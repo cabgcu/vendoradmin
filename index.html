@@ -1728,22 +1728,28 @@
     }
 
     async function checkIn(lookupVal, isScan = false, el = null) {
-        let vendor = currentData.vendors.find(v => v.id === lookupVal);
+        if (!lookupVal) return;
+        const searchVal = String(lookupVal).trim().toUpperCase();
         
-        if (!vendor && isScan) {
-            const searchVal = String(lookupVal).trim().toUpperCase();
-            vendor = currentData.vendors.find(v => 
-                (v.student_id && String(v.student_id).toUpperCase() === searchVal) ||
-                (v.id && v.id.substring(0,8).toUpperCase() === searchVal)
-            );
+        // 1. Try matching full UUID
+        let vendor = currentData.vendors.find(v => String(v.id).toUpperCase() === searchVal);
+        
+        // 2. Try matching Student ID (crucial for QR scanner)
+        if (!vendor) {
+            vendor = currentData.vendors.find(v => v.student_id && String(v.student_id).trim().toUpperCase() === searchVal);
+        }
+        
+        // 3. Try matching 8-char short ID fallback
+        if (!vendor) {
+            vendor = currentData.vendors.find(v => v.id && String(v.id).substring(0,8).toUpperCase() === searchVal);
         }
 
         if (!vendor) {
-            if (isScan) showScanModal('error', 'INVALID TICKET', 'Vendor not found in system.', null);
+            if (isScan) showScanModal('error', 'INVALID TICKET', `ID: ${searchVal} not found.`, null);
             return;
         }
 
-        const id = vendor.id; // ensure we use the real DB ID
+        const id = vendor.id; // DB ID
 
         if (isScan && vendor.status === 'Checked In') {
             showScanModal('warning', 'ALREADY SCANNED', 'This vendor has already been checked in.', vendor);
@@ -1822,7 +1828,12 @@
         if (e.key === 'Enter') { 
             e.preventDefault();
             e.stopPropagation();
-            checkIn(this.value.trim().split('id=')[1]?.split('&')[0] || this.value.trim(), true); 
+            let val = this.value.trim();
+            // Optional: Strip full URL structure if a scanner happens to inject it instead of raw data
+            if (val.includes('id=')) {
+                val = val.split('id=')[1].split('&')[0];
+            }
+            checkIn(val, true); 
             this.value = ''; 
         }
     });
@@ -2333,18 +2344,11 @@
         let subj = '', body = '';
         let targetTemplate = forceTemplateId;
 
-        // If manual resend is triggered, try to use the exact template they were previously sent
-        if (!targetTemplate && vendor.email_sent && ['approved', 'power', 'power_denied', 'denied'].includes(vendor.email_sent)) {
-            // Force a power vendor to switch to a 'power' template if they accidentally got a standard 'approved' template
-            if (vendor.needs_power === 'Yes' && vendor.email_sent === 'approved') {
-                targetTemplate = 'power';
-            } else {
-                targetTemplate = vendor.email_sent;
-            }
-        }
-
+        // If NOT forced, fallback to history or inference
         if (!targetTemplate) {
-            if (vendor.status === 'Approved' || vendor.status === 'Checked In') {
+            if (vendor.email_sent && ['approved', 'power', 'power_denied', 'denied'].includes(vendor.email_sent)) {
+                targetTemplate = vendor.email_sent;
+            } else if (vendor.status === 'Approved' || vendor.status === 'Checked In') {
                 targetTemplate = (vendor.needs_power === 'Yes') ? 'power' : 'approved';
             } else if (vendor.status === 'Denied') {
                 targetTemplate = 'denied';
@@ -2549,18 +2553,12 @@
             return;
         }
 
-        // Determine correct template dynamically based on CURRENT status (bypassing past history)
+        // Target exact template based on active filter tab to prevent glitches
         let targetTemplate = null;
-        if (vendor.status === 'Approved' || vendor.status === 'Checked In') {
-            targetTemplate = vendor.needs_power === 'Yes' ? 'power' : 'approved';
-        } else if (vendor.status === 'Denied') {
-            targetTemplate = 'denied';
-        }
-        
-        if (!targetTemplate) {
-            showToast("Cannot determine correct template for current status.");
-            return;
-        }
+        if (activeFilter === 'approved') targetTemplate = 'approved';
+        else if (activeFilter === 'power') targetTemplate = 'power';
+        else if (activeFilter === 'denied') targetTemplate = 'denied';
+        else targetTemplate = vendor.email_sent || 'approved'; // safety fallback
         
         showToast(`Sending to ${vendor.first_name}...`);
         const success = await sendSingleEmail(vendor, targetTemplate);
