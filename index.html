@@ -420,6 +420,39 @@
     </div>
 </div>
 
+<!-- VENDOR PROFILE MODAL -->
+<div id="profileModal" class="modal-overlay" onclick="closeProfileModal()">
+    <div class="modal-content" style="max-width: 600px;" onclick="event.stopPropagation()">
+        <button class="close-modal" onclick="closeProfileModal()">&times;</button>
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="width: 80px; height: 80px; background: var(--gradient-accent); border-radius: 50%; margin: 0 auto 15px auto; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; color: white;" id="profileModalInitial">A</div>
+            <h2 style="margin:0; font-weight: 800; font-size: 1.8rem;" id="profileModalName">Vendor Name</h2>
+            <p style="color:var(--text-muted); margin-top: 5px; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 10px;" id="profileModalEmail">email@example.com</p>
+        </div>
+
+        <div class="stats-container" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+            <div class="frosted stat-card" style="padding: 15px;">
+                <span class="stat-label">Total Markets</span>
+                <span class="stat-val" style="font-size: 2.2rem;" id="profileModalCount">0</span>
+            </div>
+            <div class="frosted stat-card" style="padding: 15px;">
+                <span class="stat-label">Main Category</span>
+                <span class="stat-val" style="font-size: 1.1rem; margin-top: 15px; color: #BF5AF2; letter-spacing: 0.5px;" id="profileModalMainCat">-</span>
+            </div>
+        </div>
+
+        <div class="review-field-label">Products & Themes Sold</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 25px;" id="profileModalTags">
+            <!-- Tags dynamically populated -->
+        </div>
+
+        <div class="review-field-label">Market History</div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; padding: 15px; max-height: 200px; overflow-y: auto;" id="profileModalHistory">
+            <!-- History dynamically populated -->
+        </div>
+    </div>
+</div>
+
 <!-- REVIEW VENDOR MODAL (FULL APPLICATION RESPONSE) -->
 <div id="reviewModal" class="modal-overlay" onclick="closeReviewModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
@@ -843,7 +876,10 @@
             <hr style="border:0; border-top:1px solid var(--glass-border); margin:30px 0;">
             <div style="margin-bottom:30px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <label class="stat-label" style="margin-bottom:0;">Email Templates</label>
+                    <div>
+                        <label class="stat-label" style="margin-bottom:0;">Global Email Templates</label>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 5px 0 0 0;">Templates saved here will automatically apply to all past and future markets.</p>
+                    </div>
                     <select id="templateTypeSelector" class="modern-input" style="width:auto; height:40px; padding:0 36px 0 12px; margin:0;" onchange="switchTemplateType(this.value)">
                         <option value="approved">Approved Template</option>
                         <option value="power">Approved (Power Granted) Template</option>
@@ -854,11 +890,11 @@
                 
                 <div class="form-grid" style="margin-bottom: 20px; gap: 16px;">
                     <div>
-                        <label class="stat-label">Banner Image URL</label>
+                        <label class="stat-label">Banner Image URL (Specific to this market)</label>
                         <input type="text" id="bannerUrlInput" class="modern-input" placeholder="Leave blank for no image..." oninput="updatePreview()">
                     </div>
                     <div>
-                        <label class="stat-label">Email Heading</label>
+                        <label class="stat-label">Email Heading (Specific to this market)</label>
                         <input type="text" id="headingTextInput" class="modern-input" placeholder="e.g. Market Status Update" oninput="updatePreview()">
                     </div>
                 </div>
@@ -893,10 +929,17 @@
 
             <!-- Data Export -->
             <hr style="border:0; border-top:1px solid var(--glass-border); margin:30px 0;">
-            <div style="margin-bottom:10px; background: rgba(52, 199, 89, 0.05); border: 1px solid rgba(52, 199, 89, 0.2); padding: 25px; border-radius: 20px;">
+            <div style="margin-bottom:30px; background: rgba(52, 199, 89, 0.05); border: 1px solid rgba(52, 199, 89, 0.2); padding: 25px; border-radius: 20px;">
                 <label class="stat-label" style="color: #34C759; font-size: 1rem; margin-bottom: 10px;">Data Export</label>
                 <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Download a CSV spreadsheet of all vendors who have officially checked in to this market event. Contains their names, student IDs, and GCU emails.</p>
                 <button onclick="exportCheckedInVendorsCSV()" class="btn-action" style="background: var(--gradient-success); padding: 12px 24px;">↓ Download Checked-In Vendors (CSV)</button>
+            </div>
+
+            <!-- Storage Cleanup -->
+            <div style="margin-bottom:10px; background: rgba(255, 149, 0, 0.05); border: 1px solid rgba(255, 149, 0, 0.2); padding: 25px; border-radius: 20px;">
+                <label class="stat-label" style="color: #FF9500; font-size: 1rem; margin-bottom: 10px;">Storage Space Cleanup</label>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Supabase limits free storage to 50MB. Click below to permanently delete food license images attached to applications that are older than 5 months. The vendor profile will remain, but the image file will be erased.</p>
+                <button onclick="runStorageCleanup()" class="btn-action" style="background: var(--gradient-warning); color: #000; padding: 12px 24px;">🗑 Delete Old Files (> 5 Months)</button>
             </div>
         </div>
     </div>
@@ -1012,10 +1055,13 @@
     let alertTimeout = null;
     let closeAnimTimeout = null;
 
+    // Global variable to store active profile maps for the new modal
+    window.currentProfiles = {}; 
+
     const DEFAULTS = {
         approved: { subj: "CAB Student Market: You're Approved!", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWe are so excited to have you showcase your items at the market.\n\n**Please click the link below to confirm your attendance by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n\nMore details regarding setup time, maps, and rules will follow closer to the event date.\n\n– CAB Student Market Team" },
-        power: { subj: "CAB Student Market: Approved (Power Access)", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWe have noted your request for electricity and have secured a spot for you near a power source. Please ensure you bring your own extension cords.\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team" },
-        power_denied: { subj: "CAB Student Market: Approved (No Power Available)", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWhile we would love to accommodate your request for power, unfortunately, all electricity spaces have been filled. You are still approved to participate, but you will not have access to a power source.\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team" },
+        power: { subj: "CAB Student Market: Approved (Power Access)", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWe have noted your request for electricity and have secured a spot for you near a power source. Please ensure you bring your own extension cords.\n\n**Please click the link below to confirm your attendance by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team" },
+        power_denied: { subj: "CAB Student Market: Approved (No Power Available)", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWhile we would love to accommodate your request for power, unfortunately, all electricity spaces have been filled. You are still approved to participate, but you will not have access to a power source.\n\n**Please click the link below to confirm your attendance by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team" },
         denied: { subj: "CAB Student Market Application Update", body: "Hello {{FIRST}},\n\nThank you so much for applying to {{MARKET_NAME}}.\n\nUnfortunately, due to overwhelming demand and limited space, we are unable to accept your application at this time.\n\nWe highly encourage you to apply for our future markets!\n\n– CAB Student Market Team" }
     };
 
@@ -1381,17 +1427,33 @@
             const email = (v.preferred_email || '').toLowerCase().trim();
             if (!email) return;
 
+            let cats = v.autoCategories;
+            if (!cats) {
+                cats = extractVendorCategories(v.description || '');
+            }
+
             if (!profilesMap[email]) {
                 profilesMap[email] = {
                     ...v,
+                    originalEmail: email,
                     appCount: 1,
-                    lastEvent: eventMap[v.event_id] || 'Unknown Event'
+                    lastEvent: eventMap[v.event_id] || 'Unknown Event',
+                    allEvents: [eventMap[v.event_id] || 'Unknown Event'],
+                    allCategories: new Set(cats || [])
                 };
             } else {
                 profilesMap[email].appCount++;
+                const evName = eventMap[v.event_id] || 'Unknown Event';
+                if (!profilesMap[email].allEvents.includes(evName)) {
+                    profilesMap[email].allEvents.push(evName);
+                }
+                if (cats) {
+                    cats.forEach(c => profilesMap[email].allCategories.add(c));
+                }
             }
         });
 
+        window.currentProfiles = profilesMap;
         const profiles = Object.values(profilesMap);
         
         const tbody = document.getElementById('profilesTableBody');
@@ -1399,10 +1461,10 @@
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No vendor profiles found in the last 5 months.</td></tr>';
         } else {
             tbody.innerHTML = profiles.map(p => `
-                <tr>
+                <tr class="clickable-row" onclick="openProfileModal('${p.originalEmail}')">
                     <td style="font-family: monospace; letter-spacing: 1px;">${p.student_id || 'N/A'}</td>
                     <td><strong>${p.first_name} ${p.last_name}</strong></td>
-                    <td><a href="mailto:${p.preferred_email}" style="color:var(--text-muted);">${p.preferred_email}</a></td>
+                    <td><a href="mailto:${p.preferred_email}" style="color:var(--text-muted);" onclick="event.stopPropagation()">${p.preferred_email}</a></td>
                     <td>${p.phone || 'N/A'}</td>
                     <td>${p.lastEvent}</td>
                     <td><span class="status-badge sent" style="background: rgba(191, 90, 242, 0.1); border-color: rgba(191, 90, 242, 0.3); color: #BF5AF2;">${p.appCount} Apps</span></td>
@@ -1410,6 +1472,44 @@
             `).join('');
         }
         document.getElementById('loader').style.display = 'none';
+    }
+
+    function openProfileModal(email) {
+        const p = window.currentProfiles[email];
+        if (!p) return;
+
+        document.getElementById('profileModalInitial').innerText = (p.first_name || 'V').charAt(0).toUpperCase();
+        document.getElementById('profileModalName').innerText = `${p.first_name} ${p.last_name}`;
+        document.getElementById('profileModalEmail').innerText = p.preferred_email;
+        document.getElementById('profileModalCount').innerText = p.appCount;
+
+        const catArray = Array.from(p.allCategories);
+        document.getElementById('profileModalMainCat').innerText = catArray.length > 0 ? catArray[0] : 'Uncategorized';
+
+        const tagsContainer = document.getElementById('profileModalTags');
+        if (catArray.length === 0) {
+            tagsContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.9rem;">No distinct themes identified.</span>';
+        } else {
+            tagsContainer.innerHTML = catArray.map(c => `<span class="group-tag" style="font-size: 0.85rem; padding: 6px 12px; border-radius: 20px;">${c}</span>`).join('');
+        }
+
+        const historyContainer = document.getElementById('profileModalHistory');
+        if (p.allEvents.length === 0) {
+            historyContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">No history found.</div>';
+        } else {
+            historyContainer.innerHTML = p.allEvents.map(e => `
+                <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 8px; height: 8px; background: #34C759; border-radius: 50%;"></div>
+                    <strong>${e}</strong>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('profileModal').style.display = 'flex';
+    }
+
+    function closeProfileModal() {
+        document.getElementById('profileModal').style.display = 'none';
     }
 
     let commentResolver = null;
@@ -1859,15 +1959,12 @@
             let isEmailSentForView = false;
             
             if (activeFilter === 'power') {
-                // In Needs Power, only count it as sent if the specific power emails went out
                 isEmailSentForView = (v.email_sent === 'power' || v.email_sent === 'power_denied');
             } else if (activeFilter === 'denied') {
                 isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
             } else if (activeFilter === 'approved') {
-                // In Approved, count it as sent if ANY approval email went out (standard or power)
                 isEmailSentForView = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
             } else {
-                // For "All Applications", be strictly accurate based on what they SHOULD have received
                 if (v.status === 'Denied') {
                     isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
                 } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
@@ -1888,7 +1985,6 @@
             
             if (v.autoCategories && v.autoCategories.length > 0) {
                 const cat = v.autoCategories[0];
-                // Hide redundant 'Food' tag if they already have the 'Food License' tag
                 if (!(cat === 'Food' && hasFoodLicense)) {
                     tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(10, 132, 255, 0.1); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">${cat}</span>`);
                 }
@@ -2720,24 +2816,28 @@
         const banner = document.getElementById('bannerUrlInput').value;
         const heading = document.getElementById('headingTextInput').value;
 
-        let updates = { banner_url: banner, heading_text: heading };
+        // Separate updates into GLOBAL (templates) and LOCAL (banner/heading)
+        let globalUpdates = {};
+        let localUpdates = { banner_url: banner, heading_text: heading };
         
-        if (currentTemplateType === 'approved') { updates.template_approved_body = body; updates.template_approved_subject = subj; }
-        else if (currentTemplateType === 'denied') { updates.template_denied_body = body; updates.template_denied_subject = subj; }
-        else if (currentTemplateType === 'power') { updates.template_power_body = body; updates.template_power_subject = subj; }
-        else if (currentTemplateType === 'power_denied') { updates.template_power_denied_body = body; updates.template_power_denied_subject = subj; }
+        if (currentTemplateType === 'approved') { globalUpdates.template_approved_body = body; globalUpdates.template_approved_subject = subj; }
+        else if (currentTemplateType === 'denied') { globalUpdates.template_denied_body = body; globalUpdates.template_denied_subject = subj; }
+        else if (currentTemplateType === 'power') { globalUpdates.template_power_body = body; globalUpdates.template_power_subject = subj; }
+        else if (currentTemplateType === 'power_denied') { globalUpdates.template_power_denied_body = body; globalUpdates.template_power_denied_subject = subj; }
         
-        const { error } = await _supabase.from('events').update(updates).eq('id', currentData.activeId);
+        const allEventIds = currentData.allEvents.map(e => e.id);
+
+        // Update body and subject globally for ALL events
+        const { error: err1 } = await _supabase.from('events').update(globalUpdates).in('id', allEventIds);
         
-        if (error) {
-            console.error(error);
-            if (error.message.includes("column")) {
-                alert("Database Note: You need to run a quick SQL command to save the 'Power Denied' template.\n\nRun this in the Supabase SQL Editor:\nALTER TABLE events ADD COLUMN template_power_denied_subject TEXT, ADD COLUMN template_power_denied_body TEXT;");
-            } else {
-                showToast("Error saving template");
-            }
+        // Update the banner and heading ONLY for the currently active event
+        const { error: err2 } = await _supabase.from('events').update(localUpdates).eq('id', currentData.activeId);
+        
+        if (err1 || err2) {
+            console.error(err1 || err2);
+            showToast("Error saving template");
         } else {
-            showToast(`Template Saved!`);
+            showToast(`Global Templates Saved!`);
             refreshData(null, true);
         }
     }
@@ -2768,15 +2868,12 @@
         };
 
         const fDate = formatDate(date);
+        const fClose = formatDateTime(close);
         const fContact = formatDate(contact);
         const fConfirm = formatDate(confirm);
-        const fClose = formatDateTime(close);
 
-        const apprBody = `Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} on ${fDate} has been **APPROVED**!\n\nWe are so excited to have you showcase your items at the market.\n\n**Please click the link below to confirm your attendance by ${fConfirm}:**\n{{CONFIRM_LINK}}\n\nMore details regarding setup time, maps, and rules will follow closer to the event date.\n\n– CAB Student Market Team`;
-        
-        const powBody = `Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} on ${fDate} has been **APPROVED**!\n\nWe have noted your request for electricity and have secured a spot for you near a power source. Please ensure you bring your own extension cords.\n\n**Please click the link below to confirm your attendance by ${fConfirm}:**\n{{CONFIRM_LINK}}\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team`;
-
-        const powDenBody = `Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} on ${fDate} has been **APPROVED**!\n\nWhile we would love to accommodate your request for power, unfortunately, all electricity spaces have been filled. You are still approved to participate, but you will not have access to a power source.\n\n**Please click the link below to confirm your attendance by ${fConfirm}:**\n{{CONFIRM_LINK}}\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team`;
+        // Inherit dynamic templates from the currently active event, or fallback to system defaults
+        const currentActive = currentData.activeEvent || {};
 
         const { data, error } = await _supabase.from('events').insert([{ 
             name: name, 
@@ -2787,15 +2884,16 @@
             app_close: close,
             contact_date: contact,
             confirm_date: confirm,
-            template_approved_body: apprBody, 
-            template_approved_subject: DEFAULTS.approved.subj,
-            template_denied_body: DEFAULTS.denied.body, 
-            template_denied_subject: DEFAULTS.denied.subj,
-            template_power_body: powBody, 
-            template_power_subject: DEFAULTS.power.subj,
-            template_power_denied_body: powDenBody,
-            template_power_denied_subject: DEFAULTS.power_denied.subj,
-            banner_url: "", heading_text: "Market Status Update"
+            template_approved_body: currentActive.template_approved_body || DEFAULTS.approved.body, 
+            template_approved_subject: currentActive.template_approved_subject || DEFAULTS.approved.subj,
+            template_denied_body: currentActive.template_denied_body || DEFAULTS.denied.body, 
+            template_denied_subject: currentActive.template_denied_subject || DEFAULTS.denied.subj,
+            template_power_body: currentActive.template_power_body || DEFAULTS.power.body, 
+            template_power_subject: currentActive.template_power_subject || DEFAULTS.power.subj,
+            template_power_denied_body: currentActive.template_power_denied_body || DEFAULTS.power_denied.body,
+            template_power_denied_subject: currentActive.template_power_denied_subject || DEFAULTS.power_denied.subj,
+            banner_url: "", // Intentionally blank for a new event
+            heading_text: "Market Status Update" // Default heading
         }]).select(); 
 
         if(error) {
@@ -2891,6 +2989,72 @@
         document.body.removeChild(link);
         
         showToast("CSV Downloaded!");
+    }
+
+    async function runStorageCleanup() {
+        if (!confirm("This will permanently delete food license files older than 5 months from your Supabase storage to free up space.\n\nProceed?")) return;
+
+        document.getElementById('loader').style.display = 'flex';
+        const loaderText = document.querySelector('#loader span');
+        loaderText.innerText = 'CLEANING...';
+
+        const fiveMonthsAgo = new Date();
+        fiveMonthsAgo.setMonth(fiveMonthsAgo.getMonth() - 5);
+        const isoDate = fiveMonthsAgo.toISOString();
+
+        // Find vendors older than 5 months with a non-empty food license link
+        const { data, error } = await _supabase.from('vendors')
+            .select('id, food_license_link')
+            .lte('created_at', isoDate)
+            .not('food_license_link', 'is', null)
+            .neq('food_license_link', '')
+            .neq('food_license_link', 'Deleted to save space');
+
+        if (error) {
+            console.error("Cleanup fetch error:", error);
+            showToast("Error finding old files.");
+            document.getElementById('loader').style.display = 'none';
+            return;
+        }
+
+        let deletedCount = 0;
+        const prefix = SUPABASE_URL + '/storage/v1/object/public/';
+
+        for (const vendor of data) {
+            const url = vendor.food_license_link;
+            
+            // Only attempt to delete if it's an actual Supabase Storage URL
+            if (url && url.startsWith(prefix)) {
+                try {
+                    const pathParts = url.substring(prefix.length).split('/');
+                    const bucket = pathParts[0];
+                    const filePath = pathParts.slice(1).join('/');
+
+                    // Delete the file physically from the Supabase Bucket
+                    await _supabase.storage.from(bucket).remove([filePath]);
+                    
+                    // Overwrite the database record so it doesn't break the UI
+                    await _supabase.from('vendors').update({ food_license_link: 'Deleted to save space' }).eq('id', vendor.id);
+                    
+                    deletedCount++;
+                } catch (err) {
+                    console.error("Error deleting file:", err);
+                }
+            } else if (url && url.includes('drive.google.com')) {
+                // If they used a Google Drive link, we can just erase the link text to clean up the UI
+                await _supabase.from('vendors').update({ food_license_link: 'Archived Google Drive Link' }).eq('id', vendor.id);
+            }
+        }
+
+        document.getElementById('loader').style.display = 'none';
+        loaderText.innerText = 'LOADING';
+        
+        if (deletedCount > 0) {
+            showToast(`Cleanup complete! Deleted ${deletedCount} old files.`);
+            refreshData(null, true);
+        } else {
+            showToast("Storage is already clean. No files > 5 months old found.");
+        }
     }
 </script>
 </body>
