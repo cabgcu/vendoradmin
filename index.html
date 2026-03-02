@@ -894,7 +894,7 @@
                         <input type="text" id="bannerUrlInput" class="modern-input" placeholder="Leave blank for no image..." oninput="updatePreview()">
                     </div>
                     <div>
-                        <label class="stat-label">Email Heading (Specific to this market)</label>
+                        <label class="stat-label">Email Heading (Global for all markets)</label>
                         <input type="text" id="headingTextInput" class="modern-input" placeholder="e.g. Market Status Update" oninput="updatePreview()">
                     </div>
                 </div>
@@ -1727,13 +1727,23 @@
         alertTimeout = setTimeout(() => { closeCheckInAlert(); }, duration);
     }
 
-    async function checkIn(id, isScan = false, el = null) {
-        const vendor = currentData.vendors.find(v => v.id === id);
+    async function checkIn(lookupVal, isScan = false, el = null) {
+        let vendor = currentData.vendors.find(v => v.id === lookupVal);
         
+        if (!vendor && isScan) {
+            const searchVal = String(lookupVal).trim().toUpperCase();
+            vendor = currentData.vendors.find(v => 
+                (v.student_id && String(v.student_id).toUpperCase() === searchVal) ||
+                (v.id && v.id.substring(0,8).toUpperCase() === searchVal)
+            );
+        }
+
         if (!vendor) {
             if (isScan) showScanModal('error', 'INVALID TICKET', 'Vendor not found in system.', null);
             return;
         }
+
+        const id = vendor.id; // ensure we use the real DB ID
 
         if (isScan && vendor.status === 'Checked In') {
             showScanModal('warning', 'ALREADY SCANNED', 'This vendor has already been checked in.', vendor);
@@ -2539,14 +2549,17 @@
             return;
         }
 
-        // Determine correct template based on prior send history if available
-        let targetTemplate = vendor.email_sent;
+        // Determine correct template dynamically based on CURRENT status (bypassing past history)
+        let targetTemplate = null;
+        if (vendor.status === 'Approved' || vendor.status === 'Checked In') {
+            targetTemplate = vendor.needs_power === 'Yes' ? 'power' : 'approved';
+        } else if (vendor.status === 'Denied') {
+            targetTemplate = 'denied';
+        }
         
-        // Auto-correct mistakes: if they need power but only got a standard approved email, force it to 'power'
-        if (vendor.needs_power === 'Yes' && targetTemplate === 'approved') {
-            targetTemplate = null; // Let the engine automatically infer 'power'
-        } else if (!targetTemplate || targetTemplate === 'Yes' || targetTemplate === 'No') {
-            targetTemplate = null; 
+        if (!targetTemplate) {
+            showToast("Cannot determine correct template for current status.");
+            return;
         }
         
         showToast(`Sending to ${vendor.first_name}...`);
@@ -2816,9 +2829,9 @@
         const banner = document.getElementById('bannerUrlInput').value;
         const heading = document.getElementById('headingTextInput').value;
 
-        // Separate updates into GLOBAL (templates) and LOCAL (banner/heading)
-        let globalUpdates = {};
-        let localUpdates = { banner_url: banner, heading_text: heading };
+        // Make heading_text save GLOBALLY for all events, while banner_url remains specific to the current market
+        let globalUpdates = { heading_text: heading };
+        let localUpdates = { banner_url: banner };
         
         if (currentTemplateType === 'approved') { globalUpdates.template_approved_body = body; globalUpdates.template_approved_subject = subj; }
         else if (currentTemplateType === 'denied') { globalUpdates.template_denied_body = body; globalUpdates.template_denied_subject = subj; }
@@ -2827,10 +2840,10 @@
         
         const allEventIds = currentData.allEvents.map(e => e.id);
 
-        // Update body and subject globally for ALL events
+        // Update body, subject, and HEADING globally for ALL events
         const { error: err1 } = await _supabase.from('events').update(globalUpdates).in('id', allEventIds);
         
-        // Update the banner and heading ONLY for the currently active event
+        // Update the banner ONLY for the currently active event
         const { error: err2 } = await _supabase.from('events').update(localUpdates).eq('id', currentData.activeId);
         
         if (err1 || err2) {
@@ -2893,7 +2906,7 @@
             template_power_denied_body: currentActive.template_power_denied_body || DEFAULTS.power_denied.body,
             template_power_denied_subject: currentActive.template_power_denied_subject || DEFAULTS.power_denied.subj,
             banner_url: "", // Intentionally blank for a new event
-            heading_text: "Market Status Update" // Default heading
+            heading_text: currentActive.heading_text || "Market Status Update" // Inherit global heading
         }]).select(); 
 
         if(error) {
