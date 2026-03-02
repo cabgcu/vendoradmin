@@ -758,20 +758,13 @@
             <h2 class="mb-4">Market Setup</h2>
 
             <!-- System Settings -->
-            <div style="margin-bottom:30px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px;">
+            <div style="display: none; margin-bottom:30px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px;">
                 <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">System Public URL (Important for Emails)</label>
                 <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">If the "Confirm Attendance" link in emails goes to a blank page, it is because you are sending emails from a local or testing environment. Enter your live, hosted website URL here (e.g. <strong>https://my-market.netlify.app</strong>) to permanently fix the links.</p>
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <input type="text" id="publicUrlInput" class="modern-input" placeholder="https://..." style="flex: 1; min-width: 200px;">
                     <button onclick="savePublicUrl()" class="btn-action" style="white-space: nowrap;">Save URL</button>
                 </div>
-            </div>
-
-            <!-- Data Export -->
-            <div style="margin-bottom:30px; background: rgba(52, 199, 89, 0.05); border: 1px solid rgba(52, 199, 89, 0.2); padding: 25px; border-radius: 20px;">
-                <label class="stat-label" style="color: #34C759; font-size: 1rem; margin-bottom: 10px;">Data Export</label>
-                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Download a CSV spreadsheet of all vendors who have officially checked in to this market event. Contains their names, student IDs, and GCU emails.</p>
-                <button onclick="exportCheckedInVendorsCSV()" class="btn-action" style="background: var(--gradient-success); padding: 12px 24px;">↓ Download Checked-In Vendors (CSV)</button>
             </div>
 
             <!-- Form Access Controls -->
@@ -896,6 +889,14 @@
                         <iframe id="emailPreview"></iframe>
                     </div>
                 </div>
+            </div>
+
+            <!-- Data Export -->
+            <hr style="border:0; border-top:1px solid var(--glass-border); margin:30px 0;">
+            <div style="margin-bottom:10px; background: rgba(52, 199, 89, 0.05); border: 1px solid rgba(52, 199, 89, 0.2); padding: 25px; border-radius: 20px;">
+                <label class="stat-label" style="color: #34C759; font-size: 1rem; margin-bottom: 10px;">Data Export</label>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Download a CSV spreadsheet of all vendors who have officially checked in to this market event. Contains their names, student IDs, and GCU emails.</p>
+                <button onclick="exportCheckedInVendorsCSV()" class="btn-action" style="background: var(--gradient-success); padding: 12px 24px;">↓ Download Checked-In Vendors (CSV)</button>
             </div>
         </div>
     </div>
