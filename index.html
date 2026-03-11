@@ -326,6 +326,15 @@
         }
         .comment-delete:hover { opacity: 1; }
 
+        /* AI Comment Specific Styles */
+        .comment-card.ai-comment {
+            background: rgba(10, 132, 255, 0.1);
+            border: 1px solid rgba(10, 132, 255, 0.3);
+        }
+        .comment-author.ai-author {
+            color: #0A84FF;
+        }
+
         /* Manual Scan Search Result Styles */
         .manual-result-item { 
             background: rgba(255, 255, 255, 0.05); 
@@ -446,6 +455,12 @@
             <!-- Tags dynamically populated -->
         </div>
 
+        <!-- NEW: STRIKES SECTION IN PROFILE -->
+        <div class="review-field-label">Late Application Strikes</div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 25px;" id="profileModalStrikes">
+            <!-- Strikes dynamically populated -->
+        </div>
+
         <div class="review-field-label">Market History</div>
         <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; padding: 15px; max-height: 200px; overflow-y: auto;" id="profileModalHistory">
             <!-- History dynamically populated -->
@@ -460,6 +475,11 @@
         <h2 style="margin-top:0; margin-bottom:5px; font-weight: 800; font-size: 1.8rem;" id="reviewName">Vendor Name</h2>
         <div style="display:flex; gap:10px; margin-bottom: 15px; flex-wrap: wrap;" id="reviewTags">
             <!-- Tags injected here -->
+        </div>
+
+        <!-- ✨ NEW AI INSIGHTS DASHBOARD ✨ -->
+        <div id="aiInsightsBox" style="margin-bottom: 25px; background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.3); padding: 20px; border-radius: 16px; display: none;">
+            <!-- Content injected dynamically -->
         </div>
 
         <div id="reviewModalCheckInContainer" style="margin-bottom: 25px;">
@@ -523,6 +543,10 @@
             <a href="#" target="_blank" style="color: #0A84FF; text-decoration: none; font-weight: bold;">-</a>
         </div>
 
+        <!-- NEW: STRIKES SECTION IN REVIEW MODAL -->
+        <div class="review-field-label" id="reviewStrikesLabel" style="display:none;">Late Application Strikes</div>
+        <div class="review-field-value" id="reviewStrikes" style="display:none; color: #FF3B30; background: rgba(255, 59, 48, 0.05); border-color: rgba(255, 59, 48, 0.2); font-size: 0.95rem;"></div>
+
         <div class="review-field-label">Additional Comments</div>
         <div class="review-field-value" id="reviewComments" style="min-height: 40px; white-space: pre-wrap;">-</div>
 
@@ -533,7 +557,7 @@
         <div style="margin-bottom: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden;">
             <div style="padding: 15px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--glass-border);">
                 <textarea id="newCommentText" class="modern-input" style="height: 60px; resize: vertical; margin-bottom: 10px; font-size: 0.95rem; background: rgba(0,0,0,0.4);" placeholder="Write a comment..."></textarea>
-                <div style="display:flex; justify-content: flex-end;">
+                <div style="display:flex; justify-content: flex-end; gap: 10px;">
                     <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 0.85rem; background: rgba(255, 255, 255, 0.1);" onclick="saveInternalNotes()">Add Comment</button>
                 </div>
             </div>
@@ -716,24 +740,31 @@
             <div class="frosted stat-card"><span class="stat-label">New Apps</span><span class="stat-val" id="countInbox">0</span></div>
             <div class="frosted stat-card"><span class="stat-label">Needs Review</span><span class="stat-val" style="color:#FF9500" id="countReview">0</span></div>
             <div class="frosted stat-card"><span class="stat-label">Approved</span><span class="stat-val" style="color:#34C759" id="countApproved">0</span></div>
-            <div class="frosted stat-card"><span class="stat-label">Denied</span><span class="stat-val" style="color:#FF3B30" id="countDenied">0</span></div>
+            <div class="frosted stat-card"><span class="stat-label">Historical Strikes</span><span class="stat-val" style="color:#BF5AF2" id="strikeWarningLabel">0</span></div>
         </div>
 
         <div class="filter-row">
-            <input type="text" id="search" class="modern-input" placeholder="Search name, email, or student ID..." onkeyup="renderTable()" style="flex: 3; min-width: 250px;">
+            <input type="text" id="search" class="modern-input" placeholder="Search name, email, or student ID..." onkeyup="renderTable()" style="flex: 2; min-width: 200px;">
             
-            <select id="categoryFilter" class="modern-input" style="flex: 1.5; min-width: 200px;" onchange="renderTable()">
+            <select id="categoryFilter" class="modern-input" style="flex: 1; min-width: 150px;" onchange="renderTable()">
                 <option value="all">All Vendor Themes</option>
                 <!-- Dynamically populated based on current vendors -->
             </select>
             
-            <select id="requirementFilter" class="modern-input" style="flex: 1.5; min-width: 220px;" onchange="renderTable()">
+            <select id="requirementFilter" class="modern-input" style="flex: 1; min-width: 160px;" onchange="renderTable()">
                 <option value="all">Any Special Requests</option>
                 <option value="power">Needs Power</option>
                 <option value="food">Food License</option>
             </select>
+
+            <select id="attendanceFilter" class="modern-input" style="flex: 1; min-width: 160px;" onchange="renderTable()">
+                <option value="all">Any Attendance Status</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="declined">Declined / Can't Make It</option>
+                <option value="awaiting">Awaiting Reply</option>
+            </select>
             
-            <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; flex-shrink: 0;">Send Emails to Current View...</button>
+            <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; flex-shrink: 0; display: none;">Send Emails...</button>
         </div>
         
         <div class="table-container">
@@ -760,14 +791,13 @@
                 </div>
             </div>
 
+            <!-- UNIFIED SCANNER & SEARCH BAR -->
             <div style="margin-bottom: 30px;">
-                <label class="stat-label">Manual Check-In</label>
-                <input type="text" id="manualCheckInSearch" class="modern-input" placeholder="Search by name or student ID..." onkeyup="filterManualCheckIn()">
-                <div id="manualCheckInResults" style="margin-top: 15px; max-height: 350px; overflow-y: auto;"></div>
+                <label class="stat-label">Universal Search & Scanner</label>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 10px;">Type a name to search manually, or simply point your barcode scanner here.</p>
+                <input type="text" id="unifiedCheckInInput" class="modern-input" placeholder="Ready to scan QR Code or type name..." style="text-align:center; font-size: 1.1rem; padding: 16px; background: rgba(10, 132, 255, 0.05); border-color: rgba(10, 132, 255, 0.4);" autocomplete="off">
+                <div id="unifiedCheckInResults" style="margin-top: 15px; max-height: 350px; overflow-y: auto;"></div>
             </div>
-            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 30px 0;">
-            <label class="stat-label">Hardware Scanner Input</label>
-            <input type="text" id="hardwareInput" class="modern-input" placeholder="Ready to scan QR Code..." style="text-align:center; margin-bottom: 20px; background: rgba(10, 132, 255, 0.1); border-color: rgba(10, 132, 255, 0.3);" autocomplete="off">
         </div>
     </div>
 
@@ -813,7 +843,7 @@
             </div>
             
             <div style="margin-bottom:30px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px;">
-                <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 20px;">Create New Market Event</label>
+                <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 20px;">Edit Active Event / Create New</label>
                 
                 <div class="form-grid" style="gap: 20px; margin-bottom: 20px;">
                     <div>
@@ -859,7 +889,10 @@
                     </div>
                 </div>
 
-                <button onclick="createNewEvent()" class="btn-action" style="width: 100%; padding: 15px; font-size: 1.1rem;">Create Event & Update Public Application Form</button>
+                <div style="display:flex; gap: 15px; flex-wrap: wrap;">
+                    <button onclick="updateActiveEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: var(--gradient-success);">Update ACTIVE Event</button>
+                    <button onclick="createNewEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: rgba(255,255,255,0.1);">Create as NEW Event</button>
+                </div>
             </div>
             
             <div style="margin-bottom:30px; padding: 20px; border: 1px solid rgba(255, 59, 48, 0.3); border-radius: 16px; background: rgba(255, 59, 48, 0.05);">
@@ -885,6 +918,7 @@
                         <option value="power">Approved (Power Granted) Template</option>
                         <option value="power_denied">Approved (Power Denied) Template</option>
                         <option value="denied">Denied Template</option>
+                        <option value="custom">Custom Mass Email</option>
                     </select>
                 </div>
                 
@@ -913,11 +947,15 @@
                             <button type="button" class="tag-chip" onclick="insertTag('{{CONTACT_DATE}}')">+ Contact Date</button>
                             <button type="button" class="tag-chip" onclick="insertTag('{{CONFIRM_DEADLINE}}')">+ Confirm Deadline</button>
                             <button type="button" class="tag-chip" onclick="insertTag('{{CONFIRM_LINK}}')" style="border-color: #34C759; color: #34C759;">+ Confirm Link</button>
+                            <button type="button" class="tag-chip" onclick="insertTag('{{DECLINE_LINK}}')" style="border-color: #FF3B30; color: #FF3B30;">+ Decline Link</button>
                         </div>
                         <textarea id="emailTemplateInput" class="modern-input" style="height:300px; font-family:sans-serif; font-size:0.95rem; line-height:1.5;" oninput="updatePreview()" placeholder="Type your message here..."></textarea>
                         <div style="display:flex; justify-content:space-between; margin-top:10px;">
                             <button onclick="resetTemplate()" style="background:transparent; border:1px solid rgba(255,255,255,0.3); color:#aaa; padding:8px 12px; border-radius:8px; cursor:pointer;">Reset Default</button>
-                            <button onclick="saveEmailTemplate()" class="btn-action">Save Template</button>
+                            <div style="display: flex; gap: 10px;">
+                                <button id="btnSendCustomBlast" onclick="sendCustomBlastFromSettings()" class="btn-action" style="background: var(--gradient-warning); color: #000; display: none;">Send to Approved Vendors</button>
+                                <button onclick="saveEmailTemplate()" class="btn-action">Save Template</button>
+                            </div>
                         </div>
                     </div>
                     <div>
@@ -946,40 +984,72 @@
 </div>
 
 <script>
+    // --- INTEGRATION: OPENROUTER DEEPSEEK V3 API KEY ---
+    const OPENROUTER_API_KEY = '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';
+
     // --- VENDOR CONFIRMATION FLOW ENGINE ---
     window.addEventListener('DOMContentLoaded', () => { 
         const urlParams = new URLSearchParams(window.location.search);
         const confirmId = urlParams.get('confirm');
+        const declineId = urlParams.get('decline');
         
         if (confirmId) {
-            handleVendorConfirmation(confirmId);
+            handleVendorConfirmation(confirmId, 'confirm');
+        } else if (declineId) {
+            handleVendorConfirmation(declineId, 'decline');
         } else if (sessionStorage.getItem('cab_market_auth') === 'true') {
             unlockApp();
         }
+
+        setupUnifiedScanner();
     });
 
-    async function handleVendorConfirmation(id) {
+    async function handleVendorConfirmation(id, action) {
         try {
             const loginScreen = document.getElementById('login-screen');
             if (loginScreen) loginScreen.style.display = 'none';
             
+            const isConfirming = action === 'confirm';
+
             // Show loading screen
             const msgDiv = document.createElement('div');
             msgDiv.id = 'confirmation-loading-screen';
             msgDiv.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#050505; color:white; font-family:var(--font-stack); z-index:999999;";
-            msgDiv.innerHTML = `<div class="spinner" style="margin-bottom:20px; width:40px; height:40px; border-top-color:#34C759;"></div><h2 style="font-weight:800;">Confirming your attendance...</h2>`;
+            msgDiv.innerHTML = `<div class="spinner" style="margin-bottom:20px; width:40px; height:40px; border-top-color:${isConfirming ? '#34C759' : '#FF3B30'};"></div><h2 style="font-weight:800;">${isConfirming ? 'Confirming your attendance...' : 'Updating your status...'}</h2>`;
             document.body.appendChild(msgDiv);
             
-            // Attempt to update the column "attendance_confirmed"
-            const { error } = await _supabase.from('vendors').update({ attendance_confirmed: true }).eq('id', id);
-            
-            if (error) throw error;
-            
-            msgDiv.innerHTML = `
-                <div style="font-size: 5rem; color: #34C759; margin-bottom: 20px; text-shadow: 0 0 30px rgba(52, 199, 89, 0.4);">✓</div>
-                <h2 style="color:#34C759; margin-bottom: 15px; font-weight:800; font-size:2.5rem;">Confirmed!</h2>
-                <p style="color:var(--text-muted); font-size:1.1rem; max-width:400px; text-align:center;">Your attendance has been successfully recorded. We look forward to seeing you at the market!</p>
-            `;
+            if (isConfirming) {
+                const { error } = await _supabase.from('vendors').update({ attendance_confirmed: true }).eq('id', id);
+                if (error) throw error;
+                
+                msgDiv.innerHTML = `
+                    <div style="font-size: 5rem; color: #34C759; margin-bottom: 20px; text-shadow: 0 0 30px rgba(52, 199, 89, 0.4);">✓</div>
+                    <h2 style="color:#34C759; margin-bottom: 15px; font-weight:800; font-size:2.5rem;">Confirmed!</h2>
+                    <p style="color:var(--text-muted); font-size:1.1rem; max-width:400px; text-align:center;">Your attendance has been successfully recorded. We look forward to seeing you at the market!</p>
+                `;
+            } else {
+                // Handle Decline
+                const { data: vData } = await _supabase.from('vendors').select('internal_notes').eq('id', id).single();
+                let notes = getParsedNotes(vData?.internal_notes);
+                
+                notes.unshift({ 
+                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9), 
+                    date: new Date().toISOString(), 
+                    text: "❌ Vendor clicked the 'Can't Make It' link in their email.", 
+                    author: 'System', 
+                    type: 'status_change', 
+                    status: 'Declined' 
+                });
+
+                const { error } = await _supabase.from('vendors').update({ attendance_confirmed: false, internal_notes: JSON.stringify(notes) }).eq('id', id);
+                if (error) throw error;
+                
+                msgDiv.innerHTML = `
+                    <div style="font-size: 5rem; color: #FF3B30; margin-bottom: 20px; text-shadow: 0 0 30px rgba(255, 59, 48, 0.4);">✕</div>
+                    <h2 style="color:#FF3B30; margin-bottom: 15px; font-weight:800; font-size:2.5rem;">Declined</h2>
+                    <p style="color:var(--text-muted); font-size:1.1rem; max-width:400px; text-align:center;">We've received your notice that you can no longer attend. Your spot has been released. We hope to see you at the next market!</p>
+                `;
+            }
             
         } catch (err) {
             console.error("Confirmation Error:", err);
@@ -988,7 +1058,7 @@
                 <div style="position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#050505; color:white; font-family:sans-serif; z-index:999999;">
                     <div style="font-size: 4rem; color: #FF3B30; margin-bottom: 20px;">✕</div>
                     <h2 style="color:#FF3B30; font-weight:800; margin-bottom:10px;">System Error</h2>
-                    <p style="color:#a1a1aa; text-align:center; max-width: 400px;">${err.message || 'We could not process your confirmation automatically. Please reply directly to the email to confirm your attendance.'}</p>
+                    <p style="color:#a1a1aa; text-align:center; max-width: 400px;">${err.message || 'We could not process your status automatically. Please reply directly to the email to update us.'}</p>
                 </div>
             `;
         }
@@ -1015,7 +1085,8 @@
         'Art & Prints': ['art', 'prints', 'painting', 'canvas', 'drawing', 'portraits', 'illustrations', 'watercolor', 'poster', 'posters'],
         'Stickers & Accessories': ['stickers', 'decals', 'stationery', 'keychains', 'pins', 'buttons', 'bookmarks'],
         'Beauty & Care': ['lip gloss', 'lip balm', 'cosmetics', 'makeup', 'skincare', 'lotion', 'soap', 'body butter', 'perfume', 'fragrance'],
-        'Home Decor': ['decor', 'candles', 'ceramics', 'pottery', 'glassware', 'coaster', 'tufting', 'rug', 'rugs']
+        'Home Decor': ['decor', 'candles', 'ceramics', 'pottery', 'glassware', 'coaster', 'tufting', 'rug', 'rugs'],
+        'Services & Experiences': ['henna', 'tattoo', 'tarot', 'reading', 'massage', 'hair', 'nails', 'face paint', 'service', 'services', 'tooth gem', 'gem']
     };
 
     function extractVendorCategories(text) {
@@ -1045,7 +1116,7 @@
 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
-    let currentData = { vendors: [], allEvents: [], activeId: "", activeEvent: null, publicUrl: "" };
+    let currentData = { vendors: [], allEvents: [], activeId: "", activeEvent: null, publicUrl: "", customTemplatesMap: {} };
     let realtimeSubscription = null;
     let currentTemplateType = 'approved';
     let activeFilter = 'inbox'; 
@@ -1055,14 +1126,18 @@
     let alertTimeout = null;
     let closeAnimTimeout = null;
 
-    // Global variable to store active profile maps for the new modal
+    // AI & Strike State
+    let isAIQueueRunning = false;
+    const aiAnalyzingSet = new Set();
     window.currentProfiles = {}; 
+    window.vendorStrikes = {}; // Tracks how many times they applied AFTER the close date
 
     const DEFAULTS = {
-        approved: { subj: "CAB Student Market: You're Approved!", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWe are so excited to have you showcase your items at the market.\n\n**Please click the link below to confirm your attendance by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n\nMore details regarding setup time, maps, and rules will follow closer to the event date.\n\n– CAB Student Market Team" },
-        power: { subj: "CAB Student Market: Approved (Power Access)", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWe have noted your request for electricity and have secured a spot for you near a power source. Please ensure you bring your own extension cords.\n\n**Please click the link below to confirm your attendance by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team" },
-        power_denied: { subj: "CAB Student Market: Approved (No Power Available)", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWhile we would love to accommodate your request for power, unfortunately, all electricity spaces have been filled. You are still approved to participate, but you will not have access to a power source.\n\n**Please click the link below to confirm your attendance by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team" },
-        denied: { subj: "CAB Student Market Application Update", body: "Hello {{FIRST}},\n\nThank you so much for applying to {{MARKET_NAME}}.\n\nUnfortunately, due to overwhelming demand and limited space, we are unable to accept your application at this time.\n\nWe highly encourage you to apply for our future markets!\n\n– CAB Student Market Team" }
+        approved: { subj: "CAB Student Market: You're Approved!", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWe are so excited to have you showcase your items at the market.\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}\n\nMore details regarding setup time, maps, and rules will follow closer to the event date.\n\n– CAB Student Market Team" },
+        power: { subj: "CAB Student Market: Approved (Power Access)", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWe have noted your request for electricity and have secured a spot for you near a power source. Please ensure you bring your own extension cords.\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team" },
+        power_denied: { subj: "CAB Student Market: Approved (No Power Available)", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWhile we would love to accommodate your request for power, unfortunately, all electricity spaces have been filled. You are still approved to participate, but you will not have access to a power source.\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team" },
+        denied: { subj: "CAB Student Market Application Update", body: "Hello {{FIRST}},\n\nThank you so much for applying to {{MARKET_NAME}}.\n\nUnfortunately, due to overwhelming demand and limited space, we are unable to accept your application at this time.\n\nWe highly encourage you to apply for our future markets!\n\n– CAB Student Market Team" },
+        custom: { subj: "Important Update from CAB Student Market", body: "Hello {{FIRST}},\n\n[Type your custom mass email message here]\n\n– CAB Student Market Team" }
     };
 
     // LOGIN LOGIC
@@ -1113,6 +1188,155 @@
         realtimeSubscription = _supabase.channel('public:vendors')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'vendors' }, () => { refreshData(null, true); })
             .subscribe();
+    }
+
+    // --- DEEPSEEK V3 AI AUTOMATION ENGINE ---
+    async function processAIQueue() {
+        if (isAIQueueRunning) return;
+        isAIQueueRunning = true;
+
+        // Find all vendors that do NOT have an AI analysis yet
+        const unanalyzed = currentData.vendors.filter(v => {
+            const notes = getParsedNotes(v.internal_notes);
+            return !notes.some(n => n.type === 'ai_analysis');
+        });
+
+        // Process them one by one quietly in the background
+        for (const vendor of unanalyzed) {
+            await runDeepSeekAnalysis(vendor);
+            // 2 second pause between checks to avoid OpenRouter rate limits
+            await new Promise(r => setTimeout(r, 2000)); 
+        }
+
+        isAIQueueRunning = false;
+    }
+
+    async function runDeepSeekAnalysis(vendor) {
+        if (!vendor || aiAnalyzingSet.has(vendor.id)) return;
+        
+        let comments = getParsedNotes(vendor.internal_notes);
+        if (comments.some(c => c.type === 'ai_analysis')) return; // Already analyzed
+
+        aiAnalyzingSet.add(vendor.id);
+        
+        // Update UI immediately if they are staring at this specific vendor
+        if (currentReviewingId === vendor.id) updateAIInsightsUI(vendor);
+
+        const prompt = `
+        You are an assistant for a student market administration team. Analyze this vendor application.
+        
+        Name: ${vendor.first_name} ${vendor.last_name}
+        Description/Products: ${vendor.description}
+        Food License Checked: ${vendor.food_license}
+        Needs Power: ${vendor.needs_power}
+
+        Respond ONLY with a valid, raw JSON object. Do NOT use markdown formatting, backticks, or asterisks.
+        {
+            "categories": ["Array of 1-3 best fit categories. Choose from: Clothes, Food, Jewelry, Crafts, Art & Prints, Stickers & Accessories, Beauty & Care, Home Decor. If none fit, you MUST make up a relevant 1-2 word custom category (e.g. 'Services & Experiences', 'Henna', '3D Printing'). Do not leave this empty."],
+            "summary": "A clean, basic 1-sentence summary of what they sell.",
+            "risk_flags": ["Array of warnings. Example: 'Selling food but no license checked', 'Needs power but no details given'. Empty array if no risks."]
+        }
+        `;
+
+        try {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    model: "deepseek/deepseek-chat", // DeepSeek V3 via OpenRouter
+                    messages: [{ role: "user", content: prompt }]
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.error) throw new Error(data.error.message || "OpenRouter API limits or error.");
+
+            // Clean up the response in case DeepSeek accidentally wraps it in markdown code blocks
+            let rawText = data.choices[0].message.content;
+            rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+            
+            const aiData = JSON.parse(rawText);
+            
+            // Fallback: If AI fails to return an array, force it to 'Other' so the UI doesn't break
+            if (!aiData.categories || aiData.categories.length === 0) {
+                aiData.categories = ['Other'];
+            }
+
+            // Re-fetch latest notes just in case it was updated manually while fetching
+            comments = getParsedNotes(vendor.internal_notes);
+            
+            // Save structured AI data into the notes field so it persists without DB schema migrations
+            comments.unshift({
+                id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
+                date: new Date().toISOString(),
+                author: 'DeepSeek V3',
+                type: 'ai_analysis',
+                ai_data: aiData
+            });
+
+            const newNotesStr = JSON.stringify(comments);
+            vendor.internal_notes = newNotesStr;
+            
+            // Update local memory so categories filter updates immediately
+            vendor.autoCategories = aiData.categories;
+            vendor.aiData = aiData;
+
+            await _supabase.from('vendors').update({ internal_notes: newNotesStr }).eq('id', vendor.id);
+
+            buildCategoryDropdown(); // Update filter dropdown with new AI categories
+
+            // Immediately refresh the UI if we are still looking at the same vendor
+            if (currentReviewingId === vendor.id) {
+                openReviewModal(vendor.id); // Re-render modal to show new tags and insights
+            } else if (document.getElementById('view-list').style.display !== 'none') {
+                renderTable(); // Re-render table to show updated category badges
+            }
+        } catch (err) {
+            console.error(`AI Error for ${vendor.id}:`, err);
+        } finally {
+            aiAnalyzingSet.delete(vendor.id);
+            if (currentReviewingId === vendor.id) updateAIInsightsUI(vendor);
+        }
+    }
+
+    function updateAIInsightsUI(vendor) {
+        const aiBox = document.getElementById('aiInsightsBox');
+        if (!aiBox) return;
+
+        if (vendor.aiData) {
+            let flagsHtml = '';
+            if (vendor.aiData.risk_flags && vendor.aiData.risk_flags.length > 0) {
+                flagsHtml = `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 59, 48, 0.2); color: #FF3B30; font-size: 0.9rem; font-weight: 700;">
+                    <span style="display:block; margin-bottom:4px; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">⚠️ AI Risk Flags</span>
+                    ${vendor.aiData.risk_flags.join('<br>')}
+                </div>`;
+            }
+
+            aiBox.innerHTML = `
+                <div style="font-size: 0.75rem; color: #0A84FF; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                    ✨ DeepSeek Analysis
+                </div>
+                <div style="font-size: 0.95rem; color: #fff;">
+                    <strong>Summary:</strong> ${vendor.aiData.summary}
+                </div>
+                ${flagsHtml}
+            `;
+            aiBox.style.display = 'block';
+        } else if (aiAnalyzingSet.has(vendor.id)) {
+            aiBox.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px; color: #0A84FF; font-weight: 700; font-size: 0.9rem;">
+                    <div class="spinner" style="width:16px; height:16px; border-width:2px; border-top-color:#0A84FF;"></div>
+                    DeepSeek is analyzing this application...
+                </div>
+            `;
+            aiBox.style.display = 'block';
+        } else {
+            aiBox.style.display = 'none';
+        }
     }
 
     function buildCategoryDropdown() {
@@ -1196,10 +1420,12 @@
             document.getElementById('eventDropdown').innerHTML = '<option>No Active Markets</option>';
             document.getElementById('vendorTableBody').innerHTML = '<tr><td colspan="8" style="text-align:center;">No events. Create one in Settings.</td></tr>';
             
-            document.getElementById('countInbox').innerText = 0;
-            document.getElementById('countReview').innerText = 0;
-            document.getElementById('countApproved').innerText = 0;
-            document.getElementById('countDenied').innerText = 0;
+            // Check for null before setting innerText
+            if (document.getElementById('countInbox')) document.getElementById('countInbox').innerText = 0;
+            if (document.getElementById('countReview')) document.getElementById('countReview').innerText = 0;
+            if (document.getElementById('countApproved')) document.getElementById('countApproved').innerText = 0;
+            if (document.getElementById('countDenied')) document.getElementById('countDenied').innerText = 0;
+            if (document.getElementById('strikeWarningLabel')) document.getElementById('strikeWarningLabel').innerText = 0;
 
             toggleView('settings');
             showToast("No active markets. Please create one.");
@@ -1211,14 +1437,31 @@
         activeId = activeEvent.id;
         localStorage.setItem('marketEventId', activeId);
 
+        // Fetch CUSTOM templates stored securely in secrets
+        const { data: customData } = await _supabase.from('secrets').select('value').eq('name', 'MARKET_CUSTOM_TEMPLATES').maybeSingle();
+        let customTemplatesMap = {};
+        if (customData && customData.value) {
+            try { customTemplatesMap = JSON.parse(customData.value); } catch(e){}
+        }
+
         // Load Vendors for this event (Sorted ascending so #1 is at the top)
         const { data: vendorsData, error: vendorErr } = await _supabase.from('vendors').select('*').eq('event_id', activeId).order('created_at', { ascending: true });
         
         if (vendorsData) {
             vendorsData.forEach((v, index) => {
                 v.appNumber = index + 1;
-                // Auto tag them for the dropdown based solely on the description
-                v.autoCategories = extractVendorCategories(v.description || '');
+                
+                // Check if AI has already categorized them
+                const notes = getParsedNotes(v.internal_notes);
+                const aiNote = notes.find(n => n.type === 'ai_analysis');
+                
+                if (aiNote && aiNote.ai_data) {
+                    v.autoCategories = (aiNote.ai_data.categories && aiNote.ai_data.categories.length > 0) ? aiNote.ai_data.categories : ['Other'];
+                    v.aiData = aiNote.ai_data;
+                } else {
+                    v.autoCategories = extractVendorCategories(v.description || '');
+                    if (v.autoCategories.length === 0) v.autoCategories = ['Other'];
+                }
             });
         }
 
@@ -1231,6 +1474,7 @@
             bannerUrl: activeEvent.banner_url || "",
             headingText: activeEvent.heading_text || "Market Status Update",
             publicUrl: publicUrlStr,
+            customTemplatesMap: customTemplatesMap,
             
             apprSubj: activeEvent.template_approved_subject || DEFAULTS.approved.subj,
             apprBody: activeEvent.template_approved_body || DEFAULTS.approved.body,
@@ -1239,11 +1483,16 @@
             powSubj: activeEvent.template_power_subject || DEFAULTS.power.subj,
             powBody: activeEvent.template_power_body || DEFAULTS.power.body,
             powDenSubj: activeEvent.template_power_denied_subject || DEFAULTS.power_denied.subj,
-            powDenBody: activeEvent.template_power_denied_body || DEFAULTS.power_denied.body
+            powDenBody: activeEvent.template_power_denied_body || DEFAULTS.power_denied.body,
+            customSubj: customTemplatesMap[activeId]?.subj || DEFAULTS.custom.subj,
+            customBody: customTemplatesMap[activeId]?.body || DEFAULTS.custom.body,
         };
         
+        // Calculate the strikes before updating stats and rendering
+        await calculateStrikes();
         updateStats();
         buildCategoryDropdown();
+        populateSettingsForm();
         
         const dropdown = document.getElementById('eventDropdown');
         if (dropdown) dropdown.innerHTML = currentData.allEvents.map(e => `<option value="${e.id}" ${e.id == currentData.activeId ? 'selected' : ''}>${e.name}</option>`).join('');
@@ -1261,11 +1510,125 @@
                 renderTable();
             }
             if (document.getElementById('view-scan').style.display !== 'none') {
-                filterManualCheckIn();
+                filterUnifiedCheckIn('');
             }
         }
         
         if (!silent) document.getElementById('loader').style.display = 'none';
+
+        // Kick off the AI background queue silently
+        processAIQueue();
+    }
+
+    // --- 3 STRIKES LATE POLICY ---
+    async function calculateStrikes() {
+        if (!currentData.vendors.length) return;
+        const emails = [...new Set(currentData.vendors.map(v => v.preferred_email).filter(Boolean))];
+        if(!emails.length) return;
+
+        // We fetch ALL historical apps specifically for the vendors in the current view
+        const { data: pastApps } = await _supabase.from('vendors').select('preferred_email, created_at, event_id').in('preferred_email', emails);
+        
+        window.vendorStrikes = {}; // Tracks specific market names they were late to: { 'email': ['Spring Fest', 'Winter Market'] }
+        let totalStrikesInView = 0;
+        
+        if (pastApps) {
+            pastApps.forEach(app => {
+                const ev = currentData.allEvents.find(e => e.id === app.event_id);
+                if (ev && ev.app_close) {
+                    const appDate = new Date(app.created_at);
+                    const closeDate = new Date(ev.app_close);
+                    
+                    // If they applied AFTER the close deadline for that specific event, mark it as a strike
+                    if (appDate > closeDate) {
+                        if (!window.vendorStrikes[app.preferred_email]) {
+                            window.vendorStrikes[app.preferred_email] = [];
+                        }
+                        if (!window.vendorStrikes[app.preferred_email].includes(ev.name)) {
+                            window.vendorStrikes[app.preferred_email].push(ev.name);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Sum up strikes just for analytics dashboard display
+        currentData.vendors.forEach(v => {
+            if(window.vendorStrikes[v.preferred_email]) {
+                totalStrikesInView += window.vendorStrikes[v.preferred_email].length;
+            }
+        });
+
+        const strikeLabel = document.getElementById('strikeWarningLabel');
+        if (strikeLabel) strikeLabel.innerText = totalStrikesInView;
+    }
+
+    // --- UNIFIED SCANNER ENGINE ---
+    function setupUnifiedScanner() {
+        const input = document.getElementById('unifiedCheckInInput');
+        if(!input) return;
+        input.addEventListener('keyup', (e) => {
+            if (e.key !== 'Enter') {
+                filterUnifiedCheckIn(input.value);
+            }
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                let val = input.value.trim();
+                // Strip junk URL data if scanner is messy
+                if (val.includes('id=')) val = val.split('id=')[1].split('&')[0];
+                checkIn(val, true);
+                input.value = '';
+                filterUnifiedCheckIn(''); 
+            }
+        });
+    }
+
+    function filterUnifiedCheckIn(val) {
+        val = val.toUpperCase();
+        const res = document.getElementById("unifiedCheckInResults");
+        if (!res) return;
+        res.innerHTML = "";
+        
+        if (!val) {
+            res.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 20px;">Type a name or student ID to search manually... or just scan a ticket barcode.</div>';
+            return;
+        }
+        
+        const matched = currentData.vendors.filter(v => {
+            const searchStr = `${v.first_name || ''} ${v.last_name || ''} ${v.student_id || ''}`.toUpperCase();
+            return searchStr.includes(val);
+        });
+        
+        if (matched.length === 0) {
+            res.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 20px;">No vendors found matching that search.</div>';
+            return;
+        }
+
+        matched.forEach(v => {
+            const d = document.createElement('div');
+            d.className = "manual-result-item";
+            
+            const isFoodLicense = v.food_license && v.food_license.toLowerCase() === 'yes';
+            const isFoodCategory = v.autoCategories && v.autoCategories.includes('Food');
+            
+            let foodBadge = '';
+            if (isFoodLicense) foodBadge = '<span style="color: #FF9500; font-weight: bold; font-size: 0.75rem;">[FOOD LICENSE]</span> ';
+            else if (isFoodCategory) foodBadge = '<span style="color: #0A84FF; font-weight: bold; font-size: 0.75rem;">[FOOD]</span> ';
+            
+            const powerBadge = v.needs_power === 'Yes' ? '<span style="color: #FFD60A; font-weight: bold; font-size: 0.75rem;">[POWER]</span> ' : '';
+
+            let btnHtml = '';
+            if (v.status === 'Approved' || v.status === 'Checked In') {
+                btnHtml = `<button class="btn-action" style="padding: 6px 16px; font-size: 0.8rem; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}" onclick="checkIn('${v.id}', false, this)">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`;
+            } else {
+                btnHtml = `<span style="color: #FF3B30; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; padding-right: 10px;">${v.status}</span>`;
+            }
+
+            d.innerHTML = `<div><strong>${v.first_name} ${v.last_name}</strong><br><small style="color:var(--text-muted);">${foodBadge}${powerBadge} ID: ${v.student_id || 'N/A'}</small></div>${btnHtml}`;
+            res.appendChild(d);
+        });
     }
 
     async function savePublicUrl() {
@@ -1278,16 +1641,67 @@
         showToast("Public URL Saved!");
     }
 
+    function populateSettingsForm() {
+        const ev = currentData.activeEvent;
+        if (!ev) return;
+        document.getElementById('evName').value = ev.name || '';
+        document.getElementById('evLocation').value = ev.location || '';
+        document.getElementById('evDate').value = ev.market_date || '';
+        document.getElementById('evTime').value = ev.market_time || '';
+        
+        // Handle Datetime-local inputs strictly parsing UTC correctly
+        if (ev.app_open) document.getElementById('evOpen').value = new Date(new Date(ev.app_open).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        if (ev.app_close) document.getElementById('evClose').value = new Date(new Date(ev.app_close).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        
+        document.getElementById('evContact').value = ev.contact_date || '';
+        document.getElementById('evConfirm').value = ev.confirm_date || '';
+    }
+
+    async function updateActiveEvent() {
+        const name = document.getElementById('evName').value.trim();
+        const date = document.getElementById('evDate').value;
+        const time = document.getElementById('evTime').value.trim();
+        const location = document.getElementById('evLocation').value.trim();
+        const open = document.getElementById('evOpen').value;
+        const close = document.getElementById('evClose').value;
+        const contact = document.getElementById('evContact').value;
+        const confirm = document.getElementById('evConfirm').value;
+
+        if(!name || !date || !time || !location || !open || !close || !contact || !confirm) {
+            return alert("Please fill in all event details.");
+        }
+
+        showToast("Updating market info...");
+        const { error } = await _supabase.from('events').update({
+            name: name, 
+            market_date: date,
+            market_time: time,
+            location: location,
+            app_open: new Date(open).toISOString(),
+            app_close: new Date(close).toISOString(),
+            contact_date: contact,
+            confirm_date: confirm
+        }).eq('id', currentData.activeId);
+
+        if (error) {
+            console.error(error);
+            alert("Database Error updating event.");
+        } else {
+            showToast("Active Market Updated!");
+            refreshData(null, true);
+        }
+    }
+
     function updateStats() {
         const inbox = currentData.vendors.filter(v => v.status !== 'Approved' && v.status !== 'Checked In' && v.status !== 'Needs Review' && v.status !== 'Denied').length;
         const review = currentData.vendors.filter(v => v.status === 'Needs Review').length;
         const approved = currentData.vendors.filter(v => v.status === 'Approved' || v.status === 'Checked In').length;
         const denied = currentData.vendors.filter(v => v.status === 'Denied').length;
 
-        document.getElementById('countInbox').innerText = inbox;
-        document.getElementById('countReview').innerText = review;
-        document.getElementById('countApproved').innerText = approved;
-        document.getElementById('countDenied').innerText = denied;
+        if (document.getElementById('countInbox')) document.getElementById('countInbox').innerText = inbox;
+        if (document.getElementById('countReview')) document.getElementById('countReview').innerText = review;
+        if (document.getElementById('countApproved')) document.getElementById('countApproved').innerText = approved;
+        if (document.getElementById('countDenied')) document.getElementById('countDenied').innerText = denied;
 
         // Update Check-In Screen Stats
         const checkedInCount = currentData.vendors.filter(v => v.status === 'Checked In').length;
@@ -1306,8 +1720,9 @@
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
         
         // Reset dropdowns on tab switch
-        document.getElementById('categoryFilter').value = 'all';
-        document.getElementById('requirementFilter').value = 'all';
+        if (document.getElementById('categoryFilter')) document.getElementById('categoryFilter').value = 'all';
+        if (document.getElementById('requirementFilter')) document.getElementById('requirementFilter').value = 'all';
+        if (document.getElementById('attendanceFilter')) document.getElementById('attendanceFilter').value = 'all';
 
         const btn = document.getElementById(`nav-${filter}`);
         if(btn) {
@@ -1338,8 +1753,8 @@
         } else if (v === 'scan') {
             document.getElementById('nav-scan').classList.add('active-scan');
             document.getElementById('view-scan').style.display = 'block';
-            filterManualCheckIn();
-            setTimeout(() => document.getElementById('hardwareInput').focus(), 100);
+            filterUnifiedCheckIn('');
+            setTimeout(() => document.getElementById('unifiedCheckInInput').focus(), 100);
         }
     }
 
@@ -1428,8 +1843,9 @@
             if (!email) return;
 
             let cats = v.autoCategories;
-            if (!cats) {
+            if (!cats || cats.length === 0) {
                 cats = extractVendorCategories(v.description || '');
+                if (cats.length === 0) cats = ['Other'];
             }
 
             if (!profilesMap[email]) {
@@ -1491,6 +1907,20 @@
             tagsContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.9rem;">No distinct themes identified.</span>';
         } else {
             tagsContainer.innerHTML = catArray.map(c => `<span class="group-tag" style="font-size: 0.85rem; padding: 6px 12px; border-radius: 20px;">${c}</span>`).join('');
+        }
+
+        const strikesContainer = document.getElementById('profileModalStrikes');
+        const strikesArr = window.vendorStrikes[email] || [];
+        
+        if (strikesArr.length === 0) {
+            strikesContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">0 Late Applications. Vendor is in good standing.</span>';
+            strikesContainer.style.borderColor = 'rgba(255,255,255,0.1)';
+            strikesContainer.style.background = 'rgba(255,255,255,0.03)';
+        } else {
+            strikesContainer.style.borderColor = 'rgba(255,59,48,0.3)';
+            strikesContainer.style.background = 'rgba(255,59,48,0.05)';
+            const listHtml = strikesArr.map(eventName => `<div style="color: #FF3B30; font-size: 0.9rem; font-weight: bold; margin-bottom: 6px;">🚨 Late to: ${eventName}</div>`).join('');
+            strikesContainer.innerHTML = `<div style="margin-bottom: 12px; font-weight: 800; color: #FF3B30;">Total Strikes: ${strikesArr.length}</div>${listHtml}`;
         }
 
         const historyContainer = document.getElementById('profileModalHistory');
@@ -1556,20 +1986,28 @@
 
     function renderCommentsFeed(vendor) {
         const feedEl = document.getElementById('commentFeed');
-        const comments = getParsedNotes(vendor.internal_notes);
+        // Filter out AI analysis objects so they don't clutter the comments feed
+        const comments = getParsedNotes(vendor.internal_notes).filter(c => c.type !== 'ai_analysis');
 
         if (comments.length === 0) {
-            feedEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 20px 0;">No comments yet.</div>';
+            feedEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 20px 0;">No manual comments yet.</div>';
             return;
         }
 
         feedEl.innerHTML = comments.map(c => {
             let authorName = c.author || 'Admin';
             let badgeHtml = '';
+            let extraClasses = '';
+            let authorClass = '';
+
+            if (c.type === 'ai_analysis') {
+                extraClasses = 'ai-comment';
+                authorClass = 'ai-author';
+            }
 
             if (c.type === 'status_change') {
-                if (c.status === 'Denied') {
-                    badgeHtml = '<span style="background: rgba(255,59,48,0.2); color: #FF3B30; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">DENIED</span>';
+                if (c.status === 'Denied' || c.status === 'Declined') {
+                    badgeHtml = `<span style="background: rgba(255,59,48,0.2); color: #FF3B30; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px; text-transform: uppercase;">${c.status}</span>`;
                 }
                 if (c.status === 'Needs Review') {
                     badgeHtml = '<span style="background: rgba(255,149,0,0.2); color: #FF9500; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">NEEDS REVIEW</span>';
@@ -1577,9 +2015,9 @@
             }
 
             return `
-            <div class="comment-card">
+            <div class="comment-card ${extraClasses}">
                 <div class="comment-header">
-                    <div class="comment-author">
+                    <div class="comment-author ${authorClass}">
                         ${authorName} ${badgeHtml}
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -1637,7 +2075,7 @@
         
         updateStats();
         renderTable(); 
-        if (document.getElementById('view-scan').style.display !== 'none') filterManualCheckIn();
+        if (document.getElementById('view-scan').style.display !== 'none') filterUnifiedCheckIn('');
         
         const { error } = await _supabase.from('vendors').update(updates).eq('id', id);
         if (error) {
@@ -1778,66 +2216,6 @@
         }
     }
 
-    function filterManualCheckIn() {
-        const val = document.getElementById("manualCheckInSearch").value.toUpperCase();
-        const res = document.getElementById("manualCheckInResults");
-        if (!res) return;
-        res.innerHTML = "";
-        
-        if (!val) {
-            res.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 20px;">Type a name or student ID to search all vendors...</div>';
-            return;
-        }
-        
-        const matched = currentData.vendors.filter(v => {
-            const searchStr = `${v.first_name || ''} ${v.last_name || ''} ${v.student_id || ''}`.toUpperCase();
-            return searchStr.includes(val);
-        });
-        
-        if (matched.length === 0) {
-            res.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 20px;">No vendors found matching that search.</div>';
-            return;
-        }
-
-        matched.forEach(v => {
-            const d = document.createElement('div');
-            d.className = "manual-result-item";
-            
-            const isFoodLicense = v.food_license && v.food_license.toLowerCase() === 'yes';
-            const isFoodCategory = v.autoCategories && v.autoCategories.includes('Food');
-            
-            let foodBadge = '';
-            if (isFoodLicense) foodBadge = '<span style="color: #FF9500; font-weight: bold; font-size: 0.75rem;">[FOOD LICENSE]</span> ';
-            else if (isFoodCategory) foodBadge = '<span style="color: #0A84FF; font-weight: bold; font-size: 0.75rem;">[FOOD]</span> ';
-            
-            const powerBadge = v.needs_power === 'Yes' ? '<span style="color: #FFD60A; font-weight: bold; font-size: 0.75rem;">[POWER]</span> ' : '';
-
-            let btnHtml = '';
-            if (v.status === 'Approved' || v.status === 'Checked In') {
-                btnHtml = `<button class="btn-action" style="padding: 6px 16px; font-size: 0.8rem; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}" onclick="checkIn('${v.id}', false, this)">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`;
-            } else {
-                btnHtml = `<span style="color: #FF3B30; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; padding-right: 10px;">${v.status}</span>`;
-            }
-
-            d.innerHTML = `<div><strong>${v.first_name} ${v.last_name}</strong><br><small style="color:var(--text-muted);">${foodBadge}${powerBadge} ID: ${v.student_id || 'N/A'}</small></div>${btnHtml}`;
-            res.appendChild(d);
-        });
-    }
-
-    document.getElementById('hardwareInput').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') { 
-            e.preventDefault();
-            e.stopPropagation();
-            let val = this.value.trim();
-            // Optional: Strip full URL structure if a scanner happens to inject it instead of raw data
-            if (val.includes('id=')) {
-                val = val.split('id=')[1].split('&')[0];
-            }
-            checkIn(val, true); 
-            this.value = ''; 
-        }
-    });
-
     function extractCleanData(vendor) {
         let rawComments = vendor.additional_comments || '';
         let cleanedComments = [];
@@ -1891,10 +2269,19 @@
         return { finalComments, dbAgreements };
     }
 
+    function getAttendanceState(vendor) {
+        if (vendor.attendance_confirmed) return 'confirmed';
+        const notes = getParsedNotes(vendor.internal_notes);
+        const hasDeclined = notes.some(n => n.type === 'status_change' && n.status === 'Declined');
+        if (hasDeclined) return 'declined';
+        return 'awaiting';
+    }
+
     function getFilteredVendorsForCurrentView() {
         const search = document.getElementById('search').value.toLowerCase();
         const categoryFilter = document.getElementById('categoryFilter')?.value || 'all';
         const requirementFilter = document.getElementById('requirementFilter')?.value || 'all';
+        const attendanceFilter = document.getElementById('attendanceFilter')?.value || 'all';
         
         return currentData.vendors.filter(v => {
             // 'inbox' now serves as a master list and does not filter out any statuses
@@ -1906,6 +2293,11 @@
             if (requirementFilter === 'power' && v.needs_power !== 'Yes') return false;
             if (requirementFilter === 'food' && (!v.food_license || v.food_license.toLowerCase() !== 'yes')) return false;
             
+            if (attendanceFilter !== 'all') {
+                const attState = getAttendanceState(v);
+                if (attState !== attendanceFilter) return false;
+            }
+
             if (categoryFilter !== 'all') {
                 if (categoryFilter === 'other') {
                     if (v.autoCategories && v.autoCategories.length > 0) return false;
@@ -1920,26 +2312,6 @@
             }
             return true;
         });
-    }
-
-    // Toggle Attendance Confirmation Function
-    async function toggleConfirmation(id, state) {
-        const vendor = currentData.vendors.find(v => v.id === id);
-        if (!vendor) return;
-        
-        vendor.attendance_confirmed = state;
-        showToast(state ? "Marked as Confirmed!" : "Confirmation Removed");
-        openReviewModal(id);
-        renderTable();
-        
-        const { error } = await _supabase.from('vendors').update({ attendance_confirmed: state }).eq('id', id);
-        if (error) {
-            console.error(error);
-            alert("Database Note: You need to run a quick SQL command to save Attendance tracking.\n\nRun this in the Supabase SQL Editor:\nALTER TABLE vendors ADD COLUMN attendance_confirmed BOOLEAN DEFAULT FALSE;");
-            vendor.attendance_confirmed = !state; 
-            openReviewModal(id);
-            renderTable();
-        }
     }
 
     function renderTable() {
@@ -2002,6 +2374,14 @@
             // Clean Badge Layout Generation
             let tagsArray = [];
 
+            // Add 3 Strikes Penalty Badge Warning
+            const strikes = window.vendorStrikes[v.preferred_email]?.length || 0;
+            if (strikes >= 3) {
+                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">🚨 ${strikes} LATE STRIKES</span>`);
+            } else if (strikes > 0) {
+                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">⚠️ ${strikes} LATE</span>`);
+            }
+
             const hasFoodLicense = v.food_license && v.food_license.toLowerCase() === 'yes';
             
             if (v.autoCategories && v.autoCategories.length > 0) {
@@ -2021,15 +2401,22 @@
 
             const tagsContainer = tagsArray.length > 0 ? `<div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">${tagsArray.join('')}</div>` : '';
 
-            const confirmedCell = v.attendance_confirmed 
-                ? '<span style="color: #34C759; font-weight: 800; background: rgba(52, 199, 89, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(52, 199, 89, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✓ Confirmed</span>' 
-                : '<span style="color: var(--text-muted); font-weight: 700; font-size: 0.7rem; background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1); text-transform: uppercase; white-space: nowrap;">Awaiting Reply</span>';
+            const attState = getAttendanceState(v);
+            let confirmedCell = '';
+            if (attState === 'confirmed') {
+                confirmedCell = '<span style="color: #34C759; font-weight: 800; background: rgba(52, 199, 89, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(52, 199, 89, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✓ Confirmed</span>';
+            } else if (attState === 'declined') {
+                confirmedCell = '<span style="color: #FF3B30; font-weight: 800; background: rgba(255, 59, 48, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255, 59, 48, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✕ Declined</span>';
+            } else {
+                confirmedCell = '<span style="color: var(--text-muted); font-weight: 700; font-size: 0.7rem; background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1); text-transform: uppercase; white-space: nowrap;">Awaiting Reply</span>';
+            }
 
             const checkInCell = isAppr
                 ? `<button onclick="checkIn('${v.id}', false, this); event.stopPropagation();" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`
                 : `<span style="color:var(--text-muted); font-size:0.75rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">${v.status}</span>`;
 
-            const canEmail = (activeFilter === 'approved' || activeFilter === 'denied' || activeFilter === 'power');
+            // Only allow resend email if they aren't pending
+            const canEmail = v.status !== 'Needs Review' && v.status !== 'Pending';
 
             return `
             <tr class="clickable-row" onclick="openReviewModal('${v.id}')">
@@ -2070,8 +2457,18 @@
         else if (vendor.status === 'Denied') tagsArray.push(`<span class="status-pill denied" style="font-size: 0.85rem;">Denied</span>`);
         
         if (vendor.status === 'Checked In') tagsArray.push(`<span class="status-pill approved" style="font-size: 0.85rem; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255,255,255,0.3);">Checked In</span>`);
-        if (vendor.attendance_confirmed) tagsArray.push(`<span class="status-pill approved" style="font-size: 0.85rem; background: rgba(52, 199, 89, 0.15); color: #34C759; border: 1px solid rgba(52, 199, 89, 0.4);">✓ Attendance Confirmed</span>`);
         
+        const attState = getAttendanceState(vendor);
+        if (attState === 'confirmed') tagsArray.push(`<span class="status-pill approved" style="font-size: 0.85rem; background: rgba(52, 199, 89, 0.15); color: #34C759; border: 1px solid rgba(52, 199, 89, 0.4);">✓ Attendance Confirmed</span>`);
+        if (attState === 'declined') tagsArray.push(`<span class="status-pill denied" style="font-size: 0.85rem; background: rgba(255, 59, 48, 0.15); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.4);">✕ Attendance Declined</span>`);
+        
+        const strikesArr = window.vendorStrikes[vendor.preferred_email] || [];
+        const strikes = strikesArr.length;
+        
+        if (strikes >= 3) {
+            tagsArray.push(`<span class="group-tag" style="background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); font-size: 0.85rem; margin-top:0;">🚨 ${strikes} LATE STRIKES</span>`);
+        }
+
         if (vendor.needs_power === 'Yes') tagsArray.push(`<span class="power-tag" style="margin-top:0; font-size: 0.85rem; padding: 6px 12px; border-radius: 20px;">Power Requested</span>`);
 
         const hasFoodLicense = vendor.food_license && vendor.food_license.toLowerCase() === 'yes';
@@ -2106,6 +2503,20 @@
         document.getElementById('reviewComments').innerText = cleanData.finalComments || 'None';
         document.getElementById('reviewAgreements').innerText = cleanData.dbAgreements || 'None recorded';
 
+        updateAIInsightsUI(vendor);
+
+        // STRIKES REVIEW MODAL UI
+        const reviewStrikesLabel = document.getElementById('reviewStrikesLabel');
+        const reviewStrikes = document.getElementById('reviewStrikes');
+        if (strikes > 0) {
+            reviewStrikesLabel.style.display = 'block';
+            reviewStrikes.style.display = 'block';
+            reviewStrikes.innerHTML = strikesArr.map(eventName => `🚨 Applied late to: <strong>${eventName}</strong>`).join('<br>');
+        } else {
+            reviewStrikesLabel.style.display = 'none';
+            reviewStrikes.style.display = 'none';
+        }
+
         const foodLicEl = document.getElementById('reviewFoodLicense');
         const foodVal = vendor.food_license || 'N/A';
         foodLicEl.innerText = foodVal;
@@ -2131,6 +2542,11 @@
         document.getElementById('newCommentText').value = '';
         renderCommentsFeed(vendor);
 
+        // Instant Prioritization: If they open an unanalyzed vendor, force the analysis to run right now
+        if (!vendor.aiData && !aiAnalyzingSet.has(vendor.id)) {
+            runDeepSeekAnalysis(vendor);
+        }
+
         const linkEl = document.getElementById('reviewLink');
         if (vendor.link) {
             let validUrl = vendor.link.startsWith('http') ? vendor.link : `https://${vendor.link}`;
@@ -2142,7 +2558,7 @@
         const checkInContainer = document.getElementById('reviewModalCheckInContainer');
         if (vendor.status === 'Approved' || vendor.status === 'Checked In') {
             const isCheckedIn = vendor.status === 'Checked In';
-            const isConfirmed = vendor.attendance_confirmed === true;
+            const isConfirmed = attState === 'confirmed';
             checkInContainer.innerHTML = `
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 0.85rem; font-weight: 700; background: ${isConfirmed ? 'rgba(52, 199, 89, 0.15)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${isConfirmed ? '#34C759' : 'rgba(255,255,255,0.2)'}; color: ${isConfirmed ? '#34C759' : '#fff'};" onclick="toggleConfirmation('${vendor.id}', ${!isConfirmed})">
@@ -2158,6 +2574,28 @@
         }
 
         document.getElementById('reviewModal').style.display = 'flex';
+    }
+
+    // Toggle Attendance Confirmation Function
+    async function toggleConfirmation(id, state) {
+        const vendor = currentData.vendors.find(v => v.id === id);
+        if (!vendor) return;
+        
+        vendor.attendance_confirmed = state;
+
+        // If manually toggling OFF, we strip out any negative "Declined" notes so they go cleanly back to "Awaiting"
+        if (!state) {
+            let notes = getParsedNotes(vendor.internal_notes);
+            const filteredNotes = notes.filter(n => !(n.type === 'status_change' && n.status === 'Declined'));
+            vendor.internal_notes = JSON.stringify(filteredNotes);
+            await _supabase.from('vendors').update({ attendance_confirmed: false, internal_notes: vendor.internal_notes }).eq('id', id);
+        } else {
+            await _supabase.from('vendors').update({ attendance_confirmed: true }).eq('id', id);
+        }
+        
+        showToast(state ? "Marked as Confirmed!" : "Reset to Awaiting Reply");
+        openReviewModal(id);
+        renderTable();
     }
 
     async function saveInternalNotes() {
@@ -2369,26 +2807,30 @@
         } else if (targetTemplate === 'denied') {
             subj = currentData.denSubj; 
             body = currentData.denBody;
+        } else if (targetTemplate === 'custom') {
+            subj = currentData.customSubj;
+            body = currentData.customBody;
         }
 
-        // Auto-inject the confirm link into ALL approval emails if missing (guarantees the button is always sent)
+        // Auto-inject the confirm/decline link into ALL approval emails if missing
         if (['approved', 'power', 'power_denied'].includes(targetTemplate)) {
             if (body && !body.includes('{{CONFIRM_LINK}}')) {
-                body += "\n\n**Please click the link below to confirm your attendance by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}";
+                body += "\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}";
             }
         }
 
         return { subj, body, targetTemplate };
     }
 
-    function parseEmailVariables(str, vendor, confirmUrl = "#") {
+    function parseEmailVariables(str, vendor, confirmUrl = "#", declineUrl = "#") {
         const ev = currentData.activeEvent || {};
         
         // Date formatters
         const formatDate = (dStr) => dStr ? new Date(dStr + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
         const formatDateTime = (dtStr) => dtStr ? new Date(dtStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) + ' at ' + new Date(dtStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
 
-        const finalConfirmLink = `<a href="${confirmUrl}" style="display:inline-block; padding:12px 24px; background-color:#34C759; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 0;">Confirm My Attendance</a>`;
+        const finalConfirmLink = `<a href="${confirmUrl}" style="display:inline-block; padding:12px 24px; background-color:#34C759; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 5px 10px 0;">✓ Confirm Attendance</a>`;
+        const finalDeclineLink = `<a href="${declineUrl}" style="display:inline-block; padding:12px 24px; background-color:#FF3B30; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 0;">✕ Can't Make It</a>`;
 
         return str.replace(/\{\{FIRST\}\}/g, vendor?.first_name || 'Alex')
                   .replace(/\{\{MARKET_NAME\}\}/g, ev.name || 'Student Market')
@@ -2399,7 +2841,8 @@
                   .replace(/\{\{APP_CLOSES\}\}/g, formatDateTime(ev.app_close))
                   .replace(/\{\{CONTACT_DATE\}\}/g, formatDate(ev.contact_date))
                   .replace(/\{\{CONFIRM_DEADLINE\}\}/g, formatDate(ev.confirm_date))
-                  .replace(/\{\{CONFIRM_LINK\}\}/g, finalConfirmLink);
+                  .replace(/\{\{CONFIRM_LINK\}\}/g, finalConfirmLink)
+                  .replace(/\{\{DECLINE_LINK\}\}/g, finalDeclineLink);
     }
 
     async function sendSingleEmail(vendor, forceTemplateId = null) {
@@ -2420,36 +2863,40 @@
 
         // Safety warning if trying to send from a local file without a Public URL set
         if (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1') || baseUrl.startsWith('file:')) {
-            alert("CRITICAL WARNING: You are sending emails without a 'System Public URL' saved in Settings! The 'Confirm Attendance' buttons will be completely broken (404 Error) for the students.\n\nPlease go to Settings and enter your live website URL.");
+            alert("CRITICAL WARNING: You are sending emails without a 'System Public URL' saved in Settings! The links will be broken (404 Error) for the students.\n\nPlease go to Settings and enter your live website URL.");
             return false; // Block sending to prevent broken emails
         }
 
         const confirmUrl = `${baseUrl}?confirm=${vendor.id}`;
+        const declineUrl = `${baseUrl}?decline=${vendor.id}`;
         
-        let rawBody = parseEmailVariables(templates.body, vendor, confirmUrl);
+        let rawBody = parseEmailVariables(templates.body, vendor, confirmUrl, declineUrl);
         
         let htmlBodyStr = rawBody.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
         let plainTextStr = rawBody.replace(/\*\*(.*?)\*\*/g, '$1');
         
         // Clean up the confirm link specifically for Plain Text email clients
-        const finalConfirmLink = `<a href="${confirmUrl}" style="display:inline-block; padding:12px 24px; background-color:#34C759; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 0;">Confirm My Attendance</a>`;
+        const finalConfirmLink = `<a href="${confirmUrl}" style="display:inline-block; padding:12px 24px; background-color:#34C759; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 5px 10px 0;">✓ Confirm Attendance</a>`;
+        const finalDeclineLink = `<a href="${declineUrl}" style="display:inline-block; padding:12px 24px; background-color:#FF3B30; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 0;">✕ Can't Make It</a>`;
+        
         plainTextStr = plainTextStr.replace(finalConfirmLink, `\n\nConfirm Attendance Here: ${confirmUrl}\n`);
+        plainTextStr = plainTextStr.replace(finalDeclineLink, `\nDecline/Cancel Spot Here: ${declineUrl}\n`);
 
-        let parsedSubj = parseEmailVariables(templates.subj, vendor, confirmUrl);
+        let parsedSubj = parseEmailVariables(templates.subj, vendor, confirmUrl, declineUrl);
 
         let finalBannerUrl = currentData.bannerUrl || "";
         finalBannerUrl = processImageUrl(finalBannerUrl);
         
         const bannerHtml = finalBannerUrl ? `<tr><td align="center" style="padding: 0;"><img src="${finalBannerUrl}" alt="Banner" width="600" style="display: block; width: 100%; max-width: 100%; height: auto; border: 0;"></td></tr>` : "";
         
-        let statusColor = (vendor.status === 'Approved' || vendor.status === 'Checked In') ? '#34C759' : '#FF3B30';
-        let statusBadge = (vendor.status === 'Approved' || vendor.status === 'Checked In') ? 'APPROVED' : 'STATUS UPDATE';
+        let statusColor = (templates.targetTemplate === 'approved' || templates.targetTemplate === 'power' || templates.targetTemplate === 'power_denied') ? '#34C759' : (templates.targetTemplate === 'custom' ? '#0A84FF' : '#FF3B30');
+        let statusBadge = (templates.targetTemplate === 'approved' || templates.targetTemplate === 'power' || templates.targetTemplate === 'power_denied') ? 'APPROVED' : (templates.targetTemplate === 'custom' ? 'MARKET UPDATE' : 'STATUS UPDATE');
 
         const isApproved = vendor.status === 'Approved' || vendor.status === 'Checked In';
         const barcodeData = vendor.student_id || vendor.id.substring(0,8);
         const barcodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + barcodeData + "&format=png&bgcolor=FFFFFF&color=000000&margin=10";
         
-        const qrHtml = isApproved ? `
+        const qrHtml = (isApproved && templates.targetTemplate !== 'custom') ? `
             <tr>
                 <td style="padding: 0 15px; background-color: #ffffff;">
                     <div style="border-top: 2px dashed #e5e7eb; width: 100%; height: 1px;"></div>
@@ -2530,9 +2977,12 @@
                 return errData.code === 'unauthorized' ? 'unauthorized' : false;
             }
             
-            // Log the specific template type so filters can distinguish between power/standard approvals
-            await _supabase.from('vendors').update({ email_sent: templates.targetTemplate }).eq('id', vendor.id);
-            vendor.email_sent = templates.targetTemplate; // Update local state for immediate UI reflection
+            // Only overwrite their master database email_sent status if it was a core approval/denial
+            if (templates.targetTemplate !== 'custom') {
+                await _supabase.from('vendors').update({ email_sent: templates.targetTemplate }).eq('id', vendor.id);
+                vendor.email_sent = templates.targetTemplate; // Update local state for immediate UI reflection
+            }
+            
             return true;
         } catch (error) {
             console.error(`Failed to send to ${vendor.preferred_email}:`, error);
@@ -2687,41 +3137,104 @@
         refreshData(null, true); 
     }
 
+    async function sendCustomBlastFromSettings() {
+        const body = document.getElementById('emailTemplateInput').value;
+        const subj = document.getElementById('emailSubjectInput').value;
+        
+        if (!body || !subj) return showToast("Subject and Body are required.");
+
+        const targetVendors = currentData.vendors.filter(v => v.status === 'Approved' || v.status === 'Checked In');
+        
+        if (targetVendors.length === 0) {
+            return showToast("No approved vendors to send to in this market.");
+        }
+
+        if (!confirm(`You are about to mass-email ${targetVendors.length} APPROVED vendors with this custom message.\n\nAre you sure?`)) {
+            return;
+        }
+
+        // Save immediately to use the latest typed variables
+        await saveEmailTemplate(); 
+        currentData.customSubj = subj;
+        currentData.customBody = body;
+
+        document.getElementById('loader').style.display = 'flex';
+        const loaderText = document.querySelector('#loader span');
+
+        let successCount = 0;
+        let failCount = 0;
+        let isUnauthorized = false;
+
+        const BATCH_SIZE = 10;
+        for (let i = 0; i < targetVendors.length; i += BATCH_SIZE) {
+            if (isUnauthorized) break;
+            
+            const batch = targetVendors.slice(i, i + BATCH_SIZE);
+            const results = await Promise.all(batch.map(v => sendSingleEmail(v, 'custom')));
+            
+            for (const success of results) {
+                if (success === 'unauthorized') isUnauthorized = true;
+                else if (success) successCount++;
+                else failCount++;
+            }
+            loaderText.innerText = `SENDING ${Math.min(i + BATCH_SIZE, targetVendors.length)} / ${targetVendors.length}`;
+        }
+        
+        document.getElementById('loader').style.display = 'none';
+        loaderText.innerText = 'LOADING'; 
+        
+        if (isUnauthorized) alert(`STOPPING: Email API Key is invalid.\n\nSent: ${successCount}\nFailed: ${failCount}`);
+        else if (failCount > 0) alert(`Batch complete.\n\nSent: ${successCount}\nFailed: ${failCount}`);
+        else showToast(`Custom blast sent to ${successCount} vendors!`); 
+    }
+
     // SETTINGS / TEMPLATES
-    function switchTemplateType(type) { currentTemplateType = type; loadTemplateToEditor(); }
+    function switchTemplateType(type) { 
+        currentTemplateType = type; 
+        loadTemplateToEditor(); 
+    }
     
     function loadTemplateToEditor() {
         const bodyInput = document.getElementById('emailTemplateInput');
         const subjInput = document.getElementById('emailSubjectInput');
         const bannerInput = document.getElementById('bannerUrlInput');
         const headingInput = document.getElementById('headingTextInput');
+        const sendCustomBtn = document.getElementById('btnSendCustomBlast');
 
         if (!bodyInput || !subjInput) return;
 
         bannerInput.value = currentData.bannerUrl || "";
         headingInput.value = currentData.headingText || "";
 
+        if (sendCustomBtn) {
+            sendCustomBtn.style.display = currentTemplateType === 'custom' ? 'inline-block' : 'none';
+        }
+
         if (currentTemplateType === 'approved') { 
             subjInput.value = currentData.apprSubj; 
             let b = currentData.apprBody;
-            if (!b.includes('{{CONFIRM_LINK}}')) b += "\n\n**Please click the link below to confirm your attendance by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}";
+            if (!b.includes('{{CONFIRM_LINK}}')) b += "\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}";
             bodyInput.value = b; 
         }
         else if (currentTemplateType === 'power') { 
             subjInput.value = currentData.powSubj; 
             let b = currentData.powBody;
-            if (!b.includes('{{CONFIRM_LINK}}')) b += "\n\n**Please click the link below to confirm your attendance by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}";
+            if (!b.includes('{{CONFIRM_LINK}}')) b += "\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}";
             bodyInput.value = b; 
         }
         else if (currentTemplateType === 'power_denied') { 
             subjInput.value = currentData.powDenSubj; 
             let b = currentData.powDenBody;
-            if (!b.includes('{{CONFIRM_LINK}}')) b += "\n\n**Please click the link below to confirm your attendance by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}";
+            if (!b.includes('{{CONFIRM_LINK}}')) b += "\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}";
             bodyInput.value = b; 
         }
         else if (currentTemplateType === 'denied') { 
             subjInput.value = currentData.denSubj; 
             bodyInput.value = currentData.denBody; 
+        }
+        else if (currentTemplateType === 'custom') {
+            subjInput.value = currentData.customSubj;
+            bodyInput.value = currentData.customBody;
         }
         
         updatePreview();
@@ -2754,7 +3267,7 @@
         const previewIframe = document.getElementById('emailPreview');
         if (!input || !previewIframe) return;
         
-        let text = parseEmailVariables(input.value, { first_name: 'Alex' }, "#");
+        let text = parseEmailVariables(input.value, { first_name: 'Alex' }, "#", "#");
         text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
             
         const rawBannerUrl = document.getElementById('bannerUrlInput')?.value || "";
@@ -2762,13 +3275,13 @@
         
         const headingText = document.getElementById('headingTextInput')?.value || "Market Status Update";
         
-        let statusColor = currentTemplateType === 'approved' || currentTemplateType === 'power' || currentTemplateType === 'power_denied' ? '#34C759' : '#FF3B30';
-        let statusBadge = currentTemplateType === 'approved' || currentTemplateType === 'power' || currentTemplateType === 'power_denied' ? 'APPROVED' : 'STATUS UPDATE';
+        let statusColor = (currentTemplateType === 'approved' || currentTemplateType === 'power' || currentTemplateType === 'power_denied') ? '#34C759' : (currentTemplateType === 'custom' ? '#0A84FF' : '#FF3B30');
+        let statusBadge = (currentTemplateType === 'approved' || currentTemplateType === 'power' || currentTemplateType === 'power_denied') ? 'APPROVED' : (currentTemplateType === 'custom' ? 'MARKET UPDATE' : 'STATUS UPDATE');
 
         const bannerHtml = bannerUrl ? `<tr><td align="center" style="padding: 0;"><img src="${bannerUrl}" alt="Banner" width="600" style="display: block; width: 100%; max-width: 100%; height: auto; border: 0;"></td></tr>` : "";
         
         const barcodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=PREVIEW1&format=png&bgcolor=FFFFFF&color=000000&margin=10";
-        const qrHtml = currentTemplateType !== 'denied' ? `
+        const qrHtml = (currentTemplateType !== 'denied' && currentTemplateType !== 'custom') ? `
             <tr>
                 <td style="padding: 0 15px; background-color: #ffffff;">
                     <div style="border-top: 2px dashed #e5e7eb; width: 100%; height: 1px;"></div>
@@ -2827,7 +3340,20 @@
         const banner = document.getElementById('bannerUrlInput').value;
         const heading = document.getElementById('headingTextInput').value;
 
-        // Make heading_text save GLOBALLY for all events, while banner_url remains specific to the current market
+        // Custom template goes directly to local secrets instead of global events
+        if (currentTemplateType === 'custom') {
+            currentData.customTemplatesMap[currentData.activeId] = { subj, body };
+            const valStr = JSON.stringify(currentData.customTemplatesMap);
+            
+            let { data, error } = await _supabase.from('secrets').update({ value: valStr }).eq('name', 'MARKET_CUSTOM_TEMPLATES').select();
+            if (!error && (!data || data.length === 0)) {
+                await _supabase.from('secrets').insert([{ name: 'MARKET_CUSTOM_TEMPLATES', value: valStr }]);
+            }
+            showToast("Custom Mass Template Saved!");
+            return;
+        }
+
+        // Standard global template saving
         let globalUpdates = { heading_text: heading };
         let localUpdates = { banner_url: banner };
         
@@ -2838,10 +3364,7 @@
         
         const allEventIds = currentData.allEvents.map(e => e.id);
 
-        // Update body, subject, and HEADING globally for ALL events
         const { error: err1 } = await _supabase.from('events').update(globalUpdates).in('id', allEventIds);
-        
-        // Update the banner ONLY for the currently active event
         const { error: err2 } = await _supabase.from('events').update(localUpdates).eq('id', currentData.activeId);
         
         if (err1 || err2) {
@@ -2891,8 +3414,8 @@
             market_date: date,
             market_time: time,
             location: location,
-            app_open: open,
-            app_close: close,
+            app_open: new Date(open).toISOString(),
+            app_close: new Date(close).toISOString(),
             contact_date: contact,
             confirm_date: confirm,
             template_approved_body: currentActive.template_approved_body || DEFAULTS.approved.body, 
