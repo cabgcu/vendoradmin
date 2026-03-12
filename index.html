@@ -1233,22 +1233,23 @@
         if (isAIQueueRunning) return;
         isAIQueueRunning = true;
 
-        // Find all vendors that do NOT have an AI analysis yet, OR need a Food License OCR upgrade
-        const unanalyzed = currentData.vendors.filter(v => {
-            const notes = getParsedNotes(v.internal_notes);
-            const aiNote = notes.find(n => n.type === 'ai_analysis');
-            if (!aiNote) return true; // Completely new, needs analysis
-            
-            // If they are a food vendor, but were scanned BEFORE we added the OCR image scanner, force a rescan!
-            const isFoodVendor = v.food_license && v.food_license.toLowerCase() === 'yes';
-            if (isFoodVendor && (!aiNote.ai_data || !aiNote.ai_data.license_status)) return true;
-            
-            return false;
-        });
+        // Loop dynamically instead of a static array so we always grab the freshest data if Supabase updates mid-queue
+        while (true) {
+            // Find FIRST unanalyzed vendor, or a food vendor missing OCR
+            const vendorToAnalyze = currentData.vendors.find(v => {
+                const notes = getParsedNotes(v.internal_notes);
+                const aiNote = notes.find(n => n.type === 'ai_analysis');
+                if (!aiNote) return true; // Completely new
+                
+                const isFoodVendor = v.food_license && v.food_license.toLowerCase() === 'yes';
+                if (isFoodVendor && (!aiNote.ai_data || !aiNote.ai_data.license_status)) return true; // Needs OCR
+                
+                return false;
+            });
 
-        // Process them one by one quietly in the background
-        for (const vendor of unanalyzed) {
-            const success = await runDeepSeekAnalysis(vendor);
+            if (!vendorToAnalyze) break; // Queue empty!
+
+            const success = await runDeepSeekAnalysis(vendorToAnalyze);
             
             // If we hit an unrecoverable auth error (e.g. 401/402 out of credits), stop the entire queue
             if (success === 'auth_error') {
@@ -1256,137 +1257,111 @@
                 break; 
             }
             
-            // 2.5 second pause between checks to safely avoid OpenRouter rate limits
+            // Wait 2.5 seconds before processing the next one to avoid aggressive OpenRouter rate limits
             await new Promise(r => setTimeout(r, 2500)); 
         }
 
         isAIQueueRunning = false;
     }
 
-    async function runDeepSeekAnalysis(vendor) {
-        if (!vendor || aiAnalyzingSet.has(vendor.id) || !OPENROUTER_API_KEY) return false;
-        
-        let comments = getParsedNotes(vendor.internal_notes);
-        const existingAiNote = comments.find(c => c.type === 'ai_analysis');
-        
-        const isFoodVendor = vendor.food_license && vendor.food_license.toLowerCase() === 'yes';
-        const missingLicenseScan = isFoodVendor && (!existingAiNote || !existingAiNote.ai_data || !existingAiNote.ai_data.license_status);
-        
-        // If it already has an AI scan and doesn't need an OCR upgrade, skip it.
-        if (existingAiNote && !missingLicenseScan) return true; 
+    async function runDeepSeekAnalysis(passedVendor) {
+        if (!passedVendor || !OPENROUTER_API_KEY) return false;
+        if (aiAnalyzingSet.has(passedVendor.id)) return false;
 
-        // If it needs an OCR upgrade, strip the old text-only AI comment so we can generate a fresh one
-        if (existingAiNote && missingLicenseScan) {
-            comments = comments.filter(c => c.type !== 'ai_analysis');
-            vendor.internal_notes = JSON.stringify(comments);
-        }
-
-        aiAnalyzingSet.add(vendor.id);
+        aiAnalyzingSet.add(passedVendor.id);
         
-        // --- VISION PRE-FLIGHT (OCR) FOR FOOD LICENSES ---
-        let licenseOcrResult = null;
-        if (vendor.food_license && vendor.food_license.toLowerCase() === 'yes') {
-            if (!vendor.food_license_link || vendor.food_license_link.trim() === '') {
-                licenseOcrResult = "🚨 Claimed food license, but no file provided.";
-            } else if (vendor.food_license_link.includes('drive.google.com')) {
-                licenseOcrResult = "⚠️ Cannot auto-scan Google Drive links. Manual check required.";
-            } else if (vendor.food_license_link.startsWith('http')) {
-                try {
-                    if (currentReviewingId === vendor.id) {
-                        const aiBox = document.getElementById('aiInsightsBox');
-                        if (aiBox) {
-                            aiBox.innerHTML = `
-                                <div style="display: flex; align-items: center; gap: 12px; color: #0A84FF; font-weight: 700; font-size: 0.9rem;">
-                                    <div class="spinner" style="width:16px; height:16px; border-width:2px; border-top-color:#0A84FF;"></div>
-                                    AI is visually scanning Food Handler's License...
-                                </div>
-                            `;
-                            aiBox.style.display = 'block';
-                        }
-                    }
+        try {
+            // 1. FETCH ABSOLUTE LATEST DB STATE to prevent race conditions and stale overwrites
+            const { data: freshVendor, error: dbErr } = await _supabase.from('vendors').select('*').eq('id', passedVendor.id).single();
+            if (dbErr || !freshVendor) throw new Error("Could not fetch fresh vendor data");
+            
+            let vendor = freshVendor; // Use the fresh data exclusively
+            
+            let comments = getParsedNotes(vendor.internal_notes);
+            const existingAiNote = comments.find(c => c.type === 'ai_analysis');
+            
+            const isFoodVendor = vendor.food_license && vendor.food_license.toLowerCase() === 'yes';
+            const missingLicenseScan = isFoodVendor && (!existingAiNote || !existingAiNote.ai_data || !existingAiNote.ai_data.license_status);
+            
+            // If it already has an AI scan and doesn't need an OCR upgrade, skip it.
+            if (existingAiNote && !missingLicenseScan) return true; 
 
-                    const currentYear = new Date().getFullYear();
-                    const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                    
-                    const visionController = new AbortController();
-                    const visionTimeoutId = setTimeout(() => visionController.abort(), 15000); // 15 second timeout for image scan
-                    
-                    const visionRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                        method: "POST",
-                        headers: {
-                            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                            "Content-Type": "application/json",
-                            "HTTP-Referer": window.location.href,
-                            "X-Title": "CAB Admin System"
-                        },
-                        body: JSON.stringify({
-                            model: "openai/gpt-4o-mini", // Fast Vision Model
-                            response_format: { type: "json_object" },
-                            messages: [{
-                                role: "user",
-                                content: [
-                                    { type: "text", text: `You are a strict health inspector reviewing a food handler's license. The CURRENT DATE is ${currentDateStr} (Year: ${currentYear}). Read the image carefully. 1. Identify the Issue Date or Expiration Date. 2. If it has an Issue Date and says 'Valid for 3 Years', add 3 to the issue year (e.g. 2023 + 3 = 2026). 3. CRITICAL: If the expiration year is ${currentYear} or greater, the license IS VALID. Do NOT mark it expired! Respond ONLY in valid JSON: {"is_valid_license": boolean, "expiration_date": "string (e.g. 'July 2026') or 'Not Found'", "is_expired": boolean, "notes": "Brief explanation of dates found"}` },
-                                    { type: "image_url", image_url: { url: vendor.food_license_link } }
-                                ]
-                            }]
-                        }),
-                        signal: visionController.signal
-                    });
-                    
-                    clearTimeout(visionTimeoutId);
+            // If it needs an OCR upgrade, strip the old text-only AI comment so we can generate a fresh one
+            if (existingAiNote && missingLicenseScan) {
+                comments = comments.filter(c => c.type !== 'ai_analysis');
+            }
 
-                    if (visionRes.ok) {
-                        const visionData = await visionRes.json();
-                        let rawV = visionData.choices[0].message.content.replace(/```json/gi, '').replace(/```/g, '').trim();
-                        const vJson = JSON.parse(rawV);
+            // Update UI immediately
+            if (currentReviewingId === vendor.id) updateAIInsightsUI(vendor, true); // Force loading state in UI
+
+            // --- VISION PRE-FLIGHT (OCR) FOR FOOD LICENSES ---
+            let licenseOcrResult = null;
+            if (vendor.food_license && vendor.food_license.toLowerCase() === 'yes') {
+                if (!vendor.food_license_link || vendor.food_license_link.trim() === '') {
+                    licenseOcrResult = "🚨 Claimed food license, but no file provided.";
+                } else if (vendor.food_license_link.includes('drive.google.com')) {
+                    licenseOcrResult = "⚠️ Cannot auto-scan Google Drive links. Manual check required.";
+                } else if (vendor.food_license_link.startsWith('http')) {
+                    try {
+                        const currentYear = new Date().getFullYear();
+                        const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                         
-                        if (!vJson.is_valid_license) {
-                            licenseOcrResult = `🚨 Invalid or Unreadable License (${vJson.notes}).`;
-                        } else if (vJson.is_expired) {
-                            licenseOcrResult = `🚨 Food License is EXPIRED! (Expired on ${vJson.expiration_date}).`;
+                        const visionController = new AbortController();
+                        const visionTimeoutId = setTimeout(() => visionController.abort(), 15000); // 15 second timeout for image scan
+                        
+                        const visionRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                            method: "POST",
+                            headers: {
+                                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                                "Content-Type": "application/json",
+                                "HTTP-Referer": window.location.href,
+                                "X-Title": "CAB Admin System"
+                            },
+                            body: JSON.stringify({
+                                model: "openai/gpt-4o-mini", // Fast Vision Model
+                                response_format: { type: "json_object" },
+                                messages: [{
+                                    role: "user",
+                                    content: [
+                                        { type: "text", text: `You are a strict health inspector reviewing a food handler's license. The CURRENT DATE is ${currentDateStr} (Year: ${currentYear}). Read the image carefully. 1. Identify the Issue Date or Expiration Date. 2. If it has an Issue Date and says 'Valid for 3 Years', add 3 to the issue year (e.g. 2023 + 3 = 2026). 3. CRITICAL: If the expiration year is ${currentYear} or greater, the license IS VALID. Do NOT mark it expired! Respond ONLY in valid JSON: {"is_valid_license": boolean, "expiration_date": "string (e.g. 'July 2026') or 'Not Found'", "is_expired": boolean, "notes": "Brief explanation of dates found"}` },
+                                        { type: "image_url", image_url: { url: vendor.food_license_link } }
+                                    ]
+                                }]
+                            }),
+                            signal: visionController.signal
+                        });
+                        
+                        clearTimeout(visionTimeoutId);
+
+                        if (visionRes.ok) {
+                            const visionData = await visionRes.json();
+                            let rawV = visionData.choices[0].message.content.replace(/```json/gi, '').replace(/```/g, '').trim();
+                            const vJson = JSON.parse(rawV);
+                            
+                            if (!vJson.is_valid_license) {
+                                licenseOcrResult = `🚨 Invalid or Unreadable License (${vJson.notes}).`;
+                            } else if (vJson.is_expired) {
+                                licenseOcrResult = `🚨 Food License is EXPIRED! (Expired on ${vJson.expiration_date}).`;
+                            } else {
+                                licenseOcrResult = `✅ Food License is Valid (Expires: ${vJson.expiration_date}).`;
+                            }
                         } else {
-                            licenseOcrResult = `✅ Food License is Valid (Expires: ${vJson.expiration_date}).`;
+                            licenseOcrResult = "⚠️ API failed to scan license image.";
                         }
-                    } else {
-                        licenseOcrResult = "⚠️ API failed to scan license image.";
+                    } catch (e) {
+                        console.error("Vision OCR Error:", e);
+                        licenseOcrResult = e.name === "AbortError" ? "⚠️ Image scan timed out." : "⚠️ System error while scanning license image.";
                     }
-                } catch (e) {
-                    console.error("Vision OCR Error:", e);
-                    licenseOcrResult = e.name === "AbortError" ? "⚠️ Image scan timed out." : "⚠️ System error while scanning license image.";
                 }
             }
-        }
 
-        // Return UI back to text scanning mode
-        if (currentReviewingId === vendor.id) {
-            const aiBox = document.getElementById('aiInsightsBox');
-            if (aiBox) {
-                aiBox.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 12px; color: #0A84FF; font-weight: 700; font-size: 0.9rem;">
-                        <div class="spinner" style="width:16px; height:16px; border-width:2px; border-top-color:#0A84FF;"></div>
-                        Student Market AI is compiling final application report...
-                    </div>
-                `;
-            }
-        }
+            const prompt = `
+Vendor ID: ${vendor.id}
+Name: ${vendor.first_name} ${vendor.last_name}
+Description/Products: ${vendor.description}
+Needs Power: ${vendor.needs_power}
+            `;
 
-        const prompt = `
-        You are an expert market curator. Analyze this vendor application to categorize their products accurately.
-        
-        Name: ${vendor.first_name} ${vendor.last_name}
-        Description/Products: ${vendor.description}
-        Needs Power: ${vendor.needs_power}
-
-        Respond ONLY with a valid, raw JSON object. Do NOT use markdown formatting, backticks, or asterisks (**).
-        {
-            "primary_category": "Select exactly ONE broad category from this list: [Clothes, Food, Jewelry, Crafts, Art & Prints, Accessories, Beauty & Care, Home Decor, Services & Experiences]. NOTE: Sewing, tote bags, and keychains belong in Crafts or Accessories. IF AND ONLY IF none of those fit, you may output a 1-3 word specific category naming exactly what they sell. NEVER output 'Other', 'Misc', 'General', 'Specialty', 'Unique Goods' or 'Uncategorized'.",
-            "specific_tags": ["Array of 1-3 HIGHLY SPECIFIC product niches. Do not use generic words like 'Food' or 'Clothes'. Use hyper-detailed tags like 'Hand-poured Soy Candles', 'Vintage Y2K Clothing', 'Filipino Baked Goods', 'Permanent Jewelry', 'Ribbon Bouquets', 'Custom Resin Art', 'Sewn Tote Bags', 'Bible Covers'."],
-            "summary": "A clean, basic 1-sentence summary of what they sell. Do not use asterisks.",
-            "risk_flags": ["Array of warnings. Example: 'Needs power but no details given'. Empty array if no risks. Do not use asterisks."]
-        }
-        `;
-
-        try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
@@ -1401,7 +1376,13 @@
                 body: JSON.stringify({
                     model: "deepseek/deepseek-chat", // DeepSeek V3 via OpenRouter
                     response_format: { type: "json_object" }, // Force valid JSON
-                    messages: [{ role: "user", content: prompt }]
+                    messages: [
+                        { 
+                            role: "system", 
+                            content: "You are an expert market curator categorizing vendor applications. Respond ONLY with a valid, raw JSON object. Do NOT use markdown formatting like bolding or asterisks (**). Format: {\"primary_category\": \"Generate exactly ONE highly accurate, 1-3 word category describing their main product. Examples: 'Vintage Clothing', 'Crochet', 'Baked Goods', 'Permanent Jewelry', 'Henna Art', 'Stickers & Art', 'Ribbon Bouquets', '3D Prints'. NEVER output 'Other', 'Misc', 'General', 'Specialty', 'Unique Goods' or 'Uncategorized'.\", \"specific_tags\": [\"Array of 1-3 HIGHLY SPECIFIC product niches. Examples: 'Hand-poured Soy Candles', 'Y2K Streetwear', 'Filipino Pastries', 'Custom Resin Art'\"], \"summary\": \"A clean, basic 1-sentence summary of what they sell. Do not use asterisks.\", \"risk_flags\": [\"Array of warnings. Example: 'Needs power but no details given'. Empty array if no risks. Do not use asterisks.\"]}" 
+                        },
+                        { role: "user", content: prompt }
+                    ]
                 }),
                 signal: controller.signal
             });
@@ -1437,10 +1418,7 @@
                 aiData.license_status = licenseOcrResult;
             }
 
-            // Re-fetch latest notes just in case it was updated manually while fetching
-            comments = getParsedNotes(vendor.internal_notes);
-            
-            // Save structured AI data into the notes field so it persists without DB schema migrations
+            // Save structured AI data into the DB notes field
             comments.unshift({
                 id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
                 date: new Date().toISOString(),
@@ -1450,29 +1428,33 @@
             });
 
             const newNotesStr = JSON.stringify(comments);
-            vendor.internal_notes = newNotesStr;
             
-            // Update local memory so categories filter updates immediately
-            vendor.autoCategories = [aiData.primary_category];
-            vendor.aiData = aiData;
+            // Update local memory specifically so categories filter updates immediately
+            const memVendor = currentData.vendors.find(v => v.id === passedVendor.id);
+            if (memVendor) {
+                memVendor.autoCategories = [aiData.primary_category];
+                memVendor.aiData = aiData;
+                memVendor.internal_notes = newNotesStr;
+            }
 
-            await _supabase.from('vendors').update({ internal_notes: newNotesStr }).eq('id', vendor.id);
+            // Save to database
+            await _supabase.from('vendors').update({ internal_notes: newNotesStr }).eq('id', passedVendor.id);
 
-            buildCategoryDropdown(); // Update filter dropdown with new AI categories
+            buildCategoryDropdown();
 
-            // Immediately refresh the UI if we are still looking at the same vendor
-            if (currentReviewingId === vendor.id) {
-                openReviewModal(vendor.id); // Re-render modal to show new tags and insights
+            // Only update the UI if the user is STILL looking at this exact vendor
+            if (currentReviewingId === passedVendor.id) {
+                openReviewModal(passedVendor.id); 
             } else if (document.getElementById('view-list').style.display !== 'none') {
-                renderTable(); // Re-render table to show updated category badges
+                renderTable(); 
             }
             
             return true;
         } catch (err) {
-            console.error(`AI Error for ${vendor.id}:`, err);
+            console.error(`AI Error for ${passedVendor.id}:`, err);
             
             // If they are looking at the vendor while it fails, show the exact error in the UI
-            if (currentReviewingId === vendor.id) {
+            if (currentReviewingId === passedVendor.id) {
                 const aiBox = document.getElementById('aiInsightsBox');
                 if (aiBox) {
                     let errMsg = err.message === "auth_error" ? "API Key Invalid or Out of Credits" : 
@@ -1483,7 +1465,7 @@
                             <div style="font-size: 0.85rem; color: #FF3B30; font-weight: 600; display: flex; align-items: center; gap: 8px;">
                                 ⚠️ AI Error: ${errMsg}
                             </div>
-                            <button onclick="forceAIRescan('${vendor.id}')" class="btn-action" style="padding: 6px 12px; font-size: 0.75rem; background: rgba(255, 59, 48, 0.2); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.4);">Retry</button>
+                            <button onclick="forceAIRescan('${passedVendor.id}')" class="btn-action" style="padding: 6px 12px; font-size: 0.75rem; background: rgba(255, 59, 48, 0.2); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.4);">Retry</button>
                         </div>
                     `;
                     aiBox.style.display = 'block';
@@ -1493,8 +1475,7 @@
             if (err.message === "auth_error") return 'auth_error';
             return false;
         } finally {
-            aiAnalyzingSet.delete(vendor.id);
-            if (currentReviewingId === vendor.id && vendor.aiData) updateAIInsightsUI(vendor);
+            aiAnalyzingSet.delete(passedVendor.id);
         }
     }
 
@@ -1502,7 +1483,7 @@
         const vendor = currentData.vendors.find(v => v.id === id);
         if (!vendor) return;
 
-        // Clear existing AI data
+        // Clear existing AI data locally
         let comments = getParsedNotes(vendor.internal_notes);
         comments = comments.filter(c => c.type !== 'ai_analysis');
         vendor.internal_notes = JSON.stringify(comments);
@@ -1511,19 +1492,23 @@
         // Temporarily save to DB so we don't duplicate
         await _supabase.from('vendors').update({ internal_notes: vendor.internal_notes }).eq('id', id);
 
-        // Update UI to spinner instantly, but DO NOT add to aiAnalyzingSet here.
-        // runDeepSeekAnalysis() will add it. If we add it here, the system instantly rejects the job!
-        updateAIInsightsUI(vendor);
-
-        // Run fresh analysis
+        // Run fresh analysis, which automatically handles adding to set and UI spinner
         await runDeepSeekAnalysis(vendor);
     }
 
-    function updateAIInsightsUI(vendor) {
+    function updateAIInsightsUI(vendor, forceLoading = false) {
         const aiBox = document.getElementById('aiInsightsBox');
         if (!aiBox) return;
 
-        if (vendor.aiData) {
+        if (forceLoading || aiAnalyzingSet.has(vendor.id)) {
+            aiBox.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px; color: #0A84FF; font-weight: 700; font-size: 0.9rem;">
+                    <div class="spinner" style="width:16px; height:16px; border-width:2px; border-top-color:#0A84FF;"></div>
+                    Student Market AI is analyzing this application...
+                </div>
+            `;
+            aiBox.style.display = 'block';
+        } else if (vendor.aiData) {
             let flagsHtml = '';
             // Filter out redundant food license flags generated by DeepSeek to keep the UI clean
             let filteredFlags = vendor.aiData.risk_flags ? vendor.aiData.risk_flags.filter(f => !f.toLowerCase().includes('food license') && !f.toLowerCase().includes('food handler')) : [];
@@ -1564,14 +1549,6 @@
                 </div>
                 ${licenseHtml}
                 ${flagsHtml}
-            `;
-            aiBox.style.display = 'block';
-        } else if (aiAnalyzingSet.has(vendor.id)) {
-            aiBox.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 12px; color: #0A84FF; font-weight: 700; font-size: 0.9rem;">
-                    <div class="spinner" style="width:16px; height:16px; border-width:2px; border-top-color:#0A84FF;"></div>
-                    Student Market AI is analyzing this application...
-                </div>
             `;
             aiBox.style.display = 'block';
         } else {
