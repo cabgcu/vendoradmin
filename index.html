@@ -804,9 +804,14 @@
 
     <!-- VIEW: VENDOR PROFILES ARCHIVE -->
     <div id="view-profiles" class="view" style="display:none;">
-        <div style="margin-bottom: 20px;">
-            <h2 style="margin:0; font-weight: 800;">Vendor Profiles</h2>
-            <p style="color:var(--text-muted); font-size: 0.95rem; margin-top: 5px;">Showing unique vendors from the last 5 months across all events.</p>
+        <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h2 style="margin:0; font-weight: 800;">Vendor Profiles</h2>
+                <p style="color:var(--text-muted); font-size: 0.95rem; margin-top: 5px;">Showing unique vendors from the last 5 months across all events.</p>
+            </div>
+            <div style="flex: 1; min-width: 250px; max-width: 400px;">
+                <input type="text" id="profileSearch" class="modern-input" placeholder="Search profiles by name, email, or ID..." onkeyup="renderProfilesTable()">
+            </div>
         </div>
         <div class="table-container">
             <table>
@@ -1906,6 +1911,7 @@
         
         if (filter === 'profiles') {
             document.getElementById('view-profiles').style.display = 'block';
+            if (document.getElementById('profileSearch')) document.getElementById('profileSearch').value = '';
             fetchAndRenderProfiles();
         } else {
             document.getElementById('view-list').style.display = 'block';
@@ -2043,11 +2049,28 @@
         });
 
         window.currentProfiles = profilesMap;
-        const profiles = Object.values(profilesMap);
-        
+        renderProfilesTable();
+        document.getElementById('loader').style.display = 'none';
+    }
+
+    function renderProfilesTable() {
+        const searchInput = document.getElementById('profileSearch');
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
         const tbody = document.getElementById('profilesTableBody');
+        
+        if (!window.currentProfiles) return;
+        
+        let profiles = Object.values(window.currentProfiles);
+        
+        if (searchTerm) {
+            profiles = profiles.filter(p => {
+                const searchStr = `${p.first_name || ''} ${p.last_name || ''} ${p.preferred_email || ''} ${p.student_id || ''} ${p.phone || ''}`.toLowerCase();
+                return searchStr.includes(searchTerm);
+            });
+        }
+        
         if (profiles.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No vendor profiles found in the last 5 months.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No vendor profiles found matching your search.</td></tr>';
         } else {
             tbody.innerHTML = profiles.map(p => `
                 <tr class="clickable-row" onclick="openProfileModal('${p.originalEmail}')">
@@ -2060,7 +2083,6 @@
                 </tr>
             `).join('');
         }
-        document.getElementById('loader').style.display = 'none';
     }
 
     function openProfileModal(email) {
