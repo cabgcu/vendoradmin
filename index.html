@@ -942,8 +942,16 @@
                 
                 <div class="form-grid" style="margin-bottom: 20px; gap: 16px;">
                     <div>
-                        <label class="stat-label">Banner Image URL (Specific to this market)</label>
-                        <input type="text" id="bannerUrlInput" class="modern-input" placeholder="Leave blank for no image..." oninput="updatePreview()">
+                        <label class="stat-label">Banner Image (Specific to this market)</label>
+                        <div style="display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 18px; border-radius: var(--radius-input); border: 1px solid var(--glass-border);">
+                            <input type="file" id="bannerFileInput" accept="image/*" style="display: none;" onchange="handleBannerSelection(event)">
+                            <button type="button" onclick="document.getElementById('bannerFileInput').click()" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; flex-shrink: 0; margin: 0;">Upload</button>
+                            <span id="bannerFileName" style="font-size: 0.85rem; color: var(--text-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">No file chosen</span>
+                            <button type="button" onclick="clearBannerSelection()" style="background: transparent; border: none; color: #FF3B30; cursor: pointer; display: none; font-size: 1.2rem; line-height: 1; padding: 0 5px;" id="clearBannerBtn">&times;</button>
+                        </div>
+                        <div id="settingsBannerPreviewContainer" style="margin-top: 10px; display: none;">
+                            <img id="settingsBannerPreview" src="" style="max-width: 100%; max-height: 120px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
+                        </div>
                     </div>
                     <div>
                         <label class="stat-label">Email Heading (Global for all markets)</label>
@@ -1143,6 +1151,9 @@
     let isInitialLoad = true;
     let alertTimeout = null;
     let closeAnimTimeout = null;
+
+    let selectedBannerFile = null;
+    let bannerDeleted = false;
 
     // AI & Strike State
     let isAIQueueRunning = false;
@@ -3408,18 +3419,72 @@
         currentTemplateType = type; 
         loadTemplateToEditor(); 
     }
+
+    function handleBannerSelection(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        selectedBannerFile = file;
+        bannerDeleted = false;
+        
+        document.getElementById('bannerFileName').innerText = file.name;
+        document.getElementById('clearBannerBtn').style.display = 'block';
+        
+        const previewUrl = URL.createObjectURL(file);
+        const previewImg = document.getElementById('settingsBannerPreview');
+        previewImg.src = previewUrl;
+        document.getElementById('settingsBannerPreviewContainer').style.display = 'block';
+        
+        updatePreview();
+    }
+
+    function clearBannerSelection() {
+        selectedBannerFile = null;
+        bannerDeleted = true;
+        
+        const fileInput = document.getElementById('bannerFileInput');
+        if (fileInput) fileInput.value = '';
+        
+        document.getElementById('bannerFileName').innerText = 'No file chosen';
+        document.getElementById('clearBannerBtn').style.display = 'none';
+        
+        document.getElementById('settingsBannerPreviewContainer').style.display = 'none';
+        document.getElementById('settingsBannerPreview').src = '';
+        
+        updatePreview();
+    }
     
     function loadTemplateToEditor() {
         const bodyInput = document.getElementById('emailTemplateInput');
         const subjInput = document.getElementById('emailSubjectInput');
-        const bannerInput = document.getElementById('bannerUrlInput');
         const headingInput = document.getElementById('headingTextInput');
         const sendCustomBtn = document.getElementById('btnSendCustomBlast');
 
         if (!bodyInput || !subjInput) return;
 
-        bannerInput.value = currentData.bannerUrl || "";
         headingInput.value = currentData.headingText || "";
+
+        selectedBannerFile = null;
+        bannerDeleted = false;
+        const bannerFileText = document.getElementById('bannerFileName');
+        const clearBtn = document.getElementById('clearBannerBtn');
+        const previewContainer = document.getElementById('settingsBannerPreviewContainer');
+        const previewImg = document.getElementById('settingsBannerPreview');
+        
+        const fileInput = document.getElementById('bannerFileInput');
+        if(fileInput) fileInput.value = '';
+
+        if (currentData.bannerUrl) {
+            bannerFileText.innerText = "Current Banner Active";
+            clearBtn.style.display = 'block';
+            previewImg.src = processImageUrl(currentData.bannerUrl);
+            previewContainer.style.display = 'block';
+        } else {
+            bannerFileText.innerText = "No file chosen";
+            clearBtn.style.display = 'none';
+            previewImg.src = "";
+            previewContainer.style.display = 'none';
+        }
 
         if (sendCustomBtn) {
             sendCustomBtn.style.display = currentTemplateType === 'custom' ? 'inline-block' : 'none';
@@ -3485,8 +3550,12 @@
         let text = parseEmailVariables(input.value, { first_name: 'Alex' }, "#", "#");
         text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
             
-        const rawBannerUrl = document.getElementById('bannerUrlInput')?.value || "";
-        const bannerUrl = processImageUrl(rawBannerUrl);
+        let bannerUrl = "";
+        if (selectedBannerFile) {
+            bannerUrl = URL.createObjectURL(selectedBannerFile);
+        } else if (!bannerDeleted && currentData.bannerUrl) {
+            bannerUrl = processImageUrl(currentData.bannerUrl);
+        }
         
         const headingText = document.getElementById('headingTextInput')?.value || "Market Status Update";
         
@@ -3552,8 +3621,46 @@
     async function saveEmailTemplate() {
         const body = document.getElementById('emailTemplateInput').value;
         const subj = document.getElementById('emailSubjectInput').value;
-        const banner = document.getElementById('bannerUrlInput').value;
         const heading = document.getElementById('headingTextInput').value;
+
+        // --- BANNER UPLOAD LOGIC ---
+        let finalBannerUrl = currentData.bannerUrl || "";
+        if (bannerDeleted) {
+            finalBannerUrl = "";
+        }
+        
+        if (selectedBannerFile) {
+            document.getElementById('loader').style.display = 'flex';
+            document.querySelector('#loader span').innerText = 'UPLOADING...';
+            
+            const fileExt = selectedBannerFile.name.split('.').pop();
+            const fileName = `banner_${currentData.activeId}_${Date.now()}.${fileExt}`;
+            
+            const { data: uploadData, error: uploadError } = await _supabase.storage
+                .from('banners')
+                .upload(fileName, selectedBannerFile, { upsert: true });
+                
+            if (uploadError) {
+                console.error("Banner upload error:", uploadError);
+                alert("Failed to upload banner image. Please ensure a public storage bucket named 'banners' exists in your Supabase project.");
+                document.getElementById('loader').style.display = 'none';
+                document.querySelector('#loader span').innerText = 'LOADING';
+                return;
+            }
+            
+            const { data: publicUrlData } = _supabase.storage.from('banners').getPublicUrl(fileName);
+            finalBannerUrl = publicUrlData.publicUrl;
+            
+            document.getElementById('loader').style.display = 'none';
+            document.querySelector('#loader span').innerText = 'LOADING';
+            
+            currentData.bannerUrl = finalBannerUrl;
+            selectedBannerFile = null;
+            bannerDeleted = false;
+        } else if (bannerDeleted) {
+             currentData.bannerUrl = "";
+             bannerDeleted = false;
+        }
 
         // Custom template goes directly to local secrets instead of global events
         if (currentTemplateType === 'custom') {
@@ -3564,13 +3671,17 @@
             if (!error && (!data || data.length === 0)) {
                 await _supabase.from('secrets').insert([{ name: 'MARKET_CUSTOM_TEMPLATES', value: valStr }]);
             }
+            
+            await _supabase.from('events').update({ banner_url: finalBannerUrl, heading_text: heading }).eq('id', currentData.activeId);
+            
             showToast("Custom Mass Template Saved!");
+            refreshData(null, true);
             return;
         }
 
         // Standard global template saving
         let globalUpdates = { heading_text: heading };
-        let localUpdates = { banner_url: banner };
+        let localUpdates = { banner_url: finalBannerUrl };
         
         if (currentTemplateType === 'approved') { globalUpdates.template_approved_body = body; globalUpdates.template_approved_subject = subj; }
         else if (currentTemplateType === 'denied') { globalUpdates.template_denied_body = body; globalUpdates.template_denied_subject = subj; }
