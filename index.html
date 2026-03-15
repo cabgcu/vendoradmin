@@ -405,7 +405,7 @@
             <p id="login-error" style="color: #FF3B30; font-size: 0.8rem; margin-top: 10px; font-weight: 600; display: none;">Invalid Password</p>
         </div>
         
-        <button onclick="handleLogin()" class="btn-action" style="width: 100%; padding: 15px; font-size: 1rem;">LOG IN</button>
+        <button id="login-btn" onclick="handleLogin()" class="btn-action" style="width: 100%; padding: 15px; font-size: 1rem;">LOG IN</button>
     </div>
 </div>
 
@@ -848,6 +848,22 @@
                 <button onclick="saveSystemSettings()" class="btn-action" style="width: 100%; padding: 15px; font-size: 1.1rem;">Save System Settings</button>
             </div>
 
+            <!-- Admin Password Management -->
+            <div style="margin-bottom:30px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px;">
+                <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">Change Admin Password</label>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Update the master password required to access this admin portal.</p>
+                
+                <div class="form-grid" style="gap: 16px; margin-bottom: 0;">
+                    <div>
+                        <label class="stat-label">New Password</label>
+                        <input type="password" id="newAdminPassword" class="modern-input" placeholder="Enter new password">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button onclick="updateAdminPassword()" class="btn-action" style="width: 100%; padding: 15px; font-size: 1.1rem;">Update Password</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Form Access Controls -->
             <div style="margin-bottom:30px; background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.2); padding: 25px; border-radius: 20px;">
                 <label class="stat-label" style="color: #0A84FF; font-size: 1rem; margin-bottom: 10px;">Public Form Access Control (This Market Only)</label>
@@ -1168,19 +1184,45 @@
     };
 
     // LOGIN LOGIC
-    const SYSTEM_PASSWORD = "Vendor49!";
+    const FALLBACK_PASSWORD = "Vendor49!";
 
-    function handleLogin() {
+    async function handleLogin() {
         const input = document.getElementById('login-password');
         const error = document.getElementById('login-error');
+        const loginBtn = document.getElementById('login-btn');
         
-        if (input.value === SYSTEM_PASSWORD) {
-            sessionStorage.setItem('cab_market_auth', 'true');
-            unlockApp();
-        } else {
+        // UI Loading State
+        const originalText = loginBtn.innerText;
+        loginBtn.innerText = 'VERIFYING...';
+        loginBtn.disabled = true;
+        error.style.display = 'none';
+
+        try {
+            // Fetch current password from DB secrets
+            const { data } = await _supabase.from('secrets').select('value').eq('name', 'ADMIN_PASSWORD').maybeSingle();
+            let validPassword = data && data.value ? data.value : FALLBACK_PASSWORD;
+            
+            if (input.value === validPassword) {
+                sessionStorage.setItem('cab_market_auth', 'true');
+                
+                // If logging in for the first time with fallback, auto-save it to DB to initialize the system
+                if (!data) {
+                    await _supabase.from('secrets').upsert([{ name: 'ADMIN_PASSWORD', value: FALLBACK_PASSWORD }]);
+                }
+                
+                unlockApp();
+            } else {
+                error.style.display = 'block';
+                input.value = '';
+                input.focus();
+            }
+        } catch (err) {
+            console.error("Login Check Error:", err);
+            error.innerText = "Connection error. Try again.";
             error.style.display = 'block';
-            input.value = '';
-            input.focus();
+        } finally {
+            loginBtn.innerText = originalText;
+            loginBtn.disabled = false;
         }
     }
 
@@ -1822,6 +1864,28 @@
         if (brKey) BREVO_API_KEY = brKey;
         
         showToast("System Settings Saved!");
+    }
+
+    async function updateAdminPassword() {
+        const newPass = document.getElementById('newAdminPassword').value.trim();
+        if (!newPass) return showToast("Password cannot be empty.");
+        if (newPass.length < 6) return showToast("Password must be at least 6 characters.");
+
+        if (!confirm("Are you sure you want to change the admin portal password?\n\nYou and all other admins will need this new password to log in next time.")) return;
+
+        document.getElementById('loader').style.display = 'flex';
+        
+        const { error } = await _supabase.from('secrets').upsert([{ name: 'ADMIN_PASSWORD', value: newPass }], { onConflict: 'name' });
+        
+        document.getElementById('loader').style.display = 'none';
+
+        if (error) {
+            console.error(error);
+            showToast("Error updating password in database.");
+        } else {
+            showToast("Admin Password Updated!");
+            document.getElementById('newAdminPassword').value = '';
+        }
     }
 
     function populateSettingsForm() {
