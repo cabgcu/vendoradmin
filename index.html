@@ -456,7 +456,7 @@
         </div>
 
         <!-- NEW: STRIKES SECTION IN PROFILE -->
-        <div class="review-field-label">Late Application Strikes</div>
+        <div class="review-field-label">Late Applications</div>
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 25px;" id="profileModalStrikes">
             <!-- Strikes dynamically populated -->
         </div>
@@ -544,7 +544,7 @@
         </div>
 
         <!-- NEW: STRIKES SECTION IN REVIEW MODAL -->
-        <div class="review-field-label" id="reviewStrikesLabel" style="display:none;">Late Application Strikes</div>
+        <div class="review-field-label" id="reviewStrikesLabel" style="display:none;">Late Applications</div>
         <div class="review-field-value" id="reviewStrikes" style="display:none; color: #FF3B30; background: rgba(255, 59, 48, 0.05); border-color: rgba(255, 59, 48, 0.2); font-size: 0.95rem;"></div>
 
         <div class="review-field-label">Additional Comments</div>
@@ -741,7 +741,7 @@
             <div class="frosted stat-card"><span class="stat-label">New Apps</span><span class="stat-val" id="countInbox">0</span></div>
             <div class="frosted stat-card"><span class="stat-label">Needs Review</span><span class="stat-val" style="color:#FF9500" id="countReview">0</span></div>
             <div class="frosted stat-card"><span class="stat-label">Approved</span><span class="stat-val" style="color:#34C759" id="countApproved">0</span></div>
-            <div class="frosted stat-card"><span class="stat-label">Historical Strikes</span><span class="stat-val" style="color:#BF5AF2" id="strikeWarningLabel">0</span></div>
+            <div class="frosted stat-card"><span class="stat-label">Late Applicants</span><span class="stat-val" style="color:#BF5AF2" id="strikeWarningLabel">0</span></div>
         </div>
 
         <div class="filter-row">
@@ -2033,14 +2033,14 @@
                     originalEmail: email,
                     appCount: 1,
                     lastEvent: eventMap[v.event_id] || 'Unknown Event',
-                    allEvents: [eventMap[v.event_id] || 'Unknown Event'],
+                    allEvents: [{ name: eventMap[v.event_id] || 'Unknown Event', status: v.status }],
                     allCategories: new Set(cats || [])
                 };
             } else {
                 profilesMap[email].appCount++;
                 const evName = eventMap[v.event_id] || 'Unknown Event';
-                if (!profilesMap[email].allEvents.includes(evName)) {
-                    profilesMap[email].allEvents.push(evName);
+                if (!profilesMap[email].allEvents.some(e => e.name === evName)) {
+                    profilesMap[email].allEvents.push({ name: evName, status: v.status });
                 }
                 if (cats) {
                     cats.forEach(c => profilesMap[email].allCategories.add(c));
@@ -2122,12 +2122,23 @@
         if (p.allEvents.length === 0) {
             historyContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">No history found.</div>';
         } else {
-            historyContainer.innerHTML = p.allEvents.map(e => `
-                <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 8px; height: 8px; background: #34C759; border-radius: 50%;"></div>
-                    <strong>${e}</strong>
+            historyContainer.innerHTML = p.allEvents.map(e => {
+                let sColor = '#a1a1aa';
+                let sText = e.status || 'Pending';
+                if (sText === 'Approved' || sText === 'Checked In') { sColor = '#34C759'; sText = 'Accepted'; }
+                else if (sText === 'Denied') { sColor = '#FF3B30'; sText = 'Denied'; }
+                else if (sText === 'Needs Review') { sColor = '#FF9500'; sText = 'Reviewing'; }
+                
+                return `
+                <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 8px; height: 8px; background: ${sColor}; border-radius: 50%;"></div>
+                        <strong>${e.name}</strong>
+                    </div>
+                    <span style="font-size: 0.8rem; color: ${sColor}; font-weight: 800; text-transform: uppercase;">${sText}</span>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         document.getElementById('profileModal').style.display = 'flex';
