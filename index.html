@@ -167,8 +167,8 @@
         .clickable-row { cursor: pointer; transition: all 0.2s ease; }
         .clickable-row:hover td { background: rgba(255, 255, 255, 0.08); }
 
-        .clickable-row.dragging td { opacity: 0.4; background: rgba(255, 255, 255, 0.1); }
-        .clickable-row.drag-over td { border-top: 2px solid #0A84FF; border-bottom: 2px solid #0A84FF; background: rgba(10, 132, 255, 0.1); }
+        .clickable-row.dragging td { opacity: 0.4 !important; background: rgba(255, 255, 255, 0.1) !important; }
+        .clickable-row.drag-over td { border-top: 2px solid #0A84FF !important; border-bottom: 2px solid #0A84FF !important; background: rgba(10, 132, 255, 0.15) !important; }
 
         .group-tag { font-size: 0.75rem; font-weight: 700; color: #BF5AF2; display: inline-block; text-transform: uppercase; background: rgba(191, 90, 242, 0.1); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(191, 90, 242, 0.3); }
         .power-tag { font-size: 0.75rem; font-weight: 700; color: #FFD60A; display: inline-block; text-transform: uppercase; background: rgba(255, 214, 10, 0.15); padding: 4px 8px; border-radius: 6px; margin-top: 4px; border: 1px solid rgba(255, 214, 10, 0.3); }
@@ -2116,9 +2116,8 @@
         document.querySelectorAll('.control-item').forEach(el => el.classList.remove('active', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan'));
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
         
-        // Reset dropdowns on tab switch
+        // Reset dropdowns on tab switch (intentionally preserving the sort filter state)
         if (document.getElementById('unifiedFilter')) document.getElementById('unifiedFilter').value = 'all';
-        if (document.getElementById('sortFilter')) document.getElementById('sortFilter').value = 'default';
         if (document.getElementById('search')) document.getElementById('search').value = '';
 
         const btn = document.getElementById(`nav-${filter}`);
@@ -2914,6 +2913,7 @@
 
     function handleDragOver(e) {
         e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
         const tr = e.target.closest('tr');
         if (tr && !tr.classList.contains('drag-over')) {
             document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
@@ -2928,23 +2928,35 @@
 
     function handleDrop(e, targetId) {
         e.preventDefault();
+        e.stopPropagation();
         document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
         document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
         
         if (draggedVendorId && draggedVendorId !== targetId) {
             let currentOrder = JSON.parse(localStorage.getItem('market_custom_order_' + currentData.activeId) || '[]');
             
-            // Pre-fill with the default loaded database order if sorting for the very first time
-            if (currentOrder.length === 0) {
-                currentOrder = currentData.vendors.map(v => v.id);
-            }
+            // Instantly sync the saved order with any brand new vendors so math doesn't break
+            currentData.vendors.forEach(v => {
+                if (!currentOrder.includes(v.id)) currentOrder.push(v.id);
+            });
             
             const fromIdx = currentOrder.indexOf(draggedVendorId);
-            const toIdx = currentOrder.indexOf(targetId);
+            let toIdx = currentOrder.indexOf(targetId);
             
-            if (fromIdx > -1) currentOrder.splice(fromIdx, 1);
-            if (toIdx > -1) currentOrder.splice(toIdx, 0, draggedVendorId);
-            else currentOrder.push(draggedVendorId);
+            if (fromIdx > -1 && toIdx > -1) {
+                // Remove from old position
+                currentOrder.splice(fromIdx, 1);
+                
+                // Recalculate target position since array shifted
+                toIdx = currentOrder.indexOf(targetId);
+                
+                // If dragged downwards, place after. If dragged upwards, place before.
+                if (fromIdx < toIdx) {
+                    currentOrder.splice(toIdx + 1, 0, draggedVendorId);
+                } else {
+                    currentOrder.splice(toIdx, 0, draggedVendorId);
+                }
+            }
             
             localStorage.setItem('market_custom_order_' + currentData.activeId, JSON.stringify(currentOrder));
             
