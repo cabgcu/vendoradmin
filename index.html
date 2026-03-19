@@ -1799,7 +1799,30 @@
             return;
         }
 
-        let activeEvent = eventsData.find(e => e.id === activeId) || eventsData[0];
+        // Sort events chronologically so dropdown makes sense
+        const now = new Date();
+        eventsData.sort((a, b) => new Date((a.market_date || '1970-01-01') + 'T00:00:00') - new Date((b.market_date || '1970-01-01') + 'T00:00:00'));
+
+        let activeEvent = null;
+        if (eventId) {
+            // Explicitly requested event via dropdown
+            activeEvent = eventsData.find(e => e.id === eventId);
+        } else {
+            // Always auto-select the current/next upcoming market (ignores last viewed)
+            activeEvent = eventsData.find(e => {
+                if (!e.market_date) return false;
+                // Valid until 11:59 PM on the day of the market
+                return new Date(e.market_date + 'T23:59:59') >= now;
+            });
+            
+            // If all are in the past, pick the most recent one (last in the sorted list)
+            if (!activeEvent && eventsData.length > 0) {
+                activeEvent = eventsData[eventsData.length - 1];
+            }
+        }
+        
+        if (!activeEvent) activeEvent = eventsData[0]; // Safe fallback
+        
         activeId = activeEvent.id;
         localStorage.setItem('marketEventId', activeId);
 
