@@ -167,6 +167,9 @@
         .clickable-row { cursor: pointer; transition: all 0.2s ease; }
         .clickable-row:hover td { background: rgba(255, 255, 255, 0.08); }
 
+        .clickable-row.dragging td { opacity: 0.4; background: rgba(255, 255, 255, 0.1); }
+        .clickable-row.drag-over td { border-top: 2px solid #0A84FF; border-bottom: 2px solid #0A84FF; background: rgba(10, 132, 255, 0.1); }
+
         .group-tag { font-size: 0.75rem; font-weight: 700; color: #BF5AF2; display: inline-block; text-transform: uppercase; background: rgba(191, 90, 242, 0.1); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(191, 90, 242, 0.3); }
         .power-tag { font-size: 0.75rem; font-weight: 700; color: #FFD60A; display: inline-block; text-transform: uppercase; background: rgba(255, 214, 10, 0.15); padding: 4px 8px; border-radius: 6px; margin-top: 4px; border: 1px solid rgba(255, 214, 10, 0.3); }
         
@@ -253,6 +256,7 @@
         }
         
         select.modern-input option { background-color: #1a1a1a; color: white; }
+        select.modern-input optgroup { background-color: #111; color: var(--text-muted); font-weight: bold; }
         .modern-input:focus { border-color: #0A84FF; background: rgba(255, 255, 255, 0.08); }
         
         .form-card { padding: 40px; border-radius: var(--radius-card); max-width: 1000px; margin: 0 auto; }
@@ -404,14 +408,24 @@
     <div class="login-card">
         <img src="https://i.imgur.com/p2qZOL5.png" alt="CAB" style="height: 60px; margin-bottom: 20px;">
         <h2 style="margin-bottom: 10px; font-weight: 800;">MARKET ADMIN</h2>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">Enter the system password to manage student vendors.</p>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">Login with your staff account or master admin password.</p>
         
-        <div class="mb-4">
-            <input type="password" id="login-password" class="modern-input" placeholder="Enter Password" style="text-align: center; font-family: inherit;">
-            <p id="login-error" style="color: #FF3B30; font-size: 0.8rem; margin-top: 10px; font-weight: 600; display: none;">Invalid Password</p>
+        <div id="login-error" style="color: #FF3B30; font-size: 0.85rem; margin-bottom: 15px; font-weight: 600; display: none;">Invalid credentials</div>
+
+        <div id="login-form">
+            <div class="mb-3"><input type="email" id="login-email" class="modern-input" placeholder="Email (Leave blank for Master Admin)" style="text-align: center;"></div>
+            <div class="mb-3"><input type="password" id="login-password" class="modern-input" placeholder="Password" style="text-align: center;"></div>
+            <button id="login-btn" onclick="handleLogin()" class="btn-action" style="width: 100%; padding: 15px; font-size: 1rem;">LOG IN</button>
+            <p style="margin-top: 15px; font-size: 0.85rem;"><a href="javascript:void(0)" onclick="toggleAuthMode('register')" style="color: #0A84FF; text-decoration: none;">Need a staff account? Sign up</a></p>
         </div>
-        
-        <button id="login-btn" onclick="handleLogin()" class="btn-action" style="width: 100%; padding: 15px; font-size: 1rem;">LOG IN</button>
+
+        <div id="register-form" style="display: none;">
+            <div class="mb-3"><input type="text" id="reg-name" class="modern-input" placeholder="Full Name" style="text-align: center;"></div>
+            <div class="mb-3"><input type="email" id="reg-email" class="modern-input" placeholder="Authorized GCU Email" style="text-align: center;"></div>
+            <div class="mb-3"><input type="password" id="reg-password" class="modern-input" placeholder="Create Password" style="text-align: center;"></div>
+            <button id="reg-btn" onclick="handleRegister()" class="btn-action" style="width: 100%; padding: 15px; font-size: 1rem; background: var(--gradient-success);">CREATE ACCOUNT</button>
+            <p style="margin-top: 15px; font-size: 0.85rem;"><a href="javascript:void(0)" onclick="toggleAuthMode('login')" style="color: var(--text-muted); text-decoration: none;">Back to Login</a></p>
+        </div>
     </div>
 </div>
 
@@ -738,6 +752,7 @@
             <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.2); margin: 0 2px;"></div>
             <button onclick="toggleView('scan')" id="nav-scan" class="control-item" style="background: rgba(52, 199, 89, 0.2); border-color: rgba(52, 199, 89, 0.4); color: #34C759;">CHECK IN</button>
             <button onclick="toggleView('settings')" id="nav-settings" class="control-item">SETTINGS</button>
+            <button onclick="handleLogout()" class="control-item" style="background: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.3); color: #FF3B30; margin-left: 6px;">LOGOUT</button>
         </div>
     </div>
 
@@ -750,28 +765,35 @@
             <div class="frosted stat-card"><span class="stat-label">Late Applicants</span><span class="stat-val" style="color:#BF5AF2" id="strikeWarningLabel">0</span></div>
         </div>
 
-        <div class="filter-row">
-            <input type="text" id="search" class="modern-input" placeholder="Search name, email, or student ID..." onkeyup="renderTable()" style="flex: 2; min-width: 200px;">
-            
-            <select id="categoryFilter" class="modern-input" style="flex: 1; min-width: 150px;" onchange="renderTable()">
-                <option value="all">All Vendor Themes</option>
-                <!-- Dynamically populated based on current vendors -->
-            </select>
-            
-            <select id="requirementFilter" class="modern-input" style="flex: 1; min-width: 160px;" onchange="renderTable()">
-                <option value="all">Any Special Requests</option>
-                <option value="power">Needs Power</option>
-                <option value="food">Food License</option>
-            </select>
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+            <div class="filter-row" style="margin-bottom: 0;">
+                <input type="text" id="search" class="modern-input" placeholder="Search name, email, or student ID..." onkeyup="renderTable()" style="flex: 2; min-width: 200px;">
+                
+                <select id="unifiedFilter" class="modern-input" style="flex: 1.5; min-width: 180px;" onchange="renderTable()">
+                    <option value="all">All Vendors</option>
+                    <optgroup label="Special Requests">
+                        <option value="req_power">Needs Power</option>
+                        <option value="req_food">Food License</option>
+                    </optgroup>
+                    <optgroup label="Attendance">
+                        <option value="att_confirmed">Confirmed</option>
+                        <option value="att_declined">Declined / Can't Make It</option>
+                        <option value="att_awaiting">Awaiting Reply</option>
+                    </optgroup>
+                    <optgroup label="Vendor Themes" id="dynamicCategoryGroup">
+                        <!-- Populated by JS -->
+                    </optgroup>
+                </select>
+                
+                <select id="sortFilter" class="modern-input" style="flex: 1; min-width: 200px;" onchange="renderTable()">
+                    <option value="default">Default Order</option>
+                    <option value="custom">Custom (Drag & Drop)</option>
+                    <option value="az">Name: A-Z</option>
+                    <option value="za">Name: Z-A</option>
+                </select>
 
-            <select id="attendanceFilter" class="modern-input" style="flex: 1; min-width: 160px;" onchange="renderTable()">
-                <option value="all">Any Attendance Status</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="declined">Declined / Can't Make It</option>
-                <option value="awaiting">Awaiting Reply</option>
-            </select>
-            
-            <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; flex-shrink: 0; display: none;">Send Emails...</button>
+                <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; flex-shrink: 0; display: none; height: 50px;">Send Emails...</button>
+            </div>
         </div>
         
         <div class="table-container">
@@ -836,6 +858,7 @@
                     <button id="stab-event" class="settings-tab active" onclick="switchSettingsTab('event')">Event Setup</button>
                     <button id="stab-emails" class="settings-tab" onclick="switchSettingsTab('emails')">Email Templates</button>
                     <button id="stab-system" class="settings-tab" onclick="switchSettingsTab('system')">System & Data</button>
+                    <button id="stab-users" class="settings-tab" onclick="switchSettingsTab('users')">User Management</button>
                 </div>
             </div>
 
@@ -1036,6 +1059,24 @@
                     <button onclick="saveSystemSettings()" class="btn-action" style="width: 100%; padding: 15px; font-size: 1.1rem;">Save System Settings</button>
                 </div>
             </div>
+            
+            <!-- TAB 4: USERS -->
+            <div id="settings-tab-users" class="settings-section" style="display:none;">
+                <div style="margin-bottom:30px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px;">
+                    <label class="stat-label" style="color: #0A84FF; font-size: 1rem; margin-bottom: 10px;">Authorized Emails (Whitelist)</label>
+                    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 15px;">Add emails here to allow staff members to create their own accounts.</p>
+                    <div style="display:flex; gap:10px; margin-bottom: 20px;">
+                        <input type="email" id="newAuthEmail" class="modern-input" placeholder="staff@gcu.edu">
+                        <button onclick="addAuthorizedEmail()" class="btn-action" style="white-space: nowrap;">Add Email</button>
+                    </div>
+                    <div id="authEmailList" style="max-height: 200px; overflow-y: auto; margin-bottom: 30px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 10px; border: 1px solid var(--glass-border);"></div>
+
+                    <hr style="border:0; border-top:1px solid var(--glass-border); margin:30px 0;">
+
+                    <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">Active Staff Accounts</label>
+                    <div id="activeStaffList" style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 10px; border: 1px solid var(--glass-border);"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -1043,6 +1084,7 @@
 <script>
     // --- API KEYS ---
     let OPENROUTER_API_KEY = '';
+    let currentUser = { role: 'admin', name: 'Master Admin', email: 'admin' };
 
     // --- VENDOR CONFIRMATION FLOW ENGINE ---
     window.addEventListener('DOMContentLoaded', () => { 
@@ -1054,8 +1096,22 @@
             handleVendorConfirmation(confirmId, 'confirm');
         } else if (declineId) {
             handleVendorConfirmation(declineId, 'decline');
-        } else if (sessionStorage.getItem('cab_market_auth') === 'true') {
-            unlockApp();
+        } else {
+            const savedAuth = sessionStorage.getItem('cab_market_auth');
+            if (savedAuth) {
+                try { 
+                    const parsed = JSON.parse(savedAuth);
+                    if (parsed.role) {
+                        currentUser = parsed;
+                        unlockApp();
+                    }
+                } catch(e) { 
+                    if(savedAuth === 'true'){ 
+                        currentUser = { role: 'admin', name: 'Master Admin', email: 'admin' }; 
+                        unlockApp(); 
+                    } 
+                }
+            }
         }
 
         setupUnifiedScanner();
@@ -1189,9 +1245,9 @@
     // AI & Strike State
     let isAIQueueRunning = false;
     const aiAnalyzingSet = new Set();
-    const failedAIVendors = new Set(); // ADD THIS LINE HERE
+    const failedAIVendors = new Set(); 
     window.currentProfiles = {}; 
-    window.vendorStrikes = {}; // Tracks how many times they applied AFTER the close date
+    window.vendorStrikes = {}; 
 
     const DEFAULTS = {
         approved: { subj: "CAB Student Market: You're Approved!", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWe are so excited to have you showcase your items at the market.\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}\n\nMore details regarding setup time, maps, and rules will follow closer to the event date.\n\n– CAB Student Market Team" },
@@ -1204,8 +1260,65 @@
     // LOGIN LOGIC
     const FALLBACK_PASSWORD = "Vendor49!";
 
+    function toggleAuthMode(mode) {
+        document.getElementById('login-error').style.display = 'none';
+        if (mode === 'register') {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+        } else {
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('register-form').style.display = 'none';
+        }
+    }
+
+    async function handleRegister() {
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim().toLowerCase();
+        const pass = document.getElementById('reg-password').value;
+        const error = document.getElementById('login-error');
+        const btn = document.getElementById('reg-btn');
+
+        if (!name || !email || !pass) {
+            error.innerText = "All fields are required.";
+            error.style.display = 'block';
+            return;
+        }
+
+        btn.innerText = 'CREATING...';
+        btn.disabled = true;
+        error.style.display = 'none';
+
+        try {
+            const { data: allowed } = await _supabase.from('allowed_emails').select('email').eq('email', email).maybeSingle();
+            if (!allowed) {
+                throw new Error("This email is not authorized to register.");
+            }
+
+            const { data: existing } = await _supabase.from('cab_users').select('email').eq('email', email).maybeSingle();
+            if (existing) {
+                throw new Error("Account already exists for this email.");
+            }
+
+            const { error: insErr, data: newUser } = await _supabase.from('cab_users').insert([{ email, name, password: pass, role: 'user' }]).select().single();
+            if (insErr) throw insErr;
+
+            currentUser = { role: 'user', name, email, id: newUser.id };
+            sessionStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
+            unlockApp();
+        } catch(e) {
+            error.innerText = e.message || "Registration error.";
+            error.style.display = 'block';
+            console.error(e);
+        } finally {
+            btn.innerText = 'CREATE ACCOUNT';
+            btn.disabled = false;
+        }
+    }
+
     async function handleLogin() {
-        const input = document.getElementById('login-password');
+        const emailInput = document.getElementById('login-email');
+        const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+        const pass = document.getElementById('login-password').value;
         const error = document.getElementById('login-error');
         const loginBtn = document.getElementById('login-btn');
         
@@ -1216,27 +1329,36 @@
         error.style.display = 'none';
 
         try {
-            // Fetch current password from DB secrets
-            const { data } = await _supabase.from('secrets').select('value').eq('name', 'ADMIN_PASSWORD').maybeSingle();
-            let validPassword = data && data.value ? data.value : FALLBACK_PASSWORD;
-            
-            if (input.value === validPassword) {
-                sessionStorage.setItem('cab_market_auth', 'true');
+            if (!email) {
+                // Fetch current password from DB secrets for Master Admin
+                const { data } = await _supabase.from('secrets').select('value').eq('name', 'ADMIN_PASSWORD').maybeSingle();
+                let validPassword = data && data.value ? data.value : FALLBACK_PASSWORD;
                 
-                // If logging in for the first time with fallback, auto-save it to DB to initialize the system
-                if (!data) {
-                    await _supabase.from('secrets').upsert([{ name: 'ADMIN_PASSWORD', value: FALLBACK_PASSWORD }]);
+                if (pass === validPassword) {
+                    currentUser = { role: 'admin', name: 'Master Admin', email: 'admin' };
+                    sessionStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
+                    
+                    // Auto-save fallback on first run
+                    if (!data) await _supabase.from('secrets').upsert([{ name: 'ADMIN_PASSWORD', value: FALLBACK_PASSWORD }]);
+                    
+                    unlockApp();
+                } else {
+                    throw new Error("Invalid master password.");
                 }
-                
-                unlockApp();
             } else {
-                error.style.display = 'block';
-                input.value = '';
-                input.focus();
+                // Check Staff Account
+                const { data: user } = await _supabase.from('cab_users').select('*').eq('email', email).eq('password', pass).maybeSingle();
+                if (user) {
+                    currentUser = { role: user.role, name: user.name, email: user.email, id: user.id };
+                    sessionStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
+                    unlockApp();
+                } else {
+                    throw new Error("Invalid email or password.");
+                }
             }
         } catch (err) {
             console.error("Login Check Error:", err);
-            error.innerText = "Connection error. Try again.";
+            error.innerText = err.message || "Connection error. Try again.";
             error.style.display = 'block';
         } finally {
             loginBtn.innerText = originalText;
@@ -1244,12 +1366,27 @@
         }
     }
 
+    function handleLogout() {
+        sessionStorage.removeItem('cab_market_auth');
+        location.reload();
+    }
+
     async function unlockApp() {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'flex';
         
+        // --- APPLY PERMISSIONS ---
+        if (currentUser && currentUser.role !== 'admin') {
+            document.getElementById('nav-settings').style.display = 'none';
+            const blastBtn = document.getElementById('blastBtn');
+            if (blastBtn) blastBtn.style.display = 'none';
+        } else {
+            document.getElementById('nav-settings').style.display = 'flex';
+        }
+
         // Securely fetch API keys from Supabase Secrets
-        const { data, error } = await _supabase.from('secrets').select('name, value').in('name', ['BREVO_API_KEY', 'OPENROUTER_API_KEY']);
+        const keysToFetch = currentUser.role === 'admin' ? ['BREVO_API_KEY', 'OPENROUTER_API_KEY'] : ['OPENROUTER_API_KEY'];
+        const { data, error } = await _supabase.from('secrets').select('name, value').in('name', keysToFetch);
         if (data) {
             const brevo = data.find(s => s.name === 'BREVO_API_KEY');
             const openRouter = data.find(s => s.name === 'OPENROUTER_API_KEY');
@@ -1454,8 +1591,6 @@
 
             await _supabase.from('vendors').update({ internal_notes: newNotesStr }).eq('id', passedVendor.id);
 
-            // We no longer build dropdowns here because categories are handled entirely locally now!
-
             if (currentReviewingId === passedVendor.id) {
                 // Refresh the modal UI
                 updateAIInsightsUI(memVendor);
@@ -1567,8 +1702,8 @@
     }
 
     function buildCategoryDropdown() {
-        const select = document.getElementById('categoryFilter');
-        if (!select) return;
+        const optGroup = document.getElementById('dynamicCategoryGroup');
+        if (!optGroup) return;
         
         // Calculate category counts based on current event
         let categoryCounts = {};
@@ -1585,39 +1720,36 @@
             }
         });
         
-        // Save current selection to restore if possible
-        const currentVal = select.value;
-        
-        let html = `<option value="all">All Vendor Themes (${totalVendors})</option>`;
+        let html = '';
         const sortedCats = Object.keys(categoryCounts).sort();
         
         if (sortedCats.length === 0) {
             html += '<option value="none" disabled>No Themes Detected</option>';
         } else {
             sortedCats.forEach(c => {
-                html += `<option value="${c}">${c} (${categoryCounts[c]})</option>`;
+                html += `<option value="cat_${c}">${c} (${categoryCounts[c]})</option>`;
             });
         }
         
-        select.innerHTML = html;
-        if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
-            select.value = currentVal;
-        }
+        optGroup.innerHTML = html;
 
-        // Update Requirement Counts as well
-        const reqSelect = document.getElementById('requirementFilter');
-        if (reqSelect) {
+        // Update Requirement Counts in the unified dropdown
+        const filterSelect = document.getElementById('unifiedFilter');
+        if (filterSelect) {
+            const currentVal = filterSelect.value;
+            
             let powerCount = currentData.vendors.filter(v => v.needs_power === 'Yes').length;
             let foodCount = currentData.vendors.filter(v => v.food_license && v.food_license.toLowerCase() === 'yes').length;
-            const reqVal = reqSelect.value;
             
-            reqSelect.innerHTML = `
-                <option value="all">Any Special Requests</option>
-                <option value="power">Needs Power (${powerCount})</option>
-                <option value="food">Food License (${foodCount})</option>
-            `;
-            if (reqVal && Array.from(reqSelect.options).some(o => o.value === reqVal)) {
-                reqSelect.value = reqVal;
+            Array.from(filterSelect.options).forEach(opt => {
+                if (opt.value === 'req_power') opt.innerText = `Needs Power (${powerCount})`;
+                if (opt.value === 'req_food') opt.innerText = `Food License (${foodCount})`;
+            });
+
+            if (Array.from(filterSelect.options).some(o => o.value === currentVal)) {
+                filterSelect.value = currentVal;
+            } else {
+                filterSelect.value = 'all';
             }
         }
     }
@@ -1985,9 +2117,9 @@
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
         
         // Reset dropdowns on tab switch
-        if (document.getElementById('categoryFilter')) document.getElementById('categoryFilter').value = 'all';
-        if (document.getElementById('requirementFilter')) document.getElementById('requirementFilter').value = 'all';
-        if (document.getElementById('attendanceFilter')) document.getElementById('attendanceFilter').value = 'all';
+        if (document.getElementById('unifiedFilter')) document.getElementById('unifiedFilter').value = 'all';
+        if (document.getElementById('sortFilter')) document.getElementById('sortFilter').value = 'default';
+        if (document.getElementById('search')) document.getElementById('search').value = '';
 
         const btn = document.getElementById(`nav-${filter}`);
         if(btn) {
@@ -2571,9 +2703,7 @@
 
     function getFilteredVendorsForCurrentView() {
         const search = document.getElementById('search').value.toLowerCase();
-        const categoryFilter = document.getElementById('categoryFilter')?.value || 'all';
-        const requirementFilter = document.getElementById('requirementFilter')?.value || 'all';
-        const attendanceFilter = document.getElementById('attendanceFilter')?.value || 'all';
+        const unifiedFilter = document.getElementById('unifiedFilter')?.value || 'all';
         
         return currentData.vendors.filter(v => {
             // 'inbox' now serves as a master list and does not filter out any statuses
@@ -2582,16 +2712,21 @@
             if (activeFilter === 'denied' && v.status !== 'Denied') return false;
             if (activeFilter === 'power' && ((v.status !== 'Approved' && v.status !== 'Checked In') || v.needs_power !== 'Yes')) return false;
 
-            if (requirementFilter === 'power' && v.needs_power !== 'Yes') return false;
-            if (requirementFilter === 'food' && (!v.food_license || v.food_license.toLowerCase() !== 'yes')) return false;
-            
-            if (attendanceFilter !== 'all') {
-                const attState = getAttendanceState(v);
-                if (attState !== attendanceFilter) return false;
-            }
+            if (unifiedFilter !== 'all') {
+                if (unifiedFilter === 'req_power' && v.needs_power !== 'Yes') return false;
+                if (unifiedFilter === 'req_food' && (!v.food_license || v.food_license.toLowerCase() !== 'yes')) return false;
+                
+                if (unifiedFilter.startsWith('att_')) {
+                    const attState = getAttendanceState(v);
+                    if (unifiedFilter === 'att_confirmed' && attState !== 'confirmed') return false;
+                    if (unifiedFilter === 'att_declined' && attState !== 'declined') return false;
+                    if (unifiedFilter === 'att_awaiting' && attState !== 'awaiting') return false;
+                }
 
-            if (categoryFilter !== 'all') {
-                if (!v.autoCategories || !v.autoCategories.some(c => c.toLowerCase() === categoryFilter.toLowerCase())) return false;
+                if (unifiedFilter.startsWith('cat_')) {
+                    const catTarget = unifiedFilter.substring(4);
+                    if (!v.autoCategories || !v.autoCategories.some(c => c.toLowerCase() === catTarget.toLowerCase())) return false;
+                }
             }
 
             if (search) {
@@ -2604,17 +2739,40 @@
 
     function renderTable() {
         const filtered = getFilteredVendorsForCurrentView();
+
+        const sortVal = document.getElementById('sortFilter')?.value || 'default';
+        if (sortVal === 'az') {
+            filtered.sort((a, b) => (a.first_name || '').localeCompare(b.first_name || ''));
+        } else if (sortVal === 'za') {
+            filtered.sort((a, b) => (b.first_name || '').localeCompare(a.first_name || ''));
+        } else if (sortVal === 'custom') {
+            let customOrder = JSON.parse(localStorage.getItem('market_custom_order_' + currentData.activeId) || '[]');
+            filtered.sort((a, b) => {
+                let idxA = customOrder.indexOf(a.id);
+                let idxB = customOrder.indexOf(b.id);
+                if (idxA === -1 && idxB === -1) return a.appNumber - b.appNumber;
+                if (idxA === -1) return 1;
+                if (idxB === -1) return -1;
+                return idxA - idxB;
+            });
+        } else {
+            filtered.sort((a, b) => a.appNumber - b.appNumber);
+        }
         
         const blastBtn = document.getElementById('blastBtn');
-        if (activeFilter === 'approved') {
-            blastBtn.style.display = 'inline-block';
-            blastBtn.innerText = 'Send Approved Emails...';
-        } else if (activeFilter === 'denied') {
-            blastBtn.style.display = 'inline-block';
-            blastBtn.innerText = 'Send Denied Emails...';
-        } else if (activeFilter === 'power') {
-            blastBtn.style.display = 'inline-block';
-            blastBtn.innerText = 'Send Power Emails...';
+        if (currentUser.role === 'admin') {
+            if (activeFilter === 'approved') {
+                blastBtn.style.display = 'inline-block';
+                blastBtn.innerText = 'Send Approved Emails...';
+            } else if (activeFilter === 'denied') {
+                blastBtn.style.display = 'inline-block';
+                blastBtn.innerText = 'Send Denied Emails...';
+            } else if (activeFilter === 'power') {
+                blastBtn.style.display = 'inline-block';
+                blastBtn.innerText = 'Send Power Emails...';
+            } else {
+                blastBtn.style.display = 'none';
+            }
         } else {
             blastBtn.style.display = 'none';
         }
@@ -2662,6 +2820,11 @@
             // Clean Badge Layout Generation
             let tagsArray = [];
 
+            const colorNote = getParsedNotes(v.internal_notes).find(n => n.type === 'color_code');
+            const rowColor = colorNote ? colorNote.color : '';
+            const rowBgStyle = rowColor ? `background: ${rowColor}20 !important;` : '';
+            const rowBorderStyle = rowColor ? `background: ${rowColor}20 !important; border-left: 6px solid ${rowColor} !important; border-radius: 16px 0 0 16px;` : 'border-radius: 16px 0 0 16px;';
+
             // Add 3 Strikes Penalty Badge Warning
             const strikes = window.vendorStrikes[v.preferred_email]?.length || 0;
             if (strikes >= 3) {
@@ -2708,23 +2871,27 @@
                 ? `<button onclick="checkIn('${v.id}', false, this); event.stopPropagation();" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`
                 : `<span style="color:var(--text-muted); font-size:0.75rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">${v.status}</span>`;
 
-            // Only allow resend email if they aren't pending
-            const canEmail = v.status !== 'Needs Review' && v.status !== 'Pending';
+            // Only allow resend email if they aren't pending and user is admin
+            const canEmail = currentUser.role === 'admin' && v.status !== 'Needs Review' && v.status !== 'Pending';
 
             return `
-            <tr class="clickable-row" onclick="openReviewModal('${v.id}')">
-                <td><span style="color: #BF5AF2; font-weight: 800; margin-right: 8px; font-size: 1.1rem;">#${v.appNumber}</span><br><span style="font-family: monospace; letter-spacing: 1px; font-size: 0.85rem; color: var(--text-muted);">${v.student_id || 'N/A'}</span></td>
-                <td>
+            <tr class="clickable-row" style="${rowBgStyle}" draggable="true" ondragstart="handleDragStart(event, '${v.id}')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${v.id}')" onclick="openReviewModal('${v.id}')">
+                <td style="${rowBorderStyle}"><span style="color: #BF5AF2; font-weight: 800; margin-right: 8px; font-size: 1.1rem;">#${v.appNumber}</span><br><span style="font-family: monospace; letter-spacing: 1px; font-size: 0.85rem; color: var(--text-muted);">${v.student_id || 'N/A'}</span></td>
+                <td style="${rowBgStyle}">
                     <strong style="font-size: 1.05rem;">${v.first_name} ${v.last_name}</strong>
                     ${tagsContainer}
                 </td>
-                <td><a href="mailto:${v.preferred_email}" onclick="event.stopPropagation()" style="color:var(--text-muted);">${v.preferred_email}</a><br><small style="color:var(--text-muted); opacity: 0.5;">${v.gcu_email || ''}</small></td>
-                <td>${statusToggle}</td>
-                <td>${confirmedCell}</td>
-                <td>${checkInCell}</td>
-                <td>${emailSentBadge}</td>
-                <td>
+                <td style="${rowBgStyle}"><a href="mailto:${v.preferred_email}" onclick="event.stopPropagation()" style="color:var(--text-muted);">${v.preferred_email}</a><br><small style="color:var(--text-muted); opacity: 0.5;">${v.gcu_email || ''}</small></td>
+                <td style="${rowBgStyle}">${statusToggle}</td>
+                <td style="${rowBgStyle}">${confirmedCell}</td>
+                <td style="${rowBgStyle}">${checkInCell}</td>
+                <td style="${rowBgStyle}">${emailSentBadge}</td>
+                <td style="${rowBgStyle}">
                     <div class="action-wrapper" onclick="event.stopPropagation()">
+                        <label class="btn-icon-text" title="Color Code" style="margin: 0; background: ${rowColor || 'rgba(255,255,255,0.05)'}; position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;">
+                            🎨
+                            <input type="color" onchange="saveVendorColor('${v.id}', this.value)" value="${rowColor || '#ffffff'}" style="position: absolute; left: -10px; top: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer;">
+                        </label>
                         <button onclick="openEditModal('${v.id}')" class="btn-icon-text" title="Edit Application">Edit</button>
                         <button onclick="resendEmail('${v.id}')" class="btn-icon-text" title="Send Status Email" style="${canEmail ? '' : 'display:none;'}">Email</button>
                         <button onclick="deleteVendor('${v.id}')" class="btn-icon-text danger" title="Delete">Del</button>
@@ -2735,6 +2902,83 @@
         };
 
         tbody.innerHTML = filtered.map(v => generateRowHtml(v)).join('');
+    }
+
+    let draggedVendorId = null;
+
+    function handleDragStart(e, id) {
+        draggedVendorId = id;
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => e.target.classList.add('dragging'), 0);
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        const tr = e.target.closest('tr');
+        if (tr && !tr.classList.contains('drag-over')) {
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            tr.classList.add('drag-over');
+        }
+    }
+
+    function handleDragLeave(e) {
+        const tr = e.target.closest('tr');
+        if (tr) tr.classList.remove('drag-over');
+    }
+
+    function handleDrop(e, targetId) {
+        e.preventDefault();
+        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+        
+        if (draggedVendorId && draggedVendorId !== targetId) {
+            let currentOrder = JSON.parse(localStorage.getItem('market_custom_order_' + currentData.activeId) || '[]');
+            
+            // Pre-fill with the default loaded database order if sorting for the very first time
+            if (currentOrder.length === 0) {
+                currentOrder = currentData.vendors.map(v => v.id);
+            }
+            
+            const fromIdx = currentOrder.indexOf(draggedVendorId);
+            const toIdx = currentOrder.indexOf(targetId);
+            
+            if (fromIdx > -1) currentOrder.splice(fromIdx, 1);
+            if (toIdx > -1) currentOrder.splice(toIdx, 0, draggedVendorId);
+            else currentOrder.push(draggedVendorId);
+            
+            localStorage.setItem('market_custom_order_' + currentData.activeId, JSON.stringify(currentOrder));
+            
+            const sortSelect = document.getElementById('sortFilter');
+            if(sortSelect) sortSelect.value = 'custom';
+            
+            renderTable();
+        }
+        draggedVendorId = null;
+    }
+
+    async function saveVendorColor(id, hexColor) {
+        const vendor = currentData.vendors.find(v => v.id === id);
+        if (!vendor) return;
+        
+        let notes = getParsedNotes(vendor.internal_notes);
+        notes = notes.filter(n => n.type !== 'color_code'); // Remove existing color code entry
+        
+        // Skip adding if they select pure black or white (used as standard reset methods)
+        if (hexColor && hexColor !== '#000000' && hexColor !== '#ffffff') {
+            notes.push({
+                id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
+                date: new Date().toISOString(),
+                type: 'color_code',
+                color: hexColor,
+                author: 'System'
+            });
+        }
+        
+        vendor.internal_notes = JSON.stringify(notes);
+        renderTable(); 
+        
+        const { error } = await _supabase.from('vendors').update({ internal_notes: vendor.internal_notes }).eq('id', id);
+        if (error) showToast("Error syncing color to database");
     }
 
     function openReviewModal(id) {
@@ -3151,6 +3395,7 @@
     }
 
     async function sendSingleEmail(vendor, forceTemplateId = null) {
+        if (currentUser.role !== 'admin') return false;
         if (!vendor || !vendor.preferred_email || vendor.status === 'Needs Review' || vendor.status === 'Pending') return false;
 
         const templates = getTemplateDetails(vendor, forceTemplateId);
@@ -3296,6 +3541,11 @@
     }
 
     async function resendEmail(id) {
+        if (currentUser.role !== 'admin') {
+            showToast("Only admins can send emails.");
+            return;
+        }
+
         if (activeFilter === 'inbox' || activeFilter === 'review') {
             showToast("Cannot send emails from this tab.");
             return;
@@ -3326,6 +3576,11 @@
     }
 
     function openBulkEmailModal() {
+        if (currentUser.role !== 'admin') {
+            showToast("Only admins can send mass emails.");
+            return;
+        }
+
         if (activeFilter === 'inbox' || activeFilter === 'review') {
             showToast("Cannot send emails from this tab.");
             return;
@@ -3396,6 +3651,8 @@
     }
 
     async function executeBulkEmail() { 
+        if (currentUser.role !== 'admin') return;
+
         const templateId = document.getElementById('bulkEmailTemplate').value;
         const checkboxes = document.querySelectorAll('.bulk-vendor-checkbox:checked');
         const vendorIds = Array.from(checkboxes).map(cb => cb.value);
@@ -3443,6 +3700,8 @@
     }
 
     async function sendCustomBlastFromSettings() {
+        if (currentUser.role !== 'admin') return;
+
         const body = document.getElementById('emailTemplateInput').value;
         const subj = document.getElementById('emailSubjectInput').value;
         
@@ -3503,6 +3762,9 @@
         
         if (tabId === 'emails') {
             updatePreview();
+        }
+        if (tabId === 'users') {
+            loadUserManagement();
         }
     }
 
@@ -3991,6 +4253,87 @@
             refreshData(null, true);
         } else {
             showToast("Storage is already clean. No files > 5 months old found.");
+        }
+    }
+
+    // --- USER MANAGEMENT ---
+    async function loadUserManagement() {
+        if (currentUser.role !== 'admin') return;
+        
+        const emailListEl = document.getElementById('authEmailList');
+        const staffListEl = document.getElementById('activeStaffList');
+
+        // Load Allowed Emails
+        const { data: emails } = await _supabase.from('allowed_emails').select('*');
+        if (emails && emails.length > 0) {
+            emailListEl.innerHTML = emails.map(e => `
+                <div style="display:flex; justify-content:space-between; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <span>${e.email}</span>
+                    <button onclick="removeAuthorizedEmail('${e.email}')" style="background:none; border:none; color:#FF3B30; cursor:pointer; font-weight: bold;">Remove</button>
+                </div>
+            `).join('');
+        } else {
+            emailListEl.innerHTML = '<div style="color:var(--text-muted); padding:10px;">No emails authorized yet.</div>';
+        }
+
+        // Load Active Users
+        const { data: users } = await _supabase.from('cab_users').select('*');
+        if (users && users.length > 0) {
+            staffListEl.innerHTML = users.map(u => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div>
+                        <strong>${u.name}</strong> <span style="font-size:0.75rem; color:var(--text-muted); margin-left:8px;">${u.email}</span>
+                        <div style="font-size:0.75rem; color:#BF5AF2; text-transform:uppercase; margin-top:4px; font-weight:bold;">${u.role}</div>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="resetStaffPassword('${u.id}', '${u.name}')" class="btn-icon-text" style="padding: 6px 12px;">Reset Pass</button>
+                        <button onclick="removeStaff('${u.id}', '${u.name}')" class="btn-icon-text danger" style="padding: 6px 12px;">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            staffListEl.innerHTML = '<div style="color:var(--text-muted); padding:10px;">No staff accounts created yet.</div>';
+        }
+    }
+
+    async function addAuthorizedEmail() {
+        const input = document.getElementById('newAuthEmail');
+        const email = input.value.trim().toLowerCase();
+        if (!email) return;
+
+        const { error } = await _supabase.from('allowed_emails').insert([{ email }]);
+        if (error) {
+            showToast("Failed to add email or it already exists.");
+        } else {
+            input.value = '';
+            showToast("Email authorized.");
+            loadUserManagement();
+        }
+    }
+
+    async function removeAuthorizedEmail(email) {
+        if (!confirm(`Revoke registration access for ${email}?`)) return;
+        await _supabase.from('allowed_emails').delete().eq('email', email);
+        showToast("Email removed.");
+        loadUserManagement();
+    }
+
+    async function removeStaff(id, name) {
+        if (!confirm(`Permanently delete the account for ${name}?`)) return;
+        await _supabase.from('cab_users').delete().eq('id', id);
+        showToast("Staff account deleted.");
+        loadUserManagement();
+    }
+
+    async function resetStaffPassword(id, name) {
+        const newPass = prompt(`Enter a new temporary password for ${name}:`);
+        if (!newPass || newPass.trim() === '') return;
+        
+        const { error } = await _supabase.from('cab_users').update({ password: newPass }).eq('id', id);
+        if (error) {
+            showToast("Error resetting password.");
+        } else {
+            showToast(`Password for ${name} updated!`);
         }
     }
 </script>
