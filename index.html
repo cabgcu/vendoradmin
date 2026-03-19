@@ -395,6 +395,14 @@
         .settings-tab { background: transparent; border: none; color: var(--text-muted); font-size: 0.9rem; font-weight: 700; padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
         .settings-tab:hover { color: #fff; background: rgba(255,255,255,0.05); }
         .settings-tab.active { background: rgba(255,255,255,0.15); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); }
+
+        /* Color Picker Palette */
+        .color-trigger-wrapper { position: relative; display: flex; align-items: center; }
+        .color-palette-inline { position: absolute; right: 100%; margin-right: 8px; display: none; gap: 8px; background: rgba(20,20,20,0.95); padding: 8px 12px; border-radius: 20px; border: 1px solid var(--glass-border); z-index: 100; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .color-trigger-wrapper:hover .color-palette-inline { display: flex; }
+        .color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2); }
+        .color-dot:hover { transform: scale(1.2); border-color: #fff; }
+        .color-dot.clear { background: rgba(255,255,255,0.1); border: 2px dashed rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -2887,10 +2895,18 @@
                 <td style="${rowBgStyle}">${emailSentBadge}</td>
                 <td style="${rowBgStyle}">
                     <div class="action-wrapper" onclick="event.stopPropagation()">
-                        <label class="btn-icon-text" title="Color Code" style="margin: 0; background: ${rowColor || 'rgba(255,255,255,0.05)'}; position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;">
-                            🎨
-                            <input type="color" onchange="saveVendorColor('${v.id}', this.value)" value="${rowColor || '#ffffff'}" style="position: absolute; left: -10px; top: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer;">
-                        </label>
+                        <div class="color-trigger-wrapper">
+                            <button class="btn-icon-text" title="Color Code" style="margin: 0; background: ${rowColor || 'rgba(255,255,255,0.05)'}; color: ${rowColor ? '#000' : 'white'}; cursor: default;">🎨</button>
+                            <div class="color-palette-inline">
+                                <div class="color-dot" style="background: #FF3B30;" onclick="saveVendorColor('${v.id}', '#FF3B30'); event.stopPropagation();" title="Red"></div>
+                                <div class="color-dot" style="background: #FF9500;" onclick="saveVendorColor('${v.id}', '#FF9500'); event.stopPropagation();" title="Orange"></div>
+                                <div class="color-dot" style="background: #FFCC00;" onclick="saveVendorColor('${v.id}', '#FFCC00'); event.stopPropagation();" title="Yellow"></div>
+                                <div class="color-dot" style="background: #34C759;" onclick="saveVendorColor('${v.id}', '#34C759'); event.stopPropagation();" title="Green"></div>
+                                <div class="color-dot" style="background: #0A84FF;" onclick="saveVendorColor('${v.id}', '#0A84FF'); event.stopPropagation();" title="Blue"></div>
+                                <div class="color-dot" style="background: #BF5AF2;" onclick="saveVendorColor('${v.id}', '#BF5AF2'); event.stopPropagation();" title="Purple"></div>
+                                <div class="color-dot clear" onclick="saveVendorColor('${v.id}', '#ffffff'); event.stopPropagation();" title="Clear Color">✕</div>
+                            </div>
+                        </div>
                         <button onclick="openEditModal('${v.id}')" class="btn-icon-text" title="Edit Application">Edit</button>
                         <button onclick="resendEmail('${v.id}')" class="btn-icon-text" title="Send Status Email" style="${canEmail ? '' : 'display:none;'}">Email</button>
                         <button onclick="deleteVendor('${v.id}')" class="btn-icon-text danger" title="Delete">Del</button>
