@@ -399,6 +399,7 @@
         /* Color Picker Palette */
         .color-trigger-wrapper { position: relative; display: flex; align-items: center; }
         .color-palette-inline { position: absolute; right: 100%; margin-right: 8px; display: none; gap: 8px; background: rgba(20,20,20,0.95); padding: 8px 12px; border-radius: 20px; border: 1px solid var(--glass-border); z-index: 100; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .color-palette-inline::after { content: ''; position: absolute; right: -15px; top: -10px; bottom: -10px; width: 15px; } /* Invisible bridge to prevent hover dropping */
         .color-trigger-wrapper:hover .color-palette-inline { display: flex; }
         .color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2); }
         .color-dot:hover { transform: scale(1.2); border-color: #fff; }
