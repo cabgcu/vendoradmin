@@ -1544,8 +1544,8 @@
                             "X-Title": "CAB Admin System"
                         },
                         body: JSON.stringify({
-                            model: "openai/gpt-4o-mini", 
-                            response_format: { type: "json_object" },
+                            // Switch to a high-tier ZERO COST free vision model on OpenRouter
+                            model: "google/gemini-2.0-flash-lite-preview-02-05:free", 
                             messages: [{
                                 role: "user",
                                 content: [
