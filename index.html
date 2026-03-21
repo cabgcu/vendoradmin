@@ -522,6 +522,9 @@
             <!-- Tags injected here -->
         </div>
 
+        <!-- ✨ DUPLICATES DASHBOARD ✨ -->
+        <div id="reviewDuplicatesContainer" style="margin-bottom: 25px; display: none;"></div>
+
         <!-- ✨ NEW AI INSIGHTS DASHBOARD ✨ -->
         <div id="aiInsightsBox" style="margin-bottom: 25px; background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.3); padding: 20px; border-radius: 16px; display: none;">
             <!-- Content injected dynamically -->
@@ -879,12 +882,17 @@
         <div class="frosted form-card" style="max-width: 1200px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 24px;">
                 <h2 style="margin: 0; font-weight: 800;">Market Setup</h2>
-                <div class="settings-tabs" style="margin: 0;">
-                    <button id="stab-event" class="settings-tab active" onclick="switchSettingsTab('event')">Event Setup</button>
-                    <button id="stab-emails" class="settings-tab" onclick="switchSettingsTab('emails')">Email Templates</button>
-                    <button id="stab-form" class="settings-tab" onclick="switchSettingsTab('form')">Form Builder</button>
-                    <button id="stab-system" class="settings-tab" onclick="switchSettingsTab('system')">System & Data</button>
-                    <button id="stab-users" class="settings-tab" onclick="switchSettingsTab('users')">User Management</button>
+                
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div class="settings-tabs" style="margin: 0;">
+                        <button id="stab-event" class="settings-tab active" onclick="switchSettingsTab('event')">Event Setup</button>
+                        <button id="stab-emails" class="settings-tab" onclick="switchSettingsTab('emails')">Email Templates</button>
+                        <button id="stab-form" class="settings-tab" onclick="switchSettingsTab('form')">Form Builder</button>
+                        <button id="stab-system" class="settings-tab" onclick="switchSettingsTab('system')">System & Data</button>
+                        <button id="stab-users" class="settings-tab" onclick="switchSettingsTab('users')">User Management</button>
+                    </div>
+                    <!-- ✨ NEW EXPORT BACKUP BUTTON ✨ -->
+                    <button onclick="exportBackupCSV()" class="btn-action" style="padding: 10px 15px; font-size: 0.85rem; background: var(--gradient-success); white-space: nowrap;">💾 Download CSV Backup</button>
                 </div>
             </div>
 
@@ -2893,6 +2901,12 @@
             filtered.sort((a, b) => a.appNumber - b.appNumber);
         }
         
+        const emailCounts = {};
+        currentData.vendors.forEach(v => {
+            const email = (v.preferred_email || '').toLowerCase();
+            if (email) emailCounts[email] = (emailCounts[email] || 0) + 1;
+        });
+
         const blastBtn = document.getElementById('blastBtn');
         if (currentUser.role === 'admin') {
             if (activeFilter === 'approved') {
@@ -2967,6 +2981,11 @@
                 tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">⚠️ ${strikes} LATE</span>`);
             }
 
+            const emailKey = (v.preferred_email || '').toLowerCase();
+            if (emailKey && emailCounts[emailKey] > 1) {
+                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">🚨 DUPLICATE APP</span>`);
+            }
+
             const hasFoodLicense = v.food_license && v.food_license.toLowerCase() === 'yes';
             
             // Use the local matched tags
@@ -3008,9 +3027,11 @@
             // Only allow resend email if they aren't pending and user is admin
             const canEmail = currentUser.role === 'admin' && v.status !== 'Needs Review' && v.status !== 'Pending';
 
+            const submitDate = v.created_at ? new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown Date';
+
             return `
             <tr class="clickable-row" style="${rowBgStyle}" draggable="true" ondragstart="handleDragStart(event, '${v.id}')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${v.id}')" onclick="openReviewModal('${v.id}')">
-                <td style="${rowBorderStyle}"><span style="color: #BF5AF2; font-weight: 800; margin-right: 8px; font-size: 1.1rem;">#${v.appNumber}</span><br><span style="font-family: monospace; letter-spacing: 1px; font-size: 0.85rem; color: var(--text-muted);">${v.student_id || 'N/A'}</span></td>
+                <td style="${rowBorderStyle}"><span style="color: #BF5AF2; font-weight: 800; margin-right: 8px; font-size: 1.1rem;">#${v.appNumber}</span><br><span style="font-family: monospace; letter-spacing: 1px; font-size: 0.85rem; color: var(--text-muted);">${v.student_id || 'N/A'}</span><br><span style="font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; font-weight: 600;">${submitDate}</span></td>
                 <td style="${rowBgStyle}">
                     <strong style="font-size: 1.05rem;">${v.first_name} ${v.last_name}</strong>
                     ${tagsContainer}
@@ -3141,7 +3162,9 @@
         if (!vendor) return;
         
         currentReviewingId = id;
-        document.getElementById('reviewName').innerText = `#${vendor.appNumber} - ${vendor.first_name} ${vendor.last_name}`;
+        
+        const submitDate = vendor.created_at ? new Date(vendor.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown Date';
+        document.getElementById('reviewName').innerHTML = `#${vendor.appNumber} - ${vendor.first_name} ${vendor.last_name} <br><span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-top: 4px;">Applied: ${submitDate}</span>`;
         
         // --- FIX 3: Instantly clear out the old vendor's data so it doesn't flash on screen ---
         const aiBox = document.getElementById('aiInsightsBox');
@@ -3150,6 +3173,50 @@
             aiBox.innerHTML = '';
         }
         
+        // --- DUPLICATE CHECKER ---
+        const dupContainer = document.getElementById('reviewDuplicatesContainer');
+        const duplicateApps = currentData.vendors.filter(v => v.id !== vendor.id && (v.preferred_email || '').toLowerCase() === (vendor.preferred_email || '').toLowerCase());
+        
+        if (duplicateApps.length > 0) {
+            let dupHtml = `<div class="review-field-label" style="color: #FF3B30;">🚨 Duplicate Applications Found (${duplicateApps.length})</div>`;
+            
+            duplicateApps.forEach(dup => {
+                const dupDate = dup.created_at ? new Date(dup.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown Date';
+                
+                // Diff Engine: Find exactly what changed between this application and the duplicate
+                const differences = [];
+                const fieldsToCompare = ['first_name', 'last_name', 'phone', 'description', 'link', 'needs_power', 'food_license', 'availability', 'communication_method', 'past_vendor', 'additional_comments'];
+                
+                fieldsToCompare.forEach(f => {
+                    const val1 = String(vendor[f] || '').trim();
+                    const val2 = String(dup[f] || '').trim();
+                    if (val1 !== val2) {
+                        differences.push(f.replace(/_/g, ' ').toUpperCase());
+                    }
+                });
+                
+                let diffText = differences.length > 0 
+                    ? `<span style="color: #FF9500; font-size: 0.85rem; display: block; margin-top: 6px; line-height: 1.4;"><strong>Differences Found:</strong> ${differences.join(', ')}</span>` 
+                    : `<span style="color: #34C759; font-size: 0.85rem; display: block; margin-top: 6px; line-height: 1.4;">Identical matching data.</span>`;
+                
+                dupHtml += `
+                    <div style="background: rgba(255, 59, 48, 0.05); border: 1px solid rgba(255, 59, 48, 0.3); padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;" onclick="openReviewModal('${dup.id}')" onmouseover="this.style.background='rgba(255, 59, 48, 0.1)'" onmouseout="this.style.background='rgba(255, 59, 48, 0.05)'">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong style="color: #fff;">App #${dup.appNumber} - ${dup.status}</strong>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold;">${dupDate}</span>
+                        </div>
+                        ${diffText}
+                        <div style="margin-top: 10px; font-size: 0.8rem; font-weight: bold; color: #0A84FF;">Click to jump to this version ↗</div>
+                    </div>
+                `;
+            });
+            dupContainer.innerHTML = dupHtml;
+            dupContainer.style.display = 'block';
+        } else {
+            dupContainer.style.display = 'none';
+            dupContainer.innerHTML = '';
+        }
+
         let tagsArray = [];
         if (vendor.status === 'Needs Review') tagsArray.push(`<span class="status-pill review" style="font-size: 0.85rem;">Needs Review</span>`);
         else if (vendor.status === 'Approved' || vendor.status === 'Checked In') tagsArray.push(`<span class="status-pill approved" style="font-size: 0.85rem;">Approved</span>`);
@@ -3166,6 +3233,16 @@
         
         if (strikes >= 3) {
             tagsArray.push(`<span class="group-tag" style="background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); font-size: 0.85rem; margin-top:0;">🚨 ${strikes} LATE STRIKES</span>`);
+        }
+
+        const emailCounts = {};
+        currentData.vendors.forEach(v => {
+            const email = (v.preferred_email || '').toLowerCase();
+            if (email) emailCounts[email] = (emailCounts[email] || 0) + 1;
+        });
+        const emailKey = (vendor.preferred_email || '').toLowerCase();
+        if (emailKey && emailCounts[emailKey] > 1) {
+            tagsArray.push(`<span class="group-tag" style="background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); font-size: 0.85rem; margin-top:0;">🚨 DUPLICATE APP</span>`);
         }
 
         if (vendor.needs_power === 'Yes') tagsArray.push(`<span class="power-tag" style="margin-top:0; font-size: 0.85rem; padding: 6px 12px; border-radius: 20px;">Power Requested</span>`);
@@ -4757,6 +4834,36 @@
             btn.innerText = origText;
             btn.disabled = false;
         } 
+    }
+
+    // --- MANUAL CSV BACKUP EXPORT ---
+    function exportBackupCSV() {
+        if (!currentData || !currentData.vendors || currentData.vendors.length === 0) {
+            return showToast("No data available to backup.", true);
+        }
+        
+        const rows = [];
+        // Get all unique columns from the first vendor
+        const headers = Object.keys(currentData.vendors[0]);
+        rows.push(headers.join(','));
+        
+        currentData.vendors.forEach(v => {
+            const values = headers.map(h => {
+                let val = v[h] === null || v[h] === undefined ? '' : String(v[h]);
+                val = val.replace(/"/g, '""'); // Escape quotes for CSV
+                return `"${val}"`; 
+            });
+            rows.push(values.join(','));
+        });
+        
+        const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const marketName = currentData.activeEvent ? currentData.activeEvent.name.replace(/[^a-z0-9]/gi, '_') : 'Market';
+        a.download = `Backup_${marketName}_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        showToast("✨ Local Backup Downloaded Successfully!", false);
     }
 </script>
 </body>
