@@ -4358,7 +4358,7 @@
 
         if(data && data[0]) {
             const newTitle = `${name} Vendor Application`;
-            const newDesc = `Hello! Thank you for your interest in applying to a CAB student Market for the 2025-2026 school year! CAB Applications for the ${name}.<br><br><strong>Date of Market:</strong> ${fDate}<br><strong>Time:</strong> ${time}<br><strong>Location:</strong> ${location}<br><br>This application will close on ${fClose}.<br>Select vendors will be contacted via email on ${fContact}.<br>Respond to confirm your spot by ${fConfirm}.`;
+            const newDesc = `Hello! Thank you for your interest in applying to a CAB Student Market for the 2025-2026 school year! CAB Applications for the ${name}.<br><br><strong>Date of Market:</strong> ${fDate}<br><strong>Time:</strong> ${time}<br><strong>Location:</strong> ${location}<br><br>This application will close on ${fClose}.<br>Select vendors will be contacted via email on ${fContact}.<br>Respond to confirm your spot by ${fConfirm}.`;
 
             const { data: secData } = await _supabase.from('secrets').select('value').eq('name', 'MARKET_FORM_CONFIG_V3').maybeSingle();
             let configToSave = {};
