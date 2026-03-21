@@ -891,8 +891,6 @@
                         <button id="stab-system" class="settings-tab" onclick="switchSettingsTab('system')">System & Data</button>
                         <button id="stab-users" class="settings-tab" onclick="switchSettingsTab('users')">User Management</button>
                     </div>
-                    <!-- ✨ NEW EXPORT BACKUP BUTTON ✨ -->
-                    <button onclick="exportBackupCSV()" class="btn-action" style="padding: 10px 15px; font-size: 0.85rem; background: var(--gradient-success); white-space: nowrap;">💾 Download CSV Backup</button>
                 </div>
             </div>
 
@@ -1041,6 +1039,13 @@
 
             <!-- TAB 3: SYSTEM & DATA -->
             <div id="settings-tab-system" class="settings-section" style="display:none;">
+                <!-- Full Data Backup -->
+                <div style="margin-bottom:30px; background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.2); padding: 25px; border-radius: 20px;">
+                    <label class="stat-label" style="color: #0A84FF; font-size: 1rem; margin-bottom: 10px;">Full Database Backup</label>
+                    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Download a complete CSV spreadsheet of ALL vendor applications, internal notes, and data for the current market event.</p>
+                    <button onclick="exportBackupCSV()" class="btn-action" style="background: var(--gradient-accent); padding: 12px 24px;">💾 Download Full CSV Backup</button>
+                </div>
+
                 <!-- Admin Password Management -->
                 <div style="margin-bottom:30px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px;">
                     <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">Change Admin Password</label>
