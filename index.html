@@ -396,13 +396,24 @@
         .settings-tab:hover { color: #fff; background: rgba(255,255,255,0.05); }
         .settings-tab.active { background: rgba(255,255,255,0.15); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); }
 
-        /* Form Builder Styles */
-        .builder-q-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 16px; margin-bottom: 16px; position: relative; transition: all 0.2s ease;}
-        .builder-q-card:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); }
-        .builder-q-remove { color: #FF3B30; cursor: pointer; font-weight: bold; background: rgba(255, 59, 48, 0.1); border: 1px solid rgba(255, 59, 48, 0.2); border-radius: 8px; font-size: 0.85rem; padding: 6px 12px; transition: 0.2s; }
-        .builder-q-remove:hover { background: rgba(255, 59, 48, 0.2); color: #fff; }
-        .admin-grid-2 { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 15px; }
-        @media (min-width: 600px) { .admin-grid-2 { grid-template-columns: 1fr 1fr; } }
+        /* Form Builder Styles (Google Forms Theme) */
+        .builder-q-card { background: rgba(255,255,255,0.02); border: 1px solid transparent; padding: 25px; border-radius: 16px; margin-bottom: 20px; position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 10px rgba(0,0,0,0.2);}
+        .builder-q-card:hover { background: rgba(255,255,255,0.04); }
+        .builder-q-card:focus-within { background: rgba(255,255,255,0.06); box-shadow: 0 10px 30px rgba(0,0,0,0.4); transform: scale(1.01); z-index: 10; }
+        
+        .gf-input::placeholder { color: rgba(255,255,255,0.3); }
+        
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: .3s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .switch input:checked + .slider { background-color: #0A84FF; }
+        .switch input:checked + .slider:before { transform: translateX(20px); }
+        .switch input:disabled + .slider { opacity: 0.5; cursor: not-allowed; }
+
+        .builder-q-remove { color: #var(--text-muted); cursor: pointer; font-weight: bold; background: transparent; border: none; border-radius: 50%; font-size: 1.2rem; width: 36px; height: 36px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .builder-q-remove:hover { background: rgba(255, 59, 48, 0.15); color: #FF3B30; }
 
         /* Color Picker Palette */
         .color-trigger-wrapper { position: relative; display: flex; align-items: center; }
@@ -4611,85 +4622,80 @@
         list.innerHTML = formConfig.questions.map((q, i) => {
             // Protected fields that shouldn't be deleted or heavily mutated
             const isProtected = q.id === 'student_id' || q.id === 'full_name_combined';
-            const borderColor = q.type === 'section_header' ? '#BF5AF2' : '#0A84FF';
+            const isSection = q.type === 'section_header';
+            const borderColor = isSection ? '#BF5AF2' : '#0A84FF';
 
             return `
-            <div class="builder-q-card" style="border-left: 4px solid ${borderColor}; transition: all 0.3s ease;">
-                <!-- Card Header -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
-                    <div style="display:flex; gap:6px; align-items:center;">
-                        <button class="btn-action" style="padding:4px 10px; background: rgba(255,255,255,0.1); min-width:auto; font-size:12px; border-radius: 8px;" onclick="moveQ(${i},-1)" ${i===0?'disabled':''}>▲</button>
-                        <button class="btn-action" style="padding:4px 10px; background: rgba(255,255,255,0.1); min-width:auto; font-size:12px; border-radius: 8px;" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''}>▼</button>
-                        <span style="font-weight:800; margin-left:10px; color:#fff; font-size: 0.95rem;">Field ${i+1}</span>
+            <div class="builder-q-card" style="border-left: 6px solid ${borderColor};">
+                
+                <!-- Top Toolbar -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                    <div style="display:flex; align-items: center; gap: 8px;">
+                        <button class="btn-action" style="padding:0; width: 28px; height: 28px; background: rgba(255,255,255,0.1); font-size:12px; border-radius: 6px; display:flex; align-items:center; justify-content:center;" onclick="moveQ(${i},-1)" ${i===0?'disabled':''} title="Move Up">▲</button>
+                        <button class="btn-action" style="padding:0; width: 28px; height: 28px; background: rgba(255,255,255,0.1); font-size:12px; border-radius: 6px; display:flex; align-items:center; justify-content:center;" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''} title="Move Down">▼</button>
+                        ${isProtected ? `<span style="color:#a1a1aa; font-size: 0.7rem; font-style: italic; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; margin-left: 8px;">Protected Field</span>` : ''}
                     </div>
-                    ${!isProtected ? `<button class="builder-q-remove" onclick="deleteQ(${i})">🗑️ Remove</button>` : `<span style="color:#a1a1aa; font-size: 0.75rem; font-style: italic; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px;">Protected Core Field</span>`}
-                </div>
-
-                <!-- Setup Grid (Type & Width/Required) -->
-                <div class="admin-grid-2">
-                    <div>
-                        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:6px; text-transform: uppercase; font-weight: 700;">Field Type</label>
-                        <select class="modern-input" style="padding:12px; border-color: rgba(255,255,255,0.1);" onchange="updateQ(${i}, 'type', this.value)" ${isProtected ? 'disabled' : ''}>
-                            <option value="text" ${q.type==='text'?'selected':''}>Short Text</option>
-                            <option value="textarea" ${q.type==='textarea'?'selected':''}>Paragraph Text</option>
-                            <option value="email" ${q.type==='email'?'selected':''}>Email Address</option>
-                            <option value="tel" ${q.type==='tel'?'selected':''}>Phone Number</option>
+                    
+                    <div style="display:flex; align-items: center; gap: 15px;">
+                        <select class="modern-input" style="padding: 8px 36px 8px 12px; height: 38px; font-size: 0.85rem; border-color: rgba(255,255,255,0.1); background-color: rgba(0,0,0,0.4); border-radius: 8px; margin: 0;" onchange="updateQ(${i}, 'type', this.value)" ${isProtected ? 'disabled' : ''}>
+                            <option value="text" ${q.type==='text'?'selected':''}>Short answer</option>
+                            <option value="textarea" ${q.type==='textarea'?'selected':''}>Paragraph</option>
+                            <option value="email" ${q.type==='email'?'selected':''}>Email</option>
+                            <option value="tel" ${q.type==='tel'?'selected':''}>Phone</option>
                             <option value="number" ${q.type==='number'?'selected':''}>Number</option>
-                            <option value="dropdown" ${q.type==='dropdown'?'selected':''}>Dropdown Menu</option>
-                            <option value="checkbox_single" ${q.type==='checkbox_single'?'selected':''}>Single Checkbox / Agreement</option>
-                            <option value="section_header" ${q.type==='section_header'?'selected':''}>Section Header (Page Break)</option>
+                            <option value="dropdown" ${q.type==='dropdown'?'selected':''}>Dropdown</option>
+                            <option value="checkbox_single" ${q.type==='checkbox_single'?'selected':''}>Agreement / Checkbox</option>
+                            <option value="section_header" ${q.type==='section_header'?'selected':''}>Page Break (Section)</option>
                         </select>
                     </div>
-
-                    <div style="display:flex; flex-direction:column; justify-content: flex-end; gap: 12px;">
-                        ${q.type !== 'section_header' ? `
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <input type="checkbox" id="req_${i}" ${q.required?'checked':''} onchange="updateQ(${i}, 'required', this.checked)" ${isProtected && q.required ? 'disabled' : ''} style="width:20px; height:20px; accent-color: #0A84FF; cursor:pointer;">
-                                <label for="req_${i}" style="font-size:0.9rem; color:#fff; font-weight: 600; cursor:pointer;">Required Question</label>
-                            </div>
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <label style="font-size:0.85rem; color:var(--text-muted); font-weight:700;">Width:</label>
-                                <select class="modern-input" style="padding:8px 12px; font-size: 0.85rem; width: auto; flex: 1; border-color: rgba(255,255,255,0.1);" onchange="updateQ(${i}, 'width', this.value)">
-                                    <option value="full" ${q.width==='full'?'selected':''}>Full Width (100%)</option>
-                                    <option value="half" ${q.width==='half'?'selected':''}>Half Width (50%)</option>
-                                </select>
-                            </div>
-                        ` : `
-                            <div style="color:#BF5AF2; font-size:0.85rem; font-weight:800; background: rgba(191, 90, 242, 0.1); padding: 12px; border-radius: 12px; border: 1px solid rgba(191, 90, 242, 0.2);">
-                                📝 Acts as a Page Break
-                            </div>
-                        `}
-                    </div>
                 </div>
 
-                <!-- Text Labels -->
-                <div style="margin-top:20px;">
-                    <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:6px; text-transform: uppercase; font-weight: 700;">${q.type === 'section_header' ? 'Header Title Text' : 'Main Question Label'}</label>
-                    <input type="text" class="modern-input" style="padding:12px; font-weight: 600;" value="${escapeHtml(q.label)}" oninput="updateQ(${i},'label',this.value)">
+                <!-- Main Input (Title/Label) -->
+                <div style="margin-bottom: 8px;">
+                    <input type="text" class="gf-input" style="width: 100%; background: transparent; border: none; border-bottom: 2px solid transparent; color: #fff; font-size: ${isSection ? '1.5rem' : '1.15rem'}; font-weight: ${isSection ? '800' : '600'}; padding: 8px 0; outline: none; transition: 0.2s;" value="${escapeHtml(q.label)}" placeholder="${isSection ? 'Section Title' : 'Question Title'}" oninput="updateQ(${i},'label',this.value)" onfocus="this.style.borderBottomColor='${borderColor}'" onblur="this.style.borderBottomColor='transparent'">
                 </div>
 
-                ${q.type !== 'section_header' && q.type !== 'checkbox_single' ? `
-                    <div style="margin-top:15px;">
-                        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:6px; text-transform: uppercase; font-weight: 700;">Hint Text (Optional)</label>
-                        <input type="text" class="modern-input" style="padding:12px; color: #a1a1aa; font-size: 0.9rem;" value="${escapeHtml(q.hint || '')}" placeholder="e.g. Please enter your valid GCU email..." oninput="updateQ(${i},'hint',this.value)">
-                    </div>
+                ${!isSection ? `
+                <!-- Description/Hint -->
+                <div style="margin-bottom: 15px;">
+                    <input type="text" class="gf-input" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid transparent; color: var(--text-muted); font-size: 0.9rem; padding: 6px 0; outline: none; transition: 0.2s;" value="${escapeHtml(q.hint || '')}" placeholder="${q.type === 'checkbox_single' ? 'Agreement terms text...' : 'Description or hint (optional)'}" oninput="updateQ(${i},'hint',this.value)" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.3)'" onblur="this.style.borderBottomColor='transparent'">
+                </div>
                 ` : ''}
 
-                ${q.type === 'checkbox_single' ? `
-                    <div style="margin-top:15px;">
-                        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:6px; text-transform: uppercase; font-weight: 700;">Agreement Text</label>
-                        <textarea class="modern-input" style="padding:12px; min-height: 80px; font-size: 0.9rem;" placeholder="I acknowledge that..." oninput="updateQ(${i},'hint',this.value)">${escapeHtml(q.hint || '')}</textarea>
-                    </div>
-                ` : ''}
-
+                <!-- Contextual Inputs (Dropdown options) -->
                 ${q.type === 'dropdown' ? `
-                    <div style="margin-top:20px; background: rgba(10, 132, 255, 0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(10, 132, 255, 0.2);">
-                        <label style="font-size:0.75rem; color:#0A84FF; font-weight:800; text-transform: uppercase; display:block; margin-bottom:8px;">Dropdown Options (Comma Separated)</label>
-                        <input type="text" class="modern-input" style="padding:12px; border-color: rgba(10,132,255,0.4);" value="${escapeHtml(q.options || '')}" placeholder="Option 1, Option 2, Option 3" oninput="updateQ(${i},'options',this.value)">
+                    <div style="margin-top:15px; display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 1.2rem; color: var(--text-muted);">☰</span>
+                        <input type="text" style="flex: 1; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 0; font-size: 0.95rem; outline:none; transition: 0.2s;" value="${escapeHtml(q.options || '')}" placeholder="Option 1, Option 2, Option 3 (comma separated)" oninput="updateQ(${i},'options',this.value)" onfocus="this.style.borderBottomColor='#0A84FF'" onblur="this.style.borderBottomColor='rgba(255,255,255,0.2)'">
                     </div>
                 ` : ''}
 
-                <div style="margin-top:15px; font-size:0.7rem; color:rgba(255,255,255,0.2); text-align:right; font-family: monospace;">ID: ${q.id}</div>
+                <!-- Bottom Footer (Required, Delete, Width) -->
+                <div style="display:flex; justify-content: flex-end; align-items: center; gap: 15px; margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
+                    ${!isSection ? `
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <select style="background:transparent; border:none; color:var(--text-muted); font-size:0.85rem; outline:none; cursor:pointer; font-weight: 600;" onchange="updateQ(${i}, 'width', this.value)" title="Field Width">
+                            <option value="full" ${q.width==='full'?'selected':''}>Full Width</option>
+                            <option value="half" ${q.width==='half'?'selected':''}>Half Width</option>
+                        </select>
+                    </div>
+                    
+                    <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 5px;"></div>
+                    
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <label for="req_${i}" style="font-size:0.9rem; color:#fff; font-weight: 600; cursor:pointer; user-select: none;">Required</label>
+                        <label class="switch">
+                            <input type="checkbox" id="req_${i}" ${q.required?'checked':''} onchange="updateQ(${i}, 'required', this.checked)" ${isProtected && q.required ? 'disabled' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    ` : ''}
+
+                    ${!isProtected ? `
+                    <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 5px;"></div>
+                    <button class="builder-q-remove" onclick="deleteQ(${i})" title="Delete Item">🗑️</button>
+                    ` : ''}
+                </div>
             </div>`;
         }).join('');
     }
