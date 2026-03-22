@@ -141,9 +141,11 @@
         .control-item.active-profiles { background: #BF5AF2; border: none; box-shadow: 0 8px 20px rgba(191, 90, 242, 0.2); }
         .control-item.active-scan { background: rgba(52, 199, 89, 0.2); border-color: rgba(52, 199, 89, 0.4); color: #34C759; }
 
-        .stats-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; margin-bottom: 20px; }
-        .stat-card { padding: 24px; border-radius: var(--radius-card); text-align: center; transition: transform 0.3s ease; }
-        .stat-val { font-size: 2.8rem; font-weight: 800; display: block; letter-spacing: -0.02em; }
+        .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 20px; }
+        .stat-card { padding: 20px; border-radius: var(--radius-card); text-align: center; transition: transform 0.3s ease; }
+        .stat-val { font-size: 2.4rem; font-weight: 800; display: block; letter-spacing: -0.02em; }
+        .stat-sub { display: flex; justify-content: center; gap: 14px; margin-top: 8px; }
+        .stat-sub span { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; }
         
         .stat-label { 
             font-size: 0.8rem; 
@@ -364,7 +366,7 @@
             .brand-logo { height: 40px; } .brand-text h1 { font-size: 1.2rem; }
             .controls { flex-wrap: wrap; justify-content: center; width: 100%; gap: 6px; }
             .control-item { font-size: 0.75rem; padding: 0 10px; height: 36px; flex: 1 1 auto; justify-content: center; }
-            .stats-container { grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+            .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 24px; }
             .stat-card { padding: 16px; } .stat-val { font-size: 1.8rem; }
             table, thead, tbody, th, td, tr { display: block; }
             thead tr { position: absolute; top: -9999px; left: -9999px; }
@@ -785,17 +787,18 @@
             </div>
         </div>
         <div class="controls">
-            <button onclick="setFilter('inbox')" id="nav-inbox" class="control-item">ALL APPLICATIONS</button>
-            <button onclick="setFilter('approved')" id="nav-approved" class="control-item">APPROVED</button>
-            <button onclick="setFilter('review')" id="nav-review" class="control-item">NEEDS REVIEW</button>
-            <button onclick="setFilter('power')" id="nav-power" class="control-item">NEEDS POWER</button>
-            <button onclick="setFilter('denied')" id="nav-denied" class="control-item">DENIED</button>
-            <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.2); margin: 0 2px;"></div>
+            <button onclick="setFilter('inbox')" id="nav-inbox" class="control-item">VENDORS</button>
             <button onclick="setFilter('profiles')" id="nav-profiles" class="control-item">PROFILES</button>
-            <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.2); margin: 0 2px;"></div>
             <button onclick="toggleView('scan')" id="nav-scan" class="control-item" style="background: rgba(52, 199, 89, 0.2); border-color: rgba(52, 199, 89, 0.4); color: #34C759;">CHECK IN</button>
             <button onclick="toggleView('settings')" id="nav-settings" class="control-item">SETTINGS</button>
-            <button onclick="handleLogout()" class="control-item" style="background: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.3); color: #FF3B30; margin-left: 6px;">LOGOUT</button>
+            <button onclick="handleLogout()" class="control-item" style="background: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.3); color: #FF3B30;">LOGOUT</button>
+        </div>
+        <div class="controls" id="vendorFilterTabs" style="margin-top: 6px;">
+            <button onclick="setFilter('inbox')" id="nav-filter-all" class="control-item" style="font-size: 0.7rem; height: 32px;">ALL</button>
+            <button onclick="setFilter('approved')" id="nav-approved" class="control-item" style="font-size: 0.7rem; height: 32px;">APPROVED</button>
+            <button onclick="setFilter('review')" id="nav-review" class="control-item" style="font-size: 0.7rem; height: 32px;">REVIEW</button>
+            <button onclick="setFilter('power')" id="nav-power" class="control-item" style="font-size: 0.7rem; height: 32px;">POWER</button>
+            <button onclick="setFilter('denied')" id="nav-denied" class="control-item" style="font-size: 0.7rem; height: 32px;">DENIED</button>
         </div>
     </div>
 
@@ -804,9 +807,13 @@
         <div class="stats-container" id="statsBar">
             <div class="frosted stat-card"><span class="stat-label">New Apps</span><span class="stat-val" id="countInbox">0</span></div>
             <div class="frosted stat-card"><span class="stat-label">Needs Review</span><span class="stat-val" style="color:#FF9500" id="countReview">0</span></div>
-            <div class="frosted stat-card"><span class="stat-label">Approved</span><span class="stat-val" style="color:#34C759" id="countApproved">0</span></div>
-            <div class="frosted stat-card"><span class="stat-label">Confirmed</span><span class="stat-val" style="color:#30D158" id="countConfirmed">0</span></div>
-            <div class="frosted stat-card"><span class="stat-label">Declined</span><span class="stat-val" style="color:#FF3B30" id="countDeclined">0</span></div>
+            <div class="frosted stat-card">
+                <span class="stat-label">Approved</span><span class="stat-val" style="color:#34C759" id="countApproved">0</span>
+                <div class="stat-sub">
+                    <span style="color:#30D158;"><span id="countConfirmed">0</span> confirmed</span>
+                    <span style="color:#FF3B30;"><span id="countDeclined">0</span> declined</span>
+                </div>
+            </div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
@@ -2285,26 +2292,36 @@
         activeFilter = filter;
         document.querySelectorAll('.control-item').forEach(el => el.classList.remove('active', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan'));
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
-        
+
         // Reset dropdowns on tab switch (intentionally preserving the sort filter state)
         if (document.getElementById('unifiedFilter')) document.getElementById('unifiedFilter').value = 'all';
         if (document.getElementById('search')) document.getElementById('search').value = '';
 
-        const btn = document.getElementById(`nav-${filter}`);
-        if(btn) {
-            if (filter === 'inbox') btn.classList.add('active');
-            else if (filter === 'review') btn.classList.add('active-review');
-            else if (filter === 'approved') btn.classList.add('active-approved');
-            else if (filter === 'denied') btn.classList.add('active-denied');
-            else if (filter === 'power') btn.classList.add('active-power', 'active');
-            else if (filter === 'profiles') btn.classList.add('active-profiles');
+        // Highlight the primary nav "VENDORS" button for any vendor filter tab
+        const vendorFilters = ['inbox', 'approved', 'review', 'power', 'denied'];
+        if (vendorFilters.includes(filter)) {
+            document.getElementById('nav-inbox').classList.add('active');
         }
-        
+
+        // Highlight the active sub-filter tab
+        const filterTabId = filter === 'inbox' ? 'nav-filter-all' : `nav-${filter}`;
+        const filterBtn = document.getElementById(filterTabId);
+        if (filterBtn) {
+            if (filter === 'inbox') filterBtn.classList.add('active');
+            else if (filter === 'review') filterBtn.classList.add('active-review');
+            else if (filter === 'approved') filterBtn.classList.add('active-approved');
+            else if (filter === 'denied') filterBtn.classList.add('active-denied');
+            else if (filter === 'power') filterBtn.classList.add('active-power', 'active');
+        }
+
         if (filter === 'profiles') {
+            document.getElementById('nav-profiles').classList.add('active-profiles');
+            document.getElementById('vendorFilterTabs').style.display = 'none';
             document.getElementById('view-profiles').style.display = 'block';
             if (document.getElementById('profileSearch')) document.getElementById('profileSearch').value = '';
             fetchAndRenderProfiles();
         } else {
+            document.getElementById('vendorFilterTabs').style.display = 'flex';
             document.getElementById('view-list').style.display = 'block';
             renderTable();
         }
@@ -2313,7 +2330,8 @@
     function toggleView(v) {
         document.querySelectorAll('.control-item').forEach(e => e.classList.remove('active', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan'));
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
-        
+        document.getElementById('vendorFilterTabs').style.display = 'none';
+
         if (v === 'settings') {
             document.getElementById('nav-settings').classList.add('active-settings');
             document.getElementById('view-settings').style.display = 'block';
@@ -2899,7 +2917,7 @@
             }
 
             if (search) {
-                const searchStr = `${v.student_id} ${v.first_name} ${v.last_name} ${v.preferred_email} ${v.gcu_email}`.toLowerCase();
+                const searchStr = `${v.student_id} ${v.first_name} ${v.last_name} ${v.preferred_email} ${v.gcu_email} ${v.description}`.toLowerCase();
                 if (!searchStr.includes(search)) return false;
             }
             return true;
