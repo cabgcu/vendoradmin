@@ -545,6 +545,9 @@
             <!-- Dynamic check in button injected here -->
         </div>
 
+        <!-- EMAIL DELIVERY STATUS TRACKER -->
+        <div id="reviewEmailStatusContainer" style="margin-bottom: 25px; display: none;"></div>
+
         <div class="form-grid" style="margin-bottom: 20px;">
             <div>
                 <div class="review-field-label">Student ID</div>
@@ -832,6 +835,7 @@
                 </select>
 
                 <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; flex-shrink: 0; display: none; height: 50px;">Send Emails...</button>
+                <button onclick="refreshAllEmailStatuses()" id="refreshStatusBtn" class="btn-action" style="white-space: nowrap; flex-shrink: 0; display: none; height: 50px; background: rgba(10, 132, 255, 0.1); border: 1px solid rgba(10, 132, 255, 0.3); color: #0A84FF;">Refresh Email Status</button>
             </div>
         </div>
         
@@ -2924,6 +2928,7 @@
         });
 
         const blastBtn = document.getElementById('blastBtn');
+        const refreshStatusBtn = document.getElementById('refreshStatusBtn');
         if (currentUser.role === 'admin') {
             if (activeFilter === 'approved') {
                 blastBtn.style.display = 'inline-block';
@@ -2937,8 +2942,12 @@
             } else {
                 blastBtn.style.display = 'none';
             }
+            // Show refresh status button on tabs where emails are sent
+            const hasEmailedVendors = filtered.some(v => v.email_sent || v.brevo_message_id);
+            refreshStatusBtn.style.display = (hasEmailedVendors && ['approved', 'denied', 'power', 'all'].includes(activeFilter)) ? 'inline-block' : 'none';
         } else {
             blastBtn.style.display = 'none';
+            refreshStatusBtn.style.display = 'none';
         }
 
         const tbody = document.getElementById('vendorTableBody');
@@ -2979,7 +2988,18 @@
                 }
             }
             
-            const emailSentBadge = isEmailSentForView ? `<span class="status-badge sent">SENT</span>` : `<span class="status-badge draft">UNSENT</span>`;
+            let emailSentBadge = '';
+            if (isEmailSentForView) {
+                const deliveryStatus = v.email_delivery_status;
+                if (deliveryStatus && deliveryStatus !== 'sent') {
+                    const dDisplay = getEmailDeliveryDisplay(deliveryStatus);
+                    emailSentBadge = `<span class="status-badge sent" style="background: ${dDisplay.bg}; color: ${dDisplay.color}; border: 1px solid ${dDisplay.color}40;">${dDisplay.icon} ${dDisplay.label.toUpperCase()}</span>`;
+                } else {
+                    emailSentBadge = `<span class="status-badge sent">SENT</span>`;
+                }
+            } else {
+                emailSentBadge = `<span class="status-badge draft">UNSENT</span>`;
+            }
 
             // Clean Badge Layout Generation
             let tagsArray = [];
@@ -3370,7 +3390,73 @@
             checkInContainer.innerHTML = '';
         }
 
+        // --- EMAIL DELIVERY STATUS SECTION ---
+        const emailStatusContainer = document.getElementById('reviewEmailStatusContainer');
+        if (vendor.email_sent || vendor.brevo_message_id) {
+            const deliveryStatus = vendor.email_delivery_status || 'sent';
+            const display = getEmailDeliveryDisplay(deliveryStatus);
+            const sentAt = vendor.email_sent_at ? new Date(vendor.email_sent_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+
+            // Build the status step tracker
+            const steps = ['sent', 'delivered', 'opened', 'clicked'];
+            const negativeStatuses = ['hardBounce', 'softBounce', 'blocked', 'error'];
+            const isNegative = negativeStatuses.includes(deliveryStatus);
+
+            let stepsHtml = '';
+            if (!isNegative) {
+                const currentIdx = steps.indexOf(deliveryStatus);
+                stepsHtml = steps.map((step, i) => {
+                    const stepDisplay = getEmailDeliveryDisplay(step);
+                    const isActive = i <= currentIdx;
+                    const isCurrent = step === deliveryStatus;
+                    return `<div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; ${isActive ? `background: ${stepDisplay.color}; color: #fff;` : 'background: rgba(255,255,255,0.1); color: var(--text-muted);'}">${isActive ? '✓' : (i + 1)}</div>
+                        <span style="font-size: 0.8rem; font-weight: ${isCurrent ? '800' : '600'}; color: ${isActive ? '#fff' : 'var(--text-muted)'}; text-transform: uppercase; letter-spacing: 0.5px;">${stepDisplay.label}</span>
+                        ${i < steps.length - 1 ? '<div style="flex: 0 0 20px; height: 2px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>' : ''}
+                    </div>`;
+                }).join('');
+            }
+
+            emailStatusContainer.innerHTML = `
+                <div style="background: ${display.bg}; border: 1px solid ${display.color}40; padding: 16px 20px; border-radius: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isNegative || stepsHtml ? '12px' : '0'};">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.2rem;">${display.icon}</span>
+                            <div>
+                                <div style="font-weight: 800; font-size: 0.9rem; color: ${display.color}; text-transform: uppercase; letter-spacing: 1px;">Email: ${display.label}</div>
+                                ${sentAt ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Sent ${sentAt}</div>` : ''}
+                            </div>
+                        </div>
+                        <button onclick="checkSingleEmailStatus('${vendor.id}'); event.stopPropagation();" class="btn-action" style="padding: 6px 14px; font-size: 0.75rem; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);" id="refreshEmailStatusBtn">Refresh Status</button>
+                    </div>
+                    ${isNegative ? `<div style="font-size: 0.85rem; color: ${display.color}; font-weight: 600; padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">${display.icon} This email ${deliveryStatus === 'hardBounce' ? 'bounced permanently — the address may be invalid' : deliveryStatus === 'softBounce' ? 'soft bounced — delivery may still be retried' : deliveryStatus === 'blocked' ? 'was blocked by the recipient server' : 'encountered a delivery error'}</div>` : ''}
+                    ${stepsHtml ? `<div style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${stepsHtml}</div>` : ''}
+                </div>
+            `;
+            emailStatusContainer.style.display = 'block';
+        } else {
+            emailStatusContainer.style.display = 'none';
+            emailStatusContainer.innerHTML = '';
+        }
+
         document.getElementById('reviewModal').style.display = 'flex';
+    }
+
+    // Refresh email status for a single vendor from the review modal
+    async function checkSingleEmailStatus(vendorId) {
+        const btn = document.getElementById('refreshEmailStatusBtn');
+        if (btn) { btn.innerText = 'Checking...'; btn.disabled = true; }
+
+        const result = await fetchEmailStatus(vendorId);
+
+        if (result) {
+            showToast(`Email status: ${getEmailDeliveryDisplay(result.status).label}`);
+        } else {
+            showToast('No delivery data found from Brevo.');
+        }
+
+        // Re-open the modal to refresh the UI
+        openReviewModal(vendorId);
     }
 
     // Toggle Attendance Confirmation Function
@@ -3774,18 +3860,147 @@
                 console.error("Email API Error:", errData);
                 return errData.code === 'unauthorized' ? 'unauthorized' : false;
             }
-            
+
+            // Capture the messageId from Brevo's response for delivery tracking
+            const responseData = await response.json();
+            const brevoMessageId = responseData.messageId || null;
+
             // Only overwrite their master database email_sent status if it was a core approval/denial
+            const updatePayload = {
+                brevo_message_id: brevoMessageId,
+                email_delivery_status: 'sent',
+                email_sent_at: new Date().toISOString()
+            };
             if (templates.targetTemplate !== 'custom') {
-                await _supabase.from('vendors').update({ email_sent: templates.targetTemplate }).eq('id', vendor.id);
-                vendor.email_sent = templates.targetTemplate; // Update local state for immediate UI reflection
+                updatePayload.email_sent = templates.targetTemplate;
             }
-            
+
+            await _supabase.from('vendors').update(updatePayload).eq('id', vendor.id);
+
+            // Update local state for immediate UI reflection
+            vendor.brevo_message_id = brevoMessageId;
+            vendor.email_delivery_status = 'sent';
+            vendor.email_sent_at = updatePayload.email_sent_at;
+            if (templates.targetTemplate !== 'custom') {
+                vendor.email_sent = templates.targetTemplate;
+            }
+
             return true;
         } catch (error) {
             console.error(`Failed to send to ${vendor.preferred_email}:`, error);
             return false;
         }
+    }
+
+    // --- BREVO EMAIL DELIVERY TRACKING ---
+    // Fetches email events from Brevo for a specific vendor's email address
+    // and determines the highest-priority delivery status.
+    async function fetchEmailStatus(vendorId) {
+        const vendor = currentData.vendors.find(v => v.id === vendorId);
+        if (!vendor || !vendor.preferred_email) return null;
+
+        // If no email has been sent yet, nothing to check
+        if (!vendor.email_sent && !vendor.brevo_message_id) return null;
+
+        try {
+            // Query Brevo's transactional email events for this recipient
+            const emailEncoded = encodeURIComponent(vendor.preferred_email);
+            let url = `https://api.brevo.com/v3/smtp/statistics/events?limit=50&email=${emailEncoded}`;
+
+            // If we have a messageId, filter by it for precision
+            if (vendor.brevo_message_id) {
+                url += `&messageId=${encodeURIComponent(vendor.brevo_message_id)}`;
+            }
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: { 'accept': 'application/json', 'api-key': BREVO_API_KEY }
+            });
+
+            if (!response.ok) {
+                console.error('Brevo events API error:', response.status);
+                return null;
+            }
+
+            const data = await response.json();
+            const events = data.events || [];
+
+            if (events.length === 0) return null;
+
+            // Priority order: higher index = higher priority status
+            const statusPriority = ['sent', 'deferred', 'delivered', 'opened', 'clicked', 'softBounce', 'hardBounce', 'unsubscribed', 'blocked', 'error'];
+
+            // Determine the most significant status from all events
+            let highestStatus = 'sent';
+            let highestPriority = 0;
+            let latestDate = null;
+
+            events.forEach(evt => {
+                const evtName = evt.event;
+                const idx = statusPriority.indexOf(evtName);
+
+                // Negative events (bounce, error, blocked) always take highest priority
+                if (['hardBounce', 'softBounce', 'blocked', 'error'].includes(evtName)) {
+                    highestStatus = evtName;
+                    highestPriority = 999;
+                    latestDate = evt.date;
+                } else if (idx > highestPriority && highestPriority < 999) {
+                    highestStatus = evtName;
+                    highestPriority = idx;
+                    latestDate = evt.date;
+                }
+            });
+
+            // Save to database and local state
+            const updateData = { email_delivery_status: highestStatus };
+            await _supabase.from('vendors').update(updateData).eq('id', vendorId);
+            vendor.email_delivery_status = highestStatus;
+
+            return { status: highestStatus, events: events, latestDate: latestDate };
+        } catch (err) {
+            console.error('Failed to fetch email status:', err);
+            return null;
+        }
+    }
+
+    // Returns display properties for an email delivery status
+    function getEmailDeliveryDisplay(status) {
+        const map = {
+            'sent':         { label: 'Sent',        color: '#0A84FF', icon: '📤', bg: 'rgba(10, 132, 255, 0.1)' },
+            'deferred':     { label: 'Deferred',    color: '#FF9500', icon: '⏳', bg: 'rgba(255, 149, 0, 0.1)' },
+            'delivered':    { label: 'Delivered',    color: '#34C759', icon: '✓',  bg: 'rgba(52, 199, 89, 0.1)' },
+            'opened':       { label: 'Opened',      color: '#34C759', icon: '👁', bg: 'rgba(52, 199, 89, 0.15)' },
+            'clicked':      { label: 'Clicked',     color: '#30D158', icon: '🔗', bg: 'rgba(48, 209, 88, 0.15)' },
+            'softBounce':   { label: 'Soft Bounce', color: '#FF9500', icon: '⚠',  bg: 'rgba(255, 149, 0, 0.1)' },
+            'hardBounce':   { label: 'Bounced',     color: '#FF3B30', icon: '✕',  bg: 'rgba(255, 59, 48, 0.1)' },
+            'blocked':      { label: 'Blocked',     color: '#FF3B30', icon: '🚫', bg: 'rgba(255, 59, 48, 0.1)' },
+            'error':        { label: 'Error',       color: '#FF3B30', icon: '⚠',  bg: 'rgba(255, 59, 48, 0.1)' },
+            'unsubscribed': { label: 'Unsubscribed',color: '#8E8E93', icon: '🚫', bg: 'rgba(142, 142, 147, 0.1)' }
+        };
+        return map[status] || { label: status || 'Unknown', color: '#8E8E93', icon: '?', bg: 'rgba(142, 142, 147, 0.1)' };
+    }
+
+    // Bulk refresh email status for all vendors that have been emailed
+    async function refreshAllEmailStatuses() {
+        const emailedVendors = currentData.vendors.filter(v => v.email_sent || v.brevo_message_id);
+        if (emailedVendors.length === 0) {
+            showToast('No emails have been sent yet.');
+            return;
+        }
+
+        showToast(`Checking delivery status for ${emailedVendors.length} emails...`);
+
+        // Process in batches of 5 to avoid rate limits
+        const batchSize = 5;
+        let updated = 0;
+        for (let i = 0; i < emailedVendors.length; i += batchSize) {
+            const batch = emailedVendors.slice(i, i + batchSize);
+            const results = await Promise.all(batch.map(v => fetchEmailStatus(v.id)));
+            updated += results.filter(r => r !== null).length;
+        }
+
+        showToast(`Updated ${updated} email statuses.`);
+        renderTable();
     }
 
     async function resendEmail(id) {
