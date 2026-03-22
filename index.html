@@ -2899,7 +2899,7 @@
             }
 
             if (search) {
-                const searchStr = `${v.student_id} ${v.first_name} ${v.last_name} ${v.preferred_email} ${v.gcu_email}`.toLowerCase();
+                const searchStr = `${v.student_id} ${v.first_name} ${v.last_name} ${v.preferred_email} ${v.gcu_email} ${v.description}`.toLowerCase();
                 if (!searchStr.includes(search)) return false;
             }
             return true;
