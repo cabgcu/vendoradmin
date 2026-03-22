@@ -1522,6 +1522,7 @@
     }
 
     function handleLogout() {
+        stopEmailStatusPolling();
         sessionStorage.removeItem('cab_market_auth');
         location.reload();
     }
@@ -1574,6 +1575,7 @@
 
         refreshData();
         setupRealtime();
+        startEmailStatusPolling();
     }
 
     document.getElementById('login-password').addEventListener('keydown', (e) => {
@@ -4034,14 +4036,14 @@
     }
 
     // Bulk refresh email status for all vendors that have been emailed
-    async function refreshAllEmailStatuses() {
+    async function refreshAllEmailStatuses(silent = false) {
         const emailedVendors = currentData.vendors.filter(v => v.email_sent || v.brevo_message_id);
         if (emailedVendors.length === 0) {
-            showToast('No emails have been sent yet.');
+            if (!silent) showToast('No emails have been sent yet.');
             return;
         }
 
-        showToast(`Checking delivery status for ${emailedVendors.length} emails...`);
+        if (!silent) showToast(`Checking delivery status for ${emailedVendors.length} emails...`);
 
         // Process in batches of 5 to avoid rate limits
         const batchSize = 5;
@@ -4052,8 +4054,35 @@
             updated += results.filter(r => r !== null).length;
         }
 
-        showToast(`Updated ${updated} email statuses.`);
-        renderTable();
+        if (!silent && updated > 0) showToast(`Updated ${updated} email statuses.`);
+        if (updated > 0) renderTable();
+    }
+
+    // Auto-poll email delivery statuses every 2 minutes for vendors
+    // whose status hasn't reached a final state yet
+    let emailStatusInterval = null;
+    function startEmailStatusPolling() {
+        if (emailStatusInterval) clearInterval(emailStatusInterval);
+        emailStatusInterval = setInterval(async () => {
+            // Only poll for vendors whose email hasn't reached a terminal state
+            const pendingVendors = currentData.vendors.filter(v =>
+                (v.email_sent || v.brevo_message_id) &&
+                !['opened', 'clicked', 'hardBounce', 'blocked', 'error', 'unsubscribed'].includes(v.email_delivery_status)
+            );
+            if (pendingVendors.length === 0) return;
+
+            const batchSize = 5;
+            let updated = 0;
+            for (let i = 0; i < pendingVendors.length; i += batchSize) {
+                const batch = pendingVendors.slice(i, i + batchSize);
+                const results = await Promise.all(batch.map(v => fetchEmailStatus(v.id)));
+                updated += results.filter(r => r !== null).length;
+            }
+            if (updated > 0) renderTable();
+        }, 120000); // Every 2 minutes
+    }
+    function stopEmailStatusPolling() {
+        if (emailStatusInterval) { clearInterval(emailStatusInterval); emailStatusInterval = null; }
     }
 
     async function resendEmail(id) {
@@ -4085,9 +4114,13 @@
         const success = await sendSingleEmail(vendor, targetTemplate);
         
         if (success === 'unauthorized') showToast("API Error: Invalid Key.");
-        else if (success) showToast("Sent!");
+        else if (success) {
+            showToast("Sent!");
+            // Auto-check delivery status after 30 seconds
+            setTimeout(() => fetchEmailStatus(vendor.id).then(() => renderTable()), 30000);
+        }
         else showToast("Failed to send.");
-        
+
         refreshData(null, true);
     }
 
@@ -4210,9 +4243,12 @@
         
         if (isUnauthorized) alert(`STOPPING: Email API Key is invalid.\n\nSent: ${successCount}\nFailed: ${failCount}`);
         else if (failCount > 0) alert(`Batch complete.\n\nSent: ${successCount}\nFailed: ${failCount}`);
-        else showToast(`All ${successCount} emails sent successfully!`); 
-        
-        refreshData(null, true); 
+        else showToast(`All ${successCount} emails sent successfully!`);
+
+        refreshData(null, true);
+
+        // Auto-check delivery status after 30 seconds to catch quick deliveries
+        if (successCount > 0) setTimeout(() => refreshAllEmailStatuses(true), 30000);
     }
 
     async function sendCustomBlastFromSettings() {
@@ -4265,7 +4301,9 @@
         
         if (isUnauthorized) alert(`STOPPING: Email API Key is invalid.\n\nSent: ${successCount}\nFailed: ${failCount}`);
         else if (failCount > 0) alert(`Batch complete.\n\nSent: ${successCount}\nFailed: ${failCount}`);
-        else showToast(`Custom blast sent to ${successCount} vendors!`); 
+        else showToast(`Custom blast sent to ${successCount} vendors!`);
+
+        if (successCount > 0) setTimeout(() => refreshAllEmailStatuses(true), 30000);
     }
 
     // SETTINGS / TEMPLATES
