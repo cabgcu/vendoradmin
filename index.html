@@ -786,19 +786,18 @@
                 <div class="event-subtext">Active: <select id="eventDropdown" class="modern-input" style="width:auto; height:36px; padding:0 36px 0 12px; display:inline-block; font-size:0.85rem;" onchange="switchEvent(this.value)"></select></div>
             </div>
         </div>
-        <div class="controls">
+        <div class="controls" id="vendorFilterTabs">
+            <button onclick="setFilter('inbox')" id="nav-filter-all" class="control-item control-item-filter" style="font-size: 0.7rem; height: 32px;">ALL</button>
+            <button onclick="setFilter('approved')" id="nav-approved" class="control-item control-item-filter" style="font-size: 0.7rem; height: 32px;">APPROVED</button>
+            <button onclick="setFilter('review')" id="nav-review" class="control-item control-item-filter" style="font-size: 0.7rem; height: 32px;">REVIEW</button>
+            <button onclick="setFilter('power')" id="nav-power" class="control-item control-item-filter" style="font-size: 0.7rem; height: 32px;">POWER</button>
+            <button onclick="setFilter('denied')" id="nav-denied" class="control-item control-item-filter" style="font-size: 0.7rem; height: 32px;">DENIED</button>
+            <div class="control-item-filter" style="width: 1px; height: 24px; background: rgba(255,255,255,0.15); margin: 0 4px;"></div>
             <button onclick="setFilter('inbox')" id="nav-inbox" class="control-item">VENDORS</button>
             <button onclick="setFilter('profiles')" id="nav-profiles" class="control-item">PROFILES</button>
             <button onclick="toggleView('scan')" id="nav-scan" class="control-item" style="background: rgba(52, 199, 89, 0.2); border-color: rgba(52, 199, 89, 0.4); color: #34C759;">CHECK IN</button>
             <button onclick="toggleView('settings')" id="nav-settings" class="control-item">SETTINGS</button>
             <button onclick="handleLogout()" class="control-item" style="background: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.3); color: #FF3B30;">LOGOUT</button>
-        </div>
-        <div class="controls" id="vendorFilterTabs" style="margin-top: 6px;">
-            <button onclick="setFilter('inbox')" id="nav-filter-all" class="control-item" style="font-size: 0.7rem; height: 32px;">ALL</button>
-            <button onclick="setFilter('approved')" id="nav-approved" class="control-item" style="font-size: 0.7rem; height: 32px;">APPROVED</button>
-            <button onclick="setFilter('review')" id="nav-review" class="control-item" style="font-size: 0.7rem; height: 32px;">REVIEW</button>
-            <button onclick="setFilter('power')" id="nav-power" class="control-item" style="font-size: 0.7rem; height: 32px;">POWER</button>
-            <button onclick="setFilter('denied')" id="nav-denied" class="control-item" style="font-size: 0.7rem; height: 32px;">DENIED</button>
         </div>
     </div>
 
@@ -806,11 +805,18 @@
     <div id="view-list" class="view">
         <div class="stats-container" id="statsBar">
             <div class="frosted stat-card"><span class="stat-label">New Apps</span><span class="stat-val" id="countInbox">0</span></div>
-            <div class="frosted stat-card"><span class="stat-label">Needs Review</span><span class="stat-val" style="color:#FF9500" id="countReview">0</span></div>
             <div class="frosted stat-card">
-                <span class="stat-label">Approved</span><span class="stat-val" style="color:#34C759" id="countApproved">0</span>
+                <span class="stat-label">Status</span><span class="stat-val" style="color:#34C759" id="countApproved">0</span>
                 <div class="stat-sub">
-                    <span style="color:#30D158;"><span id="countConfirmed">0</span> confirmed</span>
+                    <span style="color:#34C759;"><span id="countApprovedSub">0</span> approved</span>
+                    <span style="color:#FF9500;"><span id="countReview">0</span> review</span>
+                    <span style="color:#FF3B30;"><span id="countDeniedSub">0</span> denied</span>
+                </div>
+            </div>
+            <div class="frosted stat-card">
+                <span class="stat-label">Attendance</span><span class="stat-val" style="color:#30D158" id="countConfirmed">0</span>
+                <div class="stat-sub">
+                    <span style="color:#30D158;"><span id="countConfirmedSub">0</span> confirmed</span>
                     <span style="color:#FF3B30;"><span id="countDeclined">0</span> can't attend</span>
                 </div>
             </div>
@@ -1928,10 +1934,13 @@
             
             // Check for null before setting innerText
             if (document.getElementById('countInbox')) document.getElementById('countInbox').innerText = 0;
-            if (document.getElementById('countReview')) document.getElementById('countReview').innerText = 0;
             if (document.getElementById('countApproved')) document.getElementById('countApproved').innerText = 0;
+            if (document.getElementById('countApprovedSub')) document.getElementById('countApprovedSub').innerText = 0;
+            if (document.getElementById('countReview')) document.getElementById('countReview').innerText = 0;
             if (document.getElementById('countDenied')) document.getElementById('countDenied').innerText = 0;
+            if (document.getElementById('countDeniedSub')) document.getElementById('countDeniedSub').innerText = 0;
             if (document.getElementById('countConfirmed')) document.getElementById('countConfirmed').innerText = 0;
+            if (document.getElementById('countConfirmedSub')) document.getElementById('countConfirmedSub').innerText = 0;
             if (document.getElementById('countDeclined')) document.getElementById('countDeclined').innerText = 0;
 
             toggleView('settings');
@@ -2270,11 +2279,16 @@
         const confirmed = currentData.vendors.filter(v => getAttendanceState(v) === 'confirmed').length;
         const declined = currentData.vendors.filter(v => getAttendanceState(v) === 'declined').length;
 
+        const totalStatus = approved + review + denied;
+
         if (document.getElementById('countInbox')) document.getElementById('countInbox').innerText = inbox;
+        if (document.getElementById('countApproved')) document.getElementById('countApproved').innerText = totalStatus;
+        if (document.getElementById('countApprovedSub')) document.getElementById('countApprovedSub').innerText = approved;
         if (document.getElementById('countReview')) document.getElementById('countReview').innerText = review;
-        if (document.getElementById('countApproved')) document.getElementById('countApproved').innerText = approved;
+        if (document.getElementById('countDeniedSub')) document.getElementById('countDeniedSub').innerText = denied;
         if (document.getElementById('countDenied')) document.getElementById('countDenied').innerText = denied;
         if (document.getElementById('countConfirmed')) document.getElementById('countConfirmed').innerText = confirmed;
+        if (document.getElementById('countConfirmedSub')) document.getElementById('countConfirmedSub').innerText = confirmed;
         if (document.getElementById('countDeclined')) document.getElementById('countDeclined').innerText = declined;
 
         // Update Check-In Screen Stats
@@ -2297,13 +2311,13 @@
         if (document.getElementById('unifiedFilter')) document.getElementById('unifiedFilter').value = 'all';
         if (document.getElementById('search')) document.getElementById('search').value = '';
 
-        // Highlight the primary nav "VENDORS" button for any vendor filter tab
+        // Highlight the VENDORS nav button for any vendor filter
         const vendorFilters = ['inbox', 'approved', 'review', 'power', 'denied'];
         if (vendorFilters.includes(filter)) {
             document.getElementById('nav-inbox').classList.add('active');
         }
 
-        // Highlight the active sub-filter tab
+        // Highlight the active filter tab
         const filterTabId = filter === 'inbox' ? 'nav-filter-all' : `nav-${filter}`;
         const filterBtn = document.getElementById(filterTabId);
         if (filterBtn) {
@@ -2314,14 +2328,16 @@
             else if (filter === 'power') filterBtn.classList.add('active-power', 'active');
         }
 
+        // Show/hide filter tabs based on context
+        const filterTabs = document.querySelectorAll('#vendorFilterTabs .control-item-filter');
         if (filter === 'profiles') {
             document.getElementById('nav-profiles').classList.add('active-profiles');
-            document.getElementById('vendorFilterTabs').style.display = 'none';
+            filterTabs.forEach(t => t.style.display = 'none');
             document.getElementById('view-profiles').style.display = 'block';
             if (document.getElementById('profileSearch')) document.getElementById('profileSearch').value = '';
             fetchAndRenderProfiles();
         } else {
-            document.getElementById('vendorFilterTabs').style.display = 'flex';
+            filterTabs.forEach(t => t.style.display = '');
             document.getElementById('view-list').style.display = 'block';
             renderTable();
         }
@@ -2330,7 +2346,8 @@
     function toggleView(v) {
         document.querySelectorAll('.control-item').forEach(e => e.classList.remove('active', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan'));
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
-        document.getElementById('vendorFilterTabs').style.display = 'none';
+        // Hide filter tabs when on settings/scan
+        document.querySelectorAll('#vendorFilterTabs .control-item-filter').forEach(t => t.style.display = 'none');
 
         if (v === 'settings') {
             document.getElementById('nav-settings').classList.add('active-settings');
