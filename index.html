@@ -127,8 +127,8 @@
 
         .control-item {
             background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: #fff;
-            padding: 0 12px; border-radius: var(--radius-button); font-weight: 600; height: 38px;
-            display: flex; align-items: center; cursor: pointer; transition: 0.2s; font-size: 0.75rem;
+            padding: 0 10px; border-radius: var(--radius-button); font-weight: 600; height: 32px;
+            display: flex; align-items: center; cursor: pointer; transition: 0.2s; font-size: 0.7rem;
             letter-spacing: 0.5px;
         }
         .control-item:hover { background: rgba(255,255,255,0.1); }
@@ -787,11 +787,11 @@
             </div>
         </div>
         <div class="controls" id="vendorFilterTabs">
-            <button onclick="setFilter('inbox')" id="nav-filter-all" class="control-item control-item-filter" style="font-size: 0.7rem; height: 32px;">ALL</button>
-            <button onclick="setFilter('approved')" id="nav-approved" class="control-item control-item-filter" style="font-size: 0.7rem; height: 32px;">APPROVED</button>
-            <button onclick="setFilter('review')" id="nav-review" class="control-item control-item-filter" style="font-size: 0.7rem; height: 32px;">REVIEW</button>
-            <button onclick="setFilter('power')" id="nav-power" class="control-item control-item-filter" style="font-size: 0.7rem; height: 32px;">POWER</button>
-            <button onclick="setFilter('denied')" id="nav-denied" class="control-item control-item-filter" style="font-size: 0.7rem; height: 32px;">DENIED</button>
+            <button onclick="setFilter('inbox')" id="nav-filter-all" class="control-item control-item-filter">ALL</button>
+            <button onclick="setFilter('approved')" id="nav-approved" class="control-item control-item-filter">APPROVED</button>
+            <button onclick="setFilter('review')" id="nav-review" class="control-item control-item-filter">REVIEW</button>
+            <button onclick="setFilter('power')" id="nav-power" class="control-item control-item-filter">POWER</button>
+            <button onclick="setFilter('denied')" id="nav-denied" class="control-item control-item-filter">DENIED</button>
             <div class="control-item-filter" style="width: 1px; height: 24px; background: rgba(255,255,255,0.15); margin: 0 4px;"></div>
             <button onclick="setFilter('inbox')" id="nav-inbox" class="control-item">VENDORS</button>
             <button onclick="setFilter('profiles')" id="nav-profiles" class="control-item">PROFILES</button>
