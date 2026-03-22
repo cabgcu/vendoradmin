@@ -32,6 +32,7 @@
         body {
             margin: 0;
             font-family: var(--font-stack);
+            font-size: 14px;
             color: var(--text-main);
             background-color: transparent;
             min-height: 100vh;
@@ -832,6 +833,7 @@
                     <option value="custom">Custom (Drag & Drop)</option>
                     <option value="az">Name: A-Z</option>
                     <option value="za">Name: Z-A</option>
+                    <option value="color">Sort by Color</option>
                 </select>
 
                 <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; flex-shrink: 0; display: none; height: 50px;">Send Emails...</button>
@@ -2907,6 +2909,17 @@
             filtered.sort((a, b) => (a.first_name || '').localeCompare(b.first_name || ''));
         } else if (sortVal === 'za') {
             filtered.sort((a, b) => (b.first_name || '').localeCompare(a.first_name || ''));
+        } else if (sortVal === 'color') {
+            // Sort colored applications first, grouped by color, then uncolored at bottom
+            const colorOrder = ['#FF3B30', '#FF9500', '#FFCC00', '#34C759', '#0A84FF', '#BF5AF2'];
+            filtered.sort((a, b) => {
+                const colorA = getParsedNotes(a.internal_notes).find(n => n.type === 'color_code')?.color || '';
+                const colorB = getParsedNotes(b.internal_notes).find(n => n.type === 'color_code')?.color || '';
+                const idxA = colorA ? colorOrder.indexOf(colorA) : 999;
+                const idxB = colorB ? colorOrder.indexOf(colorB) : 999;
+                if (idxA !== idxB) return idxA - idxB;
+                return a.appNumber - b.appNumber;
+            });
         } else if (sortVal === 'custom') {
             let customOrder = JSON.parse(localStorage.getItem('market_custom_order_' + currentData.activeId) || '[]');
             filtered.sort((a, b) => {
