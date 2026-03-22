@@ -42,28 +42,6 @@
             --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        .light-mode {
-            --bg-dark: #ffffff;
-            --bg-surface: #f5f5f7;
-            --bg-radial-1: rgba(10, 132, 255, 0.06);
-            --bg-radial-2: rgba(191, 90, 242, 0.06);
-            --glass-surface: rgba(255, 255, 255, 0.9);
-            --glass-border: rgba(0, 0, 0, 0.1);
-            --glass-hover: rgba(0, 0, 0, 0.04);
-            --glass-active: rgba(0, 0, 0, 0.08);
-            --text-main: #1a1a1a;
-            --text-muted: #6b7280;
-            --text-inverse: #ffffff;
-            --input-bg: rgba(0, 0, 0, 0.04);
-            --card-bg: rgba(0, 0, 0, 0.02);
-            --card-border: rgba(0, 0, 0, 0.08);
-            --row-hover: rgba(0, 0, 0, 0.03);
-            --table-border: rgba(0, 0, 0, 0.06);
-            --shadow-color: rgba(0, 0, 0, 0.08);
-            --toast-bg: rgba(255, 255, 255, 0.98);
-            --modal-bg: rgba(255, 255, 255, 0.98);
-            --loader-bg: rgba(255, 255, 255, 0.95);
-        }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
@@ -1108,17 +1086,6 @@
 
             <!-- TAB 3: SYSTEM & DATA -->
             <div id="settings-tab-system" class="settings-section" style="display:none;">
-                <!-- Appearance -->
-                <div style="margin-bottom:30px; background: var(--card-bg); border: 1px solid var(--card-border); padding: 25px; border-radius: 20px;">
-                    <label class="stat-label" style="font-size: 1rem; margin-bottom: 10px;">Appearance</label>
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <span style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600;">Theme</span>
-                        <div style="display: flex; gap: 8px;">
-                            <button onclick="setTheme('dark')" id="theme-dark-btn" class="btn-action" style="padding: 8px 18px; font-size: 0.8rem; font-weight: 700;">Dark</button>
-                            <button onclick="setTheme('light')" id="theme-light-btn" class="btn-action" style="padding: 8px 18px; font-size: 0.8rem; font-weight: 700;">Light</button>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Full Data Backup -->
                 <div style="margin-bottom:30px; background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.2); padding: 25px; border-radius: 20px;">
@@ -1249,32 +1216,6 @@
 </div>
 
 <script>
-    // --- THEME ---
-    function setTheme(theme) {
-        if (theme === 'light') {
-            document.documentElement.classList.add('light-mode');
-        } else {
-            document.documentElement.classList.remove('light-mode');
-        }
-        localStorage.setItem('cab_theme', theme);
-        updateThemeButtons(theme);
-    }
-
-    function updateThemeButtons(theme) {
-        const darkBtn = document.getElementById('theme-dark-btn');
-        const lightBtn = document.getElementById('theme-light-btn');
-        if (!darkBtn || !lightBtn) return;
-        darkBtn.style.background = theme === 'dark' ? 'var(--gradient-accent)' : 'var(--glass-hover)';
-        darkBtn.style.border = theme === 'dark' ? 'none' : '1px solid var(--glass-border)';
-        lightBtn.style.background = theme === 'light' ? 'var(--gradient-accent)' : 'var(--glass-hover)';
-        lightBtn.style.border = theme === 'light' ? 'none' : '1px solid var(--glass-border)';
-    }
-
-    // Apply saved theme immediately to prevent flash
-    (function() {
-        const saved = localStorage.getItem('cab_theme') || 'dark';
-        if (saved === 'light') document.documentElement.classList.add('light-mode');
-    })();
 
     // --- API KEYS ---
     let OPENROUTER_API_KEY = '';
@@ -4401,7 +4342,6 @@
             loadFormBuilderTab();
         }
         if (tabId === 'system') {
-            updateThemeButtons(localStorage.getItem('cab_theme') || 'dark');
         }
     }
 
