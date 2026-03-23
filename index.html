@@ -491,7 +491,7 @@
         /* Inline Form Builder */
         .fb-field { transition: all 0.15s ease; cursor: pointer; position: relative; }
         .fb-field:hover:not(.fb-field-active) { background: rgba(255,255,255,0.025); }
-        .fb-field:hover:not(.fb-field-active)::after { content: 'Click to edit'; position: absolute; top: 8px; right: 12px; font-size: 0.65rem; color: rgba(255,255,255,0.25); font-weight: 600; pointer-events: none; }
+        .fb-field:hover:not(.fb-field-active)::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border: 1px solid rgba(10,132,255,0.15); border-radius: inherit; pointer-events: none; }
         .fb-field-active { cursor: default; }
         .fb-toolbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 8px 0 0; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 10px; }
         .fb-pill {
@@ -1238,41 +1238,70 @@
 
             <!-- TAB 2: EMAILS -->
             <div id="settings-tab-emails" class="settings-section" style="display:none;">
-                <!-- Template selector bar -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-                    <div>
-                        <label class="stat-label" style="margin-bottom:0;">Global Email Templates</label>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 5px 0 0 0;">Templates saved here apply to all past and future markets.</p>
+
+                <!-- Default Assignment Panel -->
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-card); padding: 20px 22px; margin-bottom: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                        <label class="stat-label" style="margin:0;">Default Templates</label>
+                        <span style="font-size:0.72rem; color:var(--text-muted);">Which template to send for each action</span>
                     </div>
-                    <select id="templateTypeSelector" class="modern-input" style="width:auto; height:42px; padding:0 38px 0 14px; margin:0; font-weight:600;" onchange="switchTemplateType(this.value)">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:0.78rem; color:#34C759; font-weight:700; min-width:100px;">Approved</span>
+                            <select id="defaultTpl_approved" class="modern-input" style="margin:0; height:34px; padding:0 28px 0 10px; font-size:0.78rem;" onchange="setDefaultTemplate('approved',this.value)"></select>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:0.78rem; color:#FF453A; font-weight:700; min-width:100px;">Denied</span>
+                            <select id="defaultTpl_denied" class="modern-input" style="margin:0; height:34px; padding:0 28px 0 10px; font-size:0.78rem;" onchange="setDefaultTemplate('denied',this.value)"></select>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:0.78rem; color:#30D158; font-weight:700; min-width:100px;">Power Yes</span>
+                            <select id="defaultTpl_power" class="modern-input" style="margin:0; height:34px; padding:0 28px 0 10px; font-size:0.78rem;" onchange="setDefaultTemplate('power',this.value)"></select>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:0.78rem; color:#FF9F0A; font-weight:700; min-width:100px;">Power No</span>
+                            <select id="defaultTpl_power_denied" class="modern-input" style="margin:0; height:34px; padding:0 28px 0 10px; font-size:0.78rem;" onchange="setDefaultTemplate('power_denied',this.value)"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template list + editor -->
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap;">
+                    <select id="templateTypeSelector" class="modern-input" style="width:auto; height:42px; padding:0 38px 0 14px; margin:0; font-weight:600; flex:1; min-width:180px;" onchange="switchTemplateType(this.value)">
                         <option value="approved">Approved Template</option>
                         <option value="power">Approved (Power Granted)</option>
                         <option value="power_denied">Approved (Power Denied)</option>
                         <option value="denied">Denied Template</option>
                         <option value="custom">Custom Mass Email</option>
                     </select>
+                    <div style="display:flex; gap:6px;">
+                        <button class="fb-pill" onclick="createNewTemplate()" style="padding:7px 14px;">+ New</button>
+                        <button class="fb-pill" onclick="duplicateCurrentTemplate()" style="padding:7px 14px;">Duplicate</button>
+                        <button class="fb-pill" onclick="renameCurrentTemplate()" style="padding:7px 14px;">Rename</button>
+                        <button class="fb-pill fb-pill-danger" id="btnDeleteTemplate" onclick="deleteCurrentTemplate()" style="padding:7px 14px; display:none;">Delete</button>
+                    </div>
                 </div>
 
                 <!-- Banner + Heading settings -->
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-card); padding: 24px; margin-bottom: 20px;">
-                    <div class="form-grid" style="margin-bottom: 0; gap: 18px;">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-card); padding: 20px 22px; margin-bottom: 16px;">
+                    <div class="form-grid" style="margin-bottom: 0; gap: 14px;">
                         <div>
-                            <label class="stat-label">Banner Image (This market only)</label>
-                            <div style="display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: var(--radius-inner); border: 1px solid rgba(255,255,255,0.06);">
+                            <label class="stat-label" style="font-size:0.7rem;">Banner Image (This market)</label>
+                            <div style="display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: var(--radius-inner); border: 1px solid rgba(255,255,255,0.06);">
                                 <input type="file" id="bannerFileInput" accept="image/*" style="display: none;" onchange="handleBannerSelection(event)">
-                                <button type="button" onclick="document.getElementById('bannerFileInput').click()" class="btn-action" style="padding: 8px 16px; font-size: 0.8rem; flex-shrink: 0; margin: 0;">Upload</button>
-                                <span id="bannerFileName" style="font-size: 0.85rem; color: var(--text-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">No file chosen</span>
+                                <button type="button" onclick="document.getElementById('bannerFileInput').click()" class="btn-action" style="padding: 6px 14px; font-size: 0.78rem; flex-shrink: 0; margin: 0;">Upload</button>
+                                <span id="bannerFileName" style="font-size: 0.8rem; color: var(--text-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">No file chosen</span>
                                 <button type="button" onclick="clearBannerSelection()" style="background: transparent; border: none; color: #FF3B30; cursor: pointer; display: none; font-size: 1.2rem; line-height: 1; padding: 0 5px;" id="clearBannerBtn">&times;</button>
                             </div>
                         </div>
                         <div>
-                            <label class="stat-label">Email Heading (All markets)</label>
-                            <input type="text" id="headingTextInput" class="modern-input" placeholder="e.g. Market Status Update" oninput="updatePreview()">
+                            <label class="stat-label" style="font-size:0.7rem;">Email Heading (All markets)</label>
+                            <input type="text" id="headingTextInput" class="modern-input" style="padding:8px 14px;" placeholder="e.g. Market Status Update" oninput="updatePreview()">
                         </div>
                     </div>
                 </div>
 
-                <input type="text" id="emailSubjectInput" class="modern-input" placeholder="Subject Line" style="margin-bottom:16px; font-weight:bold; font-size: 1.05rem; padding: 14px 20px;">
+                <input type="text" id="emailSubjectInput" class="modern-input" placeholder="Subject Line" style="margin-bottom:12px; font-weight:bold; font-size: 1rem; padding: 12px 18px;">
                 <!-- Hidden textarea for backward compatibility -->
                 <textarea id="emailTemplateInput" style="display:none;"></textarea>
 
@@ -1562,7 +1591,7 @@
     
     let currentData = { vendors: [], allEvents: [], activeId: "", activeEvent: null, publicUrl: "", customTemplatesMap: {} };
     let realtimeSubscription = null;
-    let currentTemplateType = 'approved';
+    let currentTemplateType = 'builtin_approved';
     let activeFilter = 'inbox'; 
     let currentReviewingId = null;
     let currentEditingId = null;
@@ -2255,6 +2284,7 @@
         loadTemplateToEditor();
         loadFormConfig(); // Guarantee form status UI updates whenever active market changes
         await loadFormBuilderConfig();
+        await loadEmailTemplateLibrary();
 
         if (isInitialLoad && eventsData.length > 0) {
             const savedFilter = localStorage.getItem('marketLastFilter') || 'inbox';
@@ -4642,10 +4672,7 @@
         }
     }
 
-    function switchTemplateType(type) { 
-        currentTemplateType = type; 
-        loadTemplateToEditor(); 
-    }
+
 
     function handleBannerSelection(e) {
         const file = e.target.files[0];
@@ -4687,7 +4714,7 @@
         bannerDeleted = false;
         const bannerFileText = document.getElementById('bannerFileName');
         const clearBtn = document.getElementById('clearBannerBtn');
-        
+
         const fileInput = document.getElementById('bannerFileInput');
         if(fileInput) fileInput.value = '';
 
@@ -4699,35 +4726,24 @@
             clearBtn.style.display = 'none';
         }
 
+        // Show send-blast button only for custom-type templates
+        const isCustomDefault = emailTemplateLibrary.defaults?.custom === currentTemplateType;
         if (sendCustomBtn) {
-            sendCustomBtn.style.display = currentTemplateType === 'custom' ? 'inline-block' : 'none';
+            sendCustomBtn.style.display = isCustomDefault ? 'inline-block' : 'none';
         }
 
-        if (currentTemplateType === 'approved') { 
-            subjInput.value = currentData.apprSubj; 
-            let b = currentData.apprBody;
-            if (!b.includes('{{CONFIRM_LINK}}')) b += "\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}";
-            bodyInput.value = b; 
-        }
-        else if (currentTemplateType === 'power') { 
-            subjInput.value = currentData.powSubj; 
-            let b = currentData.powBody;
-            if (!b.includes('{{CONFIRM_LINK}}')) b += "\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}";
-            bodyInput.value = b; 
-        }
-        else if (currentTemplateType === 'power_denied') { 
-            subjInput.value = currentData.powDenSubj; 
-            let b = currentData.powDenBody;
-            if (!b.includes('{{CONFIRM_LINK}}')) b += "\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}";
-            bodyInput.value = b; 
-        }
-        else if (currentTemplateType === 'denied') { 
-            subjInput.value = currentData.denSubj; 
-            bodyInput.value = currentData.denBody; 
-        }
-        else if (currentTemplateType === 'custom') {
-            subjInput.value = currentData.customSubj;
-            bodyInput.value = currentData.customBody;
+        // Load from template library
+        const tpl = emailTemplateLibrary.templates[currentTemplateType];
+        if (tpl) {
+            subjInput.value = tpl.subj;
+            bodyInput.value = tpl.body;
+        } else {
+            // Fallback to currentData for backward compat
+            if (currentTemplateType === 'approved') { subjInput.value = currentData.apprSubj; bodyInput.value = currentData.apprBody; }
+            else if (currentTemplateType === 'power') { subjInput.value = currentData.powSubj; bodyInput.value = currentData.powBody; }
+            else if (currentTemplateType === 'power_denied') { subjInput.value = currentData.powDenSubj; bodyInput.value = currentData.powDenBody; }
+            else if (currentTemplateType === 'denied') { subjInput.value = currentData.denSubj; bodyInput.value = currentData.denBody; }
+            else if (currentTemplateType === 'custom') { subjInput.value = currentData.customSubj; bodyInput.value = currentData.customBody; }
         }
 
         syncTextareaToRich();
@@ -4835,12 +4851,23 @@
     }
 
     function resetTemplate() {
-        const type = currentTemplateType;
-        if (DEFAULTS[type]) {
-            document.getElementById('emailTemplateInput').value = DEFAULTS[type].body;
-            document.getElementById('emailSubjectInput').value = DEFAULTS[type].subj;
+        // Find which default action this template is assigned to
+        const defs = emailTemplateLibrary.defaults || {};
+        let defaultType = null;
+        Object.entries(defs).forEach(([action, tplId]) => {
+            if (tplId === currentTemplateType) defaultType = action;
+        });
+        // Also check if it's a builtin_ template
+        if (!defaultType && currentTemplateType.startsWith('builtin_')) {
+            defaultType = currentTemplateType.replace('builtin_', '');
+        }
+        if (defaultType && DEFAULTS[defaultType]) {
+            document.getElementById('emailTemplateInput').value = DEFAULTS[defaultType].body;
+            document.getElementById('emailSubjectInput').value = DEFAULTS[defaultType].subj;
             syncTextareaToRich();
             updatePreview();
+        } else {
+            showToast("No default content for this template type");
         }
     }
 
@@ -4857,8 +4884,13 @@
 
         const headingText = document.getElementById('headingTextInput')?.value || "Market Status Update";
 
-        let statusColor = (currentTemplateType === 'approved' || currentTemplateType === 'power' || currentTemplateType === 'power_denied') ? '#34C759' : (currentTemplateType === 'custom' ? '#0A84FF' : '#FF3B30');
-        let statusBadge = (currentTemplateType === 'approved' || currentTemplateType === 'power' || currentTemplateType === 'power_denied') ? 'APPROVED' : (currentTemplateType === 'custom' ? 'MARKET UPDATE' : 'STATUS UPDATE');
+        // Determine badge from which default action this template is assigned to
+        const defs = emailTemplateLibrary.defaults || {};
+        const isApprovalType = defs.approved === currentTemplateType || defs.power === currentTemplateType || defs.power_denied === currentTemplateType;
+        const isDeniedType = defs.denied === currentTemplateType;
+        const isCustomType = defs.custom === currentTemplateType;
+        let statusColor = isApprovalType ? '#34C759' : isDeniedType ? '#FF3B30' : isCustomType ? '#0A84FF' : '#888';
+        let statusBadge = isApprovalType ? 'APPROVED' : isDeniedType ? 'STATUS UPDATE' : isCustomType ? 'MARKET UPDATE' : 'EMAIL';
 
         // Banner
         const bannerEl = document.getElementById('liveEmailBanner');
@@ -4880,7 +4912,7 @@
         // QR code
         const qrEl = document.getElementById('liveEmailQR');
         if (qrEl) {
-            if (currentTemplateType !== 'denied' && currentTemplateType !== 'custom') {
+            if (isApprovalType) {
                 const barcodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=PREVIEW1&format=png&bgcolor=FFFFFF&color=000000&margin=10";
                 qrEl.innerHTML = `
                     <div style="border-top: 2px dashed #e5e7eb; margin: 0 15px;"></div>
@@ -4941,47 +4973,210 @@
              bannerDeleted = false;
         }
 
-        // Custom template goes directly to local secrets instead of global events
-        if (currentTemplateType === 'custom') {
-            currentData.customTemplatesMap[currentData.activeId] = { subj, body };
-            const valStr = JSON.stringify(currentData.customTemplatesMap);
-            
-            let { data, error } = await _supabase.from('secrets').update({ value: valStr }).eq('name', 'MARKET_CUSTOM_TEMPLATES').select();
-            if (!error && (!data || data.length === 0)) {
-                await _supabase.from('secrets').insert([{ name: 'MARKET_CUSTOM_TEMPLATES', value: valStr }]);
-            }
-            
-            await _supabase.from('events').update({ banner_url: finalBannerUrl, heading_text: heading }).eq('id', currentData.activeId);
-            
-            showToast("Custom Mass Template Saved!");
-            refreshData(null, true);
-            return;
+        // Save to template library
+        if (emailTemplateLibrary.templates[currentTemplateType]) {
+            emailTemplateLibrary.templates[currentTemplateType].subj = subj;
+            emailTemplateLibrary.templates[currentTemplateType].body = body;
         }
+        await saveEmailTemplateLibrary();
 
-        // Standard global template saving
+        // Also sync defaults to events table for backward compat
         let globalUpdates = { heading_text: heading };
         let localUpdates = { banner_url: finalBannerUrl };
-        
-        if (currentTemplateType === 'approved') { globalUpdates.template_approved_body = body; globalUpdates.template_approved_subject = subj; }
-        else if (currentTemplateType === 'denied') { globalUpdates.template_denied_body = body; globalUpdates.template_denied_subject = subj; }
-        else if (currentTemplateType === 'power') { globalUpdates.template_power_body = body; globalUpdates.template_power_subject = subj; }
-        else if (currentTemplateType === 'power_denied') { globalUpdates.template_power_denied_body = body; globalUpdates.template_power_denied_subject = subj; }
-        
-        const allEventIds = currentData.allEvents.map(e => e.id);
 
-        const { error: err1 } = await _supabase.from('events').update(globalUpdates).in('id', allEventIds);
-        const { error: err2 } = await _supabase.from('events').update(localUpdates).eq('id', currentData.activeId);
-        
-        if (err1 || err2) {
-            console.error(err1 || err2);
-            showToast("Error saving template");
-        } else {
-            showToast(`Global Templates Saved!`);
-            refreshData(null, true);
+        // If this template is assigned as a default, update events table too
+        Object.entries(emailTemplateLibrary.defaults).forEach(([action, tplId]) => {
+            if (tplId === currentTemplateType) {
+                if (action === 'approved') { globalUpdates.template_approved_body = body; globalUpdates.template_approved_subject = subj; }
+                else if (action === 'denied') { globalUpdates.template_denied_body = body; globalUpdates.template_denied_subject = subj; }
+                else if (action === 'power') { globalUpdates.template_power_body = body; globalUpdates.template_power_subject = subj; }
+                else if (action === 'power_denied') { globalUpdates.template_power_denied_body = body; globalUpdates.template_power_denied_subject = subj; }
+            }
+        });
+
+        // Also handle custom mass email backward compat
+        if (emailTemplateLibrary.defaults.custom === currentTemplateType) {
+            currentData.customTemplatesMap[currentData.activeId] = { subj, body };
+            const valStr = JSON.stringify(currentData.customTemplatesMap);
+            let { data: d2, error: e2 } = await _supabase.from('secrets').update({ value: valStr }).eq('name', 'MARKET_CUSTOM_TEMPLATES').select();
+            if (!e2 && (!d2 || d2.length === 0)) {
+                await _supabase.from('secrets').insert([{ name: 'MARKET_CUSTOM_TEMPLATES', value: valStr }]);
+            }
         }
+
+        const allEventIds = currentData.allEvents.map(e => e.id);
+        await _supabase.from('events').update(globalUpdates).in('id', allEventIds);
+        await _supabase.from('events').update(localUpdates).eq('id', currentData.activeId);
+
+        showToast("Template Saved!");
+        populateDefaultDropdowns();
+        refreshData(null, true);
     }
 
-    async function createNewEvent() { 
+    // --- EMAIL TEMPLATE CRUD ---
+    // Stored in secrets as MARKET_EMAIL_TEMPLATES_LIBRARY
+    // Format: { templates: { id: { name, subj, body } }, defaults: { approved: id, denied: id, power: id, power_denied: id } }
+    let emailTemplateLibrary = { templates: {}, defaults: {} };
+
+    async function loadEmailTemplateLibrary() {
+        try {
+            const { data } = await _supabase.from('secrets').select('value').eq('name', 'MARKET_EMAIL_TEMPLATES_LIBRARY').maybeSingle();
+            if (data?.value) {
+                emailTemplateLibrary = JSON.parse(data.value);
+                if (!emailTemplateLibrary.templates) emailTemplateLibrary.templates = {};
+                if (!emailTemplateLibrary.defaults) emailTemplateLibrary.defaults = {};
+            }
+        } catch(e) { console.error("Failed to load template library:", e); }
+        // Seed built-in templates if library is empty
+        if (Object.keys(emailTemplateLibrary.templates).length === 0) {
+            const builtIns = {
+                'builtin_approved': { name: 'Approved (Default)', subj: DEFAULTS.approved.subj, body: DEFAULTS.approved.body },
+                'builtin_power': { name: 'Power Granted (Default)', subj: DEFAULTS.power.subj, body: DEFAULTS.power.body },
+                'builtin_power_denied': { name: 'Power Denied (Default)', subj: DEFAULTS.power_denied.subj, body: DEFAULTS.power_denied.body },
+                'builtin_denied': { name: 'Denied (Default)', subj: DEFAULTS.denied.subj, body: DEFAULTS.denied.body },
+                'builtin_custom': { name: 'Custom Mass Email', subj: DEFAULTS.custom.subj, body: DEFAULTS.custom.body }
+            };
+            emailTemplateLibrary.templates = builtIns;
+            emailTemplateLibrary.defaults = { approved: 'builtin_approved', denied: 'builtin_denied', power: 'builtin_power', power_denied: 'builtin_power_denied', custom: 'builtin_custom' };
+        }
+        populateTemplateSelectorDropdown();
+        populateDefaultDropdowns();
+    }
+
+    async function saveEmailTemplateLibrary() {
+        const valStr = JSON.stringify(emailTemplateLibrary);
+        let { data, error } = await _supabase.from('secrets').update({ value: valStr }).eq('name', 'MARKET_EMAIL_TEMPLATES_LIBRARY').select();
+        if (!error && (!data || data.length === 0)) {
+            await _supabase.from('secrets').insert([{ name: 'MARKET_EMAIL_TEMPLATES_LIBRARY', value: valStr }]);
+        }
+        if (error) { console.error(error); showToast("Error saving templates", true); }
+    }
+
+    function populateTemplateSelectorDropdown() {
+        const sel = document.getElementById('templateTypeSelector');
+        if (!sel) return;
+        const tpls = emailTemplateLibrary.templates;
+        sel.innerHTML = Object.entries(tpls).map(([id, t]) =>
+            `<option value="${id}">${escapeHtml(t.name)}</option>`
+        ).join('');
+        // Select the current one
+        if (sel.querySelector(`option[value="${currentTemplateType}"]`)) {
+            sel.value = currentTemplateType;
+        } else if (sel.options.length > 0) {
+            currentTemplateType = sel.options[0].value;
+            sel.value = currentTemplateType;
+        }
+        // Show/hide delete button (don't delete if it's a default for something)
+        updateDeleteBtn();
+    }
+
+    function populateDefaultDropdowns() {
+        const actions = ['approved', 'denied', 'power', 'power_denied'];
+        const tpls = emailTemplateLibrary.templates;
+        actions.forEach(action => {
+            const sel = document.getElementById('defaultTpl_' + action);
+            if (!sel) return;
+            sel.innerHTML = Object.entries(tpls).map(([id, t]) =>
+                `<option value="${id}" ${emailTemplateLibrary.defaults[action] === id ? 'selected' : ''}>${escapeHtml(t.name)}</option>`
+            ).join('');
+        });
+    }
+
+    async function setDefaultTemplate(action, templateId) {
+        emailTemplateLibrary.defaults[action] = templateId;
+        await saveEmailTemplateLibrary();
+        // Also sync to events table for backward compat
+        const tpl = emailTemplateLibrary.templates[templateId];
+        if (!tpl) return;
+        let globalUpdates = {};
+        if (action === 'approved') { globalUpdates.template_approved_body = tpl.body; globalUpdates.template_approved_subject = tpl.subj; }
+        else if (action === 'denied') { globalUpdates.template_denied_body = tpl.body; globalUpdates.template_denied_subject = tpl.subj; }
+        else if (action === 'power') { globalUpdates.template_power_body = tpl.body; globalUpdates.template_power_subject = tpl.subj; }
+        else if (action === 'power_denied') { globalUpdates.template_power_denied_body = tpl.body; globalUpdates.template_power_denied_subject = tpl.subj; }
+        if (Object.keys(globalUpdates).length > 0) {
+            const allEventIds = currentData.allEvents.map(e => e.id);
+            await _supabase.from('events').update(globalUpdates).in('id', allEventIds);
+        }
+        showToast(`Default ${action} template updated`);
+        updateDeleteBtn();
+        refreshData(null, true);
+    }
+
+    function updateDeleteBtn() {
+        const btn = document.getElementById('btnDeleteTemplate');
+        if (!btn) return;
+        const isDefault = Object.values(emailTemplateLibrary.defaults).includes(currentTemplateType);
+        btn.style.display = isDefault ? 'none' : 'inline-flex';
+    }
+
+    function createNewTemplate() {
+        const name = prompt("Template name:");
+        if (!name || !name.trim()) return;
+        const id = 'tpl_' + Date.now();
+        emailTemplateLibrary.templates[id] = {
+            name: name.trim(),
+            subj: 'New Template',
+            body: 'Hello {{FIRST}},\n\n[Your message here]\n\n- CAB Student Market Team'
+        };
+        saveEmailTemplateLibrary();
+        currentTemplateType = id;
+        populateTemplateSelectorDropdown();
+        populateDefaultDropdowns();
+        loadTemplateToEditor();
+        showToast("Template created");
+    }
+
+    function duplicateCurrentTemplate() {
+        const src = emailTemplateLibrary.templates[currentTemplateType];
+        if (!src) return;
+        const name = prompt("Name for the copy:", src.name + ' (Copy)');
+        if (!name || !name.trim()) return;
+        const id = 'tpl_' + Date.now();
+        emailTemplateLibrary.templates[id] = { name: name.trim(), subj: src.subj, body: src.body };
+        saveEmailTemplateLibrary();
+        currentTemplateType = id;
+        populateTemplateSelectorDropdown();
+        populateDefaultDropdowns();
+        loadTemplateToEditor();
+        showToast("Template duplicated");
+    }
+
+    function renameCurrentTemplate() {
+        const tpl = emailTemplateLibrary.templates[currentTemplateType];
+        if (!tpl) return;
+        const name = prompt("Rename template:", tpl.name);
+        if (!name || !name.trim() || name.trim() === tpl.name) return;
+        tpl.name = name.trim();
+        saveEmailTemplateLibrary();
+        populateTemplateSelectorDropdown();
+        populateDefaultDropdowns();
+        showToast("Template renamed");
+    }
+
+    function deleteCurrentTemplate() {
+        const tpl = emailTemplateLibrary.templates[currentTemplateType];
+        if (!tpl) return;
+        const isDefault = Object.values(emailTemplateLibrary.defaults).includes(currentTemplateType);
+        if (isDefault) return showToast("Cannot delete a template that is set as a default", true);
+        if (!confirm(`Delete template "${tpl.name}"?`)) return;
+        delete emailTemplateLibrary.templates[currentTemplateType];
+        saveEmailTemplateLibrary();
+        const keys = Object.keys(emailTemplateLibrary.templates);
+        currentTemplateType = keys[0] || 'builtin_approved';
+        populateTemplateSelectorDropdown();
+        populateDefaultDropdowns();
+        loadTemplateToEditor();
+        showToast("Template deleted");
+    }
+
+    // Override switchTemplateType to use the library
+    function switchTemplateType(type) {
+        currentTemplateType = type;
+        loadTemplateToEditor();
+        updateDeleteBtn();
+    }
+
+    async function createNewEvent() {
         const name = document.getElementById('evName').value.trim();
         const date = document.getElementById('evDate').value;
         const time = document.getElementById('evTime').value.trim();
@@ -5328,7 +5523,7 @@
         let html = '';
 
         // --- Editable header ---
-        html += `<div style="margin-bottom:28px; text-align:center;" onclick="activeFormField=-1">`;
+        html += `<div style="margin-bottom:28px; text-align:center;">`;
         if (headerUrl) {
             html += `<img src="${escapeHtml(headerUrl)}" style="width:100%; height:auto; border-radius:16px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.1);" onerror="this.style.display='none'">`;
         }
@@ -5434,14 +5629,17 @@
         </div>`;
 
         container.innerHTML = html;
-
-        // Click outside any field to deselect
-        container.addEventListener('click', (e) => {
-            if (!e.target.closest('.fb-field') && !e.target.closest('.fb-add-row') && !e.target.closest('.fb-save-row') && !e.target.closest('input') && !e.target.closest('textarea') && !e.target.closest('select')) {
-                if (activeFormField >= 0) { activeFormField = -1; renderFormPreview(); }
-            }
-        }, { once: true });
     }
+
+    // Persistent click-outside handler for form builder
+    document.addEventListener('click', (e) => {
+        if (activeFormField < 0) return;
+        const container = document.getElementById('formPreviewContainer');
+        if (!container || !container.contains(e.target)) { activeFormField = -1; renderFormPreview(); return; }
+        if (!e.target.closest('.fb-field') && !e.target.closest('.fb-add-row') && !e.target.closest('.fb-save-row') && !e.target.closest('input') && !e.target.closest('textarea') && !e.target.closest('select') && !e.target.closest('button')) {
+            activeFormField = -1; renderFormPreview();
+        }
+    });
 
     function addCustomQuestion(t) {
         formConfig.questions.push({
@@ -5481,8 +5679,11 @@
         formConfig.questions[i][k] = v;
         if (k === 'type') {
             if (v === 'dropdown' && !formConfig.questions[i].options) formConfig.questions[i].options = 'Option 1, Option 2';
+            renderFormPreview(); // full re-render only on type change
+        } else if (k === 'width' || k === 'required') {
+            renderFormPreview(); // structural changes need re-render
         }
-        renderFormPreview();
+        // text changes (label, hint, options) update formConfig without re-render to preserve focus
     }
 
     async function saveAdminConfig() {
