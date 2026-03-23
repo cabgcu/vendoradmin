@@ -1079,7 +1079,7 @@
                     </optgroup>
                 </select>
                 
-                <select id="sortFilter" class="modern-input" style="flex: 1; min-width: 200px;" onchange="renderTable()">
+                <select id="sortFilter" class="modern-input" style="flex: 1; min-width: 200px;" onchange="localStorage.setItem('marketLastSort', this.value); renderTable()">
                     <option value="default">Default Order</option>
                     <option value="custom">Custom (Drag & Drop)</option>
                     <option value="az">Name: A-Z</option>
@@ -2201,13 +2201,18 @@
             // Explicitly requested event via dropdown
             activeEvent = eventsData.find(e => e.id === eventId);
         } else {
-            // Always auto-select the current/next upcoming market (ignores last viewed)
-            activeEvent = eventsData.find(e => {
-                if (!e.market_date) return false;
-                // Valid until 11:59 PM on the day of the market
-                return new Date(e.market_date + 'T23:59:59') >= now;
-            });
-            
+            // First, try to restore the user's last-viewed market from localStorage
+            const savedId = localStorage.getItem('marketEventId');
+            if (savedId) {
+                activeEvent = eventsData.find(e => e.id === savedId);
+            }
+            // If no saved market (or it no longer exists), auto-select current/next upcoming
+            if (!activeEvent) {
+                activeEvent = eventsData.find(e => {
+                    if (!e.market_date) return false;
+                    return new Date(e.market_date + 'T23:59:59') >= now;
+                });
+            }
             // If all are in the past, pick the most recent one (last in the sorted list)
             if (!activeEvent && eventsData.length > 0) {
                 activeEvent = eventsData[eventsData.length - 1];
@@ -2286,6 +2291,9 @@
 
         if (isInitialLoad && eventsData.length > 0) {
             const savedFilter = localStorage.getItem('marketLastFilter') || 'inbox';
+            const savedSort = localStorage.getItem('marketLastSort') || 'default';
+            const sortEl = document.getElementById('sortFilter');
+            if (sortEl) sortEl.value = savedSort;
             setFilter(savedFilter);
             isInitialLoad = false;
         } else {
@@ -3461,7 +3469,8 @@
             
             const sortSelect = document.getElementById('sortFilter');
             if(sortSelect) sortSelect.value = 'custom';
-            
+            localStorage.setItem('marketLastSort', 'custom');
+
             renderTable();
         }
         draggedVendorId = null;
