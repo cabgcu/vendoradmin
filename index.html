@@ -1321,11 +1321,14 @@
 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
                     <button onclick="resetTemplate()" style="background:transparent; border:1px solid rgba(255,255,255,0.2); color:var(--text-muted); padding:10px 18px; border-radius:100px; cursor:pointer; font-size:0.8rem; font-weight:600; transition: 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.4)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)';this.style.color='var(--text-muted)'">Reset Default</button>
-                    <div id="blastControls" style="display: none; align-items: center; gap: 8px;">
+                    <div id="blastControls" style="display: flex; align-items: center; gap: 8px;">
                         <select id="blastTargetSelector" class="modern-input" style="margin:0; height:40px; padding:0 28px 0 10px; font-size:0.78rem; width:auto;">
                             <option value="approved">Approved Vendors</option>
                             <option value="checked_in">Checked-In Vendors</option>
-                            <option value="all">All (Approved + Checked-In)</option>
+                            <option value="denied">Denied Vendors</option>
+                            <option value="pending">Pending Vendors</option>
+                            <option value="all_active">All Active (Approved + Checked-In)</option>
+                            <option value="everyone">Everyone</option>
                         </select>
                         <button onclick="sendCustomBlastFromSettings()" class="btn-action" style="background: var(--gradient-warning); color: #000; padding: 12px 24px; white-space:nowrap;">Send Email</button>
                     </div>
@@ -3974,17 +3977,22 @@
             }
         }
 
-        if (targetTemplate === 'approved') {
-            subj = currentData.apprSubj; 
+        // Try the template library first (covers all templates including user-created)
+        const libTpl = emailTemplateLibrary.templates?.[targetTemplate];
+        if (libTpl) {
+            subj = libTpl.subj;
+            body = libTpl.body;
+        } else if (targetTemplate === 'approved') {
+            subj = currentData.apprSubj;
             body = currentData.apprBody;
         } else if (targetTemplate === 'power') {
-            subj = currentData.powSubj; 
+            subj = currentData.powSubj;
             body = currentData.powBody;
         } else if (targetTemplate === 'power_denied') {
-            subj = currentData.powDenSubj; 
+            subj = currentData.powDenSubj;
             body = currentData.powDenBody;
         } else if (targetTemplate === 'denied') {
-            subj = currentData.denSubj; 
+            subj = currentData.denSubj;
             body = currentData.denBody;
         } else if (targetTemplate === 'custom') {
             subj = currentData.customSubj;
@@ -4026,7 +4034,9 @@
 
     async function sendSingleEmail(vendor, forceTemplateId = null) {
         if (currentUser.role !== 'admin') return false;
-        if (!vendor || !vendor.preferred_email || vendor.status === 'Needs Review' || vendor.status === 'Pending') return false;
+        if (!vendor || !vendor.preferred_email) return false;
+        // Only block Pending/Needs Review for auto-sends (not forced blasts)
+        if (!forceTemplateId && (vendor.status === 'Needs Review' || vendor.status === 'Pending')) return false;
 
         const templates = getTemplateDetails(vendor, forceTemplateId);
         if (!templates) return false;
@@ -4594,7 +4604,7 @@
 
         if (!body || !subj) return showToast("Subject and Body are required.");
 
-        const target = document.getElementById('blastTargetSelector')?.value || 'all';
+        const target = document.getElementById('blastTargetSelector')?.value || 'all_active';
         let targetVendors;
         let targetLabel;
         if (target === 'approved') {
@@ -4603,9 +4613,18 @@
         } else if (target === 'checked_in') {
             targetVendors = currentData.vendors.filter(v => v.status === 'Checked In');
             targetLabel = 'CHECKED-IN';
-        } else {
+        } else if (target === 'denied') {
+            targetVendors = currentData.vendors.filter(v => v.status === 'Denied');
+            targetLabel = 'DENIED';
+        } else if (target === 'pending') {
+            targetVendors = currentData.vendors.filter(v => v.status === 'Pending');
+            targetLabel = 'PENDING';
+        } else if (target === 'all_active') {
             targetVendors = currentData.vendors.filter(v => v.status === 'Approved' || v.status === 'Checked In');
             targetLabel = 'APPROVED + CHECKED-IN';
+        } else {
+            targetVendors = currentData.vendors.filter(v => v.preferred_email);
+            targetLabel = 'ALL';
         }
 
         if (targetVendors.length === 0) {
@@ -4616,10 +4635,10 @@
             return;
         }
 
-        // Save immediately to use the latest typed variables
-        await saveEmailTemplate(); 
-        currentData.customSubj = subj;
-        currentData.customBody = body;
+        // Save the current template so library has latest content
+        await saveEmailTemplate();
+
+        const sendTemplateId = currentTemplateType;
 
         document.getElementById('loader').style.display = 'flex';
         const loaderText = document.querySelector('#loader span');
@@ -4631,9 +4650,9 @@
         const BATCH_SIZE = 10;
         for (let i = 0; i < targetVendors.length; i += BATCH_SIZE) {
             if (isUnauthorized) break;
-            
+
             const batch = targetVendors.slice(i, i + BATCH_SIZE);
-            const results = await Promise.all(batch.map(v => sendSingleEmail(v, 'custom')));
+            const results = await Promise.all(batch.map(v => sendSingleEmail(v, sendTemplateId)));
             
             for (const success of results) {
                 if (success === 'unauthorized') isUnauthorized = true;
@@ -4726,12 +4745,7 @@
             clearBtn.style.display = 'none';
         }
 
-        // Show blast controls only for custom-type templates
-        const isCustomDefault = emailTemplateLibrary.defaults?.custom === currentTemplateType;
-        const blastControls = document.getElementById('blastControls');
-        if (blastControls) {
-            blastControls.style.display = isCustomDefault ? 'flex' : 'none';
-        }
+        // Blast controls always visible — any template can be sent
 
         // Load from template library
         const tpl = emailTemplateLibrary.templates[currentTemplateType];
