@@ -281,11 +281,11 @@
         .modern-input:focus { border-color: #0A84FF; background: rgba(255, 255, 255, 0.08); }
         
         .form-card { padding: 40px; border-radius: var(--radius-card); max-width: 1000px; margin: 0 auto; }
-        .editor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .editor-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
         .tag-chip { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; margin-bottom: 5px; font-weight: 600; letter-spacing: 0.5px; transition: 0.2s; }
         .tag-chip:hover { background: rgba(255,255,255,0.2); }
         
-        #emailPreview { background: #f4f4f4; border-radius: var(--radius-inner); height: 500px; width: 100%; border: 1px solid #ccc; display: block; }
+        #emailPreview { background: #f4f4f4; border-radius: var(--radius-input); height: 600px; width: 100%; border: none; display: block; }
 
         .modal-overlay { 
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
@@ -460,7 +460,7 @@
             td:first-child { border-radius: 0; padding-bottom: 8px; font-size: 1.2rem; font-weight: bold; border-left: none; }
             td:last-child { border-radius: 0; margin-top: 10px; display: block; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); border-right: none; }
             .action-wrapper { width: 100%; justify-content: flex-start; margin-top: 10px; }
-            .editor-grid { grid-template-columns: 1fr; }
+            .editor-grid { grid-template-columns: 1fr; gap: 20px; }
             .filter-row { flex-direction: column; align-items: stretch; }
             .filter-row > * { width: 100%; min-width: 0 !important; }
             .review-modal-container { flex-direction: column; max-height: 95vh; overflow-y: auto; }
@@ -489,9 +489,9 @@
         .settings-tab.active { background: var(--glass-active); color: var(--text-main); box-shadow: 0 4px 12px var(--shadow-color); border: 1px solid var(--glass-border); }
 
         /* Form Builder Styles (Google Forms Theme) */
-        .builder-q-card { background: rgba(255,255,255,0.02); border: 1px solid transparent; padding: 25px; border-radius: var(--radius-input); margin-bottom: 20px; position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 10px rgba(0,0,0,0.2);}
-        .builder-q-card:hover { background: rgba(255,255,255,0.04); }
-        .builder-q-card:focus-within { background: rgba(255,255,255,0.06); box-shadow: 0 10px 30px rgba(0,0,0,0.4); transform: scale(1.01); z-index: 10; }
+        .builder-q-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); padding: 28px; border-radius: var(--radius-card); margin-bottom: 16px; position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.15);}
+        .builder-q-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+        .builder-q-card:focus-within { background: rgba(255,255,255,0.05); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.12); z-index: 10; }
         
         .gf-input::placeholder { color: rgba(255,255,255,0.3); }
         
@@ -527,33 +527,42 @@
         /* Rich Email Editor */
         .rich-editor-wrap {
             border: 1px solid var(--glass-border);
-            border-radius: var(--radius-input);
+            border-radius: var(--radius-card);
             overflow: hidden;
             background: var(--input-bg);
             transition: border-color 0.2s;
         }
         .rich-editor-wrap:focus-within {
             border-color: #0A84FF;
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
         }
         .rich-toolbar {
             display: flex;
             align-items: center;
-            gap: 4px;
-            padding: 8px 12px;
-            background: rgba(255,255,255,0.04);
+            gap: 6px;
+            padding: 12px 18px;
+            background: rgba(255,255,255,0.03);
             border-bottom: 1px solid var(--glass-border);
+            flex-wrap: wrap;
+        }
+        .rich-toolbar-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
             flex-wrap: wrap;
         }
         .rich-toolbar-btn {
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.1);
             color: var(--text-muted);
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: 800;
             display: flex;
             align-items: center;
@@ -565,13 +574,13 @@
         .rich-toolbar-btn.active { background: rgba(10, 132, 255, 0.2); color: #0A84FF; border-color: rgba(10, 132, 255, 0.4); }
         .rich-toolbar-sep {
             width: 1px;
-            height: 20px;
-            background: rgba(255,255,255,0.1);
-            margin: 0 6px;
+            height: 24px;
+            background: rgba(255,255,255,0.08);
+            margin: 0 8px;
             flex-shrink: 0;
         }
         .rich-toolbar-label {
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -580,45 +589,46 @@
             flex-shrink: 0;
         }
         .var-chip {
-            background: rgba(10, 132, 255, 0.1);
-            border: 1px solid rgba(10, 132, 255, 0.3);
+            background: rgba(10, 132, 255, 0.08);
+            border: 1px solid rgba(10, 132, 255, 0.25);
             color: #5AC8FA;
-            padding: 3px 10px;
+            padding: 5px 14px;
             border-radius: var(--radius-button);
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.15s;
             white-space: nowrap;
             flex-shrink: 0;
         }
-        .var-chip:hover { background: rgba(10, 132, 255, 0.2); transform: scale(1.03); }
-        .var-chip.confirm { border-color: rgba(52, 199, 89, 0.4); color: #34C759; background: rgba(52, 199, 89, 0.1); }
-        .var-chip.confirm:hover { background: rgba(52, 199, 89, 0.2); }
-        .var-chip.decline { border-color: rgba(255, 59, 48, 0.4); color: #FF3B30; background: rgba(255, 59, 48, 0.1); }
-        .var-chip.decline:hover { background: rgba(255, 59, 48, 0.2); }
+        .var-chip:hover { background: rgba(10, 132, 255, 0.18); transform: scale(1.03); }
+        .var-chip.confirm { border-color: rgba(52, 199, 89, 0.35); color: #34C759; background: rgba(52, 199, 89, 0.08); }
+        .var-chip.confirm:hover { background: rgba(52, 199, 89, 0.18); }
+        .var-chip.decline { border-color: rgba(255, 59, 48, 0.35); color: #FF3B30; background: rgba(255, 59, 48, 0.08); }
+        .var-chip.decline:hover { background: rgba(255, 59, 48, 0.18); }
         #richEmailEditor {
-            min-height: 280px;
-            padding: 16px 18px;
+            min-height: 350px;
+            padding: 24px 28px;
             color: var(--text-main);
-            font-size: 0.95rem;
-            line-height: 1.6;
+            font-size: 1rem;
+            line-height: 1.7;
             font-family: var(--font-stack);
             outline: none;
             overflow-y: auto;
-            max-height: 400px;
+            max-height: 500px;
         }
         #richEmailEditor:empty::before {
             content: 'Start typing your email message here...';
-            color: rgba(255,255,255,0.25);
+            color: rgba(255,255,255,0.2);
             pointer-events: none;
+            font-size: 1rem;
         }
         #richEmailEditor .email-var {
             display: inline-block;
-            background: rgba(10, 132, 255, 0.15);
-            border: 1px solid rgba(10, 132, 255, 0.35);
+            background: rgba(10, 132, 255, 0.12);
+            border: 1px solid rgba(10, 132, 255, 0.3);
             color: #5AC8FA;
-            padding: 1px 8px;
+            padding: 2px 10px;
             border-radius: var(--radius-button);
             font-size: 0.8rem;
             font-weight: 700;
@@ -1232,70 +1242,77 @@
 
             <!-- TAB 2: EMAILS -->
             <div id="settings-tab-emails" class="settings-section" style="display:none;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <!-- Template selector bar -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
                     <div>
                         <label class="stat-label" style="margin-bottom:0;">Global Email Templates</label>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 5px 0 0 0;">Templates saved here will automatically apply to all past and future markets.</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 5px 0 0 0;">Templates saved here apply to all past and future markets.</p>
                     </div>
-                    <select id="templateTypeSelector" class="modern-input" style="width:auto; height:40px; padding:0 36px 0 12px; margin:0;" onchange="switchTemplateType(this.value)">
+                    <select id="templateTypeSelector" class="modern-input" style="width:auto; height:42px; padding:0 38px 0 14px; margin:0; font-weight:600;" onchange="switchTemplateType(this.value)">
                         <option value="approved">Approved Template</option>
-                        <option value="power">Approved (Power Granted) Template</option>
-                        <option value="power_denied">Approved (Power Denied) Template</option>
+                        <option value="power">Approved (Power Granted)</option>
+                        <option value="power_denied">Approved (Power Denied)</option>
                         <option value="denied">Denied Template</option>
                         <option value="custom">Custom Mass Email</option>
                     </select>
                 </div>
-                
-                <div class="form-grid" style="margin-bottom: 20px; gap: 16px;">
-                    <div>
-                        <label class="stat-label">Banner Image (Specific to this market)</label>
-                        <div style="display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 18px; border-radius: var(--radius-input); border: 1px solid var(--glass-border);">
-                            <input type="file" id="bannerFileInput" accept="image/*" style="display: none;" onchange="handleBannerSelection(event)">
-                            <button type="button" onclick="document.getElementById('bannerFileInput').click()" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; flex-shrink: 0; margin: 0;">Upload</button>
-                            <span id="bannerFileName" style="font-size: 0.85rem; color: var(--text-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">No file chosen</span>
-                            <button type="button" onclick="clearBannerSelection()" style="background: transparent; border: none; color: #FF3B30; cursor: pointer; display: none; font-size: 1.2rem; line-height: 1; padding: 0 5px;" id="clearBannerBtn">&times;</button>
+
+                <!-- Banner + Heading settings -->
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-card); padding: 24px; margin-bottom: 20px;">
+                    <div class="form-grid" style="margin-bottom: 0; gap: 18px;">
+                        <div>
+                            <label class="stat-label">Banner Image (This market only)</label>
+                            <div style="display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: var(--radius-inner); border: 1px solid rgba(255,255,255,0.06);">
+                                <input type="file" id="bannerFileInput" accept="image/*" style="display: none;" onchange="handleBannerSelection(event)">
+                                <button type="button" onclick="document.getElementById('bannerFileInput').click()" class="btn-action" style="padding: 8px 16px; font-size: 0.8rem; flex-shrink: 0; margin: 0;">Upload</button>
+                                <span id="bannerFileName" style="font-size: 0.85rem; color: var(--text-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">No file chosen</span>
+                                <button type="button" onclick="clearBannerSelection()" style="background: transparent; border: none; color: #FF3B30; cursor: pointer; display: none; font-size: 1.2rem; line-height: 1; padding: 0 5px;" id="clearBannerBtn">&times;</button>
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <label class="stat-label">Email Heading (Global for all markets)</label>
-                        <input type="text" id="headingTextInput" class="modern-input" placeholder="e.g. Market Status Update" oninput="updatePreview()">
+                        <div>
+                            <label class="stat-label">Email Heading (All markets)</label>
+                            <input type="text" id="headingTextInput" class="modern-input" placeholder="e.g. Market Status Update" oninput="updatePreview()">
+                        </div>
                     </div>
                 </div>
 
-                <input type="text" id="emailSubjectInput" class="modern-input" placeholder="Subject Line" style="margin-bottom:12px; font-weight:bold;">
+                <input type="text" id="emailSubjectInput" class="modern-input" placeholder="Subject Line" style="margin-bottom:16px; font-weight:bold; font-size: 1.05rem; padding: 14px 20px;">
                 <!-- Hidden textarea for backward compatibility -->
                 <textarea id="emailTemplateInput" style="display:none;"></textarea>
-                <div class="editor-grid">
-                    <div>
-                        <div class="rich-editor-wrap">
-                            <div class="rich-toolbar">
-                                <button type="button" class="rich-toolbar-btn" id="btnBold" onclick="richToggleBold()" title="Bold"><b>B</b></button>
-                                <div class="rich-toolbar-sep"></div>
-                                <span class="rich-toolbar-label">Insert:</span>
-                                <button type="button" class="var-chip" onclick="richInsertVar('{{FIRST}}', 'First Name')">First Name</button>
-                                <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_NAME}}', 'Market Name')">Market Name</button>
-                                <button type="button" class="var-chip" onclick="richInsertVar('{{LOCATION}}', 'Location')">Location</button>
-                                <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_DATE}}', 'Market Date')">Market Date</button>
-                                <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_TIME}}', 'Market Time')">Market Time</button>
-                                <button type="button" class="var-chip" onclick="richInsertVar('{{APP_OPENS}}', 'App Opens')">App Opens</button>
-                                <button type="button" class="var-chip" onclick="richInsertVar('{{APP_CLOSES}}', 'App Closes')">App Closes</button>
-                                <button type="button" class="var-chip" onclick="richInsertVar('{{CONTACT_DATE}}', 'Contact Date')">Contact Date</button>
-                                <button type="button" class="var-chip" onclick="richInsertVar('{{CONFIRM_DEADLINE}}', 'Confirm Deadline')">Deadline</button>
-                                <button type="button" class="var-chip confirm" onclick="richInsertVar('{{CONFIRM_LINK}}', 'Confirm Link')">Confirm Link</button>
-                                <button type="button" class="var-chip decline" onclick="richInsertVar('{{DECLINE_LINK}}', 'Decline Link')">Decline Link</button>
-                            </div>
-                            <div id="richEmailEditor" contenteditable="true" oninput="richEditorChanged()"></div>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                            <button onclick="resetTemplate()" style="background:transparent; border:1px solid rgba(255,255,255,0.3); color:#aaa; padding:8px 14px; border-radius:100px; cursor:pointer; font-size:0.8rem; font-weight:600;">Reset Default</button>
-                            <div style="display: flex; gap: 10px;">
-                                <button id="btnSendCustomBlast" onclick="sendCustomBlastFromSettings()" class="btn-action" style="background: var(--gradient-warning); color: #000; display: none;">Send to Approved Vendors</button>
-                                <button onclick="saveEmailTemplate()" class="btn-action">Save Template</button>
-                            </div>
-                        </div>
+
+                <div class="rich-editor-wrap">
+                    <div class="rich-toolbar">
+                        <span class="rich-toolbar-label">Format</span>
+                        <button type="button" class="rich-toolbar-btn" id="btnBold" onclick="richToggleBold()" title="Bold"><b>B</b></button>
                     </div>
-                    <div>
-                        <label class="stat-label" style="color:#aaa;">Full Email Preview</label>
+                    <div class="rich-toolbar-row">
+                        <span class="rich-toolbar-label">Insert</span>
+                        <button type="button" class="var-chip" onclick="richInsertVar('{{FIRST}}', 'First Name')">First Name</button>
+                        <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_NAME}}', 'Market Name')">Market Name</button>
+                        <button type="button" class="var-chip" onclick="richInsertVar('{{LOCATION}}', 'Location')">Location</button>
+                        <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_DATE}}', 'Market Date')">Market Date</button>
+                        <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_TIME}}', 'Market Time')">Market Time</button>
+                        <button type="button" class="var-chip" onclick="richInsertVar('{{APP_OPENS}}', 'App Opens')">App Opens</button>
+                        <button type="button" class="var-chip" onclick="richInsertVar('{{APP_CLOSES}}', 'App Closes')">App Closes</button>
+                        <button type="button" class="var-chip" onclick="richInsertVar('{{CONTACT_DATE}}', 'Contact Date')">Contact Date</button>
+                        <button type="button" class="var-chip" onclick="richInsertVar('{{CONFIRM_DEADLINE}}', 'Confirm Deadline')">Deadline</button>
+                        <button type="button" class="var-chip confirm" onclick="richInsertVar('{{CONFIRM_LINK}}', 'Confirm Link')">Confirm Link</button>
+                        <button type="button" class="var-chip decline" onclick="richInsertVar('{{DECLINE_LINK}}', 'Decline Link')">Decline Link</button>
+                    </div>
+                    <div id="richEmailEditor" contenteditable="true" oninput="richEditorChanged()"></div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+                    <button onclick="resetTemplate()" style="background:transparent; border:1px solid rgba(255,255,255,0.2); color:var(--text-muted); padding:10px 18px; border-radius:100px; cursor:pointer; font-size:0.8rem; font-weight:600; transition: 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.4)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)';this.style.color='var(--text-muted)'">Reset Default</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="btnSendCustomBlast" onclick="sendCustomBlastFromSettings()" class="btn-action" style="background: var(--gradient-warning); color: #000; display: none; padding: 12px 24px;">Send to Approved Vendors</button>
+                        <button onclick="saveEmailTemplate()" class="btn-action" style="padding: 12px 24px;">Save Template</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 28px;">
+                    <label class="stat-label" style="color:var(--text-muted); margin-bottom: 12px;">Live Email Preview</label>
+                    <div style="background: #e8e8e8; border-radius: var(--radius-card); padding: 20px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);">
                         <iframe id="emailPreview"></iframe>
                     </div>
                 </div>
@@ -1384,16 +1401,16 @@
             
             <!-- TAB 5: FORM BUILDER -->
             <div id="settings-tab-form" class="settings-section" style="display:none;">
-                <div class="editor-grid">
-                    <!-- Left: Builder Controls -->
-                    <div style="margin-bottom:30px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; max-height: 800px; overflow-y: auto;">
-                        <div class="section-header" style="margin-top:0;">Global Branding & Text</div>
-                        
-                        <div class="form-grid" style="gap: 16px; margin-bottom: 20px; grid-template-columns: 1fr;">
-                            <div>
-                                <label class="stat-label">Header Image URL</label>
-                                <input type="text" id="adminHeaderUrl" class="modern-input" placeholder="e.g. https://..." oninput="renderFormPreview()">
-                            </div>
+                <!-- Branding & Text -->
+                <div style="margin-bottom:24px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 28px; border-radius: var(--radius-card);">
+                    <div class="section-header" style="margin-top:0;">Global Branding & Text</div>
+
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 18px;">
+                        <div>
+                            <label class="stat-label">Header Image URL</label>
+                            <input type="text" id="adminHeaderUrl" class="modern-input" placeholder="e.g. https://..." oninput="renderFormPreview()">
+                        </div>
+                        <div class="form-grid" style="gap: 18px; margin-bottom: 0;">
                             <div>
                                 <label class="stat-label">Global Form Title</label>
                                 <input type="text" id="adminEventTitle" class="modern-input" placeholder="Leave blank for default" oninput="renderFormPreview()">
@@ -1403,27 +1420,32 @@
                                 <textarea id="adminEventDesc" class="modern-input" style="height: 60px;" placeholder="Leave blank for default instructions." oninput="renderFormPreview()"></textarea>
                             </div>
                         </div>
-                        
-                        <div class="section-header" style="margin-top:30px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
-                            <span>Form Pages & Questions</span>
-                        </div>
-                        
-                        <div id="adminQuestionsList"></div>
-                        
-                        <div style="text-align: center; margin-top: 30px; margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                            <button class="btn-action" style="padding: 12px 24px; font-size: 0.9rem; background: rgba(255,255,255,0.1);" onclick="addCustomQuestion('text')">+ Add Question</button>
-                            <button class="btn-action" style="padding: 12px 24px; font-size: 0.9rem; background: rgba(191, 90, 242, 0.2); color: #BF5AF2;" onclick="addCustomQuestion('section_header')">+ Add Page Break (Section)</button>
-                        </div>
-                        
-                        <button id="adminSaveBtn" class="btn-action" style="width: 100%; padding: 15px; font-size: 1.1rem; margin-top: 20px;" onclick="saveAdminConfig()">Save Form Settings</button>
                     </div>
-                    
-                    <!-- Right: Live Preview -->
-                    <div>
-                        <label class="stat-label" style="color:#aaa; margin-bottom: 15px;">Live Form Preview <span style="text-transform:none; font-weight:normal; font-size:0.8rem; margin-left:10px; color:var(--text-muted);">(Click ✏️ to edit field)</span></label>
-                        <div id="formPreviewContainer" style="background: #111; border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px; height: 800px; overflow-y: auto; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
-                            <!-- Injected by JS -->
-                        </div>
+                </div>
+
+                <!-- Question Builder -->
+                <div style="margin-bottom:24px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 28px; border-radius: var(--radius-card);">
+                    <div class="section-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Form Pages & Questions</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: none; font-weight: 500; letter-spacing: 0;">${''}Drag to reorder, click fields to edit</span>
+                    </div>
+
+                    <div id="adminQuestionsList"></div>
+
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--glass-border);">
+                        <button class="btn-action" style="padding: 14px 28px; font-size: 0.9rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);" onclick="addCustomQuestion('text')">+ Add Question</button>
+                        <button class="btn-action" style="padding: 14px 28px; font-size: 0.9rem; background: rgba(191, 90, 242, 0.15); color: #BF5AF2; border: 1px solid rgba(191, 90, 242, 0.3);" onclick="addCustomQuestion('section_header')">+ Add Page Break</button>
+                    </div>
+                </div>
+
+                <!-- Save -->
+                <button id="adminSaveBtn" class="btn-action" style="width: 100%; padding: 16px; font-size: 1.1rem;" onclick="saveAdminConfig()">Save Form Settings</button>
+
+                <!-- Live Preview -->
+                <div style="margin-top: 32px;">
+                    <label class="stat-label" style="color:var(--text-muted); margin-bottom: 14px;">Live Form Preview <span style="text-transform:none; font-weight:normal; font-size:0.8rem; margin-left:8px; color:rgba(255,255,255,0.3);">Click the pencil icon on any field to jump to its editor</span></label>
+                    <div id="formPreviewContainer" style="background: #0a0a0a; border: 1px solid var(--glass-border); border-radius: var(--radius-card); padding: 36px; min-height: 500px; overflow-y: auto; box-shadow: inset 0 2px 20px rgba(0,0,0,0.4);">
+                        <!-- Injected by JS -->
                     </div>
                 </div>
             </div>
@@ -5357,21 +5379,23 @@
             // Protected fields that shouldn't be deleted or heavily mutated
             const isProtected = q.id === 'student_id' || q.id === 'full_name_combined';
             const isSection = q.type === 'section_header';
-            const borderColor = isSection ? '#BF5AF2' : '#0A84FF';
+            const borderColor = isSection ? '#BF5AF2' : 'rgba(10, 132, 255, 0.5)';
+            const cardNum = i + 1;
 
             return `
-            <div class="builder-q-card" style="border-left: 6px solid ${borderColor};">
-                
+            <div class="builder-q-card" style="border-left: 4px solid ${borderColor};">
+
                 <!-- Top Toolbar -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                    <div style="display:flex; align-items: center; gap: 8px;">
-                        <button class="btn-action" style="padding:0; width: 28px; height: 28px; background: rgba(255,255,255,0.1); font-size:12px; border-radius: 12px; display:flex; align-items:center; justify-content:center;" onclick="moveQ(${i},-1)" ${i===0?'disabled':''} title="Move Up">▲</button>
-                        <button class="btn-action" style="padding:0; width: 28px; height: 28px; background: rgba(255,255,255,0.1); font-size:12px; border-radius: 12px; display:flex; align-items:center; justify-content:center;" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''} title="Move Down">▼</button>
-                        ${isProtected ? `<span style="color:#a1a1aa; font-size: 0.7rem; font-style: italic; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 100px; margin-left: 8px;">Protected Field</span>` : ''}
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 22px;">
+                    <div style="display:flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 0.7rem; color: rgba(255,255,255,0.25); font-weight: 700; min-width: 20px;">#${cardNum}</span>
+                        <button class="btn-action" style="padding:0; width: 30px; height: 30px; background: rgba(255,255,255,0.06); font-size:11px; border-radius: 12px; display:flex; align-items:center; justify-content:center; border: 1px solid rgba(255,255,255,0.08);" onclick="moveQ(${i},-1)" ${i===0?'disabled':''} title="Move Up">▲</button>
+                        <button class="btn-action" style="padding:0; width: 30px; height: 30px; background: rgba(255,255,255,0.06); font-size:11px; border-radius: 12px; display:flex; align-items:center; justify-content:center; border: 1px solid rgba(255,255,255,0.08);" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''} title="Move Down">▼</button>
+                        ${isProtected ? `<span style="color:#a1a1aa; font-size: 0.68rem; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 100px; margin-left: 4px;">Protected</span>` : ''}
                     </div>
-                    
-                    <div style="display:flex; align-items: center; gap: 15px;">
-                        <select class="modern-input" style="padding: 8px 36px 8px 12px; height: 38px; font-size: 0.85rem; border-color: rgba(255,255,255,0.1); background-color: rgba(0,0,0,0.4); border-radius: 12px; margin: 0;" onchange="updateQ(${i}, 'type', this.value)" ${isProtected ? 'disabled' : ''}>
+
+                    <div style="display:flex; align-items: center; gap: 12px;">
+                        <select class="modern-input" style="padding: 8px 36px 8px 14px; height: 40px; font-size: 0.85rem; border-color: rgba(255,255,255,0.08); background-color: rgba(0,0,0,0.3); border-radius: var(--radius-sm); margin: 0;" onchange="updateQ(${i}, 'type', this.value)" ${isProtected ? 'disabled' : ''}>
                             <option value="text" ${q.type==='text'?'selected':''}>Short answer</option>
                             <option value="textarea" ${q.type==='textarea'?'selected':''}>Paragraph</option>
                             <option value="email" ${q.type==='email'?'selected':''}>Email</option>
@@ -5385,39 +5409,39 @@
                 </div>
 
                 <!-- Main Input (Title/Label) -->
-                <div style="margin-bottom: 8px;">
-                    <input type="text" class="gf-input" style="width: 100%; background: transparent; border: none; border-bottom: 2px solid transparent; color: #fff; font-size: ${isSection ? '1.5rem' : '1.15rem'}; font-weight: ${isSection ? '800' : '600'}; padding: 8px 0; outline: none; transition: 0.2s;" value="${escapeHtml(q.label)}" placeholder="${isSection ? 'Section Title' : 'Question Title'}" oninput="updateQ(${i},'label',this.value)" onfocus="this.style.borderBottomColor='${borderColor}'" onblur="this.style.borderBottomColor='transparent'">
+                <div style="margin-bottom: 10px;">
+                    <input type="text" class="gf-input" style="width: 100%; background: transparent; border: none; border-bottom: 2px solid transparent; color: #fff; font-size: ${isSection ? '1.4rem' : '1.1rem'}; font-weight: ${isSection ? '800' : '600'}; padding: 10px 0; outline: none; transition: 0.2s;" value="${escapeHtml(q.label)}" placeholder="${isSection ? 'Section Title' : 'Question Title'}" oninput="updateQ(${i},'label',this.value)" onfocus="this.style.borderBottomColor='${borderColor}'" onblur="this.style.borderBottomColor='transparent'">
                 </div>
 
                 ${!isSection ? `
                 <!-- Description/Hint -->
-                <div style="margin-bottom: 15px;">
-                    <input type="text" class="gf-input" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid transparent; color: var(--text-muted); font-size: 0.9rem; padding: 6px 0; outline: none; transition: 0.2s;" value="${escapeHtml(q.hint || '')}" placeholder="${q.type === 'checkbox_single' ? 'Agreement terms text...' : 'Description or hint (optional)'}" oninput="updateQ(${i},'hint',this.value)" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.3)'" onblur="this.style.borderBottomColor='transparent'">
+                <div style="margin-bottom: 16px;">
+                    <input type="text" class="gf-input" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid transparent; color: var(--text-muted); font-size: 0.9rem; padding: 8px 0; outline: none; transition: 0.2s;" value="${escapeHtml(q.hint || '')}" placeholder="${q.type === 'checkbox_single' ? 'Agreement terms text...' : 'Description or hint (optional)'}" oninput="updateQ(${i},'hint',this.value)" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.25)'" onblur="this.style.borderBottomColor='transparent'">
                 </div>
                 ` : ''}
 
                 <!-- Contextual Inputs (Dropdown options) -->
                 ${q.type === 'dropdown' ? `
-                    <div style="margin-top:15px; display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 1.2rem; color: var(--text-muted);">☰</span>
-                        <input type="text" style="flex: 1; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 0; font-size: 0.95rem; outline:none; transition: 0.2s;" value="${escapeHtml(q.options || '')}" placeholder="Option 1, Option 2, Option 3 (comma separated)" oninput="updateQ(${i},'options',this.value)" onfocus="this.style.borderBottomColor='#0A84FF'" onblur="this.style.borderBottomColor='rgba(255,255,255,0.2)'">
+                    <div style="margin-top:12px; display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.06);">
+                        <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; white-space: nowrap;">Options</span>
+                        <input type="text" style="flex: 1; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 0; font-size: 0.95rem; outline:none; transition: 0.2s;" value="${escapeHtml(q.options || '')}" placeholder="Option 1, Option 2, Option 3 (comma separated)" oninput="updateQ(${i},'options',this.value)" onfocus="this.style.borderBottomColor='#0A84FF'" onblur="this.style.borderBottomColor='rgba(255,255,255,0.15)'">
                     </div>
                 ` : ''}
 
                 <!-- Bottom Footer (Required, Delete, Width) -->
-                <div style="display:flex; justify-content: flex-end; align-items: center; gap: 15px; margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
+                <div style="display:flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.04);">
                     ${!isSection ? `
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <select style="background:transparent; border:none; color:var(--text-muted); font-size:0.85rem; outline:none; cursor:pointer; font-weight: 600;" onchange="updateQ(${i}, 'width', this.value)" title="Field Width">
+                        <select style="background:transparent; border:none; color:var(--text-muted); font-size:0.82rem; outline:none; cursor:pointer; font-weight: 600;" onchange="updateQ(${i}, 'width', this.value)" title="Field Width">
                             <option value="full" ${q.width==='full'?'selected':''}>Full Width</option>
                             <option value="half" ${q.width==='half'?'selected':''}>Half Width</option>
                         </select>
                     </div>
-                    
-                    <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 5px;"></div>
+
+                    <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.08);"></div>
                     
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <label for="req_${i}" style="font-size:0.9rem; color:#fff; font-weight: 600; cursor:pointer; user-select: none;">Required</label>
+                        <label for="req_${i}" style="font-size:0.85rem; color:var(--text-muted); font-weight: 600; cursor:pointer; user-select: none;">Required</label>
                         <label class="switch">
                             <input type="checkbox" id="req_${i}" ${q.required?'checked':''} onchange="updateQ(${i}, 'required', this.checked)" ${isProtected && q.required ? 'disabled' : ''}>
                             <span class="slider"></span>
@@ -5426,7 +5450,7 @@
                     ` : ''}
 
                     ${!isProtected ? `
-                    <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 5px;"></div>
+                    <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.08);"></div>
                     <button class="builder-q-remove" onclick="deleteQ(${i})" title="Delete Item">🗑️</button>
                     ` : ''}
                 </div>
