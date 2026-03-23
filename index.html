@@ -285,7 +285,7 @@
         .tag-chip { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; margin-bottom: 5px; font-weight: 600; letter-spacing: 0.5px; transition: 0.2s; }
         .tag-chip:hover { background: rgba(255,255,255,0.2); }
         
-        #emailPreview { background: #f4f4f4; border-radius: var(--radius-input); height: 600px; width: 100%; border: none; display: block; }
+        #emailPreview { display: none; }
 
         .modal-overlay { 
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
@@ -489,9 +489,9 @@
         .settings-tab.active { background: var(--glass-active); color: var(--text-main); box-shadow: 0 4px 12px var(--shadow-color); border: 1px solid var(--glass-border); }
 
         /* Form Builder Styles (Google Forms Theme) */
-        .builder-q-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); padding: 28px; border-radius: var(--radius-card); margin-bottom: 16px; position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.15);}
-        .builder-q-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
-        .builder-q-card:focus-within { background: rgba(255,255,255,0.05); box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.12); z-index: 10; }
+        .builder-q-card { background: transparent; border: 1px solid rgba(255,255,255,0.06); padding: 16px 18px; border-radius: var(--radius-inner); margin-bottom: 8px; position: relative; transition: all 0.2s ease;}
+        .builder-q-card:hover { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.1); }
+        .builder-q-card:focus-within { background: rgba(255,255,255,0.03); border-color: rgba(10, 132, 255, 0.3); }
         
         .gf-input::placeholder { color: rgba(255,255,255,0.3); }
         
@@ -503,8 +503,11 @@
         .switch input:checked + .slider { background-color: #0A84FF; }
         .switch input:checked + .slider:before { transform: translateX(20px); }
         .switch input:disabled + .slider { opacity: 0.5; cursor: not-allowed; }
+        .switch-sm { width: 36px; height: 20px; }
+        .switch-sm .slider:before { height: 14px; width: 14px; }
+        .switch-sm input:checked + .slider:before { transform: translateX(16px); }
 
-        .builder-q-remove { color: #var(--text-muted); cursor: pointer; font-weight: bold; background: transparent; border: none; border-radius: 50%; font-size: 1.2rem; width: 36px; height: 36px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .builder-q-remove { color: var(--text-muted); cursor: pointer; font-weight: bold; background: transparent; border: none; border-radius: 50%; font-size: 0.85rem; width: 28px; height: 28px; transition: 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .builder-q-remove:hover { background: rgba(255, 59, 48, 0.15); color: #FF3B30; }
 
         /* Color Picker Palette */
@@ -524,44 +527,28 @@
         .preview-form-hint { display: block; margin-top: 4px; color: #a1a1aa; font-size: 0.8rem; font-weight: 500; text-transform: none; letter-spacing: 0;}
         .preview-section-header { font-size: 1.2rem; font-weight: 800; color: #ffffff; margin-bottom: 15px; margin-top: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; display: flex; align-items: center;}
 
-        /* Rich Email Editor */
-        .rich-editor-wrap {
+        /* Rich Email Editor — Floating Toolbar */
+        .rich-toolbar-floating {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            background: var(--glass-surface);
             border: 1px solid var(--glass-border);
-            border-radius: var(--radius-card);
-            overflow: hidden;
-            background: var(--input-bg);
-            transition: border-color 0.2s;
-        }
-        .rich-editor-wrap:focus-within {
-            border-color: rgba(255, 255, 255, 0.18);
-        }
-        .rich-toolbar {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 12px 18px;
-            background: rgba(255,255,255,0.03);
-            border-bottom: 1px solid var(--glass-border);
+            border-radius: var(--radius-input);
+            margin-bottom: 12px;
             flex-wrap: wrap;
-        }
-        .rich-toolbar-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 18px;
-            background: rgba(255,255,255,0.02);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            flex-wrap: wrap;
+            backdrop-filter: blur(var(--blur));
         }
         .rich-toolbar-btn {
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.1);
             color: var(--text-muted);
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 800;
             display: flex;
             align-items: center;
@@ -573,13 +560,13 @@
         .rich-toolbar-btn.active { background: rgba(10, 132, 255, 0.2); color: #0A84FF; border-color: rgba(10, 132, 255, 0.4); }
         .rich-toolbar-sep {
             width: 1px;
-            height: 24px;
+            height: 20px;
             background: rgba(255,255,255,0.08);
-            margin: 0 8px;
+            margin: 0 6px;
             flex-shrink: 0;
         }
         .rich-toolbar-label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -591,45 +578,33 @@
             background: rgba(10, 132, 255, 0.08);
             border: 1px solid rgba(10, 132, 255, 0.25);
             color: #5AC8FA;
-            padding: 5px 14px;
+            padding: 4px 12px;
             border-radius: var(--radius-button);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.15s;
             white-space: nowrap;
             flex-shrink: 0;
         }
-        .var-chip:hover { background: rgba(10, 132, 255, 0.18); transform: scale(1.03); }
+        .var-chip:hover { background: rgba(10, 132, 255, 0.18); }
         .var-chip.confirm { border-color: rgba(52, 199, 89, 0.35); color: #34C759; background: rgba(52, 199, 89, 0.08); }
         .var-chip.confirm:hover { background: rgba(52, 199, 89, 0.18); }
         .var-chip.decline { border-color: rgba(255, 59, 48, 0.35); color: #FF3B30; background: rgba(255, 59, 48, 0.08); }
         .var-chip.decline:hover { background: rgba(255, 59, 48, 0.18); }
-        #richEmailEditor {
-            min-height: 350px;
-            padding: 24px 28px;
-            color: var(--text-main);
-            font-size: 1rem;
-            line-height: 1.7;
-            font-family: var(--font-stack);
-            outline: none;
-            overflow-y: auto;
-            max-height: 500px;
-        }
         #richEmailEditor:empty::before {
-            content: 'Start typing your email message here...';
-            color: rgba(255,255,255,0.2);
+            content: 'Click here and start typing your email...';
+            color: #bbb;
             pointer-events: none;
-            font-size: 1rem;
         }
         #richEmailEditor .email-var {
             display: inline-block;
-            background: rgba(10, 132, 255, 0.12);
-            border: 1px solid rgba(10, 132, 255, 0.3);
-            color: #5AC8FA;
-            padding: 2px 10px;
+            background: #e8f4fd;
+            border: 1px solid #b3d9f2;
+            color: #0A84FF;
+            padding: 1px 8px;
             border-radius: var(--radius-button);
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 700;
             cursor: default;
             user-select: all;
@@ -637,14 +612,14 @@
             line-height: 1.6;
         }
         #richEmailEditor .email-var.link-var {
-            border-color: rgba(52, 199, 89, 0.4);
-            color: #34C759;
-            background: rgba(52, 199, 89, 0.12);
+            border-color: #a8e6c1;
+            color: #1a8a3e;
+            background: #e6f9ee;
         }
         #richEmailEditor .email-var.decline-var {
-            border-color: rgba(255, 59, 48, 0.4);
-            color: #FF3B30;
-            background: rgba(255, 59, 48, 0.12);
+            border-color: #f5b3ae;
+            color: #cc2d24;
+            background: #fde8e7;
         }
     </style>
 </head>
@@ -1279,26 +1254,35 @@
                 <!-- Hidden textarea for backward compatibility -->
                 <textarea id="emailTemplateInput" style="display:none;"></textarea>
 
-                <div class="rich-editor-wrap">
-                    <div class="rich-toolbar">
-                        <span class="rich-toolbar-label">Format</span>
-                        <button type="button" class="rich-toolbar-btn" id="btnBold" onclick="richToggleBold()" title="Bold"><b>B</b></button>
+                <!-- Toolbar floating above the live preview -->
+                <div class="rich-toolbar-floating">
+                    <button type="button" class="rich-toolbar-btn" id="btnBold" onclick="richToggleBold()" title="Bold"><b>B</b></button>
+                    <div class="rich-toolbar-sep"></div>
+                    <span class="rich-toolbar-label">Insert</span>
+                    <button type="button" class="var-chip" onclick="richInsertVar('{{FIRST}}', 'First Name')">First Name</button>
+                    <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_NAME}}', 'Market Name')">Market Name</button>
+                    <button type="button" class="var-chip" onclick="richInsertVar('{{LOCATION}}', 'Location')">Location</button>
+                    <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_DATE}}', 'Market Date')">Market Date</button>
+                    <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_TIME}}', 'Market Time')">Market Time</button>
+                    <button type="button" class="var-chip" onclick="richInsertVar('{{APP_OPENS}}', 'App Opens')">App Opens</button>
+                    <button type="button" class="var-chip" onclick="richInsertVar('{{APP_CLOSES}}', 'App Closes')">App Closes</button>
+                    <button type="button" class="var-chip" onclick="richInsertVar('{{CONTACT_DATE}}', 'Contact Date')">Contact Date</button>
+                    <button type="button" class="var-chip" onclick="richInsertVar('{{CONFIRM_DEADLINE}}', 'Confirm Deadline')">Deadline</button>
+                    <button type="button" class="var-chip confirm" onclick="richInsertVar('{{CONFIRM_LINK}}', 'Confirm Link')">Confirm Link</button>
+                    <button type="button" class="var-chip decline" onclick="richInsertVar('{{DECLINE_LINK}}', 'Decline Link')">Decline Link</button>
+                </div>
+
+                <!-- Editable email preview — you edit directly in the email -->
+                <div id="liveEmailContainer" style="background: #f3f4f6; border-radius: var(--radius-card); padding: 20px 20px 30px; overflow-y: auto; max-height: 75vh;">
+                    <div id="liveEmailWrap" style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+                        <div id="liveEmailBanner"></div>
+                        <div align="center" style="padding: 30px;">
+                            <h1 id="liveEmailHeading" style="margin: 0; font-size: 20px; font-weight: 800; text-transform: uppercase; color: #000;">Market Status Update</h1>
+                            <p id="liveEmailBadge" style="margin: 10px 0 0 0; font-size: 11px; font-weight: 700; color: #fff; display: inline-block; padding: 4px 12px; text-transform: uppercase; border-radius: 12px;">APPROVED</p>
+                        </div>
+                        <div id="richEmailEditor" contenteditable="true" oninput="richEditorChanged()" style="padding: 0 30px 30px 30px; font-size: 14px; color: #333; line-height: 1.6; font-family: 'Segoe UI', sans-serif; outline: none; min-height: 180px;"></div>
+                        <div id="liveEmailQR"></div>
                     </div>
-                    <div class="rich-toolbar-row">
-                        <span class="rich-toolbar-label">Insert</span>
-                        <button type="button" class="var-chip" onclick="richInsertVar('{{FIRST}}', 'First Name')">First Name</button>
-                        <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_NAME}}', 'Market Name')">Market Name</button>
-                        <button type="button" class="var-chip" onclick="richInsertVar('{{LOCATION}}', 'Location')">Location</button>
-                        <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_DATE}}', 'Market Date')">Market Date</button>
-                        <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_TIME}}', 'Market Time')">Market Time</button>
-                        <button type="button" class="var-chip" onclick="richInsertVar('{{APP_OPENS}}', 'App Opens')">App Opens</button>
-                        <button type="button" class="var-chip" onclick="richInsertVar('{{APP_CLOSES}}', 'App Closes')">App Closes</button>
-                        <button type="button" class="var-chip" onclick="richInsertVar('{{CONTACT_DATE}}', 'Contact Date')">Contact Date</button>
-                        <button type="button" class="var-chip" onclick="richInsertVar('{{CONFIRM_DEADLINE}}', 'Confirm Deadline')">Deadline</button>
-                        <button type="button" class="var-chip confirm" onclick="richInsertVar('{{CONFIRM_LINK}}', 'Confirm Link')">Confirm Link</button>
-                        <button type="button" class="var-chip decline" onclick="richInsertVar('{{DECLINE_LINK}}', 'Decline Link')">Decline Link</button>
-                    </div>
-                    <div id="richEmailEditor" contenteditable="true" oninput="richEditorChanged()"></div>
                 </div>
 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
@@ -1309,12 +1293,8 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 28px;">
-                    <label class="stat-label" style="color:var(--text-muted); margin-bottom: 12px;">Live Email Preview</label>
-                    <div style="background: #e8e8e8; border-radius: var(--radius-card); padding: 20px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);">
-                        <iframe id="emailPreview"></iframe>
-                    </div>
-                </div>
+                <!-- Hidden iframe kept for send-preview compatibility -->
+                <iframe id="emailPreview" style="display:none;"></iframe>
             </div>
 
             <!-- TAB 3: SYSTEM & DATA -->
@@ -1400,50 +1380,39 @@
             
             <!-- TAB 5: FORM BUILDER -->
             <div id="settings-tab-form" class="settings-section" style="display:none;">
-                <!-- Branding & Text -->
-                <div style="margin-bottom:24px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 28px; border-radius: var(--radius-card);">
-                    <div class="section-header" style="margin-top:0;">Global Branding & Text</div>
-
-                    <div style="display: grid; grid-template-columns: 1fr; gap: 18px;">
+                <!-- Branding & Text — compact -->
+                <div style="margin-bottom:16px; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); padding: 18px 20px; border-radius: var(--radius-inner);">
+                    <div class="section-header" style="margin-top:0; margin-bottom:12px; font-size:0.8rem;">Branding & Text</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                         <div>
-                            <label class="stat-label">Header Image URL</label>
-                            <input type="text" id="adminHeaderUrl" class="modern-input" placeholder="e.g. https://..." oninput="renderFormPreview()">
+                            <label class="stat-label" style="font-size:0.7rem; margin-bottom:4px;">Header Image URL</label>
+                            <input type="text" id="adminHeaderUrl" class="modern-input" style="padding:8px 14px; font-size:0.85rem;" placeholder="https://..." oninput="renderFormPreview()">
                         </div>
-                        <div class="form-grid" style="gap: 18px; margin-bottom: 0;">
-                            <div>
-                                <label class="stat-label">Global Form Title</label>
-                                <input type="text" id="adminEventTitle" class="modern-input" placeholder="Leave blank for default" oninput="renderFormPreview()">
-                            </div>
-                            <div>
-                                <label class="stat-label">Global Form Description</label>
-                                <textarea id="adminEventDesc" class="modern-input" style="height: 60px;" placeholder="Leave blank for default instructions." oninput="renderFormPreview()"></textarea>
-                            </div>
+                        <div>
+                            <label class="stat-label" style="font-size:0.7rem; margin-bottom:4px;">Form Title</label>
+                            <input type="text" id="adminEventTitle" class="modern-input" style="padding:8px 14px; font-size:0.85rem;" placeholder="Leave blank for default" oninput="renderFormPreview()">
                         </div>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <label class="stat-label" style="font-size:0.7rem; margin-bottom:4px;">Description</label>
+                        <textarea id="adminEventDesc" class="modern-input" style="height:50px; padding:8px 14px; font-size:0.85rem;" placeholder="Leave blank for default" oninput="renderFormPreview()"></textarea>
                     </div>
                 </div>
 
-                <!-- Question Builder -->
-                <div style="margin-bottom:24px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 28px; border-radius: var(--radius-card);">
-                    <div class="section-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
-                        <span>Form Pages & Questions</span>
-                        <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: none; font-weight: 500; letter-spacing: 0;">${''}Drag to reorder, click fields to edit</span>
-                    </div>
+                <!-- Question list — compact like Google Forms -->
+                <div id="adminQuestionsList"></div>
 
-                    <div id="adminQuestionsList"></div>
-
-                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--glass-border);">
-                        <button class="btn-action" style="padding: 14px 28px; font-size: 0.9rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);" onclick="addCustomQuestion('text')">+ Add Question</button>
-                        <button class="btn-action" style="padding: 14px 28px; font-size: 0.9rem; background: rgba(191, 90, 242, 0.15); color: #BF5AF2; border: 1px solid rgba(191, 90, 242, 0.3);" onclick="addCustomQuestion('section_header')">+ Add Page Break</button>
-                    </div>
+                <div style="display:flex; gap:10px; justify-content:center; margin:16px 0;">
+                    <button class="btn-action" style="padding:10px 22px; font-size:0.82rem; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);" onclick="addCustomQuestion('text')">+ Question</button>
+                    <button class="btn-action" style="padding:10px 22px; font-size:0.82rem; background:rgba(191,90,242,0.1); color:#BF5AF2; border:1px solid rgba(191,90,242,0.25);" onclick="addCustomQuestion('section_header')">+ Section</button>
                 </div>
 
-                <!-- Save -->
-                <button id="adminSaveBtn" class="btn-action" style="width: 100%; padding: 16px; font-size: 1.1rem;" onclick="saveAdminConfig()">Save Form Settings</button>
+                <button id="adminSaveBtn" class="btn-action" style="width:100%; padding:14px; font-size:1rem;" onclick="saveAdminConfig()">Save Form Settings</button>
 
                 <!-- Live Preview -->
-                <div style="margin-top: 32px;">
-                    <label class="stat-label" style="color:var(--text-muted); margin-bottom: 14px;">Live Form Preview <span style="text-transform:none; font-weight:normal; font-size:0.8rem; margin-left:8px; color:rgba(255,255,255,0.3);">Click the pencil icon on any field to jump to its editor</span></label>
-                    <div id="formPreviewContainer" style="background: #0a0a0a; border: 1px solid var(--glass-border); border-radius: var(--radius-card); padding: 36px; min-height: 500px; overflow-y: auto; box-shadow: inset 0 2px 20px rgba(0,0,0,0.4);">
+                <div style="margin-top:24px;">
+                    <label class="stat-label" style="color:var(--text-muted); margin-bottom:10px;">Live Preview</label>
+                    <div id="formPreviewContainer" style="background:#0a0a0a; border:1px solid var(--glass-border); border-radius:var(--radius-card); padding:28px; min-height:400px; overflow-y:auto;">
                         <!-- Injected by JS -->
                     </div>
                 </div>
@@ -4887,79 +4856,56 @@
     }
 
     function updatePreview() {
-        const input = document.getElementById('emailTemplateInput');
-        const previewIframe = document.getElementById('emailPreview');
-        if (!input || !previewIframe) return;
-        
-        let text = parseEmailVariables(input.value, { first_name: 'Alex' }, "#", "#");
-        text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
-            
+        // Update the live editable email chrome (banner, heading, badge, QR)
+        // The body text is edited directly inside #richEmailEditor
+
         let bannerUrl = "";
         if (selectedBannerFile) {
             bannerUrl = URL.createObjectURL(selectedBannerFile);
         } else if (!bannerDeleted && currentData.bannerUrl) {
             bannerUrl = processImageUrl(currentData.bannerUrl);
         }
-        
+
         const headingText = document.getElementById('headingTextInput')?.value || "Market Status Update";
-        
+
         let statusColor = (currentTemplateType === 'approved' || currentTemplateType === 'power' || currentTemplateType === 'power_denied') ? '#34C759' : (currentTemplateType === 'custom' ? '#0A84FF' : '#FF3B30');
         let statusBadge = (currentTemplateType === 'approved' || currentTemplateType === 'power' || currentTemplateType === 'power_denied') ? 'APPROVED' : (currentTemplateType === 'custom' ? 'MARKET UPDATE' : 'STATUS UPDATE');
 
-        const bannerHtml = bannerUrl ? `<tr><td align="center" style="padding: 0;"><img src="${bannerUrl}" alt="Banner" width="600" style="display: block; width: 100%; max-width: 100%; height: auto; border: 0;"></td></tr>` : "";
-        
-        const barcodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=PREVIEW1&format=png&bgcolor=FFFFFF&color=000000&margin=10";
-        const qrHtml = (currentTemplateType !== 'denied' && currentTemplateType !== 'custom') ? `
-            <tr>
-                <td style="padding: 0 15px; background-color: #ffffff;">
-                    <div style="border-top: 2px dashed #e5e7eb; width: 100%; height: 1px;"></div>
-                </td>
-            </tr>
-            <tr>
-                <td align="center" style="padding: 40px 30px; background-color: #ffffff;">
-                    <table border="0" cellspacing="0" cellpadding="0" width="100%">
-                        <tr>
-                            <td align="center" style="background: #ffffff; padding: 25px; border-radius: 16px; border: 2px solid #eeeeee;">
-                                <img src="${barcodeUrl}" alt="Ticket QR Code" width="250" height="250" style="display: block; margin: 0 auto; box-sizing: border-box; border: 0; max-width: 100%; height: auto; background-color: #ffffff !important; padding: 10px; border-radius: 8px;">
-                            </td>
-                        </tr>
-                    </table>
-                    <p style="margin: 25px 0 0 0; font-size: 14px; color: #1a1a1a; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-family: sans-serif;">SCAN AT CHECK-IN</p>
-                    <p style="margin: 8px 0 0 0; font-size: 12px; color: #888888; font-family: monospace;">ID: #PREVIEW1</p>
-                </td>
-            </tr>
-        ` : '';
-
-        const fullHtml = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Segoe UI', sans-serif;">
-            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden;">
-                ${bannerHtml}
-                <tr>
-                    <td align="center" style="padding: 30px;">
-                        <h1 style="margin: 0; font-size: 20px; font-weight: 800; text-transform: uppercase;">${headingText}</h1>
-                        <p style="margin: 10px 0 0 0; font-size: 11px; font-weight: 700; color: #fff; background-color: ${statusColor}; display: inline-block; padding: 4px 12px; text-transform: uppercase; border-radius: 12px;">${statusBadge}</p>
-                    </td>
-                </tr>
-                <tr><td style="padding: 0 30px 30px 30px; font-size: 14px; color: #333; line-height: 1.6;">${text}</td></tr>
-                ${qrHtml}
-            </table>
-        </body>
-        </html>`;
-
-        // Most robust cross-browser iframe injection: Memory Blob URL
-        if (previewIframe.blobUrl) {
-            URL.revokeObjectURL(previewIframe.blobUrl); // Cleanup memory
+        // Banner
+        const bannerEl = document.getElementById('liveEmailBanner');
+        if (bannerEl) {
+            bannerEl.innerHTML = bannerUrl ? `<img src="${bannerUrl}" alt="Banner" style="display:block; width:100%; height:auto; border:0;">` : '';
         }
-        
-        const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-        previewIframe.blobUrl = URL.createObjectURL(blob);
-        previewIframe.src = previewIframe.blobUrl;
+
+        // Heading
+        const headingEl = document.getElementById('liveEmailHeading');
+        if (headingEl) headingEl.textContent = headingText;
+
+        // Badge
+        const badgeEl = document.getElementById('liveEmailBadge');
+        if (badgeEl) {
+            badgeEl.textContent = statusBadge;
+            badgeEl.style.backgroundColor = statusColor;
+        }
+
+        // QR code
+        const qrEl = document.getElementById('liveEmailQR');
+        if (qrEl) {
+            if (currentTemplateType !== 'denied' && currentTemplateType !== 'custom') {
+                const barcodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=PREVIEW1&format=png&bgcolor=FFFFFF&color=000000&margin=10";
+                qrEl.innerHTML = `
+                    <div style="border-top: 2px dashed #e5e7eb; margin: 0 15px;"></div>
+                    <div align="center" style="padding: 40px 30px;">
+                        <div style="background: #fff; padding: 25px; border-radius: 16px; border: 2px solid #eee; display: inline-block;">
+                            <img src="${barcodeUrl}" alt="QR Code" width="200" height="200" style="display:block; border:0; background:#fff;">
+                        </div>
+                        <p style="margin: 20px 0 0; font-size: 14px; color: #1a1a1a; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">SCAN AT CHECK-IN</p>
+                        <p style="margin: 6px 0 0; font-size: 12px; color: #888; font-family: monospace;">ID: #PREVIEW1</p>
+                    </div>`;
+            } else {
+                qrEl.innerHTML = '';
+            }
+        }
     }
 
     async function saveEmailTemplate() {
@@ -5377,81 +5323,60 @@
             // Protected fields that shouldn't be deleted or heavily mutated
             const isProtected = q.id === 'student_id' || q.id === 'full_name_combined';
             const isSection = q.type === 'section_header';
-            const borderColor = isSection ? '#BF5AF2' : 'rgba(10, 132, 255, 0.5)';
-            const cardNum = i + 1;
+            const borderColor = isSection ? '#BF5AF2' : 'rgba(10, 132, 255, 0.4)';
 
             return `
-            <div class="builder-q-card" style="border-left: 4px solid ${borderColor};">
+            <div class="builder-q-card" style="border-left: 3px solid ${borderColor};">
 
-                <!-- Top Toolbar -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 22px;">
-                    <div style="display:flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 0.7rem; color: rgba(255,255,255,0.25); font-weight: 700; min-width: 20px;">#${cardNum}</span>
-                        <button class="btn-action" style="padding:0; width: 30px; height: 30px; background: rgba(255,255,255,0.06); font-size:11px; border-radius: 12px; display:flex; align-items:center; justify-content:center; border: 1px solid rgba(255,255,255,0.08);" onclick="moveQ(${i},-1)" ${i===0?'disabled':''} title="Move Up">▲</button>
-                        <button class="btn-action" style="padding:0; width: 30px; height: 30px; background: rgba(255,255,255,0.06); font-size:11px; border-radius: 12px; display:flex; align-items:center; justify-content:center; border: 1px solid rgba(255,255,255,0.08);" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''} title="Move Down">▼</button>
-                        ${isProtected ? `<span style="color:#a1a1aa; font-size: 0.68rem; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 100px; margin-left: 4px;">Protected</span>` : ''}
-                    </div>
+                <!-- Header row: label + type selector inline -->
+                <div style="display:flex; align-items:center; gap: 10px; margin-bottom: ${!isSection && (q.hint || q.type === 'checkbox_single') ? '4px' : '0'};">
+                    <button class="btn-action" style="padding:0; width:22px; height:22px; background:transparent; font-size:9px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); border:none; flex-shrink:0;" onclick="moveQ(${i},-1)" ${i===0?'disabled':''} title="Move Up">▲</button>
+                    <button class="btn-action" style="padding:0; width:22px; height:22px; background:transparent; font-size:9px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); border:none; flex-shrink:0;" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''} title="Move Down">▼</button>
 
-                    <div style="display:flex; align-items: center; gap: 12px;">
-                        <select class="modern-input" style="padding: 8px 36px 8px 14px; height: 40px; font-size: 0.85rem; border-color: rgba(255,255,255,0.08); background-color: rgba(0,0,0,0.3); border-radius: var(--radius-sm); margin: 0;" onchange="updateQ(${i}, 'type', this.value)" ${isProtected ? 'disabled' : ''}>
-                            <option value="text" ${q.type==='text'?'selected':''}>Short answer</option>
-                            <option value="textarea" ${q.type==='textarea'?'selected':''}>Paragraph</option>
-                            <option value="email" ${q.type==='email'?'selected':''}>Email</option>
-                            <option value="tel" ${q.type==='tel'?'selected':''}>Phone</option>
-                            <option value="number" ${q.type==='number'?'selected':''}>Number</option>
-                            <option value="dropdown" ${q.type==='dropdown'?'selected':''}>Dropdown</option>
-                            <option value="checkbox_single" ${q.type==='checkbox_single'?'selected':''}>Agreement / Checkbox</option>
-                            <option value="section_header" ${q.type==='section_header'?'selected':''}>Page Break (Section)</option>
-                        </select>
-                    </div>
-                </div>
+                    <input type="text" class="gf-input" style="flex:1; min-width:0; background:transparent; border:none; border-bottom:1.5px solid transparent; color:#fff; font-size:${isSection ? '1.1rem' : '0.95rem'}; font-weight:${isSection ? '700' : '600'}; padding:6px 0; outline:none; transition:0.2s;" value="${escapeHtml(q.label)}" placeholder="${isSection ? 'Section Title' : 'Question Title'}" oninput="updateQ(${i},'label',this.value)" onfocus="this.style.borderBottomColor='${borderColor}'" onblur="this.style.borderBottomColor='transparent'">
 
-                <!-- Main Input (Title/Label) -->
-                <div style="margin-bottom: 10px;">
-                    <input type="text" class="gf-input" style="width: 100%; background: transparent; border: none; border-bottom: 2px solid transparent; color: #fff; font-size: ${isSection ? '1.4rem' : '1.1rem'}; font-weight: ${isSection ? '800' : '600'}; padding: 10px 0; outline: none; transition: 0.2s;" value="${escapeHtml(q.label)}" placeholder="${isSection ? 'Section Title' : 'Question Title'}" oninput="updateQ(${i},'label',this.value)" onfocus="this.style.borderBottomColor='${borderColor}'" onblur="this.style.borderBottomColor='transparent'">
+                    ${isProtected ? `<span style="color:#777; font-size:0.6rem; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:100px; white-space:nowrap;">Protected</span>` : ''}
+
+                    <select class="modern-input" style="padding:4px 28px 4px 8px; height:30px; font-size:0.75rem; border-color:rgba(255,255,255,0.06); background-color:rgba(0,0,0,0.2); border-radius:8px; margin:0; width:auto; flex-shrink:0;" onchange="updateQ(${i},'type',this.value)" ${isProtected ? 'disabled' : ''}>
+                        <option value="text" ${q.type==='text'?'selected':''}>Short answer</option>
+                        <option value="textarea" ${q.type==='textarea'?'selected':''}>Paragraph</option>
+                        <option value="email" ${q.type==='email'?'selected':''}>Email</option>
+                        <option value="tel" ${q.type==='tel'?'selected':''}>Phone</option>
+                        <option value="number" ${q.type==='number'?'selected':''}>Number</option>
+                        <option value="dropdown" ${q.type==='dropdown'?'selected':''}>Dropdown</option>
+                        <option value="checkbox_single" ${q.type==='checkbox_single'?'selected':''}>Checkbox</option>
+                        <option value="section_header" ${q.type==='section_header'?'selected':''}>Section</option>
+                    </select>
+
+                    <!-- Inline footer controls -->
+                    ${!isSection ? `
+                    <select style="background:transparent; border:none; color:var(--text-muted); font-size:0.72rem; outline:none; cursor:pointer; font-weight:600; flex-shrink:0;" onchange="updateQ(${i},'width',this.value)">
+                        <option value="full" ${q.width==='full'?'selected':''}>Full</option>
+                        <option value="half" ${q.width==='half'?'selected':''}>Half</option>
+                    </select>
+                    <label style="display:flex; align-items:center; gap:5px; flex-shrink:0; cursor:pointer;">
+                        <span style="font-size:0.72rem; color:var(--text-muted); font-weight:600;">Req</span>
+                        <label class="switch switch-sm">
+                            <input type="checkbox" id="req_${i}" ${q.required?'checked':''} onchange="updateQ(${i},'required',this.checked)" ${isProtected && q.required ? 'disabled' : ''}>
+                            <span class="slider" style="border-radius:20px;"></span>
+                        </label>
+                    </label>
+                    ` : ''}
+
+                    ${!isProtected ? `<button class="builder-q-remove" style="width:28px; height:28px; font-size:0.9rem;" onclick="deleteQ(${i})" title="Delete">🗑️</button>` : ''}
                 </div>
 
                 ${!isSection ? `
-                <!-- Description/Hint -->
-                <div style="margin-bottom: 16px;">
-                    <input type="text" class="gf-input" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid transparent; color: var(--text-muted); font-size: 0.9rem; padding: 8px 0; outline: none; transition: 0.2s;" value="${escapeHtml(q.hint || '')}" placeholder="${q.type === 'checkbox_single' ? 'Agreement terms text...' : 'Description or hint (optional)'}" oninput="updateQ(${i},'hint',this.value)" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.25)'" onblur="this.style.borderBottomColor='transparent'">
+                <div style="padding-left: 54px;">
+                    <input type="text" class="gf-input" style="width:100%; background:transparent; border:none; border-bottom:1px solid transparent; color:var(--text-muted); font-size:0.8rem; padding:4px 0; outline:none; transition:0.2s;" value="${escapeHtml(q.hint || '')}" placeholder="${q.type === 'checkbox_single' ? 'Agreement terms...' : 'Hint (optional)'}" oninput="updateQ(${i},'hint',this.value)" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.2)'" onblur="this.style.borderBottomColor='transparent'">
                 </div>
                 ` : ''}
 
-                <!-- Contextual Inputs (Dropdown options) -->
                 ${q.type === 'dropdown' ? `
-                    <div style="margin-top:12px; display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.06);">
-                        <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; white-space: nowrap;">Options</span>
-                        <input type="text" style="flex: 1; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 0; font-size: 0.95rem; outline:none; transition: 0.2s;" value="${escapeHtml(q.options || '')}" placeholder="Option 1, Option 2, Option 3 (comma separated)" oninput="updateQ(${i},'options',this.value)" onfocus="this.style.borderBottomColor='#0A84FF'" onblur="this.style.borderBottomColor='rgba(255,255,255,0.15)'">
-                    </div>
-                ` : ''}
-
-                <!-- Bottom Footer (Required, Delete, Width) -->
-                <div style="display:flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.04);">
-                    ${!isSection ? `
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <select style="background:transparent; border:none; color:var(--text-muted); font-size:0.82rem; outline:none; cursor:pointer; font-weight: 600;" onchange="updateQ(${i}, 'width', this.value)" title="Field Width">
-                            <option value="full" ${q.width==='full'?'selected':''}>Full Width</option>
-                            <option value="half" ${q.width==='half'?'selected':''}>Half Width</option>
-                        </select>
-                    </div>
-
-                    <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.08);"></div>
-                    
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <label for="req_${i}" style="font-size:0.85rem; color:var(--text-muted); font-weight: 600; cursor:pointer; user-select: none;">Required</label>
-                        <label class="switch">
-                            <input type="checkbox" id="req_${i}" ${q.required?'checked':''} onchange="updateQ(${i}, 'required', this.checked)" ${isProtected && q.required ? 'disabled' : ''}>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    ` : ''}
-
-                    ${!isProtected ? `
-                    <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.08);"></div>
-                    <button class="builder-q-remove" onclick="deleteQ(${i})" title="Delete Item">🗑️</button>
-                    ` : ''}
+                <div style="padding-left: 54px; margin-top:4px;">
+                    <input type="text" class="gf-input" style="width:100%; background:transparent; border:none; border-bottom:1px dashed rgba(255,255,255,0.15); color:#ccc; font-size:0.8rem; padding:4px 0; outline:none;" value="${escapeHtml(q.options || '')}" placeholder="Option 1, Option 2, Option 3" oninput="updateQ(${i},'options',this.value)" onfocus="this.style.borderBottomColor='#0A84FF'" onblur="this.style.borderBottomColor='rgba(255,255,255,0.15)'">
                 </div>
+                ` : ''}
             </div>`;
         }).join('');
     }
