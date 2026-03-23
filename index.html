@@ -36,8 +36,10 @@
             --loader-bg: rgba(0, 0, 0, 0.95);
 
             --radius-card: 28px;
+            --radius-inner: 16px;
             --radius-input: 20px;
             --radius-button: 100px;
+            --radius-sm: 12px;
             --blur: 40px;
             --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
@@ -189,21 +191,21 @@
         .clickable-row.dragging td { opacity: 0.4 !important; background: rgba(255, 255, 255, 0.1) !important; }
         .clickable-row.drag-over td { border-top: 2px solid #0A84FF !important; border-bottom: 2px solid #0A84FF !important; background: rgba(10, 132, 255, 0.15) !important; }
 
-        .group-tag { font-size: 0.75rem; font-weight: 700; color: #BF5AF2; display: inline-block; text-transform: uppercase; background: rgba(191, 90, 242, 0.1); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(191, 90, 242, 0.3); }
-        .power-tag { font-size: 0.75rem; font-weight: 700; color: #FFD60A; display: inline-block; text-transform: uppercase; background: rgba(255, 214, 10, 0.15); padding: 4px 8px; border-radius: 6px; margin-top: 4px; border: 1px solid rgba(255, 214, 10, 0.3); }
+        .group-tag { font-size: 0.75rem; font-weight: 700; color: #BF5AF2; display: inline-block; text-transform: uppercase; background: rgba(191, 90, 242, 0.1); padding: 4px 10px; border-radius: var(--radius-button); border: 1px solid rgba(191, 90, 242, 0.3); }
+        .power-tag { font-size: 0.75rem; font-weight: 700; color: #FFD60A; display: inline-block; text-transform: uppercase; background: rgba(255, 214, 10, 0.15); padding: 4px 10px; border-radius: var(--radius-button); margin-top: 4px; border: 1px solid rgba(255, 214, 10, 0.3); }
         
         .action-wrapper { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: nowrap; }
         
-        .status-badge { font-size: 0.7rem; font-weight: 800; padding: 6px 10px; border-radius: 6px; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block; text-align: center; min-width: 70px;}
+        .status-badge { font-size: 0.7rem; font-weight: 800; padding: 6px 10px; border-radius: var(--radius-button); letter-spacing: 0.5px; text-transform: uppercase; display: inline-block; text-align: center; min-width: 70px;}
         .status-badge.sent { color: #34C759; background: rgba(52, 199, 89, 0.1); border: 1px solid rgba(52, 199, 89, 0.2); }
         .status-badge.draft { color: #FF9F0A; background: rgba(255, 159, 10, 0.1); border: 1px solid rgba(255, 159, 10, 0.2); }
         
         /* Interactive Status Toggle Styles */
         .status-toggle-group {
-            display: inline-flex; 
-            background: rgba(0,0,0,0.4); 
-            border-radius: 8px; 
-            border: 1px solid var(--glass-border); 
+            display: inline-flex;
+            background: rgba(0,0,0,0.4);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
             overflow: hidden;
             white-space: nowrap;
         }
@@ -232,7 +234,7 @@
         .status-pill.approved { background: var(--gradient-success); color: #fff; }
         .status-pill.denied { background: var(--gradient-danger); color: #fff; }
 
-        .btn-icon-text { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-size: 0.75rem; font-weight: 700; padding: 6px 12px; color: white; border-radius: 8px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-icon-text { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-size: 0.75rem; font-weight: 700; padding: 6px 12px; color: white; border-radius: var(--radius-sm); transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-icon-text:hover { background: rgba(255,255,255,0.1); }
         .btn-icon-text.danger:hover { background: rgba(255,59,48,0.2); color: #FF3B30; border-color: rgba(255,59,48,0.4); }
         
@@ -283,7 +285,7 @@
         .tag-chip { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; margin-bottom: 5px; font-weight: 600; letter-spacing: 0.5px; transition: 0.2s; }
         .tag-chip:hover { background: rgba(255,255,255,0.2); }
         
-        #emailPreview { background: #f4f4f4; border-radius: 12px; height: 500px; width: 100%; border: 1px solid #ccc; display: block; }
+        #emailPreview { background: #f4f4f4; border-radius: var(--radius-inner); height: 500px; width: 100%; border: 1px solid #ccc; display: block; }
 
         .modal-overlay { 
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
@@ -326,10 +328,10 @@
         .sidebar-btn {
             width: 100%;
             padding: 9px 0;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 700;
             letter-spacing: 0.3px;
-            border-radius: 10px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
             transition: all 0.15s ease;
             border: 1px solid transparent;
@@ -337,28 +339,28 @@
         }
         .sidebar-btn:active { transform: scale(0.97); }
         .sidebar-btn-approve {
-            background: rgba(52, 199, 89, 0.12);
+            background: rgba(52, 199, 89, 0.1);
             color: #34C759;
-            border-color: rgba(52, 199, 89, 0.25);
+            border-color: rgba(52, 199, 89, 0.2);
         }
-        .sidebar-btn-approve:hover { background: rgba(52, 199, 89, 0.22); }
+        .sidebar-btn-approve:hover { background: rgba(52, 199, 89, 0.2); }
         .sidebar-btn-neutral {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.04);
             color: var(--text-muted);
-            border-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.08);
         }
         .sidebar-btn-neutral:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
         .sidebar-btn-deny {
-            background: rgba(255, 59, 48, 0.1);
+            background: rgba(255, 59, 48, 0.08);
             color: #FF3B30;
-            border-color: rgba(255, 59, 48, 0.2);
+            border-color: rgba(255, 59, 48, 0.15);
         }
-        .sidebar-btn-deny:hover { background: rgba(255, 59, 48, 0.2); }
+        .sidebar-btn-deny:hover { background: rgba(255, 59, 48, 0.18); }
         .sidebar-btn-sm {
             padding: 7px 0;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 600;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             text-transform: none;
         }
 
@@ -372,14 +374,14 @@
         .section-header { font-size: 0.9rem; font-weight: 800; color: #BF5AF2; text-transform: uppercase; margin-bottom: 15px; margin-top: 30px; letter-spacing: 0.05em; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
         
         .review-field-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 700; }
-        .review-field-value { font-size: 1.1rem; color: var(--text-main); margin-bottom: 20px; word-break: break-word; background: var(--card-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--table-border); }
+        .review-field-value { font-size: 1.1rem; color: var(--text-main); margin-bottom: 20px; word-break: break-word; background: var(--card-bg); padding: 12px 16px; border-radius: var(--radius-inner); border: 1px solid var(--table-border); }
 
         /* Trello-like Comment Feed Styles */
         .comment-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 12px;
+            border-radius: var(--radius-inner);
+            padding: 12px 14px;
             display: flex;
             flex-direction: column;
             gap: 6px;
@@ -481,13 +483,13 @@
         .vendor-checkbox-item label { cursor: pointer; flex: 1; font-size: 0.95rem; }
 
         /* Settings Sub-Tabs */
-        .settings-tabs { display: flex; gap: 8px; background: var(--card-bg); padding: 6px; border-radius: 12px; border: 1px solid var(--glass-border); overflow-x: auto; margin-bottom: 24px; }
-        .settings-tab { background: transparent; border: none; color: var(--text-muted); font-size: 0.9rem; font-weight: 700; padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .settings-tabs { display: flex; gap: 8px; background: var(--card-bg); padding: 6px; border-radius: var(--radius-inner); border: 1px solid var(--glass-border); overflow-x: auto; margin-bottom: 24px; }
+        .settings-tab { background: transparent; border: none; color: var(--text-muted); font-size: 0.9rem; font-weight: 700; padding: 10px 20px; border-radius: var(--radius-sm); cursor: pointer; transition: 0.2s; white-space: nowrap; }
         .settings-tab:hover { color: var(--text-main); background: var(--glass-hover); }
         .settings-tab.active { background: var(--glass-active); color: var(--text-main); box-shadow: 0 4px 12px var(--shadow-color); border: 1px solid var(--glass-border); }
 
         /* Form Builder Styles (Google Forms Theme) */
-        .builder-q-card { background: rgba(255,255,255,0.02); border: 1px solid transparent; padding: 25px; border-radius: 16px; margin-bottom: 20px; position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 10px rgba(0,0,0,0.2);}
+        .builder-q-card { background: rgba(255,255,255,0.02); border: 1px solid transparent; padding: 25px; border-radius: var(--radius-input); margin-bottom: 20px; position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 10px rgba(0,0,0,0.2);}
         .builder-q-card:hover { background: rgba(255,255,255,0.04); }
         .builder-q-card:focus-within { background: rgba(255,255,255,0.06); box-shadow: 0 10px 30px rgba(0,0,0,0.4); transform: scale(1.01); z-index: 10; }
         
@@ -515,7 +517,7 @@
         .color-dot.clear { background: rgba(255,255,255,0.1); border: 2px dashed rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: bold; }
 
         /* Form Builder Preview Styles */
-        .inline-edit-btn { background: rgba(10, 132, 255, 0.2); border: 1px solid rgba(10, 132, 255, 0.4); color: #fff; border-radius: 8px; padding: 4px 8px; font-size: 0.85rem; cursor: pointer; margin-right: 10px; transition: 0.2s; vertical-align: middle; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: inline-flex; align-items: center; justify-content: center; }
+        .inline-edit-btn { background: rgba(10, 132, 255, 0.2); border: 1px solid rgba(10, 132, 255, 0.4); color: #fff; border-radius: var(--radius-sm); padding: 4px 8px; font-size: 0.85rem; cursor: pointer; margin-right: 10px; transition: 0.2s; vertical-align: middle; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: inline-flex; align-items: center; justify-content: center; }
         .inline-edit-btn:hover { background: rgba(10, 132, 255, 0.4); transform: scale(1.05); }
         .preview-form-group { margin-bottom: 20px; }
         .preview-form-label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -558,12 +560,12 @@
 <!-- EMAIL PREVIEW MODAL -->
 <div id="emailPreviewModal" class="modal-overlay" style="z-index:20003;" onclick="closeEmailPreviewModal()">
     <div class="modal-content" style="max-width: 900px; width: 95%; padding: 0; overflow: hidden; max-height: 92vh;" onclick="event.stopPropagation()">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--glass-border); background: rgba(0,0,0,0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--glass-border); background: rgba(0,0,0,0.3);">
             <div>
                 <div style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #BF5AF2;">Sent Email Preview</div>
                 <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px;" id="emailPreviewSubject"></div>
             </div>
-            <button style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; line-height: 1;" onclick="closeEmailPreviewModal()">&times;</button>
+            <button style="background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); color: var(--text-muted); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; line-height: 1;" onclick="closeEmailPreviewModal()">&times;</button>
         </div>
         <div style="background: #f3f4f6; overflow-y: auto; flex: 1; max-height: calc(92vh - 60px);">
             <iframe id="emailPreviewFrame" style="width: 100%; min-height: 700px; border: none; display: block;" sandbox="allow-same-origin"></iframe>
@@ -619,12 +621,12 @@
 
         <!-- NEW: STRIKES SECTION IN PROFILE -->
         <div class="review-field-label">Late Applications</div>
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 25px;" id="profileModalStrikes">
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; margin-bottom: 25px;" id="profileModalStrikes">
             <!-- Strikes dynamically populated -->
         </div>
 
         <div class="review-field-label">Market History</div>
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; padding: 15px; max-height: 200px; overflow-y: auto;" id="profileModalHistory">
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 16px; padding: 15px; max-height: 200px; overflow-y: auto;" id="profileModalHistory">
             <!-- History dynamically populated -->
         </div>
     </div>
@@ -712,7 +714,7 @@
 
             <!-- Activity & Internal Notes -->
             <div class="review-field-label">Activity & Internal Notes</div>
-            <div style="margin-bottom: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden;">
+            <div style="margin-bottom: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: var(--radius-input); overflow: hidden;">
                 <div style="padding: 15px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--glass-border);">
                     <textarea id="newCommentText" class="modern-input" style="height: 60px; resize: vertical; margin-bottom: 10px; font-size: 0.95rem; background: rgba(0,0,0,0.4);" placeholder="Write a comment..."></textarea>
                     <div style="display:flex; justify-content: flex-end;">
@@ -727,7 +729,7 @@
         <div class="review-modal-sidebar">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <span style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted);">Actions</span>
-                <button style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); width: 24px; height: 24px; border-radius: 8px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; line-height: 1;" onclick="closeReviewModal()">&times;</button>
+                <button style="background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); color: var(--text-muted); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; line-height: 1;" onclick="closeReviewModal()">&times;</button>
             </div>
 
             <!-- Decision Buttons -->
@@ -837,7 +839,7 @@
                 <label class="review-field-label">Food License File Link</label>
                 <input type="text" id="editFoodLink" class="modern-input" placeholder="https://...">
                 <div id="editFoodImagePreview" style="margin-top: 10px; display: none;">
-                    <img src="" style="max-width:100%; max-height:120px; border-radius:8px; border:1px solid rgba(255,255,255,0.2);">
+                    <img src="" style="max-width:100%; max-height:120px; border-radius:16px; border:1px solid rgba(255,255,255,0.2);">
                 </div>
             </div>
         </div>
@@ -879,7 +881,7 @@
             <button onclick="toggleAllCheckboxes(false)" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;">Deselect All</button>
         </div>
         
-        <div id="bulkEmailList" style="max-height: 350px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 20px;">
+        <div id="bulkEmailList" style="max-height: 350px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 16px; margin-bottom: 20px;">
             <!-- Vendor Checkboxes Injected Here -->
         </div>
 
@@ -1164,7 +1166,7 @@
                         </div>
                         <textarea id="emailTemplateInput" class="modern-input" style="height:300px; font-family:sans-serif; font-size:0.95rem; line-height:1.5;" oninput="updatePreview()" placeholder="Type your message here..."></textarea>
                         <div style="display:flex; justify-content:space-between; margin-top:10px;">
-                            <button onclick="resetTemplate()" style="background:transparent; border:1px solid rgba(255,255,255,0.3); color:#aaa; padding:8px 12px; border-radius:8px; cursor:pointer;">Reset Default</button>
+                            <button onclick="resetTemplate()" style="background:transparent; border:1px solid rgba(255,255,255,0.3); color:#aaa; padding:8px 14px; border-radius:100px; cursor:pointer; font-size:0.8rem; font-weight:600;">Reset Default</button>
                             <div style="display: flex; gap: 10px;">
                                 <button id="btnSendCustomBlast" onclick="sendCustomBlastFromSettings()" class="btn-action" style="background: var(--gradient-warning); color: #000; display: none;">Send to Approved Vendors</button>
                                 <button onclick="saveEmailTemplate()" class="btn-action">Save Template</button>
@@ -1250,12 +1252,12 @@
                         <input type="email" id="newAuthEmail" class="modern-input" placeholder="staff@gcu.edu">
                         <button onclick="addAuthorizedEmail()" class="btn-action" style="white-space: nowrap;">Add Email</button>
                     </div>
-                    <div id="authEmailList" style="max-height: 200px; overflow-y: auto; margin-bottom: 30px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 10px; border: 1px solid var(--glass-border);"></div>
+                    <div id="authEmailList" style="max-height: 200px; overflow-y: auto; margin-bottom: 30px; background: rgba(0,0,0,0.3); border-radius: 16px; padding: 10px; border: 1px solid var(--glass-border);"></div>
 
                     <hr style="border:0; border-top:1px solid var(--glass-border); margin:30px 0;">
 
                     <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">Active Staff Accounts</label>
-                    <div id="activeStaffList" style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 10px; border: 1px solid var(--glass-border);"></div>
+                    <div id="activeStaffList" style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 16px; padding: 10px; border: 1px solid var(--glass-border);"></div>
                 </div>
             </div>
             
@@ -1951,7 +1953,7 @@
                     </div>
                     <button onclick="forceAIRescan('${vendor.id}')" title="Force Rescan" style="background:none; border:none; color:#0A84FF; cursor:pointer; opacity:0.3; font-size:1.1rem; padding:0; transition:0.2s; line-height:1;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.3">↻</button>
                 </div>
-                <div style="padding: 12px 15px; border-radius: 12px; background: ${lBg}; border: 1px solid ${lBorder}; color: ${lColor}; font-size: 0.9rem; font-weight: 700;">
+                <div style="padding: 12px 15px; border-radius: 16px; background: ${lBg}; border: 1px solid ${lBorder}; color: ${lColor}; font-size: 0.9rem; font-weight: 700;">
                     ${vendor.aiData.license_status}
                 </div>
             `;
@@ -3216,11 +3218,11 @@
             const attState = getAttendanceState(v);
             let confirmedCell = '';
             if (attState === 'confirmed') {
-                confirmedCell = '<span style="color: #34C759; font-weight: 800; background: rgba(52, 199, 89, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(52, 199, 89, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✓ Confirmed</span>';
+                confirmedCell = '<span style="color: #34C759; font-weight: 800; background: rgba(52, 199, 89, 0.1); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(52, 199, 89, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✓ Confirmed</span>';
             } else if (attState === 'declined') {
-                confirmedCell = '<span style="color: #FF3B30; font-weight: 800; background: rgba(255, 59, 48, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255, 59, 48, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✕ Declined</span>';
+                confirmedCell = '<span style="color: #FF3B30; font-weight: 800; background: rgba(255, 59, 48, 0.1); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(255, 59, 48, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✕ Declined</span>';
             } else {
-                confirmedCell = '<span style="color: var(--text-muted); font-weight: 700; font-size: 0.7rem; background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1); text-transform: uppercase; white-space: nowrap;">Awaiting Reply</span>';
+                confirmedCell = '<span style="color: var(--text-muted); font-weight: 700; font-size: 0.7rem; background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(255, 255, 255, 0.1); text-transform: uppercase; white-space: nowrap;">Awaiting Reply</span>';
             }
 
             const checkInCell = isAppr
@@ -3403,7 +3405,7 @@
                     : `<span style="color: #34C759; font-size: 0.85rem; display: block; margin-top: 6px; line-height: 1.4;">Identical matching data.</span>`;
                 
                 dupHtml += `
-                    <div style="background: rgba(255, 59, 48, 0.05); border: 1px solid rgba(255, 59, 48, 0.3); padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;" onclick="openReviewModal('${dup.id}')" onmouseover="this.style.background='rgba(255, 59, 48, 0.1)'" onmouseout="this.style.background='rgba(255, 59, 48, 0.05)'">
+                    <div style="background: rgba(255, 59, 48, 0.05); border: 1px solid rgba(255, 59, 48, 0.3); padding: 15px; border-radius: 16px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;" onclick="openReviewModal('${dup.id}')" onmouseover="this.style.background='rgba(255, 59, 48, 0.1)'" onmouseout="this.style.background='rgba(255, 59, 48, 0.05)'">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <strong style="color: #fff;">App #${dup.appNumber} - ${dup.status}</strong>
                             <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold;">${dupDate}</span>
@@ -3522,7 +3524,7 @@
         if (vendor.food_license_link) {
             fLinkEl.innerHTML = `
                 <a href="${vendor.food_license_link}" target="_blank" style="color:#0A84FF; font-weight:bold; display:block; margin-bottom:8px;">Open File ↗</a>
-                <img src="${processImageUrl(vendor.food_license_link)}" style="max-width:100%; max-height:200px; border-radius:8px; border:1px solid rgba(255,255,255,0.2);" onerror="this.style.display='none'">
+                <img src="${processImageUrl(vendor.food_license_link)}" style="max-width:100%; max-height:200px; border-radius:16px; border:1px solid rgba(255,255,255,0.2);" onerror="this.style.display='none'">
             `;
         } else {
             fLinkEl.innerHTML = `<span style="color:var(--text-muted);">N/A</span>`;
@@ -3589,7 +3591,7 @@
             }
 
             emailStatusContainer.innerHTML = `
-                <div style="background: ${display.bg}; border: 1px solid ${display.color}30; padding: 12px; border-radius: 12px; margin-bottom: 16px;">
+                <div style="background: ${display.bg}; border: 1px solid ${display.color}30; padding: 12px; border-radius: 16px; margin-bottom: 16px;">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: ${isNegative || verticalStepsHtml ? '10px' : '0'};">
                         <span style="font-size: 0.95rem;">${display.icon}</span>
                         <div style="flex:1; min-width:0;">
@@ -3597,7 +3599,7 @@
                             ${sentAt ? `<div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 1px;">${sentAt}</div>` : ''}
                         </div>
                     </div>
-                    ${isNegative ? `<div style="font-size: 0.7rem; color: ${display.color}; font-weight: 600; padding: 6px 8px; background: rgba(0,0,0,0.2); border-radius: 6px; margin-bottom: 8px;">${deliveryStatus === 'hardBounce' ? 'Bounced — invalid address' : deliveryStatus === 'softBounce' ? 'Soft bounce — may retry' : deliveryStatus === 'blocked' ? 'Blocked by server' : 'Delivery error'}</div>` : ''}
+                    ${isNegative ? `<div style="font-size: 0.7rem; color: ${display.color}; font-weight: 600; padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 8px;">${deliveryStatus === 'hardBounce' ? 'Bounced — invalid address' : deliveryStatus === 'softBounce' ? 'Soft bounce — may retry' : deliveryStatus === 'blocked' ? 'Blocked by server' : 'Delivery error'}</div>` : ''}
                     ${verticalStepsHtml ? `<div style="margin-bottom: 10px;">${verticalStepsHtml}</div>` : ''}
                     <div style="display: flex; gap: 6px;">
                         <button onclick="openEmailPreviewModal('${vendor.id}'); event.stopPropagation();" class="sidebar-btn sidebar-btn-sm" style="flex:1; background: rgba(191, 90, 242, 0.1); border-color: rgba(191, 90, 242, 0.25); color: #BF5AF2;">View Email</button>
@@ -5150,13 +5152,13 @@
                 <!-- Top Toolbar -->
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
                     <div style="display:flex; align-items: center; gap: 8px;">
-                        <button class="btn-action" style="padding:0; width: 28px; height: 28px; background: rgba(255,255,255,0.1); font-size:12px; border-radius: 6px; display:flex; align-items:center; justify-content:center;" onclick="moveQ(${i},-1)" ${i===0?'disabled':''} title="Move Up">▲</button>
-                        <button class="btn-action" style="padding:0; width: 28px; height: 28px; background: rgba(255,255,255,0.1); font-size:12px; border-radius: 6px; display:flex; align-items:center; justify-content:center;" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''} title="Move Down">▼</button>
-                        ${isProtected ? `<span style="color:#a1a1aa; font-size: 0.7rem; font-style: italic; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; margin-left: 8px;">Protected Field</span>` : ''}
+                        <button class="btn-action" style="padding:0; width: 28px; height: 28px; background: rgba(255,255,255,0.1); font-size:12px; border-radius: 12px; display:flex; align-items:center; justify-content:center;" onclick="moveQ(${i},-1)" ${i===0?'disabled':''} title="Move Up">▲</button>
+                        <button class="btn-action" style="padding:0; width: 28px; height: 28px; background: rgba(255,255,255,0.1); font-size:12px; border-radius: 12px; display:flex; align-items:center; justify-content:center;" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''} title="Move Down">▼</button>
+                        ${isProtected ? `<span style="color:#a1a1aa; font-size: 0.7rem; font-style: italic; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 100px; margin-left: 8px;">Protected Field</span>` : ''}
                     </div>
                     
                     <div style="display:flex; align-items: center; gap: 15px;">
-                        <select class="modern-input" style="padding: 8px 36px 8px 12px; height: 38px; font-size: 0.85rem; border-color: rgba(255,255,255,0.1); background-color: rgba(0,0,0,0.4); border-radius: 8px; margin: 0;" onchange="updateQ(${i}, 'type', this.value)" ${isProtected ? 'disabled' : ''}>
+                        <select class="modern-input" style="padding: 8px 36px 8px 12px; height: 38px; font-size: 0.85rem; border-color: rgba(255,255,255,0.1); background-color: rgba(0,0,0,0.4); border-radius: 12px; margin: 0;" onchange="updateQ(${i}, 'type', this.value)" ${isProtected ? 'disabled' : ''}>
                             <option value="text" ${q.type==='text'?'selected':''}>Short answer</option>
                             <option value="textarea" ${q.type==='textarea'?'selected':''}>Paragraph</option>
                             <option value="email" ${q.type==='email'?'selected':''}>Email</option>
@@ -5230,7 +5232,7 @@
         let html = '';
 
         if (headerUrl) {
-            html += `<img src="${headerUrl}" style="width: 100%; height: auto; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);" onerror="this.style.display='none'">`;
+            html += `<img src="${headerUrl}" style="width: 100%; height: auto; border-radius: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);" onerror="this.style.display='none'">`;
         }
 
         html += `<h2 style="margin-top:0; font-size: 1.6rem; text-align: center;">${escapeHtml(title)}</h2>`;
@@ -5248,7 +5250,7 @@
             } else if (q.type === 'checkbox_single') {
                 html += `
                 <div class="preview-form-group">
-                    <label style="display:flex; gap:10px; align-items:flex-start; color:#fff; font-size:0.9rem; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
+                    <label style="display:flex; gap:10px; align-items:flex-start; color:#fff; font-size:0.9rem; background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; border:1px solid rgba(255,255,255,0.1);">
                         ${editBtn}
                         <input type="checkbox" style="width:18px; height:18px; margin-top:2px;" disabled>
                         <span>${escapeHtml(q.hint || q.label)}${reqMark}</span>
