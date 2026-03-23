@@ -5496,6 +5496,27 @@
 
     const typeIcons = { text: 'Aa', textarea: '&para;', email: '@', tel: '#', number: '123', dropdown: '&#9662;', checkbox_single: '&#9745;' };
 
+    async function uploadFormHeaderImage(input) {
+        const file = input.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) { showToast('Please select an image file'); return; }
+        if (file.size > 5 * 1024 * 1024) { showToast('Image must be under 5MB'); return; }
+        showToast('Uploading...');
+        try {
+            const ext = file.name.split('.').pop();
+            const name = `form_header_${currentData.activeId}_${Date.now()}.${ext}`;
+            const { error } = await _supabase.storage.from('banners').upload(name, file, { upsert: true });
+            if (error) throw error;
+            const { data } = _supabase.storage.from('banners').getPublicUrl(name);
+            formConfig.headerUrl = data.publicUrl;
+            renderFormPreview();
+            showToast('Header image uploaded!');
+        } catch(e) {
+            console.error('Header upload failed:', e);
+            showToast('Upload failed — check that a "banners" bucket exists');
+        }
+    }
+
     function renderFormPreview() {
         const container = document.getElementById('formPreviewContainer');
         if (!container) return;
@@ -5513,7 +5534,13 @@
         }
         html += `<input type="text" id="adminEventTitle" value="${escapeHtml(title)}" placeholder="Form Title" oninput="formConfig.eventTitle=this.value" onclick="event.stopPropagation()" style="width:100%; background:transparent; border:none; color:#fff; font-size:1.5rem; font-weight:800; text-align:center; outline:none; padding:6px 0; border-bottom:2px solid transparent; transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.15)'" onblur="this.style.borderBottomColor='transparent'">`;
         html += `<textarea id="adminEventDesc" placeholder="Form description..." oninput="formConfig.eventDesc=this.value" onclick="event.stopPropagation()" style="width:100%; background:transparent; border:none; color:var(--text-muted); font-size:0.9rem; text-align:center; outline:none; padding:4px 0; resize:none; height:40px; line-height:1.5; font-family:inherit; border-bottom:1px solid transparent; transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.1)'" onblur="this.style.borderBottomColor='transparent'">${escapeHtml(desc)}</textarea>`;
-        html += `<input type="text" id="adminHeaderUrl" value="${escapeHtml(headerUrl)}" placeholder="Header image URL (optional)" oninput="formConfig.headerUrl=this.value" onchange="renderFormPreview()" onclick="event.stopPropagation()" style="width:70%; max-width:360px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:var(--text-muted); font-size:0.72rem; text-align:center; outline:none; padding:5px 14px; border-radius:100px; font-family:inherit; margin-top:6px;">`;
+        html += `<div style="display:flex; align-items:center; gap:6px; margin-top:6px; justify-content:center;">`;
+        html += `<input type="text" id="adminHeaderUrl" value="${escapeHtml(headerUrl)}" placeholder="Header image URL (optional)" oninput="formConfig.headerUrl=this.value" onchange="renderFormPreview()" onclick="event.stopPropagation()" style="flex:1; max-width:300px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:var(--text-muted); font-size:0.72rem; text-align:center; outline:none; padding:5px 14px; border-radius:100px; font-family:inherit;">`;
+        html += `<label class="fb-pill" style="padding:5px 12px; font-size:0.7rem; cursor:pointer; margin:0; display:inline-flex; align-items:center; gap:4px;"><span style="font-size:0.85rem;">&#x1F4CE;</span> Upload<input type="file" accept="image/*" onchange="uploadFormHeaderImage(this)" onclick="event.stopPropagation()" style="display:none;"></label>`;
+        if (headerUrl) {
+            html += `<button class="fb-pill fb-pill-danger" onclick="event.stopPropagation(); formConfig.headerUrl=''; renderFormPreview();" style="padding:5px 10px; font-size:0.7rem;">Remove</button>`;
+        }
+        html += `</div>`;
         html += `</div>`;
         html += `<div style="border-top:1px solid rgba(255,255,255,0.06); margin-bottom:20px;"></div>`;
 
