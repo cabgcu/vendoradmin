@@ -1321,8 +1321,15 @@
 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
                     <button onclick="resetTemplate()" style="background:transparent; border:1px solid rgba(255,255,255,0.2); color:var(--text-muted); padding:10px 18px; border-radius:100px; cursor:pointer; font-size:0.8rem; font-weight:600; transition: 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.4)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)';this.style.color='var(--text-muted)'">Reset Default</button>
+                    <div id="blastControls" style="display: none; align-items: center; gap: 8px;">
+                        <select id="blastTargetSelector" class="modern-input" style="margin:0; height:40px; padding:0 28px 0 10px; font-size:0.78rem; width:auto;">
+                            <option value="approved">Approved Vendors</option>
+                            <option value="checked_in">Checked-In Vendors</option>
+                            <option value="all">All (Approved + Checked-In)</option>
+                        </select>
+                        <button onclick="sendCustomBlastFromSettings()" class="btn-action" style="background: var(--gradient-warning); color: #000; padding: 12px 24px; white-space:nowrap;">Send Email</button>
+                    </div>
                     <div style="display: flex; gap: 10px;">
-                        <button id="btnSendCustomBlast" onclick="sendCustomBlastFromSettings()" class="btn-action" style="background: var(--gradient-warning); color: #000; display: none; padding: 12px 24px;">Send to Approved Vendors</button>
                         <button onclick="saveEmailTemplate()" class="btn-action" style="padding: 12px 24px;">Save Template</button>
                     </div>
                 </div>
@@ -4584,16 +4591,28 @@
 
         const body = document.getElementById('emailTemplateInput').value;
         const subj = document.getElementById('emailSubjectInput').value;
-        
+
         if (!body || !subj) return showToast("Subject and Body are required.");
 
-        const targetVendors = currentData.vendors.filter(v => v.status === 'Approved' || v.status === 'Checked In');
-        
-        if (targetVendors.length === 0) {
-            return showToast("No approved vendors to send to in this market.");
+        const target = document.getElementById('blastTargetSelector')?.value || 'all';
+        let targetVendors;
+        let targetLabel;
+        if (target === 'approved') {
+            targetVendors = currentData.vendors.filter(v => v.status === 'Approved');
+            targetLabel = 'APPROVED';
+        } else if (target === 'checked_in') {
+            targetVendors = currentData.vendors.filter(v => v.status === 'Checked In');
+            targetLabel = 'CHECKED-IN';
+        } else {
+            targetVendors = currentData.vendors.filter(v => v.status === 'Approved' || v.status === 'Checked In');
+            targetLabel = 'APPROVED + CHECKED-IN';
         }
 
-        if (!confirm(`You are about to mass-email ${targetVendors.length} APPROVED vendors with this custom message.\n\nAre you sure?`)) {
+        if (targetVendors.length === 0) {
+            return showToast(`No ${targetLabel.toLowerCase()} vendors to send to.`);
+        }
+
+        if (!confirm(`You are about to mass-email ${targetVendors.length} ${targetLabel} vendors with this custom message.\n\nAre you sure?`)) {
             return;
         }
 
@@ -4687,8 +4706,6 @@
         const bodyInput = document.getElementById('emailTemplateInput');
         const subjInput = document.getElementById('emailSubjectInput');
         const headingInput = document.getElementById('headingTextInput');
-        const sendCustomBtn = document.getElementById('btnSendCustomBlast');
-
         if (!bodyInput || !subjInput) return;
 
         headingInput.value = currentData.headingText || "";
@@ -4709,10 +4726,11 @@
             clearBtn.style.display = 'none';
         }
 
-        // Show send-blast button only for custom-type templates
+        // Show blast controls only for custom-type templates
         const isCustomDefault = emailTemplateLibrary.defaults?.custom === currentTemplateType;
-        if (sendCustomBtn) {
-            sendCustomBtn.style.display = isCustomDefault ? 'inline-block' : 'none';
+        const blastControls = document.getElementById('blastControls');
+        if (blastControls) {
+            blastControls.style.display = isCustomDefault ? 'flex' : 'none';
         }
 
         // Load from template library
@@ -5500,6 +5518,86 @@
 
     const typeIcons = { text: 'Aa', textarea: '&para;', email: '@', tel: '#', number: '123', dropdown: '&#9662;', checkbox_single: '&#9745;' };
 
+    // Get eligible parent questions for conditional logic (dropdowns & checkboxes before this index)
+    function getConditionalParents(currentIndex) {
+        return formConfig.questions
+            .map((q, idx) => ({ q, idx }))
+            .filter(({ q, idx }) => idx < currentIndex && (q.type === 'dropdown' || q.type === 'checkbox_single') && q.id !== 'student_id' && q.id !== 'full_name_combined');
+    }
+
+    // Get possible values for a parent question
+    function getParentValues(parentQ) {
+        if (parentQ.type === 'checkbox_single') return ['Yes', 'No'];
+        if (parentQ.type === 'dropdown' && parentQ.options) return parentQ.options.split(',').map(o => o.trim()).filter(Boolean);
+        return [];
+    }
+
+    // Build the conditional logic editor row for an active field
+    function buildConditionEditor(i, q) {
+        const parents = getConditionalParents(i);
+        if (parents.length === 0) return '';
+        const cond = q.condition || {};
+        const hasCondition = cond.parentIndex !== undefined && cond.parentIndex !== null;
+        let html = `<div style="margin-top:8px; padding:8px 10px; background:rgba(255,170,0,0.04); border:1px solid rgba(255,170,0,0.12); border-radius:10px; font-size:0.75rem;" onclick="event.stopPropagation()">`;
+        html += `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">`;
+        html += `<button class="fb-pill ${hasCondition ? 'fb-pill-active' : ''}" style="font-size:0.7rem; padding:4px 10px; border-color:rgba(255,170,0,0.3); ${hasCondition ? 'background:rgba(255,170,0,0.15); color:#FFA800;' : ''}" onclick="toggleCondition(${i})">${hasCondition ? '&#9889; Conditional' : '+ Add condition'}</button>`;
+        if (hasCondition) {
+            const parentQ = formConfig.questions[cond.parentIndex];
+            const vals = parentQ ? getParentValues(parentQ) : [];
+            html += `<span style="color:var(--text-muted);">Show when</span>`;
+            html += `<select class="fb-select" style="font-size:0.7rem; max-width:160px;" onchange="setConditionParent(${i}, parseInt(this.value))">`;
+            parents.forEach(({ q: pq, idx }) => {
+                html += `<option value="${idx}" ${cond.parentIndex === idx ? 'selected' : ''}>${escapeHtml(pq.label)}</option>`;
+            });
+            html += `</select>`;
+            html += `<span style="color:var(--text-muted);">=</span>`;
+            html += `<select class="fb-select" style="font-size:0.7rem; max-width:120px;" onchange="setConditionValue(${i}, this.value)">`;
+            vals.forEach(v => {
+                html += `<option value="${escapeHtml(v)}" ${cond.value === v ? 'selected' : ''}>${escapeHtml(v)}</option>`;
+            });
+            html += `</select>`;
+            html += `<button class="fb-pill fb-pill-danger" style="font-size:0.65rem; padding:3px 8px;" onclick="removeCondition(${i})">&#10005;</button>`;
+        }
+        html += `</div></div>`;
+        return html;
+    }
+
+    function toggleCondition(i) {
+        const parents = getConditionalParents(i);
+        if (parents.length === 0) return;
+        const q = formConfig.questions[i];
+        if (q.condition && q.condition.parentIndex !== undefined) {
+            delete q.condition;
+        } else {
+            const parent = parents[parents.length - 1]; // default to nearest eligible parent
+            const vals = getParentValues(parent.q);
+            q.condition = { parentIndex: parent.idx, value: vals[0] || '' };
+        }
+        renderFormPreview();
+    }
+
+    function setConditionParent(i, parentIdx) {
+        const q = formConfig.questions[i];
+        if (!q.condition) q.condition = {};
+        q.condition.parentIndex = parentIdx;
+        const parentQ = formConfig.questions[parentIdx];
+        const vals = parentQ ? getParentValues(parentQ) : [];
+        q.condition.value = vals[0] || '';
+        renderFormPreview();
+    }
+
+    function setConditionValue(i, val) {
+        const q = formConfig.questions[i];
+        if (!q.condition) q.condition = {};
+        q.condition.value = val;
+        // No need to re-render, the select already shows the value
+    }
+
+    function removeCondition(i) {
+        delete formConfig.questions[i].condition;
+        renderFormPreview();
+    }
+
     async function uploadFormHeaderImage(input) {
         const file = input.files?.[0];
         if (!file) return;
@@ -5555,6 +5653,9 @@
             const isSection = q.type === 'section_header';
             const reqMark = q.required ? `<span style="color:#FF453A; margin-left:3px;">*</span>` : '';
             const icon = typeIcons[q.type] || '';
+            const hasCondition = q.condition && q.condition.parentIndex !== undefined;
+            const condParent = hasCondition ? formConfig.questions[q.condition.parentIndex] : null;
+            const condIndent = hasCondition ? 'margin-left:24px; border-left:2px solid rgba(255,170,0,0.2); padding-left:12px;' : '';
 
             // --- Section headers ---
             if (isSection) {
@@ -5575,7 +5676,10 @@
             }
 
             // --- Regular fields ---
-            html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" onclick="selectFormField(${i})" style="margin-bottom:4px; padding:12px 14px; border-radius:14px; border:1px solid ${isActive ? 'rgba(10,132,255,0.25)' : 'transparent'}; ${isActive ? 'background:rgba(10,132,255,0.03);' : ''} ${q.width === 'half' ? 'width:48%; display:inline-block; margin-right:2%; vertical-align:top;' : ''}">`;
+            html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" onclick="selectFormField(${i})" style="margin-bottom:4px; padding:12px 14px; border-radius:14px; border:1px solid ${isActive ? 'rgba(10,132,255,0.25)' : 'transparent'}; ${isActive ? 'background:rgba(10,132,255,0.03);' : ''} ${q.width === 'half' ? 'width:48%; display:inline-block; margin-right:2%; vertical-align:top;' : ''} ${condIndent}">`;
+            if (hasCondition && !isActive && condParent) {
+                html += `<div style="font-size:0.65rem; color:#FFA800; margin-bottom:6px; opacity:0.7;">&#9889; Shows when "${escapeHtml(condParent.label)}" = ${escapeHtml(q.condition.value)}</div>`;
+            }
 
             if (isActive) {
                 // ---- ACTIVE: editable ----
@@ -5604,6 +5708,8 @@
                     <button class="fb-pill" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''}>&#9660;</button>
                     ${!isProtected ? `<button class="fb-pill fb-pill-danger" onclick="deleteQ(${i})">Delete</button>` : `<span class="fb-pill" style="opacity:0.4; cursor:default;">Protected</span>`}
                 </div>`;
+                // --- Conditional logic row ---
+                html += buildConditionEditor(i, q);
             } else {
                 // ---- INACTIVE: looks like the real form ----
                 const labelLine = `<div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
