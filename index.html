@@ -1239,34 +1239,8 @@
             <!-- TAB 2: EMAILS -->
             <div id="settings-tab-emails" class="settings-section" style="display:none;">
 
-                <!-- Default Assignment Panel -->
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-card); padding: 20px 22px; margin-bottom: 20px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-                        <label class="stat-label" style="margin:0;">Default Templates</label>
-                        <span style="font-size:0.72rem; color:var(--text-muted);">Which template to send for each action</span>
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="font-size:0.78rem; color:#34C759; font-weight:700; min-width:100px;">Approved</span>
-                            <select id="defaultTpl_approved" class="modern-input" style="margin:0; height:34px; padding:0 28px 0 10px; font-size:0.78rem;" onchange="setDefaultTemplate('approved',this.value)"></select>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="font-size:0.78rem; color:#FF453A; font-weight:700; min-width:100px;">Denied</span>
-                            <select id="defaultTpl_denied" class="modern-input" style="margin:0; height:34px; padding:0 28px 0 10px; font-size:0.78rem;" onchange="setDefaultTemplate('denied',this.value)"></select>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="font-size:0.78rem; color:#30D158; font-weight:700; min-width:100px;">Power Yes</span>
-                            <select id="defaultTpl_power" class="modern-input" style="margin:0; height:34px; padding:0 28px 0 10px; font-size:0.78rem;" onchange="setDefaultTemplate('power',this.value)"></select>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="font-size:0.78rem; color:#FF9F0A; font-weight:700; min-width:100px;">Power No</span>
-                            <select id="defaultTpl_power_denied" class="modern-input" style="margin:0; height:34px; padding:0 28px 0 10px; font-size:0.78rem;" onchange="setDefaultTemplate('power_denied',this.value)"></select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Template list + editor -->
-                <div style="display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap;">
+                <!-- Template selector + actions -->
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
                     <select id="templateTypeSelector" class="modern-input" style="width:auto; height:42px; padding:0 38px 0 14px; margin:0; font-weight:600; flex:1; min-width:180px;" onchange="switchTemplateType(this.value)">
                         <option value="approved">Approved Template</option>
                         <option value="power">Approved (Power Granted)</option>
@@ -1280,6 +1254,15 @@
                         <button class="fb-pill" onclick="renameCurrentTemplate()" style="padding:7px 14px;">Rename</button>
                         <button class="fb-pill fb-pill-danger" id="btnDeleteTemplate" onclick="deleteCurrentTemplate()" style="padding:7px 14px; display:none;">Delete</button>
                     </div>
+                </div>
+
+                <!-- Assign defaults — compact row -->
+                <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:16px; padding:10px 14px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px;">
+                    <span style="font-size:0.72rem; color:var(--text-muted); font-weight:600; margin-right:4px;">Use for:</span>
+                    <select id="defaultTpl_approved" class="fb-select" style="font-size:0.7rem;" onchange="setDefaultTemplate('approved',this.value)"></select>
+                    <select id="defaultTpl_denied" class="fb-select" style="font-size:0.7rem;" onchange="setDefaultTemplate('denied',this.value)"></select>
+                    <select id="defaultTpl_power" class="fb-select" style="font-size:0.7rem;" onchange="setDefaultTemplate('power',this.value)"></select>
+                    <select id="defaultTpl_power_denied" class="fb-select" style="font-size:0.7rem;" onchange="setDefaultTemplate('power_denied',this.value)"></select>
                 </div>
 
                 <!-- Banner + Heading settings -->
@@ -1591,7 +1574,7 @@
     
     let currentData = { vendors: [], allEvents: [], activeId: "", activeEvent: null, publicUrl: "", customTemplatesMap: {} };
     let realtimeSubscription = null;
-    let currentTemplateType = 'builtin_approved';
+    let currentTemplateType = 'approved';
     let activeFilter = 'inbox'; 
     let currentReviewingId = null;
     let currentEditingId = null;
@@ -4857,9 +4840,9 @@
         Object.entries(defs).forEach(([action, tplId]) => {
             if (tplId === currentTemplateType) defaultType = action;
         });
-        // Also check if it's a builtin_ template
-        if (!defaultType && currentTemplateType.startsWith('builtin_')) {
-            defaultType = currentTemplateType.replace('builtin_', '');
+        // Also check if the ID itself matches a DEFAULTS key
+        if (!defaultType && DEFAULTS[currentTemplateType]) {
+            defaultType = currentTemplateType;
         }
         if (defaultType && DEFAULTS[defaultType]) {
             document.getElementById('emailTemplateInput').value = DEFAULTS[defaultType].body;
@@ -5027,17 +5010,16 @@
                 if (!emailTemplateLibrary.defaults) emailTemplateLibrary.defaults = {};
             }
         } catch(e) { console.error("Failed to load template library:", e); }
-        // Seed built-in templates if library is empty
+        // Seed from the user's EXISTING saved templates (events table), not defaults
         if (Object.keys(emailTemplateLibrary.templates).length === 0) {
-            const builtIns = {
-                'builtin_approved': { name: 'Approved (Default)', subj: DEFAULTS.approved.subj, body: DEFAULTS.approved.body },
-                'builtin_power': { name: 'Power Granted (Default)', subj: DEFAULTS.power.subj, body: DEFAULTS.power.body },
-                'builtin_power_denied': { name: 'Power Denied (Default)', subj: DEFAULTS.power_denied.subj, body: DEFAULTS.power_denied.body },
-                'builtin_denied': { name: 'Denied (Default)', subj: DEFAULTS.denied.subj, body: DEFAULTS.denied.body },
-                'builtin_custom': { name: 'Custom Mass Email', subj: DEFAULTS.custom.subj, body: DEFAULTS.custom.body }
+            emailTemplateLibrary.templates = {
+                'approved': { name: 'Approved', subj: currentData.apprSubj || DEFAULTS.approved.subj, body: currentData.apprBody || DEFAULTS.approved.body },
+                'power': { name: 'Approved (Power Granted)', subj: currentData.powSubj || DEFAULTS.power.subj, body: currentData.powBody || DEFAULTS.power.body },
+                'power_denied': { name: 'Approved (Power Denied)', subj: currentData.powDenSubj || DEFAULTS.power_denied.subj, body: currentData.powDenBody || DEFAULTS.power_denied.body },
+                'denied': { name: 'Denied', subj: currentData.denSubj || DEFAULTS.denied.subj, body: currentData.denBody || DEFAULTS.denied.body },
+                'custom': { name: 'Custom Mass Email', subj: currentData.customSubj || DEFAULTS.custom.subj, body: currentData.customBody || DEFAULTS.custom.body }
             };
-            emailTemplateLibrary.templates = builtIns;
-            emailTemplateLibrary.defaults = { approved: 'builtin_approved', denied: 'builtin_denied', power: 'builtin_power', power_denied: 'builtin_power_denied', custom: 'builtin_custom' };
+            emailTemplateLibrary.defaults = { approved: 'approved', denied: 'denied', power: 'power', power_denied: 'power_denied', custom: 'custom' };
         }
         populateTemplateSelectorDropdown();
         populateDefaultDropdowns();
@@ -5071,14 +5053,15 @@
     }
 
     function populateDefaultDropdowns() {
-        const actions = ['approved', 'denied', 'power', 'power_denied'];
+        const actionLabels = { approved: 'Approved', denied: 'Denied', power: 'Power Yes', power_denied: 'Power No' };
         const tpls = emailTemplateLibrary.templates;
-        actions.forEach(action => {
+        Object.entries(actionLabels).forEach(([action, label]) => {
             const sel = document.getElementById('defaultTpl_' + action);
             if (!sel) return;
-            sel.innerHTML = Object.entries(tpls).map(([id, t]) =>
-                `<option value="${id}" ${emailTemplateLibrary.defaults[action] === id ? 'selected' : ''}>${escapeHtml(t.name)}</option>`
-            ).join('');
+            sel.innerHTML = `<option disabled>— ${label} —</option>` +
+                Object.entries(tpls).map(([id, t]) =>
+                    `<option value="${id}" ${emailTemplateLibrary.defaults[action] === id ? 'selected' : ''}>${escapeHtml(t.name)}</option>`
+                ).join('');
         });
     }
 
@@ -5497,11 +5480,12 @@
     }
 
     let activeFormField = -1;
+    let _fbJustClicked = false;
 
     function selectFormField(index) {
+        _fbJustClicked = true;
         activeFormField = (activeFormField === index) ? -1 : index;
         renderFormPreview();
-        // Focus the label input of the newly selected field
         if (activeFormField >= 0) {
             setTimeout(() => {
                 const el = document.querySelector('.fb-field-active .fb-input-label');
@@ -5529,7 +5513,7 @@
         }
         html += `<input type="text" id="adminEventTitle" value="${escapeHtml(title)}" placeholder="Form Title" oninput="formConfig.eventTitle=this.value" onclick="event.stopPropagation()" style="width:100%; background:transparent; border:none; color:#fff; font-size:1.5rem; font-weight:800; text-align:center; outline:none; padding:6px 0; border-bottom:2px solid transparent; transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.15)'" onblur="this.style.borderBottomColor='transparent'">`;
         html += `<textarea id="adminEventDesc" placeholder="Form description..." oninput="formConfig.eventDesc=this.value" onclick="event.stopPropagation()" style="width:100%; background:transparent; border:none; color:var(--text-muted); font-size:0.9rem; text-align:center; outline:none; padding:4px 0; resize:none; height:40px; line-height:1.5; font-family:inherit; border-bottom:1px solid transparent; transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.1)'" onblur="this.style.borderBottomColor='transparent'">${escapeHtml(desc)}</textarea>`;
-        html += `<input type="text" id="adminHeaderUrl" value="${escapeHtml(headerUrl)}" placeholder="Header image URL (optional)" oninput="formConfig.headerUrl=this.value;renderFormPreview()" onclick="event.stopPropagation()" style="width:70%; max-width:360px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:var(--text-muted); font-size:0.72rem; text-align:center; outline:none; padding:5px 14px; border-radius:100px; font-family:inherit; margin-top:6px;">`;
+        html += `<input type="text" id="adminHeaderUrl" value="${escapeHtml(headerUrl)}" placeholder="Header image URL (optional)" oninput="formConfig.headerUrl=this.value" onchange="renderFormPreview()" onclick="event.stopPropagation()" style="width:70%; max-width:360px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:var(--text-muted); font-size:0.72rem; text-align:center; outline:none; padding:5px 14px; border-radius:100px; font-family:inherit; margin-top:6px;">`;
         html += `</div>`;
         html += `<div style="border-top:1px solid rgba(255,255,255,0.06); margin-bottom:20px;"></div>`;
 
@@ -5633,6 +5617,7 @@
 
     // Persistent click-outside handler for form builder
     document.addEventListener('click', (e) => {
+        if (_fbJustClicked) { _fbJustClicked = false; return; }
         if (activeFormField < 0) return;
         const container = document.getElementById('formPreviewContainer');
         if (!container || !container.contains(e.target)) { activeFormField = -1; renderFormPreview(); return; }
