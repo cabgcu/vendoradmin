@@ -523,6 +523,120 @@
         .preview-form-label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         .preview-form-hint { display: block; margin-top: 4px; color: #a1a1aa; font-size: 0.8rem; font-weight: 500; text-transform: none; letter-spacing: 0;}
         .preview-section-header { font-size: 1.2rem; font-weight: 800; color: #ffffff; margin-bottom: 15px; margin-top: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; display: flex; align-items: center;}
+
+        /* Rich Email Editor */
+        .rich-editor-wrap {
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-input);
+            overflow: hidden;
+            background: var(--input-bg);
+            transition: border-color 0.2s;
+        }
+        .rich-editor-wrap:focus-within {
+            border-color: #0A84FF;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .rich-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid var(--glass-border);
+            flex-wrap: wrap;
+        }
+        .rich-toolbar-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .rich-toolbar-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        .rich-toolbar-btn.active { background: rgba(10, 132, 255, 0.2); color: #0A84FF; border-color: rgba(10, 132, 255, 0.4); }
+        .rich-toolbar-sep {
+            width: 1px;
+            height: 20px;
+            background: rgba(255,255,255,0.1);
+            margin: 0 6px;
+            flex-shrink: 0;
+        }
+        .rich-toolbar-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            margin-right: 4px;
+            flex-shrink: 0;
+        }
+        .var-chip {
+            background: rgba(10, 132, 255, 0.1);
+            border: 1px solid rgba(10, 132, 255, 0.3);
+            color: #5AC8FA;
+            padding: 3px 10px;
+            border-radius: var(--radius-button);
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .var-chip:hover { background: rgba(10, 132, 255, 0.2); transform: scale(1.03); }
+        .var-chip.confirm { border-color: rgba(52, 199, 89, 0.4); color: #34C759; background: rgba(52, 199, 89, 0.1); }
+        .var-chip.confirm:hover { background: rgba(52, 199, 89, 0.2); }
+        .var-chip.decline { border-color: rgba(255, 59, 48, 0.4); color: #FF3B30; background: rgba(255, 59, 48, 0.1); }
+        .var-chip.decline:hover { background: rgba(255, 59, 48, 0.2); }
+        #richEmailEditor {
+            min-height: 280px;
+            padding: 16px 18px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-family: var(--font-stack);
+            outline: none;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        #richEmailEditor:empty::before {
+            content: 'Start typing your email message here...';
+            color: rgba(255,255,255,0.25);
+            pointer-events: none;
+        }
+        #richEmailEditor .email-var {
+            display: inline-block;
+            background: rgba(10, 132, 255, 0.15);
+            border: 1px solid rgba(10, 132, 255, 0.35);
+            color: #5AC8FA;
+            padding: 1px 8px;
+            border-radius: var(--radius-button);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: default;
+            user-select: all;
+            vertical-align: baseline;
+            line-height: 1.6;
+        }
+        #richEmailEditor .email-var.link-var {
+            border-color: rgba(52, 199, 89, 0.4);
+            color: #34C759;
+            background: rgba(52, 199, 89, 0.12);
+        }
+        #richEmailEditor .email-var.decline-var {
+            border-color: rgba(255, 59, 48, 0.4);
+            color: #FF3B30;
+            background: rgba(255, 59, 48, 0.12);
+        }
     </style>
 </head>
 <body>
@@ -1149,23 +1263,30 @@
                 </div>
 
                 <input type="text" id="emailSubjectInput" class="modern-input" placeholder="Subject Line" style="margin-bottom:12px; font-weight:bold;">
+                <!-- Hidden textarea for backward compatibility -->
+                <textarea id="emailTemplateInput" style="display:none;"></textarea>
                 <div class="editor-grid">
                     <div>
-                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
-                            <button type="button" class="tag-chip" onclick="insertTag('{{FIRST}}')">+ First Name</button>
-                            <button type="button" class="tag-chip" onclick="insertTag('{{MARKET_NAME}}')">+ Market Name</button>
-                            <button type="button" class="tag-chip" onclick="insertTag('{{LOCATION}}')">+ Location</button>
-                            <button type="button" class="tag-chip" onclick="insertTag('{{MARKET_DATE}}')">+ Market Date</button>
-                            <button type="button" class="tag-chip" onclick="insertTag('{{MARKET_TIME}}')">+ Market Time</button>
-                            <button type="button" class="tag-chip" onclick="insertTag('{{APP_OPENS}}')">+ App Opens (Date)</button>
-                            <button type="button" class="tag-chip" onclick="insertTag('{{APP_CLOSES}}')">+ App Closes (Date)</button>
-                            <button type="button" class="tag-chip" onclick="insertTag('{{CONTACT_DATE}}')">+ Contact Date</button>
-                            <button type="button" class="tag-chip" onclick="insertTag('{{CONFIRM_DEADLINE}}')">+ Confirm Deadline</button>
-                            <button type="button" class="tag-chip" onclick="insertTag('{{CONFIRM_LINK}}')" style="border-color: #34C759; color: #34C759;">+ Confirm Link</button>
-                            <button type="button" class="tag-chip" onclick="insertTag('{{DECLINE_LINK}}')" style="border-color: #FF3B30; color: #FF3B30;">+ Decline Link</button>
+                        <div class="rich-editor-wrap">
+                            <div class="rich-toolbar">
+                                <button type="button" class="rich-toolbar-btn" id="btnBold" onclick="richToggleBold()" title="Bold"><b>B</b></button>
+                                <div class="rich-toolbar-sep"></div>
+                                <span class="rich-toolbar-label">Insert:</span>
+                                <button type="button" class="var-chip" onclick="richInsertVar('{{FIRST}}', 'First Name')">First Name</button>
+                                <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_NAME}}', 'Market Name')">Market Name</button>
+                                <button type="button" class="var-chip" onclick="richInsertVar('{{LOCATION}}', 'Location')">Location</button>
+                                <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_DATE}}', 'Market Date')">Market Date</button>
+                                <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_TIME}}', 'Market Time')">Market Time</button>
+                                <button type="button" class="var-chip" onclick="richInsertVar('{{APP_OPENS}}', 'App Opens')">App Opens</button>
+                                <button type="button" class="var-chip" onclick="richInsertVar('{{APP_CLOSES}}', 'App Closes')">App Closes</button>
+                                <button type="button" class="var-chip" onclick="richInsertVar('{{CONTACT_DATE}}', 'Contact Date')">Contact Date</button>
+                                <button type="button" class="var-chip" onclick="richInsertVar('{{CONFIRM_DEADLINE}}', 'Confirm Deadline')">Deadline</button>
+                                <button type="button" class="var-chip confirm" onclick="richInsertVar('{{CONFIRM_LINK}}', 'Confirm Link')">Confirm Link</button>
+                                <button type="button" class="var-chip decline" onclick="richInsertVar('{{DECLINE_LINK}}', 'Decline Link')">Decline Link</button>
+                            </div>
+                            <div id="richEmailEditor" contenteditable="true" oninput="richEditorChanged()"></div>
                         </div>
-                        <textarea id="emailTemplateInput" class="modern-input" style="height:300px; font-family:sans-serif; font-size:0.95rem; line-height:1.5;" oninput="updatePreview()" placeholder="Type your message here..."></textarea>
-                        <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                             <button onclick="resetTemplate()" style="background:transparent; border:1px solid rgba(255,255,255,0.3); color:#aaa; padding:8px 14px; border-radius:100px; cursor:pointer; font-size:0.8rem; font-weight:600;">Reset Default</button>
                             <div style="display: flex; gap: 10px;">
                                 <button id="btnSendCustomBlast" onclick="sendCustomBlastFromSettings()" class="btn-action" style="background: var(--gradient-warning); color: #000; display: none;">Send to Approved Vendors</button>
@@ -2157,7 +2278,8 @@
         await loadFormBuilderConfig();
 
         if (isInitialLoad && eventsData.length > 0) {
-            setFilter('inbox');
+            const savedFilter = localStorage.getItem('marketLastFilter') || 'inbox';
+            setFilter(savedFilter);
             isInitialLoad = false;
         } else {
             if(activeFilter === 'profiles') {
@@ -2420,6 +2542,8 @@
 
     function setFilter(filter) {
         activeFilter = filter;
+        const vendorFilters = ['inbox', 'approved', 'review', 'power', 'denied'];
+        if (vendorFilters.includes(filter)) localStorage.setItem('marketLastFilter', filter);
         document.querySelectorAll('.control-item').forEach(el => el.classList.remove('active', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan'));
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
 
@@ -4627,29 +4751,118 @@
             subjInput.value = currentData.customSubj;
             bodyInput.value = currentData.customBody;
         }
-        
+
+        syncTextareaToRich();
         updatePreview();
     }
 
-    function insertTag(t) { 
-        const input = document.getElementById('emailTemplateInput'); 
-        if (input) { 
-            const start = input.selectionStart;
-            const end = input.selectionEnd;
-            const text = input.value;
-            input.value = text.substring(0, start) + t + text.substring(end);
-            input.focus();
-            input.selectionStart = input.selectionEnd = start + t.length;
-            updatePreview(); 
-        } 
+    // Variable tag label map for the rich editor
+    const VAR_LABELS = {
+        '{{FIRST}}': 'First Name', '{{MARKET_NAME}}': 'Market Name', '{{LOCATION}}': 'Location',
+        '{{MARKET_DATE}}': 'Market Date', '{{MARKET_TIME}}': 'Market Time',
+        '{{APP_OPENS}}': 'App Opens', '{{APP_CLOSES}}': 'App Closes',
+        '{{CONTACT_DATE}}': 'Contact Date', '{{CONFIRM_DEADLINE}}': 'Confirm Deadline',
+        '{{CONFIRM_LINK}}': 'Confirm Link', '{{DECLINE_LINK}}': 'Decline Link'
+    };
+
+    // Convert stored plain text (with **bold** and {{VAR}}) to rich editor HTML
+    function plainToRich(text) {
+        let html = escapeHtml(text);
+        // Convert **bold** to <b> tags
+        html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        // Convert {{VAR}} to styled pill spans
+        html = html.replace(/\{\{(.*?)\}\}/g, (match) => {
+            const label = VAR_LABELS[match] || match;
+            const extraClass = match === '{{CONFIRM_LINK}}' ? ' link-var' : match === '{{DECLINE_LINK}}' ? ' decline-var' : '';
+            return `<span class="email-var${extraClass}" contenteditable="false" data-var="${match}">${label}</span>`;
+        });
+        // Convert newlines to <br> but keep as divs for contenteditable
+        html = html.replace(/\n/g, '<br>');
+        return html;
     }
 
-    function resetTemplate() { 
+    // Convert rich editor HTML back to stored plain text format
+    function richToPlain(editor) {
+        // Clone the editor to avoid mutating the live DOM
+        const clone = editor.cloneNode(true);
+        // Replace variable pills back to {{VAR}}
+        clone.querySelectorAll('.email-var').forEach(el => {
+            const varCode = el.getAttribute('data-var') || el.textContent;
+            el.replaceWith(varCode);
+        });
+        // Get the innerHTML and convert back to plain text
+        let html = clone.innerHTML;
+        // Convert <b>/<strong> back to **bold**
+        html = html.replace(/<b>(.*?)<\/b>/gi, '**$1**');
+        html = html.replace(/<strong>(.*?)<\/strong>/gi, '**$1**');
+        // Convert <br> and </div><div> to newlines
+        html = html.replace(/<br\s*\/?>/gi, '\n');
+        html = html.replace(/<\/div>\s*<div>/gi, '\n');
+        html = html.replace(/<div>/gi, '\n');
+        html = html.replace(/<\/div>/gi, '');
+        // Strip any remaining HTML tags
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        let result = tmp.textContent || tmp.innerText || '';
+        // Clean up leading newline that contenteditable sometimes adds
+        if (result.startsWith('\n')) result = result.substring(1);
+        return result;
+    }
+
+    // Sync rich editor content to the hidden textarea (for save/preview)
+    function syncRichToTextarea() {
+        const editor = document.getElementById('richEmailEditor');
+        const textarea = document.getElementById('emailTemplateInput');
+        if (editor && textarea) {
+            textarea.value = richToPlain(editor);
+        }
+    }
+
+    // Load content into the rich editor from the hidden textarea
+    function syncTextareaToRich() {
+        const editor = document.getElementById('richEmailEditor');
+        const textarea = document.getElementById('emailTemplateInput');
+        if (editor && textarea) {
+            editor.innerHTML = plainToRich(textarea.value);
+        }
+    }
+
+    // Called on every keystroke in the rich editor
+    function richEditorChanged() {
+        syncRichToTextarea();
+        updatePreview();
+    }
+
+    // Toggle bold formatting
+    function richToggleBold() {
+        const editor = document.getElementById('richEmailEditor');
+        editor.focus();
+        document.execCommand('bold', false, null);
+        richEditorChanged();
+    }
+
+    // Insert a variable pill into the rich editor at cursor position
+    function richInsertVar(varCode, label) {
+        const editor = document.getElementById('richEmailEditor');
+        editor.focus();
+        const extraClass = varCode === '{{CONFIRM_LINK}}' ? ' link-var' : varCode === '{{DECLINE_LINK}}' ? ' decline-var' : '';
+        const pill = `<span class="email-var${extraClass}" contenteditable="false" data-var="${varCode}">${label}</span>&nbsp;`;
+        document.execCommand('insertHTML', false, pill);
+        richEditorChanged();
+    }
+
+    // Legacy insertTag still works for any external callers
+    function insertTag(t) {
+        richInsertVar(t, VAR_LABELS[t] || t);
+    }
+
+    function resetTemplate() {
         const type = currentTemplateType;
-        if (DEFAULTS[type]) { 
-            document.getElementById('emailTemplateInput').value = DEFAULTS[type].body; 
-            document.getElementById('emailSubjectInput').value = DEFAULTS[type].subj; 
-            updatePreview(); 
+        if (DEFAULTS[type]) {
+            document.getElementById('emailTemplateInput').value = DEFAULTS[type].body;
+            document.getElementById('emailSubjectInput').value = DEFAULTS[type].subj;
+            syncTextareaToRich();
+            updatePreview();
         }
     }
 
