@@ -488,11 +488,39 @@
         .settings-tab:hover { color: var(--text-main); background: var(--glass-hover); }
         .settings-tab.active { background: var(--glass-active); color: var(--text-main); box-shadow: 0 4px 12px var(--shadow-color); border: 1px solid var(--glass-border); }
 
-        /* Form Builder Styles (Google Forms Theme) */
-        .builder-q-card { background: transparent; border: 1px solid rgba(255,255,255,0.06); padding: 16px 18px; border-radius: var(--radius-inner); margin-bottom: 8px; position: relative; transition: all 0.2s ease;}
-        .builder-q-card:hover { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.1); }
-        .builder-q-card:focus-within { background: rgba(255,255,255,0.03); border-color: rgba(10, 132, 255, 0.3); }
-        
+        /* Inline Form Builder */
+        .fb-field { transition: all 0.15s ease; cursor: pointer; position: relative; }
+        .fb-field:hover:not(.fb-field-active) { background: rgba(255,255,255,0.025); }
+        .fb-field:hover:not(.fb-field-active)::after { content: 'Click to edit'; position: absolute; top: 8px; right: 12px; font-size: 0.65rem; color: rgba(255,255,255,0.25); font-weight: 600; pointer-events: none; }
+        .fb-field-active { cursor: default; }
+        .fb-toolbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 8px 0 0; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 10px; }
+        .fb-pill {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted);
+            padding: 5px 12px; border-radius: 100px; cursor: pointer; font-size: 0.72rem; font-weight: 600;
+            transition: 0.15s; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .fb-pill:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .fb-pill:disabled { opacity: 0.3; cursor: not-allowed; }
+        .fb-pill.fb-pill-danger { color: #FF453A; }
+        .fb-pill.fb-pill-danger:hover { background: rgba(255,69,58,0.12); }
+        .fb-pill.fb-pill-active { background: rgba(10,132,255,0.15); color: #0A84FF; border-color: rgba(10,132,255,0.25); }
+        .fb-select {
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); color: #ccc;
+            padding: 5px 26px 5px 10px; border-radius: 100px; font-size: 0.72rem; font-weight: 600;
+            outline: none; cursor: pointer; appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 6px center; background-size: 12px;
+        }
+        .fb-input { width: 100%; background: transparent; border: none; color: #fff; outline: none; font-family: inherit; }
+        .fb-input::placeholder { color: rgba(255,255,255,0.2); }
+        .fb-input-label { font-size: 1rem; font-weight: 600; padding: 4px 0; border-bottom: 2px solid #0A84FF; }
+        .fb-input-hint { font-size: 0.82rem; color: var(--text-muted); padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.08); margin-top: 4px; }
+        .fb-input-opts { font-size: 0.82rem; color: #ccc; padding: 6px 12px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 10px; margin-top: 6px; background: rgba(255,255,255,0.02); }
+        .fb-add-row { display: flex; gap: 8px; justify-content: center; padding: 20px 0 8px; }
+        .fb-add-btn { background: rgba(255,255,255,0.04); border: 1.5px dashed rgba(255,255,255,0.12); color: var(--text-muted); padding: 10px 22px; border-radius: 14px; cursor: pointer; font-size: 0.82rem; font-weight: 600; transition: 0.2s; font-family: inherit; }
+        .fb-add-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.2); }
+        .fb-save-row { display: flex; justify-content: flex-end; padding: 16px 0 4px; }
+
         .gf-input::placeholder { color: rgba(255,255,255,0.3); }
         
         /* Toggle Switch */
@@ -507,8 +535,6 @@
         .switch-sm .slider:before { height: 14px; width: 14px; }
         .switch-sm input:checked + .slider:before { transform: translateX(16px); }
 
-        .builder-q-remove { color: var(--text-muted); cursor: pointer; font-weight: bold; background: transparent; border: none; border-radius: 50%; font-size: 0.85rem; width: 28px; height: 28px; transition: 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .builder-q-remove:hover { background: rgba(255, 59, 48, 0.15); color: #FF3B30; }
 
         /* Color Picker Palette */
         .color-trigger-wrapper { position: relative; display: flex; align-items: center; }
@@ -519,13 +545,9 @@
         .color-dot:hover { transform: scale(1.2); border-color: #fff; }
         .color-dot.clear { background: rgba(255,255,255,0.1); border: 2px dashed rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: bold; }
 
-        /* Form Builder Preview Styles */
-        .inline-edit-btn { background: rgba(10, 132, 255, 0.2); border: 1px solid rgba(10, 132, 255, 0.4); color: #fff; border-radius: var(--radius-sm); padding: 4px 8px; font-size: 0.85rem; cursor: pointer; margin-right: 10px; transition: 0.2s; vertical-align: middle; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: inline-flex; align-items: center; justify-content: center; }
-        .inline-edit-btn:hover { background: rgba(10, 132, 255, 0.4); transform: scale(1.05); }
-        .preview-form-group { margin-bottom: 20px; }
+        /* Form Preview Labels */
         .preview-form-label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         .preview-form-hint { display: block; margin-top: 4px; color: #a1a1aa; font-size: 0.8rem; font-weight: 500; text-transform: none; letter-spacing: 0;}
-        .preview-section-header { font-size: 1.2rem; font-weight: 800; color: #ffffff; margin-bottom: 15px; margin-top: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; display: flex; align-items: center;}
 
         /* Rich Email Editor — Floating Toolbar */
         .rich-toolbar-floating {
@@ -1380,41 +1402,8 @@
             
             <!-- TAB 5: FORM BUILDER -->
             <div id="settings-tab-form" class="settings-section" style="display:none;">
-                <!-- Branding & Text — compact -->
-                <div style="margin-bottom:16px; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); padding: 18px 20px; border-radius: var(--radius-inner);">
-                    <div class="section-header" style="margin-top:0; margin-bottom:12px; font-size:0.8rem;">Branding & Text</div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                        <div>
-                            <label class="stat-label" style="font-size:0.7rem; margin-bottom:4px;">Header Image URL</label>
-                            <input type="text" id="adminHeaderUrl" class="modern-input" style="padding:8px 14px; font-size:0.85rem;" placeholder="https://..." oninput="renderFormPreview()">
-                        </div>
-                        <div>
-                            <label class="stat-label" style="font-size:0.7rem; margin-bottom:4px;">Form Title</label>
-                            <input type="text" id="adminEventTitle" class="modern-input" style="padding:8px 14px; font-size:0.85rem;" placeholder="Leave blank for default" oninput="renderFormPreview()">
-                        </div>
-                    </div>
-                    <div style="margin-top:10px;">
-                        <label class="stat-label" style="font-size:0.7rem; margin-bottom:4px;">Description</label>
-                        <textarea id="adminEventDesc" class="modern-input" style="height:50px; padding:8px 14px; font-size:0.85rem;" placeholder="Leave blank for default" oninput="renderFormPreview()"></textarea>
-                    </div>
-                </div>
-
-                <!-- Question list — compact like Google Forms -->
-                <div id="adminQuestionsList"></div>
-
-                <div style="display:flex; gap:10px; justify-content:center; margin:16px 0;">
-                    <button class="btn-action" style="padding:10px 22px; font-size:0.82rem; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);" onclick="addCustomQuestion('text')">+ Question</button>
-                    <button class="btn-action" style="padding:10px 22px; font-size:0.82rem; background:rgba(191,90,242,0.1); color:#BF5AF2; border:1px solid rgba(191,90,242,0.25);" onclick="addCustomQuestion('section_header')">+ Section</button>
-                </div>
-
-                <button id="adminSaveBtn" class="btn-action" style="width:100%; padding:14px; font-size:1rem;" onclick="saveAdminConfig()">Save Form Settings</button>
-
-                <!-- Live Preview -->
-                <div style="margin-top:24px;">
-                    <label class="stat-label" style="color:var(--text-muted); margin-bottom:10px;">Live Preview</label>
-                    <div id="formPreviewContainer" style="background:#0a0a0a; border:1px solid var(--glass-border); border-radius:var(--radius-card); padding:28px; min-height:400px; overflow-y:auto;">
-                        <!-- Injected by JS -->
-                    </div>
+                <div id="formPreviewContainer" style="background:#0a0a0a; border:1px solid var(--glass-border); border-radius:var(--radius-card); padding:28px 24px; min-height:400px; overflow-y:auto;">
+                    <!-- Injected by renderFormPreview -->
                 </div>
             </div>
             
@@ -5308,36 +5297,85 @@
     }
 
     function loadFormBuilderTab() {
-        document.getElementById('adminHeaderUrl').value = formConfig.headerUrl || ''; 
-        document.getElementById('adminEventTitle').value = formConfig.eventTitle || '';
-        document.getElementById('adminEventDesc').value = formConfig.eventDesc || '';
-        renderAdminQuestionsList(); 
+        activeFormField = -1;
         renderFormPreview();
     }
 
-    function renderAdminQuestionsList() {
-        const list = document.getElementById('adminQuestionsList');
-        if(!list) return;
+    let activeFormField = -1;
 
-        list.innerHTML = formConfig.questions.map((q, i) => {
-            // Protected fields that shouldn't be deleted or heavily mutated
+    function selectFormField(index) {
+        activeFormField = (activeFormField === index) ? -1 : index;
+        renderFormPreview();
+        // Focus the label input of the newly selected field
+        if (activeFormField >= 0) {
+            setTimeout(() => {
+                const el = document.querySelector('.fb-field-active .fb-input-label');
+                if (el) el.focus();
+            }, 50);
+        }
+    }
+
+    const typeIcons = { text: 'Aa', textarea: '&para;', email: '@', tel: '#', number: '123', dropdown: '&#9662;', checkbox_single: '&#9745;' };
+
+    function renderFormPreview() {
+        const container = document.getElementById('formPreviewContainer');
+        if (!container) return;
+
+        const title = formConfig.eventTitle || "Vendor Application";
+        const desc = formConfig.eventDesc || "Please fill out the form below.";
+        const headerUrl = formConfig.headerUrl || '';
+
+        let html = '';
+
+        // --- Editable header ---
+        html += `<div style="margin-bottom:28px; text-align:center;" onclick="activeFormField=-1">`;
+        if (headerUrl) {
+            html += `<img src="${escapeHtml(headerUrl)}" style="width:100%; height:auto; border-radius:16px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.1);" onerror="this.style.display='none'">`;
+        }
+        html += `<input type="text" id="adminEventTitle" value="${escapeHtml(title)}" placeholder="Form Title" oninput="formConfig.eventTitle=this.value" onclick="event.stopPropagation()" style="width:100%; background:transparent; border:none; color:#fff; font-size:1.5rem; font-weight:800; text-align:center; outline:none; padding:6px 0; border-bottom:2px solid transparent; transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.15)'" onblur="this.style.borderBottomColor='transparent'">`;
+        html += `<textarea id="adminEventDesc" placeholder="Form description..." oninput="formConfig.eventDesc=this.value" onclick="event.stopPropagation()" style="width:100%; background:transparent; border:none; color:var(--text-muted); font-size:0.9rem; text-align:center; outline:none; padding:4px 0; resize:none; height:40px; line-height:1.5; font-family:inherit; border-bottom:1px solid transparent; transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.1)'" onblur="this.style.borderBottomColor='transparent'">${escapeHtml(desc)}</textarea>`;
+        html += `<input type="text" id="adminHeaderUrl" value="${escapeHtml(headerUrl)}" placeholder="Header image URL (optional)" oninput="formConfig.headerUrl=this.value;renderFormPreview()" onclick="event.stopPropagation()" style="width:70%; max-width:360px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:var(--text-muted); font-size:0.72rem; text-align:center; outline:none; padding:5px 14px; border-radius:100px; font-family:inherit; margin-top:6px;">`;
+        html += `</div>`;
+        html += `<div style="border-top:1px solid rgba(255,255,255,0.06); margin-bottom:20px;"></div>`;
+
+        // --- Fields ---
+        formConfig.questions.forEach((q, i) => {
+            const isActive = activeFormField === i;
             const isProtected = q.id === 'student_id' || q.id === 'full_name_combined';
             const isSection = q.type === 'section_header';
-            const borderColor = isSection ? '#BF5AF2' : 'rgba(10, 132, 255, 0.4)';
+            const reqMark = q.required ? `<span style="color:#FF453A; margin-left:3px;">*</span>` : '';
+            const icon = typeIcons[q.type] || '';
 
-            return `
-            <div class="builder-q-card" style="border-left: 3px solid ${borderColor};">
+            // --- Section headers ---
+            if (isSection) {
+                html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" onclick="selectFormField(${i})" style="margin:24px 0 6px; padding:10px 14px; border-radius:12px; border-left:3px solid #BF5AF2; ${isActive ? 'background:rgba(191,90,242,0.06);' : ''}">`;
+                if (isActive) {
+                    html += `<input type="text" class="fb-input fb-input-label" value="${escapeHtml(q.label)}" oninput="updateQ(${i},'label',this.value)" onclick="event.stopPropagation()" style="font-size:1.15rem; font-weight:700; border-bottom-color:#BF5AF2;">`;
+                    html += `<div class="fb-toolbar" onclick="event.stopPropagation()">
+                        <button class="fb-pill" onclick="moveQ(${i},-1)" ${i===0?'disabled':''}>&#9650; Up</button>
+                        <button class="fb-pill" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''}>&#9660; Down</button>
+                        <span style="flex:1;"></span>
+                        ${!isProtected ? `<button class="fb-pill fb-pill-danger" onclick="deleteQ(${i})">Delete</button>` : ''}
+                    </div>`;
+                } else {
+                    html += `<div style="font-size:1.15rem; font-weight:700; color:#fff;">${escapeHtml(q.label)}</div>`;
+                }
+                html += `</div>`;
+                return;
+            }
 
-                <!-- Header row: label + type selector inline -->
-                <div style="display:flex; align-items:center; gap: 10px; margin-bottom: ${!isSection && (q.hint || q.type === 'checkbox_single') ? '4px' : '0'};">
-                    <button class="btn-action" style="padding:0; width:22px; height:22px; background:transparent; font-size:9px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); border:none; flex-shrink:0;" onclick="moveQ(${i},-1)" ${i===0?'disabled':''} title="Move Up">▲</button>
-                    <button class="btn-action" style="padding:0; width:22px; height:22px; background:transparent; font-size:9px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); border:none; flex-shrink:0;" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''} title="Move Down">▼</button>
+            // --- Regular fields ---
+            html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" onclick="selectFormField(${i})" style="margin-bottom:4px; padding:12px 14px; border-radius:14px; border:1px solid ${isActive ? 'rgba(10,132,255,0.25)' : 'transparent'}; ${isActive ? 'background:rgba(10,132,255,0.03);' : ''} ${q.width === 'half' ? 'width:48%; display:inline-block; margin-right:2%; vertical-align:top;' : ''}">`;
 
-                    <input type="text" class="gf-input" style="flex:1; min-width:0; background:transparent; border:none; border-bottom:1.5px solid transparent; color:#fff; font-size:${isSection ? '1.1rem' : '0.95rem'}; font-weight:${isSection ? '700' : '600'}; padding:6px 0; outline:none; transition:0.2s;" value="${escapeHtml(q.label)}" placeholder="${isSection ? 'Section Title' : 'Question Title'}" oninput="updateQ(${i},'label',this.value)" onfocus="this.style.borderBottomColor='${borderColor}'" onblur="this.style.borderBottomColor='transparent'">
-
-                    ${isProtected ? `<span style="color:#777; font-size:0.6rem; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:100px; white-space:nowrap;">Protected</span>` : ''}
-
-                    <select class="modern-input" style="padding:4px 28px 4px 8px; height:30px; font-size:0.75rem; border-color:rgba(255,255,255,0.06); background-color:rgba(0,0,0,0.2); border-radius:8px; margin:0; width:auto; flex-shrink:0;" onchange="updateQ(${i},'type',this.value)" ${isProtected ? 'disabled' : ''}>
+            if (isActive) {
+                // ---- ACTIVE: editable ----
+                html += `<input type="text" class="fb-input fb-input-label" value="${escapeHtml(q.label)}" oninput="updateQ(${i},'label',this.value)" onclick="event.stopPropagation()" placeholder="Question title">`;
+                html += `<input type="text" class="fb-input fb-input-hint" value="${escapeHtml(q.hint||'')}" placeholder="${q.type==='checkbox_single'?'Agreement text shown to applicant...':'Helper text (optional)'}" oninput="updateQ(${i},'hint',this.value)" onclick="event.stopPropagation()">`;
+                if (q.type === 'dropdown') {
+                    html += `<input type="text" class="fb-input fb-input-opts" value="${escapeHtml(q.options||'')}" placeholder="Option 1, Option 2, Option 3" oninput="updateQ(${i},'options',this.value)" onclick="event.stopPropagation()">`;
+                }
+                html += `<div class="fb-toolbar" onclick="event.stopPropagation()">
+                    <select class="fb-select" onchange="updateQ(${i},'type',this.value)" ${isProtected?'disabled':''}>
                         <option value="text" ${q.type==='text'?'selected':''}>Short answer</option>
                         <option value="textarea" ${q.type==='textarea'?'selected':''}>Paragraph</option>
                         <option value="email" ${q.type==='email'?'selected':''}>Email</option>
@@ -5345,187 +5383,133 @@
                         <option value="number" ${q.type==='number'?'selected':''}>Number</option>
                         <option value="dropdown" ${q.type==='dropdown'?'selected':''}>Dropdown</option>
                         <option value="checkbox_single" ${q.type==='checkbox_single'?'selected':''}>Checkbox</option>
-                        <option value="section_header" ${q.type==='section_header'?'selected':''}>Section</option>
                     </select>
-
-                    <!-- Inline footer controls -->
-                    ${!isSection ? `
-                    <select style="background:transparent; border:none; color:var(--text-muted); font-size:0.72rem; outline:none; cursor:pointer; font-weight:600; flex-shrink:0;" onchange="updateQ(${i},'width',this.value)">
-                        <option value="full" ${q.width==='full'?'selected':''}>Full</option>
-                        <option value="half" ${q.width==='half'?'selected':''}>Half</option>
+                    <select class="fb-select" onchange="updateQ(${i},'width',this.value)">
+                        <option value="full" ${q.width==='full'?'selected':''}>Full width</option>
+                        <option value="half" ${q.width==='half'?'selected':''}>Half width</option>
                     </select>
-                    <label style="display:flex; align-items:center; gap:5px; flex-shrink:0; cursor:pointer;">
-                        <span style="font-size:0.72rem; color:var(--text-muted); font-weight:600;">Req</span>
-                        <label class="switch switch-sm">
-                            <input type="checkbox" id="req_${i}" ${q.required?'checked':''} onchange="updateQ(${i},'required',this.checked)" ${isProtected && q.required ? 'disabled' : ''}>
-                            <span class="slider" style="border-radius:20px;"></span>
-                        </label>
-                    </label>
-                    ` : ''}
-
-                    ${!isProtected ? `<button class="builder-q-remove" style="width:28px; height:28px; font-size:0.9rem;" onclick="deleteQ(${i})" title="Delete">🗑️</button>` : ''}
-                </div>
-
-                ${!isSection ? `
-                <div style="padding-left: 54px;">
-                    <input type="text" class="gf-input" style="width:100%; background:transparent; border:none; border-bottom:1px solid transparent; color:var(--text-muted); font-size:0.8rem; padding:4px 0; outline:none; transition:0.2s;" value="${escapeHtml(q.hint || '')}" placeholder="${q.type === 'checkbox_single' ? 'Agreement terms...' : 'Hint (optional)'}" oninput="updateQ(${i},'hint',this.value)" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.2)'" onblur="this.style.borderBottomColor='transparent'">
-                </div>
-                ` : ''}
-
-                ${q.type === 'dropdown' ? `
-                <div style="padding-left: 54px; margin-top:4px;">
-                    <input type="text" class="gf-input" style="width:100%; background:transparent; border:none; border-bottom:1px dashed rgba(255,255,255,0.15); color:#ccc; font-size:0.8rem; padding:4px 0; outline:none;" value="${escapeHtml(q.options || '')}" placeholder="Option 1, Option 2, Option 3" oninput="updateQ(${i},'options',this.value)" onfocus="this.style.borderBottomColor='#0A84FF'" onblur="this.style.borderBottomColor='rgba(255,255,255,0.15)'">
-                </div>
-                ` : ''}
-            </div>`;
-        }).join('');
-    }
-
-    function renderFormPreview() {
-        const container = document.getElementById('formPreviewContainer');
-        if (!container) return;
-
-        const title = document.getElementById('adminEventTitle').value || "Vendor Application";
-        const desc = document.getElementById('adminEventDesc').value || "Please fill out the form below.";
-        const headerUrl = document.getElementById('adminHeaderUrl').value;
-
-        let html = '';
-
-        if (headerUrl) {
-            html += `<img src="${headerUrl}" style="width: 100%; height: auto; border-radius: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);" onerror="this.style.display='none'">`;
-        }
-
-        html += `<h2 style="margin-top:0; font-size: 1.6rem; text-align: center;">${escapeHtml(title)}</h2>`;
-        if (desc) {
-            html += `<p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; text-align: center; margin-bottom: 30px;">${escapeHtml(desc).replace(/\n/g, '<br>')}</p>`;
-        }
-
-        formConfig.questions.forEach((q, i) => {
-            const editBtn = `<button type="button" class="inline-edit-btn" onclick="focusBuilderCard(${i})" title="Edit Field">✏️</button>`;
-            const reqMark = q.required ? `<span style="color:#FF3B30; margin-left:4px;">*</span>` : '';
-            const hintHtml = q.hint ? `<span class="preview-form-hint">${escapeHtml(q.hint)}</span>` : '';
-
-            if (q.type === 'section_header') {
-                html += `<div class="preview-section-header">${editBtn}${escapeHtml(q.label)}</div>`;
-            } else if (q.type === 'checkbox_single') {
-                html += `
-                <div class="preview-form-group">
-                    <label style="display:flex; gap:10px; align-items:flex-start; color:#fff; font-size:0.9rem; background:rgba(255,255,255,0.05); padding:15px; border-radius:16px; border:1px solid rgba(255,255,255,0.1);">
-                        ${editBtn}
-                        <input type="checkbox" style="width:18px; height:18px; margin-top:2px;" disabled>
-                        <span>${escapeHtml(q.hint || q.label)}${reqMark}</span>
-                    </label>
+                    <button class="fb-pill ${q.required?'fb-pill-active':''}" onclick="updateQ(${i},'required',${!q.required})">Required</button>
+                    <span style="flex:1;"></span>
+                    <button class="fb-pill" onclick="moveQ(${i},-1)" ${i===0?'disabled':''}>&#9650;</button>
+                    <button class="fb-pill" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''}>&#9660;</button>
+                    ${!isProtected ? `<button class="fb-pill fb-pill-danger" onclick="deleteQ(${i})">Delete</button>` : `<span class="fb-pill" style="opacity:0.4; cursor:default;">Protected</span>`}
                 </div>`;
             } else {
-                let inputHtml = '';
-                if (q.type === 'textarea') {
-                    inputHtml = `<textarea class="modern-input" style="height:80px; background: rgba(0,0,0,0.5);" disabled></textarea>`;
-                } else if (q.type === 'dropdown') {
-                    const opts = (q.options || '').split(',').map(o => `<option>${escapeHtml(o.trim())}</option>`).join('');
-                    inputHtml = `<select class="modern-input" style="background: rgba(0,0,0,0.5);" disabled><option>Select...</option>${opts}</select>`;
-                } else {
-                    inputHtml = `<input type="${q.type}" class="modern-input" style="background: rgba(0,0,0,0.5);" placeholder="${q.id === 'student_id' ? 'e.g. 1234567' : ''}" disabled>`;
-                }
-
-                html += `
-                <div class="preview-form-group" style="${q.width === 'half' ? 'width: 48%; display: inline-block; margin-right: 2%;' : 'width: 100%;'} vertical-align: top;">
-                    <label class="preview-form-label">${editBtn}${escapeHtml(q.label)}${reqMark}</label>
-                    ${inputHtml}
-                    ${hintHtml}
+                // ---- INACTIVE: looks like the real form ----
+                const labelLine = `<div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                    <span style="font-size:0.65rem; color:rgba(255,255,255,0.2); font-weight:700; font-family:monospace;">${icon}</span>
+                    <span class="preview-form-label" style="margin:0; pointer-events:none;">${escapeHtml(q.label)}${reqMark}</span>
                 </div>`;
+                html += labelLine;
+
+                if (q.type === 'checkbox_single') {
+                    html += `<div style="display:flex; gap:10px; align-items:flex-start; color:var(--text-muted); font-size:0.85rem; padding:8px 12px; background:rgba(255,255,255,0.025); border-radius:10px; pointer-events:none; border:1px solid rgba(255,255,255,0.05);">
+                        <input type="checkbox" disabled style="width:16px; height:16px; margin-top:1px; accent-color:#0A84FF; flex-shrink:0;">
+                        <span style="line-height:1.4;">${escapeHtml(q.hint || q.label)}</span>
+                    </div>`;
+                } else if (q.type === 'textarea') {
+                    html += `<div style="height:52px; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.06); border-radius:12px;"></div>`;
+                } else if (q.type === 'dropdown') {
+                    const firstOpt = (q.options||'').split(',')[0]?.trim() || 'Select...';
+                    html += `<div style="height:38px; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:8px 14px; font-size:0.85rem; color:rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:space-between;">
+                        <span>${escapeHtml(firstOpt)}</span><span style="font-size:0.7rem;">&#9662;</span>
+                    </div>`;
+                } else {
+                    html += `<div style="height:38px; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.06); border-radius:12px;"></div>`;
+                }
+                if (q.hint && q.type !== 'checkbox_single') {
+                    html += `<span class="preview-form-hint">${escapeHtml(q.hint)}</span>`;
+                }
             }
+            html += `</div>`;
         });
 
+        // --- Add buttons & save inside the form ---
+        html += `<div class="fb-add-row">
+            <button class="fb-add-btn" onclick="addCustomQuestion('text')">+ Question</button>
+            <button class="fb-add-btn" onclick="addCustomQuestion('section_header')" style="border-color:rgba(191,90,242,0.2); color:#BF5AF2;">+ Section</button>
+        </div>`;
+        html += `<div class="fb-save-row">
+            <button id="adminSaveBtn" class="btn-action" style="padding:12px 32px; font-size:0.95rem;" onclick="saveAdminConfig()">Save Form</button>
+        </div>`;
+
         container.innerHTML = html;
+
+        // Click outside any field to deselect
+        container.addEventListener('click', (e) => {
+            if (!e.target.closest('.fb-field') && !e.target.closest('.fb-add-row') && !e.target.closest('.fb-save-row') && !e.target.closest('input') && !e.target.closest('textarea') && !e.target.closest('select')) {
+                if (activeFormField >= 0) { activeFormField = -1; renderFormPreview(); }
+            }
+        }, { once: true });
     }
 
-    function focusBuilderCard(index) {
-        const list = document.getElementById('adminQuestionsList');
-        if (!list) return;
-        const cards = list.getElementsByClassName('builder-q-card');
-        
-        if (cards[index]) {
-            cards[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            cards[index].style.backgroundColor = 'rgba(52, 199, 89, 0.15)';
-            cards[index].style.transform = 'scale(1.02)';
-            
-            const labelInput = cards[index].querySelector('input[type="text"]:not([disabled])');
-            if (labelInput) labelInput.focus();
-
-            setTimeout(() => {
-                cards[index].style.backgroundColor = 'rgba(255,255,255,0.03)';
-                cards[index].style.transform = 'scale(1)';
-            }, 1000);
-        }
-    }
-
-    function addCustomQuestion(t) { 
-        formConfig.questions.push({ 
-            id: 'q_'+Date.now(), 
-            type: t === 'section_header' ? 'section_header' : 'text', 
-            label: t === 'section_header' ? 'New Section' : 'New Question', 
-            width: 'full', 
-            required: false, 
+    function addCustomQuestion(t) {
+        formConfig.questions.push({
+            id: 'q_'+Date.now(),
+            type: t === 'section_header' ? 'section_header' : 'text',
+            label: t === 'section_header' ? 'New Section' : 'New Question',
+            width: 'full',
+            required: false,
             isCore: false,
             options: t === 'dropdown' ? 'Option 1, Option 2' : ''
-        }); 
-        renderAdminQuestionsList(); 
+        });
+        activeFormField = formConfig.questions.length - 1;
         renderFormPreview();
-        
-        // Scroll to the bottom to see the new question
         setTimeout(() => {
-            const list = document.getElementById('adminQuestionsList');
-            if(list && list.lastElementChild) list.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 100);
+            const el = document.querySelector('.fb-field-active');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 50);
     }
 
-    function deleteQ(i) { 
-        if(confirm("Are you sure you want to remove this field?")) {
-            formConfig.questions.splice(i, 1); 
-            renderAdminQuestionsList(); 
+    function deleteQ(i) {
+        if(confirm("Remove this field?")) {
+            formConfig.questions.splice(i, 1);
+            activeFormField = -1;
             renderFormPreview();
         }
     }
 
-    function moveQ(i, d) { 
-        let n=i+d; 
-        if(n<0||n>=formConfig.questions.length) return; 
-        [formConfig.questions[i],formConfig.questions[n]]=[formConfig.questions[n],formConfig.questions[i]]; 
-        renderAdminQuestionsList(); 
+    function moveQ(i, d) {
+        let n = i + d;
+        if (n < 0 || n >= formConfig.questions.length) return;
+        [formConfig.questions[i], formConfig.questions[n]] = [formConfig.questions[n], formConfig.questions[i]];
+        activeFormField = n;
         renderFormPreview();
     }
 
-    function updateQ(i, k, v) { 
-        formConfig.questions[i][k] = v; 
-        // Re-render only if type changes to show/hide specific options (like dropdown options)
+    function updateQ(i, k, v) {
+        formConfig.questions[i][k] = v;
         if (k === 'type') {
-            if(v === 'dropdown' && !formConfig.questions[i].options) formConfig.questions[i].options = 'Option 1, Option 2';
-            renderAdminQuestionsList(); 
+            if (v === 'dropdown' && !formConfig.questions[i].options) formConfig.questions[i].options = 'Option 1, Option 2';
         }
-        renderFormPreview(); // Real-time preview update
+        renderFormPreview();
     }
 
-    async function saveAdminConfig() { 
-        formConfig.headerUrl = document.getElementById('adminHeaderUrl').value;
-        formConfig.eventTitle = document.getElementById('adminEventTitle').value;
-        formConfig.eventDesc = document.getElementById('adminEventDesc').value;
-        
+    async function saveAdminConfig() {
+        // Sync any live input values back to formConfig
+        const titleEl = document.getElementById('adminEventTitle');
+        const descEl = document.getElementById('adminEventDesc');
+        const headerEl = document.getElementById('adminHeaderUrl');
+        if (titleEl) formConfig.eventTitle = titleEl.value;
+        if (descEl) formConfig.eventDesc = descEl.value;
+        if (headerEl) formConfig.headerUrl = headerEl.value;
+
         const btn = document.getElementById('adminSaveBtn');
         const origText = btn.innerText;
         btn.innerText = "Saving...";
         btn.disabled = true;
 
-        try { 
-            const { error } = await _supabase.from('secrets').upsert([{ name: 'MARKET_FORM_CONFIG_V8', value: JSON.stringify(formConfig) }], { onConflict: 'name' }); 
+        try {
+            const { error } = await _supabase.from('secrets').upsert([{ name: 'MARKET_FORM_CONFIG_V8', value: JSON.stringify(formConfig) }], { onConflict: 'name' });
             if (error) throw error;
-            showToast("Form Settings Saved Successfully", false); 
-        } catch(e) { 
-            showToast("Error saving config",true); 
+            showToast("Form Saved", false);
+        } catch(e) {
+            showToast("Error saving form", true);
             console.error(e);
         } finally {
             btn.innerText = origText;
             btn.disabled = false;
-        } 
+        }
     }
 
     // --- MANUAL CSV BACKUP EXPORT ---
