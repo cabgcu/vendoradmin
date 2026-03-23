@@ -484,6 +484,22 @@
     </div>
 </div>
 
+<!-- EMAIL PREVIEW MODAL -->
+<div id="emailPreviewModal" class="modal-overlay" style="z-index:20003;" onclick="closeEmailPreviewModal()">
+    <div class="modal-content" style="max-width: 660px; padding: 0; overflow: hidden;" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--glass-border);">
+            <div>
+                <div style="font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #BF5AF2;">Sent Email Preview</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;" id="emailPreviewSubject"></div>
+            </div>
+            <button class="close-modal" onclick="closeEmailPreviewModal()" style="position:static;">&times;</button>
+        </div>
+        <div style="background: #fff; max-height: 70vh; overflow-y: auto;">
+            <iframe id="emailPreviewFrame" style="width: 100%; min-height: 500px; border: none;" sandbox="allow-same-origin"></iframe>
+        </div>
+    </div>
+</div>
+
 <!-- DYNAMIC CHECK IN ALERT MODAL -->
 <div id="checkInAlert" class="modal-overlay" style="z-index:20002; background:rgba(0,0,0,0.95);" onclick="closeCheckInAlert()">
     <div id="alertContentBox" class="modal-content" style="text-align:center; border: 2px solid #34C759; max-width:400px;" onclick="event.stopPropagation()">
@@ -3500,7 +3516,10 @@
                                 ${sentAt ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Sent ${sentAt}</div>` : ''}
                             </div>
                         </div>
-                        <button onclick="checkSingleEmailStatus('${vendor.id}'); event.stopPropagation();" class="btn-action" style="padding: 6px 14px; font-size: 0.75rem; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);" id="refreshEmailStatusBtn">Refresh Status</button>
+                        <div style="display: flex; gap: 6px;">
+                            ${vendor.email_html_content ? `<button onclick="openEmailPreviewModal('${vendor.id}'); event.stopPropagation();" class="btn-action" style="padding: 6px 14px; font-size: 0.75rem; font-weight: 700; background: rgba(191, 90, 242, 0.15); border: 1px solid rgba(191, 90, 242, 0.4); color: #BF5AF2;">View Email</button>` : ''}
+                            <button onclick="checkSingleEmailStatus('${vendor.id}'); event.stopPropagation();" class="btn-action" style="padding: 6px 14px; font-size: 0.75rem; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);" id="refreshEmailStatusBtn">Refresh</button>
+                        </div>
                     </div>
                     ${isNegative ? `<div style="font-size: 0.85rem; color: ${display.color}; font-weight: 600; padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">${display.icon} This email ${deliveryStatus === 'hardBounce' ? 'bounced permanently — the address may be invalid' : deliveryStatus === 'softBounce' ? 'soft bounced — delivery may still be retried' : deliveryStatus === 'blocked' ? 'was blocked by the recipient server' : 'encountered a delivery error'}</div>` : ''}
                     ${stepsHtml ? `<div style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${stepsHtml}</div>` : ''}
@@ -3942,7 +3961,9 @@
             const updatePayload = {
                 brevo_message_id: brevoMessageId,
                 email_delivery_status: 'sent',
-                email_sent_at: new Date().toISOString()
+                email_sent_at: new Date().toISOString(),
+                email_html_content: htmlContent,
+                email_subject: parsedSubj
             };
             if (templates.targetTemplate !== 'custom') {
                 updatePayload.email_sent = templates.targetTemplate;
@@ -3954,6 +3975,8 @@
             vendor.brevo_message_id = brevoMessageId;
             vendor.email_delivery_status = 'sent';
             vendor.email_sent_at = updatePayload.email_sent_at;
+            vendor.email_html_content = htmlContent;
+            vendor.email_subject = parsedSubj;
             if (templates.targetTemplate !== 'custom') {
                 vendor.email_sent = templates.targetTemplate;
             }
@@ -4008,8 +4031,12 @@
             let highestPriority = 0;
             let latestDate = null;
 
+            // Normalize Brevo event names to our internal naming convention
+            // Brevo API returns 'clicks' but we use 'clicked', etc.
+            const brevoEventMap = { 'clicks': 'clicked', 'click': 'clicked', 'opens': 'opened', 'hardBounces': 'hardBounce', 'softBounces': 'softBounce', 'requests': 'sent' };
+
             events.forEach(evt => {
-                const evtName = evt.event;
+                const evtName = brevoEventMap[evt.event] || evt.event;
                 const idx = statusPriority.indexOf(evtName);
 
                 // Negative events (bounce, error, blocked) always take highest priority
@@ -4101,6 +4128,23 @@
     }
     function stopEmailStatusPolling() {
         if (emailStatusInterval) { clearInterval(emailStatusInterval); emailStatusInterval = null; }
+    }
+
+    function openEmailPreviewModal(vendorId) {
+        const vendor = currentData.vendors.find(v => v.id === vendorId);
+        if (!vendor || !vendor.email_html_content) {
+            showToast('No email preview available.');
+            return;
+        }
+        document.getElementById('emailPreviewSubject').innerText = vendor.email_subject || 'No subject';
+        const iframe = document.getElementById('emailPreviewFrame');
+        iframe.srcdoc = vendor.email_html_content;
+        document.getElementById('emailPreviewModal').style.display = 'flex';
+    }
+
+    function closeEmailPreviewModal() {
+        document.getElementById('emailPreviewModal').style.display = 'none';
+        document.getElementById('emailPreviewFrame').srcdoc = '';
     }
 
     async function resendEmail(id) {
