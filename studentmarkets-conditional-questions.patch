@@ -1,0 +1,144 @@
+From 0aa5568fbc21a7059ef6ab23eb87b4c684d79f3d Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 23 Mar 2026 21:33:44 +0000
+Subject: [PATCH] Add conditional sub-question support to public vendor form
+
+Questions configured with conditions in the admin form builder now
+show/hide on the public form based on parent answers:
+
+- Conditional questions wrapped in .conditional-section divs, hidden
+  by default, shown when parent dropdown/checkbox matches trigger value
+- toggleConditionalChildren() handles show/hide on parent change
+- Works with existing food_license and needs_power toggles
+- Validation already skips hidden .conditional-section fields
+- Autofill (returning vendors) triggers conditional visibility
+- Submission collects all field values; hidden fields submit empty
+
+Config is read from MARKET_FORM_CONFIG_V8 (same key the admin builder
+saves to), so conditions set in the builder work immediately.
+
+https://claude.ai/code/session_01443DXR1ZHFfDhF77sJZD7d
+---
+ index.html | 57 ++++++++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 51 insertions(+), 6 deletions(-)
+
+diff --git a/index.html b/index.html
+index 03877fb..4306915 100644
+--- a/index.html
++++ b/index.html
+@@ -745,32 +745,36 @@
+         if (q.type === 'textarea') inputHtml = `<textarea ${common}></textarea>`;
+         else if (q.type === 'dropdown') {
+             const opts = (q.options || '').split(',').map(o => `<option value="${o.trim()}">${o.trim()}</option>`).join('');
+-            let trigger = q.id==='food_license' ? 'onchange="toggleFoodLicense()"' : (q.id==='needs_power' ? 'onchange="togglePowerAgreement()"' : '');
++            let trigger = q.id==='food_license' ? 'onchange="toggleFoodLicense();toggleConditionalChildren(this)"' : (q.id==='needs_power' ? 'onchange="togglePowerAgreement();toggleConditionalChildren(this)"' : 'onchange="toggleConditionalChildren(this)"');
+             inputHtml = `<select ${common} ${trigger}><option value="">Select...</option>${opts}</select>`;
+         } else if (q.type === 'checkbox_single') {
+-            inputHtml = `<label class="custom-checkbox"><input type="checkbox" id="form_${q.id}"><span>${q.hint || q.label}</span></label>`;
++            inputHtml = `<label class="custom-checkbox"><input type="checkbox" id="form_${q.id}" onchange="toggleConditionalChildren(this)"><span>${q.hint || q.label}</span></label>`;
+         } else {
+             let placeholderAttr = q.id === 'student_id' ? 'placeholder="e.g. 1234567"' : '';
+             inputHtml = `<input type="${q.type}" ${common} ${placeholderAttr} autocomplete="off" />`;
+         }
+-        
++
+         let hintHtml = q.hint && q.type !== 'checkbox_single' ? `<span class="form-hint">${q.hint}</span>` : '';
+         let lbl = `<label class="form-label" id="lbl-form_${q.id}">${q.label}${q.required?'<span class="required-mark">*</span>':''}${hintHtml}</label>`;
+         let htmlString = `<div class="form-group ${q.width === 'half' ? 'half-width' : 'full-width'}">${lbl}${inputHtml}</div>`;
+-        
++
+         if (q.id === 'food_license') htmlString += `<div id="foodLicenseUploadSection" class="conditional-section full-width"><label class="form-label">Upload AZ food handlers license!<span class="required-mark">*</span></label><input type="hidden" id="formFoodLicenseLinkHidden"><div id="existingLicenseLink"></div><input type="file" id="formFoodLicenseFile" class="control-item" accept="image/*" /></div>`;
+         if (q.id === 'needs_power') htmlString += `<div id="powerAgreementSection" class="conditional-section full-width"><label class="form-label" style="color:#FFD60A">ELECTRICITY VENDORS:<span class="required-mark">*</span></label><p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;line-height:1.4;">Due to high demand, electricity is available on a first-come, first-served basis. We do not provide extension cords. Portable power is STRONGLY encouraged.</p><label class="custom-checkbox"><input type="checkbox" id="powerAgreementCheck"><span>I acknowledge that I have read this statement</span></label></div>`;
+         return htmlString;
+     }
+ 
++    // Map of parent question index → array of child question IDs (built during render)
++    let conditionalChildrenMap = {};
++
+     function renderPublicForm() {
+         document.getElementById('appHeaderImg').src = formConfig.headerUrl;
+         const dynamicStepsContainer = document.getElementById('dynamicStepsContainer');
+         dynamicStepsContainer.innerHTML = '';
+         let currentStepDiv = null;
+         let currentGrid = null;
++        conditionalChildrenMap = {};
+ 
+-        formConfig.questions.forEach((q) => {
++        formConfig.questions.forEach((q, i) => {
+             if (q.id === 'student_id') return;
+             if (q.type === 'section_header') {
+                 if (currentStepDiv) dynamicStepsContainer.appendChild(currentStepDiv);
+@@ -780,7 +784,7 @@
+                 currentGrid = document.createElement('div');
+                 currentGrid.className = 'dynamic-form-grid';
+                 currentStepDiv.appendChild(currentGrid);
+-                return; 
++                return;
+             }
+             if (!currentStepDiv) {
+                 currentStepDiv = document.createElement('div');
+@@ -789,6 +793,19 @@
+                 currentGrid.className = 'dynamic-form-grid';
+                 currentStepDiv.appendChild(currentGrid);
+             }
++
++            // If this question has a condition, wrap it in a conditional-section div
++            const cond = q.condition;
++            if (cond && cond.parentIndex !== undefined && cond.parentIndex !== null) {
++                const parentQ = formConfig.questions[cond.parentIndex];
++                if (parentQ) {
++                    // Register in the children map so the parent can toggle it
++                    if (!conditionalChildrenMap[parentQ.id]) conditionalChildrenMap[parentQ.id] = [];
++                    conditionalChildrenMap[parentQ.id].push({ childId: q.id, triggerValue: cond.value });
++                    currentGrid.innerHTML += `<div class="conditional-section full-width" data-cond-parent="${parentQ.id}" data-cond-value="${cond.value}" style="display:none;">${generateFieldHtml(q)}</div>`;
++                    return;
++                }
++            }
+             currentGrid.innerHTML += generateFieldHtml(q);
+         });
+         if (currentStepDiv) dynamicStepsContainer.appendChild(currentStepDiv);
+@@ -796,6 +813,27 @@
+         showTab(currentTab);
+     }
+ 
++    // Toggle visibility of conditional child questions when a parent value changes
++    function toggleConditionalChildren(el) {
++        const fieldId = el.id.replace('form_', '');
++        const children = conditionalChildrenMap[fieldId];
++        if (!children) return;
++        // Get current value: for checkboxes it's Yes/No, for dropdowns it's the selected value
++        const parentQ = formConfig.questions.find(q => q.id === fieldId);
++        let currentVal;
++        if (parentQ && parentQ.type === 'checkbox_single') {
++            currentVal = el.checked ? 'Yes' : 'No';
++        } else {
++            currentVal = el.value;
++        }
++        children.forEach(({ childId, triggerValue }) => {
++            const wrapper = document.querySelector(`.conditional-section[data-cond-parent="${fieldId}"][data-cond-value="${triggerValue}"]`);
++            if (wrapper) {
++                wrapper.style.display = (currentVal === triggerValue) ? 'block' : 'none';
++            }
++        });
++    }
++
+     function showTab(n) {
+         let x = document.getElementsByClassName("form-step");
+         if(x.length === 0) return;
+@@ -1227,6 +1265,13 @@
+                     document.getElementById('existingLicenseLink').innerHTML = `<div style="color:#34C759; font-size:0.85rem; margin:10px 0; font-weight:800; background:rgba(52,199,89,0.1); padding:10px; border-radius:10px; border:1px solid rgba(52,199,89,0.2);">✅ Existing license found on file.</div>`;
+                 }
+                 toggleFoodLicense(); togglePowerAgreement();
++                // Trigger all conditional children based on autofilled values
++                formConfig.questions.forEach(aq => {
++                    if (aq.type === 'dropdown' || aq.type === 'checkbox_single') {
++                        const ael = document.getElementById('form_' + aq.id);
++                        if (ael) toggleConditionalChildren(ael);
++                    }
++                });
+                 showToast("✨ Profile auto-filled!", false);
+                 return true;
+             }
+-- 
+2.43.0
+

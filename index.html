@@ -492,6 +492,11 @@
         .fb-field { transition: all 0.15s ease; cursor: pointer; position: relative; }
         .fb-field:hover:not(.fb-field-active) { background: rgba(255,255,255,0.025); }
         .fb-field:hover:not(.fb-field-active)::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border: 1px solid rgba(10,132,255,0.15); border-radius: inherit; pointer-events: none; }
+        .fb-field[draggable="true"] { cursor: grab; }
+        .fb-field[draggable="true"]:active { cursor: grabbing; }
+        .fb-field.fb-drag-over { border-top: 2px solid #0A84FF !important; margin-top: -2px; }
+        .fb-field.fb-dragging { opacity: 0.3; }
+        .fb-autosave-status { font-size: 0.68rem; color: var(--text-muted); opacity: 0.6; text-align: center; padding: 8px 0 4px; }
         .fb-field-active { cursor: default; }
         .fb-toolbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 8px 0 0; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 10px; }
         .fb-pill {
@@ -1321,11 +1326,14 @@
 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
                     <button onclick="resetTemplate()" style="background:transparent; border:1px solid rgba(255,255,255,0.2); color:var(--text-muted); padding:10px 18px; border-radius:100px; cursor:pointer; font-size:0.8rem; font-weight:600; transition: 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.4)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)';this.style.color='var(--text-muted)'">Reset Default</button>
-                    <div id="blastControls" style="display: none; align-items: center; gap: 8px;">
+                    <div id="blastControls" style="display: flex; align-items: center; gap: 8px;">
                         <select id="blastTargetSelector" class="modern-input" style="margin:0; height:40px; padding:0 28px 0 10px; font-size:0.78rem; width:auto;">
                             <option value="approved">Approved Vendors</option>
                             <option value="checked_in">Checked-In Vendors</option>
-                            <option value="all">All (Approved + Checked-In)</option>
+                            <option value="denied">Denied Vendors</option>
+                            <option value="pending">Pending Vendors</option>
+                            <option value="all_active">All Active (Approved + Checked-In)</option>
+                            <option value="everyone">Everyone</option>
                         </select>
                         <button onclick="sendCustomBlastFromSettings()" class="btn-action" style="background: var(--gradient-warning); color: #000; padding: 12px 24px; white-space:nowrap;">Send Email</button>
                     </div>
@@ -3974,17 +3982,22 @@
             }
         }
 
-        if (targetTemplate === 'approved') {
-            subj = currentData.apprSubj; 
+        // Try the template library first (covers all templates including user-created)
+        const libTpl = emailTemplateLibrary.templates?.[targetTemplate];
+        if (libTpl) {
+            subj = libTpl.subj;
+            body = libTpl.body;
+        } else if (targetTemplate === 'approved') {
+            subj = currentData.apprSubj;
             body = currentData.apprBody;
         } else if (targetTemplate === 'power') {
-            subj = currentData.powSubj; 
+            subj = currentData.powSubj;
             body = currentData.powBody;
         } else if (targetTemplate === 'power_denied') {
-            subj = currentData.powDenSubj; 
+            subj = currentData.powDenSubj;
             body = currentData.powDenBody;
         } else if (targetTemplate === 'denied') {
-            subj = currentData.denSubj; 
+            subj = currentData.denSubj;
             body = currentData.denBody;
         } else if (targetTemplate === 'custom') {
             subj = currentData.customSubj;
@@ -4026,7 +4039,9 @@
 
     async function sendSingleEmail(vendor, forceTemplateId = null) {
         if (currentUser.role !== 'admin') return false;
-        if (!vendor || !vendor.preferred_email || vendor.status === 'Needs Review' || vendor.status === 'Pending') return false;
+        if (!vendor || !vendor.preferred_email) return false;
+        // Only block Pending/Needs Review for auto-sends (not forced blasts)
+        if (!forceTemplateId && (vendor.status === 'Needs Review' || vendor.status === 'Pending')) return false;
 
         const templates = getTemplateDetails(vendor, forceTemplateId);
         if (!templates) return false;
@@ -4594,7 +4609,7 @@
 
         if (!body || !subj) return showToast("Subject and Body are required.");
 
-        const target = document.getElementById('blastTargetSelector')?.value || 'all';
+        const target = document.getElementById('blastTargetSelector')?.value || 'all_active';
         let targetVendors;
         let targetLabel;
         if (target === 'approved') {
@@ -4603,9 +4618,18 @@
         } else if (target === 'checked_in') {
             targetVendors = currentData.vendors.filter(v => v.status === 'Checked In');
             targetLabel = 'CHECKED-IN';
-        } else {
+        } else if (target === 'denied') {
+            targetVendors = currentData.vendors.filter(v => v.status === 'Denied');
+            targetLabel = 'DENIED';
+        } else if (target === 'pending') {
+            targetVendors = currentData.vendors.filter(v => v.status === 'Pending');
+            targetLabel = 'PENDING';
+        } else if (target === 'all_active') {
             targetVendors = currentData.vendors.filter(v => v.status === 'Approved' || v.status === 'Checked In');
             targetLabel = 'APPROVED + CHECKED-IN';
+        } else {
+            targetVendors = currentData.vendors.filter(v => v.preferred_email);
+            targetLabel = 'ALL';
         }
 
         if (targetVendors.length === 0) {
@@ -4616,10 +4640,10 @@
             return;
         }
 
-        // Save immediately to use the latest typed variables
-        await saveEmailTemplate(); 
-        currentData.customSubj = subj;
-        currentData.customBody = body;
+        // Save the current template so library has latest content
+        await saveEmailTemplate();
+
+        const sendTemplateId = currentTemplateType;
 
         document.getElementById('loader').style.display = 'flex';
         const loaderText = document.querySelector('#loader span');
@@ -4631,9 +4655,9 @@
         const BATCH_SIZE = 10;
         for (let i = 0; i < targetVendors.length; i += BATCH_SIZE) {
             if (isUnauthorized) break;
-            
+
             const batch = targetVendors.slice(i, i + BATCH_SIZE);
-            const results = await Promise.all(batch.map(v => sendSingleEmail(v, 'custom')));
+            const results = await Promise.all(batch.map(v => sendSingleEmail(v, sendTemplateId)));
             
             for (const success of results) {
                 if (success === 'unauthorized') isUnauthorized = true;
@@ -4726,12 +4750,7 @@
             clearBtn.style.display = 'none';
         }
 
-        // Show blast controls only for custom-type templates
-        const isCustomDefault = emailTemplateLibrary.defaults?.custom === currentTemplateType;
-        const blastControls = document.getElementById('blastControls');
-        if (blastControls) {
-            blastControls.style.display = isCustomDefault ? 'flex' : 'none';
-        }
+        // Blast controls always visible — any template can be sent
 
         // Load from template library
         const tpl = emailTemplateLibrary.templates[currentTemplateType];
@@ -5569,11 +5588,12 @@
         if (q.condition && q.condition.parentIndex !== undefined) {
             delete q.condition;
         } else {
-            const parent = parents[parents.length - 1]; // default to nearest eligible parent
+            const parent = parents[parents.length - 1];
             const vals = getParentValues(parent.q);
             q.condition = { parentIndex: parent.idx, value: vals[0] || '' };
         }
         renderFormPreview();
+        scheduleFormAutoSave();
     }
 
     function setConditionParent(i, parentIdx) {
@@ -5584,18 +5604,20 @@
         const vals = parentQ ? getParentValues(parentQ) : [];
         q.condition.value = vals[0] || '';
         renderFormPreview();
+        scheduleFormAutoSave();
     }
 
     function setConditionValue(i, val) {
         const q = formConfig.questions[i];
         if (!q.condition) q.condition = {};
         q.condition.value = val;
-        // No need to re-render, the select already shows the value
+        scheduleFormAutoSave();
     }
 
     function removeCondition(i) {
         delete formConfig.questions[i].condition;
         renderFormPreview();
+        scheduleFormAutoSave();
     }
 
     async function uploadFormHeaderImage(input) {
@@ -5612,6 +5634,7 @@
             const { data } = _supabase.storage.from('banners').getPublicUrl(name);
             formConfig.headerUrl = data.publicUrl;
             renderFormPreview();
+            scheduleFormAutoSave();
             showToast('Header image uploaded!');
         } catch(e) {
             console.error('Header upload failed:', e);
@@ -5634,13 +5657,13 @@
         if (headerUrl) {
             html += `<img src="${escapeHtml(headerUrl)}" style="width:100%; height:auto; border-radius:16px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.1);" onerror="this.style.display='none'">`;
         }
-        html += `<input type="text" id="adminEventTitle" value="${escapeHtml(title)}" placeholder="Form Title" oninput="formConfig.eventTitle=this.value" onclick="event.stopPropagation()" style="width:100%; background:transparent; border:none; color:#fff; font-size:1.5rem; font-weight:800; text-align:center; outline:none; padding:6px 0; border-bottom:2px solid transparent; transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.15)'" onblur="this.style.borderBottomColor='transparent'">`;
-        html += `<textarea id="adminEventDesc" placeholder="Form description..." oninput="formConfig.eventDesc=this.value" onclick="event.stopPropagation()" style="width:100%; background:transparent; border:none; color:var(--text-muted); font-size:0.9rem; text-align:center; outline:none; padding:4px 0; resize:none; height:40px; line-height:1.5; font-family:inherit; border-bottom:1px solid transparent; transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.1)'" onblur="this.style.borderBottomColor='transparent'">${escapeHtml(desc)}</textarea>`;
+        html += `<input type="text" id="adminEventTitle" value="${escapeHtml(title)}" placeholder="Form Title" oninput="formConfig.eventTitle=this.value;scheduleFormAutoSave()" onclick="event.stopPropagation()" style="width:100%; background:transparent; border:none; color:#fff; font-size:1.5rem; font-weight:800; text-align:center; outline:none; padding:6px 0; border-bottom:2px solid transparent; transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.15)'" onblur="this.style.borderBottomColor='transparent'">`;
+        html += `<textarea id="adminEventDesc" placeholder="Form description..." oninput="formConfig.eventDesc=this.value;scheduleFormAutoSave()" onclick="event.stopPropagation()" style="width:100%; background:transparent; border:none; color:var(--text-muted); font-size:0.9rem; text-align:center; outline:none; padding:4px 0; resize:none; height:40px; line-height:1.5; font-family:inherit; border-bottom:1px solid transparent; transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.1)'" onblur="this.style.borderBottomColor='transparent'">${escapeHtml(desc)}</textarea>`;
         html += `<div style="display:flex; align-items:center; gap:6px; margin-top:6px; justify-content:center;">`;
-        html += `<input type="text" id="adminHeaderUrl" value="${escapeHtml(headerUrl)}" placeholder="Header image URL (optional)" oninput="formConfig.headerUrl=this.value" onchange="renderFormPreview()" onclick="event.stopPropagation()" style="flex:1; max-width:300px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:var(--text-muted); font-size:0.72rem; text-align:center; outline:none; padding:5px 14px; border-radius:100px; font-family:inherit;">`;
+        html += `<input type="text" id="adminHeaderUrl" value="${escapeHtml(headerUrl)}" placeholder="Header image URL (optional)" oninput="formConfig.headerUrl=this.value;scheduleFormAutoSave()" onchange="renderFormPreview()" onclick="event.stopPropagation()" style="flex:1; max-width:300px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:var(--text-muted); font-size:0.72rem; text-align:center; outline:none; padding:5px 14px; border-radius:100px; font-family:inherit;">`;
         html += `<label class="fb-pill" style="padding:5px 12px; font-size:0.7rem; cursor:pointer; margin:0; display:inline-flex; align-items:center; gap:4px;"><span style="font-size:0.85rem;">&#x1F4CE;</span> Upload<input type="file" accept="image/*" onchange="uploadFormHeaderImage(this)" onclick="event.stopPropagation()" style="display:none;"></label>`;
         if (headerUrl) {
-            html += `<button class="fb-pill fb-pill-danger" onclick="event.stopPropagation(); formConfig.headerUrl=''; renderFormPreview();" style="padding:5px 10px; font-size:0.7rem;">Remove</button>`;
+            html += `<button class="fb-pill fb-pill-danger" onclick="event.stopPropagation(); formConfig.headerUrl=''; renderFormPreview(); scheduleFormAutoSave();" style="padding:5px 10px; font-size:0.7rem;">Remove</button>`;
         }
         html += `</div>`;
         html += `</div>`;
@@ -5659,7 +5682,8 @@
 
             // --- Section headers ---
             if (isSection) {
-                html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" onclick="selectFormField(${i})" style="margin:24px 0 6px; padding:10px 14px; border-radius:12px; border-left:3px solid #BF5AF2; ${isActive ? 'background:rgba(191,90,242,0.06);' : ''}">`;
+                const secDrag = !isActive ? `draggable="true" ondragstart="fbDragStart(event,${i})" ondragover="fbDragOver(event,${i})" ondragleave="fbDragLeave(event)" ondrop="fbDrop(event,${i})" ondragend="fbDragEnd()"` : '';
+                html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" ${secDrag} onclick="selectFormField(${i})" style="margin:24px 0 6px; padding:10px 14px; border-radius:12px; border-left:3px solid #BF5AF2; ${isActive ? 'background:rgba(191,90,242,0.06);' : ''}">`;
                 if (isActive) {
                     html += `<input type="text" class="fb-input fb-input-label" value="${escapeHtml(q.label)}" oninput="updateQ(${i},'label',this.value)" onclick="event.stopPropagation()" style="font-size:1.15rem; font-weight:700; border-bottom-color:#BF5AF2;">`;
                     html += `<div class="fb-toolbar" onclick="event.stopPropagation()">
@@ -5676,7 +5700,8 @@
             }
 
             // --- Regular fields ---
-            html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" onclick="selectFormField(${i})" style="margin-bottom:4px; padding:12px 14px; border-radius:14px; border:1px solid ${isActive ? 'rgba(10,132,255,0.25)' : 'transparent'}; ${isActive ? 'background:rgba(10,132,255,0.03);' : ''} ${q.width === 'half' ? 'width:48%; display:inline-block; margin-right:2%; vertical-align:top;' : ''} ${condIndent}">`;
+            const dragAttrs = !isActive ? `draggable="true" ondragstart="fbDragStart(event,${i})" ondragover="fbDragOver(event,${i})" ondragleave="fbDragLeave(event)" ondrop="fbDrop(event,${i})" ondragend="fbDragEnd()"` : '';
+            html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" ${dragAttrs} onclick="selectFormField(${i})" style="margin-bottom:4px; padding:12px 14px; border-radius:14px; border:1px solid ${isActive ? 'rgba(10,132,255,0.25)' : 'transparent'}; ${isActive ? 'background:rgba(10,132,255,0.03);' : ''} ${q.width === 'half' ? 'width:48%; display:inline-block; margin-right:2%; vertical-align:top;' : ''} ${condIndent}">`;
             if (hasCondition && !isActive && condParent) {
                 html += `<div style="font-size:0.65rem; color:#FFA800; margin-bottom:6px; opacity:0.7;">&#9889; Shows when "${escapeHtml(condParent.label)}" = ${escapeHtml(q.condition.value)}</div>`;
             }
@@ -5745,9 +5770,7 @@
             <button class="fb-add-btn" onclick="addCustomQuestion('text')">+ Question</button>
             <button class="fb-add-btn" onclick="addCustomQuestion('section_header')" style="border-color:rgba(191,90,242,0.2); color:#BF5AF2;">+ Section</button>
         </div>`;
-        html += `<div class="fb-save-row">
-            <button id="adminSaveBtn" class="btn-action" style="padding:12px 32px; font-size:0.95rem;" onclick="saveAdminConfig()">Save Form</button>
-        </div>`;
+        html += `<div class="fb-autosave-status" id="fbAutoSaveStatus">All changes auto-saved</div>`;
 
         container.innerHTML = html;
     }
@@ -5763,6 +5786,17 @@
         }
     });
 
+    // --- Auto-save with debounce ---
+    let _formAutoSaveTimer = null;
+    let _formSaveInFlight = false;
+
+    function scheduleFormAutoSave() {
+        clearTimeout(_formAutoSaveTimer);
+        const el = document.getElementById('fbAutoSaveStatus');
+        if (el) { el.textContent = 'Unsaved changes...'; el.style.color = '#FFA800'; }
+        _formAutoSaveTimer = setTimeout(() => saveAdminConfig(true), 1500);
+    }
+
     function addCustomQuestion(t) {
         formConfig.questions.push({
             id: 'q_'+Date.now(),
@@ -5775,6 +5809,7 @@
         });
         activeFormField = formConfig.questions.length - 1;
         renderFormPreview();
+        scheduleFormAutoSave();
         setTimeout(() => {
             const el = document.querySelector('.fb-field-active');
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -5786,6 +5821,7 @@
             formConfig.questions.splice(i, 1);
             activeFormField = -1;
             renderFormPreview();
+            scheduleFormAutoSave();
         }
     }
 
@@ -5793,22 +5829,96 @@
         let n = i + d;
         if (n < 0 || n >= formConfig.questions.length) return;
         [formConfig.questions[i], formConfig.questions[n]] = [formConfig.questions[n], formConfig.questions[i]];
+        // Update condition parentIndex references when questions move
+        formConfig.questions.forEach((q) => {
+            if (q.condition && q.condition.parentIndex !== undefined) {
+                if (q.condition.parentIndex === i) q.condition.parentIndex = n;
+                else if (q.condition.parentIndex === n) q.condition.parentIndex = i;
+            }
+        });
         activeFormField = n;
         renderFormPreview();
+        scheduleFormAutoSave();
     }
 
     function updateQ(i, k, v) {
         formConfig.questions[i][k] = v;
         if (k === 'type') {
             if (v === 'dropdown' && !formConfig.questions[i].options) formConfig.questions[i].options = 'Option 1, Option 2';
-            renderFormPreview(); // full re-render only on type change
+            renderFormPreview();
         } else if (k === 'width' || k === 'required') {
-            renderFormPreview(); // structural changes need re-render
+            renderFormPreview();
         }
-        // text changes (label, hint, options) update formConfig without re-render to preserve focus
+        scheduleFormAutoSave();
     }
 
-    async function saveAdminConfig() {
+    // --- Drag and drop ---
+    let _dragFromIndex = -1;
+
+    function fbDragStart(e, i) {
+        _dragFromIndex = i;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', i);
+        setTimeout(() => {
+            const fields = document.querySelectorAll('.fb-field');
+            if (fields[i]) fields[i].classList.add('fb-dragging');
+        }, 0);
+    }
+
+    function fbDragOver(e, i) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        // Clear all drag-over indicators
+        document.querySelectorAll('.fb-drag-over').forEach(el => el.classList.remove('fb-drag-over'));
+        if (i !== _dragFromIndex) {
+            e.currentTarget.classList.add('fb-drag-over');
+        }
+    }
+
+    function fbDragLeave(e) {
+        e.currentTarget.classList.remove('fb-drag-over');
+    }
+
+    function fbDrop(e, toIndex) {
+        e.preventDefault();
+        document.querySelectorAll('.fb-drag-over, .fb-dragging').forEach(el => {
+            el.classList.remove('fb-drag-over', 'fb-dragging');
+        });
+        const fromIndex = _dragFromIndex;
+        if (fromIndex < 0 || fromIndex === toIndex) return;
+
+        // Move the question
+        const [moved] = formConfig.questions.splice(fromIndex, 1);
+        formConfig.questions.splice(toIndex, 0, moved);
+
+        // Update condition parentIndex references
+        formConfig.questions.forEach((q) => {
+            if (q.condition && q.condition.parentIndex !== undefined) {
+                let pi = q.condition.parentIndex;
+                if (pi === fromIndex) pi = toIndex;
+                else {
+                    if (fromIndex < toIndex) { if (pi > fromIndex && pi <= toIndex) pi--; }
+                    else { if (pi >= toIndex && pi < fromIndex) pi++; }
+                }
+                q.condition.parentIndex = pi;
+            }
+        });
+
+        activeFormField = toIndex;
+        _dragFromIndex = -1;
+        renderFormPreview();
+        scheduleFormAutoSave();
+    }
+
+    function fbDragEnd() {
+        _dragFromIndex = -1;
+        document.querySelectorAll('.fb-drag-over, .fb-dragging').forEach(el => {
+            el.classList.remove('fb-drag-over', 'fb-dragging');
+        });
+    }
+
+    async function saveAdminConfig(isAuto = false) {
+        if (_formSaveInFlight) return;
         // Sync any live input values back to formConfig
         const titleEl = document.getElementById('adminEventTitle');
         const descEl = document.getElementById('adminEventDesc');
@@ -5817,21 +5927,20 @@
         if (descEl) formConfig.eventDesc = descEl.value;
         if (headerEl) formConfig.headerUrl = headerEl.value;
 
-        const btn = document.getElementById('adminSaveBtn');
-        const origText = btn.innerText;
-        btn.innerText = "Saving...";
-        btn.disabled = true;
+        _formSaveInFlight = true;
+        const statusEl = document.getElementById('fbAutoSaveStatus');
 
         try {
             const { error } = await _supabase.from('secrets').upsert([{ name: 'MARKET_FORM_CONFIG_V8', value: JSON.stringify(formConfig) }], { onConflict: 'name' });
             if (error) throw error;
-            showToast("Form Saved", false);
+            if (statusEl) { statusEl.textContent = 'Saved'; statusEl.style.color = '#34C759'; }
+            if (!isAuto) showToast("Form Saved", false);
         } catch(e) {
-            showToast("Error saving form", true);
+            if (statusEl) { statusEl.textContent = 'Save failed'; statusEl.style.color = '#FF453A'; }
+            if (!isAuto) showToast("Error saving form", true);
             console.error(e);
         } finally {
-            btn.innerText = origText;
-            btn.disabled = false;
+            _formSaveInFlight = false;
         }
     }
 
