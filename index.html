@@ -4772,9 +4772,13 @@
         // Convert <b>/<strong> back to **bold**
         html = html.replace(/<b>(.*?)<\/b>/gi, '**$1**');
         html = html.replace(/<strong>(.*?)<\/strong>/gi, '**$1**');
-        // Convert <br> and </div><div> to newlines
-        html = html.replace(/<br\s*\/?>/gi, '\n');
+        // Handle empty lines first: <div><br></div> is a single empty line
+        html = html.replace(/<div><br\s*\/?><\/div>/gi, '\n');
+        // Handle div transitions: </div><div> is a line break
         html = html.replace(/<\/div>\s*<div>/gi, '\n');
+        // Handle remaining <br> tags
+        html = html.replace(/<br\s*\/?>/gi, '\n');
+        // Handle remaining div wrappers
         html = html.replace(/<div>/gi, '\n');
         html = html.replace(/<\/div>/gi, '');
         // Strip any remaining HTML tags
