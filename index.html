@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>CAB Student Market Admin</title>
     
     <!-- Dependencies -->
@@ -52,7 +55,7 @@
             font-family: var(--font-stack);
             font-size: 14px;
             color: var(--text-main);
-            background-color: transparent;
+            background-color: #000000;
             min-height: 100vh;
             padding-bottom: 40px;
             -webkit-font-smoothing: antialiased;
@@ -449,7 +452,7 @@
         .mobile-bottom-nav {
             display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
             background: rgba(10,10,10,0.97); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.05);
             padding: 6px 0 calc(6px + env(safe-area-inset-bottom)); /* iPhone notch */
             justify-content: space-around; align-items: center;
         }
@@ -485,6 +488,7 @@
         /* --- MOBILE (768px) --- */
         @media (max-width: 768px) {
             body { padding-bottom: 64px; }
+            .app-container { padding: 0; }
 
             .mobile-bottom-nav { display: flex; }
 
@@ -492,21 +496,40 @@
             .frosted { border-color: rgba(255,255,255,0.05); }
             .modern-input { border-color: rgba(255,255,255,0.06); }
 
-            /* Topbar: compact, subtle */
-            .topbar { padding: 10px 14px; margin-top: 6px; margin-bottom: 10px; border-radius: 16px; border-color: rgba(255,255,255,0.04); }
-            .brand { gap: 10px; }
-            .brand-logo { height: 28px; }
-            .brand-text h1 { font-size: 0.9rem; }
-            .event-subtext { font-size: 0.7rem; }
-            .event-subtext select.modern-input { height: 30px !important; font-size: 0.75rem !important; padding: 0 28px 0 10px !important; }
+            /* Topbar: sticky, compact, edge-to-edge */
+            .topbar {
+                padding: 0; margin: 0;
+                border-radius: 0; border: none;
+                background: rgba(0,0,0,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                position: sticky; top: 0; z-index: 100;
+                flex-direction: column; gap: 0; text-align: left;
+                padding-top: env(safe-area-inset-top);
+            }
+            .brand {
+                gap: 8px; flex-direction: row; padding: 8px 14px;
+            }
+            .brand-logo { height: 22px; }
+            .brand-text h1 { font-size: 0.8rem; }
+            .event-subtext { font-size: 0.65rem; gap: 4px; }
+            .event-subtext select.modern-input { height: 24px !important; font-size: 0.7rem !important; padding: 0 22px 0 8px !important; border-radius: 8px !important; }
 
-            /* Filter tabs: horizontal scroll strip */
-            #vendorFilterTabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; justify-content: flex-start; gap: 4px; padding-bottom: 2px; }
+            /* Filter tabs: thin horizontal strip inside topbar */
+            #vendorFilterTabs {
+                width: 100%;
+                flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; justify-content: flex-start;
+                gap: 4px; padding: 4px 14px 6px; margin: 0;
+                border-top: 1px solid rgba(255,255,255,0.03);
+            }
             #vendorFilterTabs::-webkit-scrollbar { display: none; }
             #vendorFilterTabs > .control-item { display: none !important; }
             #vendorFilterTabs > .control-item-filter:not([style*="width: 1px"]) { display: flex !important; flex-shrink: 0; }
             #vendorFilterTabs > .control-item-filter[style*="width: 1px"] { display: none !important; }
-            .control-item { font-size: 0.6rem; padding: 0 8px; height: 26px; border-color: rgba(255,255,255,0.06); }
+            .control-item { font-size: 0.6rem; padding: 0 10px; height: 24px; border-color: rgba(255,255,255,0.06); }
+
+            /* Content padding (topbar is edge-to-edge, content needs margins) */
+            .view { padding: 0 12px; }
+            #view-scan, #view-settings, #view-profiles { padding: 0 12px; }
 
             /* Stats cards: tight */
             .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
@@ -626,11 +649,13 @@
 
         /* --- SMALL PHONES (390px) --- */
         @media (max-width: 390px) {
-            .app-container { padding: 0 8px; }
-            .topbar { padding: 8px 10px; margin-top: 4px; margin-bottom: 6px; }
-            .brand-logo { height: 24px; }
-            .brand-text h1 { font-size: 0.8rem; }
-            .control-item { font-size: 0.55rem; padding: 0 6px; height: 24px; }
+            .view { padding: 0 8px; }
+            #view-scan, #view-settings, #view-profiles { padding: 0 8px; }
+            .brand { padding: 6px 10px; }
+            .brand-logo { height: 20px; }
+            .brand-text h1 { font-size: 0.75rem; }
+            #vendorFilterTabs { padding: 3px 10px 5px; gap: 3px; }
+            .control-item { font-size: 0.55rem; padding: 0 6px; height: 22px; }
             .stats-container { gap: 4px; }
             .stat-card { padding: 8px 4px; border-radius: 10px; }
             .stat-val { font-size: 1rem; }
@@ -1655,7 +1680,7 @@
         } else if (declineId) {
             handleVendorConfirmation(declineId, 'decline');
         } else {
-            const savedAuth = sessionStorage.getItem('cab_market_auth');
+            const savedAuth = localStorage.getItem('cab_market_auth');
             if (savedAuth) {
                 try { 
                     const parsed = JSON.parse(savedAuth);
@@ -1899,7 +1924,7 @@
             if (insErr) throw insErr;
 
             currentUser = { role: 'user', name, email, id: newUser.id };
-            sessionStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
+            localStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
             unlockApp();
         } catch(e) {
             error.innerText = e.message || "Registration error.";
@@ -1932,7 +1957,7 @@
                 
                 if (pass === validPassword) {
                     currentUser = { role: 'admin', name: 'Master Admin', email: 'admin' };
-                    sessionStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
+                    localStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
                     
                     // Auto-save fallback on first run
                     if (!data) await _supabase.from('secrets').upsert([{ name: 'ADMIN_PASSWORD', value: FALLBACK_PASSWORD }]);
@@ -1946,7 +1971,7 @@
                 const { data: user } = await _supabase.from('cab_users').select('*').eq('email', email).eq('password', pass).maybeSingle();
                 if (user) {
                     currentUser = { role: user.role, name: user.name, email: user.email, id: user.id };
-                    sessionStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
+                    localStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
                     unlockApp();
                 } else {
                     throw new Error("Invalid email or password.");
@@ -1964,7 +1989,7 @@
 
     function handleLogout() {
         stopEmailStatusPolling();
-        sessionStorage.removeItem('cab_market_auth');
+        localStorage.removeItem('cab_market_auth');
         location.reload();
     }
 
@@ -3406,7 +3431,7 @@
         
         return currentData.vendors.filter(v => {
             // 'inbox' now serves as a master list and does not filter out any statuses
-            if (activeFilter === 'new' && v.status !== 'Pending' && v.status !== '' && v.status != null) return false;
+            if (activeFilter === 'new' && (v.status === 'Approved' || v.status === 'Checked In' || v.status === 'Needs Review' || v.status === 'Denied')) return false;
             if (activeFilter === 'review' && v.status !== 'Needs Review') return false;
             if (activeFilter === 'approved' && v.status !== 'Approved' && v.status !== 'Checked In') return false;
             if (activeFilter === 'denied' && v.status !== 'Denied') return false;
