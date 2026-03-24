@@ -1063,7 +1063,7 @@
             <div class="filter-row" style="margin-bottom: 0;">
                 <input type="text" id="search" class="modern-input" placeholder="Search name, email, or student ID..." onkeyup="renderTable()" style="flex: 2; min-width: 200px;">
                 
-                <select id="unifiedFilter" class="modern-input" style="flex: 1.5; min-width: 180px;" onchange="renderTable()">
+                <select id="unifiedFilter" class="modern-input" style="flex: 1.5; min-width: 180px;" onchange="localStorage.setItem('marketLastUnifiedFilter', this.value); renderTable()">
                     <option value="all">All Vendors</option>
                     <optgroup label="Special Requests">
                         <option value="req_power">Needs Power</option>
@@ -1830,10 +1830,17 @@
         }
     });
 
+    let _realtimeRefreshTimer = null;
+    let _realtimePaused = false;
+
     async function setupRealtime() {
         if (realtimeSubscription) _supabase.removeChannel(realtimeSubscription);
         realtimeSubscription = _supabase.channel('public:vendors')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'vendors' }, () => { refreshData(null, true); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'vendors' }, () => {
+                if (_realtimePaused) return;
+                clearTimeout(_realtimeRefreshTimer);
+                _realtimeRefreshTimer = setTimeout(() => refreshData(null, true), 2000);
+            })
             .subscribe();
     }
 
@@ -2204,7 +2211,7 @@
             // First, try to restore the user's last-viewed market from localStorage
             const savedId = localStorage.getItem('marketEventId');
             if (savedId) {
-                activeEvent = eventsData.find(e => e.id === savedId);
+                activeEvent = eventsData.find(e => e.id == savedId);
             }
             // If no saved market (or it no longer exists), auto-select current/next upcoming
             if (!activeEvent) {
@@ -2292,9 +2299,12 @@
         if (isInitialLoad && eventsData.length > 0) {
             const savedFilter = localStorage.getItem('marketLastFilter') || 'inbox';
             const savedSort = localStorage.getItem('marketLastSort') || 'default';
+            const savedUnified = localStorage.getItem('marketLastUnifiedFilter') || 'all';
             const sortEl = document.getElementById('sortFilter');
+            const unifiedEl = document.getElementById('unifiedFilter');
             if (sortEl) sortEl.value = savedSort;
-            setFilter(savedFilter);
+            if (unifiedEl && Array.from(unifiedEl.options).some(o => o.value === savedUnified)) unifiedEl.value = savedUnified;
+            setFilter(savedFilter, true);
             isInitialLoad = false;
         } else {
             if(activeFilter === 'profiles') {
@@ -2555,16 +2565,18 @@
         if (scanStatWaiting) scanStatWaiting.innerText = waitingCount;
     }
 
-    function setFilter(filter) {
+    function setFilter(filter, preserveDropdowns = false) {
         activeFilter = filter;
         const vendorFilters = ['inbox', 'approved', 'review', 'power', 'denied'];
         if (vendorFilters.includes(filter)) localStorage.setItem('marketLastFilter', filter);
         document.querySelectorAll('.control-item').forEach(el => el.classList.remove('active', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan'));
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
 
-        // Reset dropdowns on tab switch (intentionally preserving the sort filter state)
-        if (document.getElementById('unifiedFilter')) document.getElementById('unifiedFilter').value = 'all';
-        if (document.getElementById('search')) document.getElementById('search').value = '';
+        // Reset dropdowns on tab switch (unless restoring from localStorage)
+        if (!preserveDropdowns) {
+            if (document.getElementById('unifiedFilter')) { document.getElementById('unifiedFilter').value = 'all'; localStorage.setItem('marketLastUnifiedFilter', 'all'); }
+            if (document.getElementById('search')) document.getElementById('search').value = '';
+        }
 
         // Highlight the VENDORS nav button for any vendor filter
         if (vendorFilters.includes(filter)) {
@@ -4454,7 +4466,7 @@
             showToast("Cannot send emails from this tab.");
             return;
         }
-        
+
         const vendor = currentData.vendors.find(v => v.id === id);
         if (!vendor) return;
         if (vendor.status === 'Needs Review' || vendor.status === 'Pending') {
@@ -4468,18 +4480,19 @@
         else if (activeFilter === 'power') targetTemplate = 'power';
         else if (activeFilter === 'denied') targetTemplate = 'denied';
         else targetTemplate = vendor.email_sent || 'approved'; // safety fallback
-        
+
+        _realtimePaused = true;
         showToast(`Sending to ${vendor.first_name}...`);
         const success = await sendSingleEmail(vendor, targetTemplate);
-        
+
         if (success === 'unauthorized') showToast("API Error: Invalid Key.");
         else if (success) {
             showToast("Sent!");
-            // Auto-check delivery status after 30 seconds
             setTimeout(() => fetchEmailStatus(vendor.id).then(() => renderTable()), 30000);
         }
         else showToast("Failed to send.");
 
+        _realtimePaused = false;
         refreshData(null, true);
     }
 
@@ -4558,7 +4571,7 @@
         document.querySelectorAll('.bulk-vendor-checkbox').forEach(cb => cb.checked = state);
     }
 
-    async function executeBulkEmail() { 
+    async function executeBulkEmail() {
         if (currentUser.role !== 'admin') return;
 
         const templateId = document.getElementById('bulkEmailTemplate').value;
@@ -4569,26 +4582,27 @@
             showToast("No vendors selected.");
             return;
         }
-        
+
         if(!confirm(`You are about to send ${vendorIds.length} emails using the selected template.\n\nClick OK to confirm and send.`)) return;
-        
+
         closeBulkEmailModal();
+        _realtimePaused = true;
         let successCount = 0;
         let failCount = 0;
         let isUnauthorized = false;
-        
+
         document.getElementById('loader').style.display = 'flex';
         const loaderText = document.querySelector('#loader span');
-        
+
         const targetVendors = vendorIds.map(id => currentData.vendors.find(v => v.id === id)).filter(Boolean);
 
         const BATCH_SIZE = 10;
         for (let i = 0; i < targetVendors.length; i += BATCH_SIZE) {
             if (isUnauthorized) break;
-            
+
             const batch = targetVendors.slice(i, i + BATCH_SIZE);
             const results = await Promise.all(batch.map(v => sendSingleEmail(v, templateId)));
-            
+
             for (const success of results) {
                 if (success === 'unauthorized') isUnauthorized = true;
                 else if (success) successCount++;
@@ -4596,14 +4610,15 @@
             }
             loaderText.innerText = `SENDING ${Math.min(i + BATCH_SIZE, targetVendors.length)} / ${targetVendors.length}`;
         }
-        
+
         document.getElementById('loader').style.display = 'none';
-        loaderText.innerText = 'LOADING'; 
-        
+        loaderText.innerText = 'LOADING';
+
         if (isUnauthorized) alert(`STOPPING: Email API Key is invalid.\n\nSent: ${successCount}\nFailed: ${failCount}`);
         else if (failCount > 0) alert(`Batch complete.\n\nSent: ${successCount}\nFailed: ${failCount}`);
         else showToast(`All ${successCount} emails sent successfully!`);
 
+        _realtimePaused = false;
         refreshData(null, true);
 
         // Auto-check delivery status after 30 seconds to catch quick deliveries
@@ -4654,6 +4669,7 @@
 
         const sendTemplateId = currentTemplateType;
 
+        _realtimePaused = true;
         document.getElementById('loader').style.display = 'flex';
         const loaderText = document.querySelector('#loader span');
 
@@ -4667,7 +4683,7 @@
 
             const batch = targetVendors.slice(i, i + BATCH_SIZE);
             const results = await Promise.all(batch.map(v => sendSingleEmail(v, sendTemplateId)));
-            
+
             for (const success of results) {
                 if (success === 'unauthorized') isUnauthorized = true;
                 else if (success) successCount++;
@@ -4675,13 +4691,15 @@
             }
             loaderText.innerText = `SENDING ${Math.min(i + BATCH_SIZE, targetVendors.length)} / ${targetVendors.length}`;
         }
-        
+
         document.getElementById('loader').style.display = 'none';
-        loaderText.innerText = 'LOADING'; 
-        
+        loaderText.innerText = 'LOADING';
+
         if (isUnauthorized) alert(`STOPPING: Email API Key is invalid.\n\nSent: ${successCount}\nFailed: ${failCount}`);
         else if (failCount > 0) alert(`Batch complete.\n\nSent: ${successCount}\nFailed: ${failCount}`);
         else showToast(`Custom blast sent to ${successCount} vendors!`);
+
+        _realtimePaused = false;
 
         if (successCount > 0) setTimeout(() => refreshAllEmailStatuses(true), 30000);
     }
