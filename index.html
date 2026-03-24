@@ -1680,7 +1680,7 @@
         } else if (declineId) {
             handleVendorConfirmation(declineId, 'decline');
         } else {
-            const savedAuth = sessionStorage.getItem('cab_market_auth');
+            const savedAuth = localStorage.getItem('cab_market_auth');
             if (savedAuth) {
                 try { 
                     const parsed = JSON.parse(savedAuth);
@@ -1924,7 +1924,7 @@
             if (insErr) throw insErr;
 
             currentUser = { role: 'user', name, email, id: newUser.id };
-            sessionStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
+            localStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
             unlockApp();
         } catch(e) {
             error.innerText = e.message || "Registration error.";
@@ -1957,7 +1957,7 @@
                 
                 if (pass === validPassword) {
                     currentUser = { role: 'admin', name: 'Master Admin', email: 'admin' };
-                    sessionStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
+                    localStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
                     
                     // Auto-save fallback on first run
                     if (!data) await _supabase.from('secrets').upsert([{ name: 'ADMIN_PASSWORD', value: FALLBACK_PASSWORD }]);
@@ -1971,7 +1971,7 @@
                 const { data: user } = await _supabase.from('cab_users').select('*').eq('email', email).eq('password', pass).maybeSingle();
                 if (user) {
                     currentUser = { role: user.role, name: user.name, email: user.email, id: user.id };
-                    sessionStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
+                    localStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
                     unlockApp();
                 } else {
                     throw new Error("Invalid email or password.");
@@ -1989,7 +1989,7 @@
 
     function handleLogout() {
         stopEmailStatusPolling();
-        sessionStorage.removeItem('cab_market_auth');
+        localStorage.removeItem('cab_market_auth');
         location.reload();
     }
 
@@ -3431,7 +3431,7 @@
         
         return currentData.vendors.filter(v => {
             // 'inbox' now serves as a master list and does not filter out any statuses
-            if (activeFilter === 'new' && v.status !== 'Pending' && v.status !== '' && v.status != null) return false;
+            if (activeFilter === 'new' && (v.status === 'Approved' || v.status === 'Checked In' || v.status === 'Needs Review' || v.status === 'Denied')) return false;
             if (activeFilter === 'review' && v.status !== 'Needs Review') return false;
             if (activeFilter === 'approved' && v.status !== 'Approved' && v.status !== 'Checked In') return false;
             if (activeFilter === 'denied' && v.status !== 'Denied') return false;
