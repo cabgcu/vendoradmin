@@ -528,8 +528,8 @@
             .control-item { font-size: 0.6rem; padding: 0 10px; height: 24px; border-color: rgba(255,255,255,0.06); }
 
             /* Content padding (topbar is edge-to-edge, content needs margins) */
-            .view { padding: 0 12px; }
-            #view-scan, #view-settings, #view-profiles { padding: 0 12px; }
+            .view { padding: 10px 12px 0; }
+            #view-scan, #view-settings, #view-profiles { padding: 10px 12px 0; }
 
             /* Stats cards: tight */
             .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
@@ -609,13 +609,28 @@
             .form-grid { grid-template-columns: 1fr; gap: 12px; }
 
             /* Settings */
-            .form-card { padding: 14px !important; border-radius: 16px !important; border-color: rgba(255,255,255,0.04) !important; }
-            .settings-tabs { flex-wrap: nowrap; gap: 2px; padding: 3px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-            .settings-tabs::-webkit-scrollbar { display: none; }
-            .settings-tab { padding: 7px 10px; font-size: 0.65rem; flex-shrink: 0; text-align: center; white-space: nowrap; }
-            .settings-section .form-grid { grid-template-columns: 1fr; }
+            .form-card { padding: 12px !important; border-radius: 16px !important; border-color: rgba(255,255,255,0.04) !important; }
+            #view-settings .form-card > div:first-child { flex-direction: column; gap: 8px !important; margin-bottom: 14px !important; }
+            #view-settings .form-card > div:first-child h2 { font-size: 1rem; }
+            .settings-tabs { display: grid !important; grid-template-columns: 1fr 1fr 1fr; gap: 3px; padding: 3px; margin: 0; }
+            .settings-tab { padding: 8px 4px; font-size: 0.6rem; text-align: center; white-space: nowrap; border-radius: 8px; }
+            .settings-section .form-grid { grid-template-columns: 1fr; gap: 10px; }
             .settings-section h3 { font-size: 0.9rem; }
-            .settings-section label { font-size: 0.75rem; }
+            .settings-section label, .settings-section .stat-label { font-size: 0.7rem; }
+
+            /* Settings event form: compact sections */
+            .settings-section > div[style*="padding: 25px"] { padding: 14px !important; border-radius: 14px !important; margin-bottom: 16px !important; }
+            .settings-section > div[style*="padding: 20px"] { padding: 12px !important; border-radius: 14px !important; }
+            .settings-section .stat-label[style*="font-size: 1rem"] { font-size: 0.75rem !important; margin-bottom: 6px !important; }
+            .settings-section p[style*="font-size:0.85rem"] { font-size: 0.75rem !important; margin-bottom: 12px !important; }
+
+            /* Shrink Update/Create buttons */
+            .settings-section .btn-action[style*="padding: 15px"] { padding: 10px 12px !important; font-size: 0.8rem !important; }
+            .settings-section .btn-action { padding: 8px 12px; font-size: 0.8rem; }
+
+            /* Form access control buttons */
+            .settings-section div[style*="gap: 15px"] { gap: 6px !important; }
+            .settings-section div[style*="gap: 15px"] .btn-action { padding: 8px 6px !important; font-size: 0.7rem !important; }
 
             /* Email template editor */
             .rich-toolbar { flex-wrap: wrap !important; gap: 2px !important; }
@@ -649,8 +664,8 @@
 
         /* --- SMALL PHONES (390px) --- */
         @media (max-width: 390px) {
-            .view { padding: 0 8px; }
-            #view-scan, #view-settings, #view-profiles { padding: 0 8px; }
+            .view { padding: 8px 8px 0; }
+            #view-scan, #view-settings, #view-profiles { padding: 8px 8px 0; }
             .brand { padding: 6px 10px; }
             .brand-logo { height: 20px; }
             .brand-text h1 { font-size: 0.75rem; }
