@@ -444,6 +444,24 @@
             display: flex; gap: 12px; margin-bottom: 20px; align-items: center; width: 100%; flex-wrap: nowrap;
         }
 
+        /* --- MOBILE BOTTOM NAV --- */
+        .mobile-bottom-nav {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+            background: rgba(10,10,10,0.97); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 6px 0 calc(6px + env(safe-area-inset-bottom)); /* iPhone notch */
+            justify-content: space-around; align-items: center;
+        }
+        .mob-nav-btn {
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            background: none; border: none; color: var(--text-muted); font-size: 0.6rem;
+            font-weight: 600; cursor: pointer; padding: 6px 12px; font-family: inherit;
+            transition: color 0.2s; letter-spacing: 0.3px;
+        }
+        .mob-nav-btn.active { color: #0A84FF; }
+        .mob-nav-btn svg { stroke: currentColor; }
+
+        /* --- TABLET (900px) --- */
         @media (max-width: 900px) {
             .app-container { padding: 0 16px; }
             .topbar { flex-direction: column; gap: 16px; text-align: center; padding: 16px; margin-top: 10px; margin-bottom: 20px; }
@@ -453,13 +471,7 @@
             .control-item { font-size: 0.75rem; padding: 0 10px; height: 36px; flex: 1 1 auto; justify-content: center; }
             .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 24px; }
             .stat-card { padding: 16px; } .stat-val { font-size: 1.8rem; }
-            table, thead, tbody, th, td, tr { display: block; }
-            thead tr { position: absolute; top: -9999px; left: -9999px; }
-            tr { margin-bottom: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px; position: relative; }
-            td { border: none; padding: 6px 0; background: transparent; }
-            td:first-child { border-radius: 0; padding-bottom: 8px; font-size: 1.2rem; font-weight: bold; border-left: none; }
-            td:last-child { border-radius: 0; margin-top: 10px; display: block; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); border-right: none; }
-            .action-wrapper { width: 100%; justify-content: flex-start; margin-top: 10px; }
+            table { min-width: 0; }
             .editor-grid { grid-template-columns: 1fr; gap: 20px; }
             .filter-row { flex-direction: column; align-items: stretch; }
             .filter-row > * { width: 100%; min-width: 0 !important; }
@@ -467,6 +479,121 @@
             .review-modal-main { overflow-y: visible; padding: 24px; }
             .review-modal-sidebar { width: 100%; border-left: none; border-top: 1px solid var(--glass-border); padding: 16px; overflow-y: visible; }
             .sidebar-btn { padding: 10px 0; font-size: 0.85rem; }
+        }
+
+        /* --- MOBILE (768px) --- */
+        @media (max-width: 768px) {
+            body { padding-bottom: 70px; } /* Space for bottom nav */
+
+            .mobile-bottom-nav { display: flex; }
+
+            /* Hide desktop topbar nav buttons, keep brand + market switcher */
+            .topbar { padding: 12px 16px; margin-top: 8px; margin-bottom: 12px; border-radius: 20px; }
+            .brand-logo { height: 32px; }
+            .brand-text h1 { font-size: 1rem; }
+            .event-subtext { font-size: 0.75rem; }
+            #vendorFilterTabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; justify-content: flex-start; gap: 4px; padding-bottom: 2px; }
+            #vendorFilterTabs::-webkit-scrollbar { display: none; }
+            #vendorFilterTabs > .control-item { display: none !important; } /* Hide VENDORS, PROFILES, CHECK IN, SETTINGS, LOGOUT */
+            #vendorFilterTabs > .control-item-filter:not([style*="width: 1px"]) { display: flex !important; flex-shrink: 0; } /* Keep status filter tabs */
+            #vendorFilterTabs > .control-item-filter[style*="width: 1px"] { display: none !important; } /* Hide separator */
+            .control-item { font-size: 0.65rem; padding: 0 10px; height: 30px; }
+
+            /* Stats cards compact */
+            .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+            .stat-card { padding: 12px 8px; border-radius: 18px; }
+            .stat-val { font-size: 1.4rem; }
+            .stat-label { font-size: 0.65rem; margin-bottom: 6px; }
+            .stat-sub { gap: 8px; }
+            .stat-sub span { font-size: 0.6rem; }
+
+            /* Filter/search row */
+            .filter-row { flex-direction: column; gap: 8px; align-items: stretch; }
+            .filter-row > * { width: 100% !important; min-width: 0 !important; }
+            .modern-input { padding: 10px 14px; font-size: 0.9rem; border-radius: 14px; }
+            select.modern-input { height: 42px; }
+
+            /* TABLE → CARD LAYOUT */
+            .table-container { overflow-x: visible; }
+            table { min-width: 0; border-spacing: 0 6px; }
+            thead { display: none; }
+            tbody, tr, td { display: block; }
+            tr.clickable-row {
+                margin-bottom: 8px; padding: 14px; border-radius: 16px;
+                background: rgba(255,255,255,0.03) !important;
+                border: 1px solid var(--glass-border) !important;
+                position: relative;
+            }
+            td { border: none !important; padding: 0 !important; background: transparent !important; border-radius: 0 !important; }
+
+            /* Mobile card: show name + tags row, status, and actions */
+            td:nth-child(1) { display: inline; font-size: 0.75rem; } /* App # */
+            td:nth-child(2) { margin-top: 4px; } /* Name + tags */
+            td:nth-child(2) strong { font-size: 0.95rem; }
+            td:nth-child(3) { font-size: 0.75rem; margin-top: 4px; color: var(--text-muted); } /* Contact */
+            td:nth-child(3) small { display: none; } /* Hide secondary email */
+            td:nth-child(4) { display: inline-block; margin-top: 10px; } /* Status toggle */
+            td:nth-child(5) { display: inline-block; margin-left: 8px; margin-top: 10px; } /* Confirmed */
+            td:nth-child(6) { display: inline-block; margin-left: 8px; margin-top: 10px; } /* Check-in */
+            td:nth-child(7) { display: inline-block; margin-left: 8px; margin-top: 10px; } /* Email badge */
+            td:nth-child(8) { margin-top: 10px; padding-top: 10px !important; border-top: 1px solid rgba(255,255,255,0.06) !important; }
+            .action-wrapper { justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
+            .btn-icon-text { padding: 8px 14px; font-size: 0.7rem; }
+            .color-trigger-wrapper { display: none; } /* Hide color palette on mobile */
+            .btn-quick-status { padding: 6px 10px; font-size: 0.8rem; }
+
+            /* Review modal → full screen */
+            .modal-overlay { padding: 0; align-items: flex-end; }
+            .modal-content { max-width: 100%; width: 100%; max-height: 95vh; border-radius: 20px 20px 0 0; padding: 24px 16px; }
+            .review-modal-container { flex-direction: column; max-width: 100%; width: 100%; max-height: 95vh; border-radius: 20px 20px 0 0; overflow-y: auto; }
+            .review-modal-main { padding: 20px 16px; overflow-y: visible; }
+            .review-modal-sidebar { width: 100%; border-left: none; border-top: 1px solid var(--glass-border); padding: 14px 16px; overflow-y: visible; }
+            .sidebar-btn { padding: 12px 0; font-size: 0.85rem; }
+            .review-field-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+
+            /* Edit modal responsive */
+            #editModal .modal-content { padding: 20px 16px; }
+            .form-grid { grid-template-columns: 1fr; gap: 16px; }
+
+            /* Settings responsive */
+            .form-card { padding: 16px !important; border-radius: 20px !important; }
+            .settings-tabs { flex-wrap: wrap; gap: 4px; padding: 4px; }
+            .settings-tab { padding: 8px 12px; font-size: 0.75rem; flex: 1 1 auto; text-align: center; white-space: nowrap; }
+            .settings-section .form-grid { grid-template-columns: 1fr; }
+
+            /* Email template editor */
+            .rich-toolbar { flex-wrap: wrap !important; }
+            .email-var-chip { font-size: 0.65rem !important; padding: 4px 8px !important; }
+
+            /* Form builder */
+            .fb-add-btn { padding: 8px 16px; font-size: 0.75rem; }
+
+            /* Bulk email modal */
+            #bulkEmailModal .modal-content { max-width: 100%; padding: 20px 16px; border-radius: 20px 20px 0 0; }
+
+            /* Profile modal */
+            #profileModal .modal-content { max-width: 100%; padding: 20px 16px; border-radius: 20px 20px 0 0; }
+
+            /* Check-in view */
+            #view-scan .form-card { padding: 16px !important; }
+            #view-scan input { font-size: 1.1rem !important; }
+
+            /* Toast position above bottom nav */
+            #toast { bottom: 80px !important; }
+        }
+
+        /* --- SMALL PHONES (390px) --- */
+        @media (max-width: 390px) {
+            .app-container { padding: 0 10px; }
+            .topbar { padding: 10px 12px; margin-top: 6px; margin-bottom: 8px; }
+            .brand-logo { height: 28px; }
+            .brand-text h1 { font-size: 0.9rem; }
+            .control-item { font-size: 0.6rem; padding: 0 6px; height: 28px; }
+            .stats-container { gap: 6px; }
+            .stat-card { padding: 10px 6px; }
+            .stat-val { font-size: 1.2rem; }
+            .mob-nav-btn { padding: 6px 8px; font-size: 0.55rem; }
+            .mob-nav-btn svg { width: 20px; height: 20px; }
         }
 
         /* Bulk Email Modal Styles */
@@ -655,6 +782,30 @@
 <div id="bg-container"></div>
 <div id="loader"><div class="spinner"></div><span>LOADING</span></div>
 <div id="toast">Notification</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav id="mobileBottomNav" class="mobile-bottom-nav">
+    <button class="mob-nav-btn active" data-view="vendors" onclick="mobileNavTo('vendors')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Vendors</span>
+    </button>
+    <button class="mob-nav-btn" data-view="profiles" onclick="mobileNavTo('profiles')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profiles</span>
+    </button>
+    <button class="mob-nav-btn" data-view="scan" onclick="mobileNavTo('scan')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+        <span>Check In</span>
+    </button>
+    <button class="mob-nav-btn" data-view="settings" onclick="mobileNavTo('settings')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <span>Settings</span>
+    </button>
+    <button class="mob-nav-btn" data-view="logout" onclick="handleLogout()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Logout</span>
+    </button>
+</nav>
 
 <!-- LOGIN SCREEN -->
 <div id="login-screen">
@@ -1771,6 +1922,7 @@
     async function unlockApp() {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'flex';
+        // Mobile nav visibility handled by CSS media query
         
         // --- APPLY PERMISSIONS ---
         if (currentUser && currentUser.role !== 'admin') {
@@ -2602,11 +2754,19 @@
             document.getElementById('view-profiles').style.display = 'block';
             if (document.getElementById('profileSearch')) document.getElementById('profileSearch').value = '';
             fetchAndRenderProfiles();
+            syncMobileNav('profiles');
         } else {
             filterTabs.forEach(t => t.style.display = '');
             document.getElementById('view-list').style.display = 'block';
             renderTable();
+            syncMobileNav('vendors');
         }
+    }
+
+    function syncMobileNav(view) {
+        document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
+        const btn = document.querySelector(`.mob-nav-btn[data-view="${view}"]`);
+        if (btn) btn.classList.add('active');
     }
 
     function toggleView(v) {
@@ -2618,11 +2778,30 @@
         if (v === 'settings') {
             document.getElementById('nav-settings').classList.add('active-settings');
             document.getElementById('view-settings').style.display = 'block';
+            syncMobileNav('settings');
         } else if (v === 'scan') {
             document.getElementById('nav-scan').classList.add('active-scan');
             document.getElementById('view-scan').style.display = 'block';
             filterUnifiedCheckIn('');
             setTimeout(() => document.getElementById('unifiedCheckInInput').focus(), 100);
+            syncMobileNav('scan');
+        }
+    }
+
+    function mobileNavTo(view) {
+        document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
+        const btn = document.querySelector(`.mob-nav-btn[data-view="${view}"]`);
+        if (btn) btn.classList.add('active');
+
+        if (view === 'vendors') {
+            const vendorFilters = ['inbox', 'approved', 'review', 'power', 'denied'];
+            setFilter(vendorFilters.includes(activeFilter) ? activeFilter : 'inbox');
+        } else if (view === 'profiles') {
+            setFilter('profiles');
+        } else if (view === 'scan') {
+            toggleView('scan');
+        } else if (view === 'settings') {
+            toggleView('settings');
         }
     }
 
