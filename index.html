@@ -152,6 +152,7 @@
         .control-item:hover { background: var(--glass-active); }
         .control-item.active { background: var(--gradient-accent); border: none; box-shadow: 0 8px 20px rgba(10, 132, 255, 0.2); }
         
+        .control-item.active-new { background: linear-gradient(135deg, #5E5CE6, #BF5AF2); border: none; box-shadow: 0 8px 20px rgba(94, 92, 230, 0.2); }
         .control-item.active-review { background: var(--gradient-warning); border: none; color: #000; box-shadow: 0 8px 20px rgba(255, 149, 0, 0.2); }
         .control-item.active-approved { background: var(--gradient-success); border: none; box-shadow: 0 8px 20px rgba(52, 199, 89, 0.2); }
         .control-item.active-denied { background: var(--gradient-danger); border: none; box-shadow: 0 8px 20px rgba(255, 59, 48, 0.2); }
@@ -483,117 +484,164 @@
 
         /* --- MOBILE (768px) --- */
         @media (max-width: 768px) {
-            body { padding-bottom: 70px; } /* Space for bottom nav */
+            body { padding-bottom: 64px; }
 
             .mobile-bottom-nav { display: flex; }
 
-            /* Hide desktop topbar nav buttons, keep brand + market switcher */
-            .topbar { padding: 12px 16px; margin-top: 8px; margin-bottom: 12px; border-radius: 20px; }
-            .brand-logo { height: 32px; }
-            .brand-text h1 { font-size: 1rem; }
-            .event-subtext { font-size: 0.75rem; }
+            /* Reduce border visibility globally on mobile */
+            .frosted { border-color: rgba(255,255,255,0.05); }
+            .modern-input { border-color: rgba(255,255,255,0.06); }
+
+            /* Topbar: compact, subtle */
+            .topbar { padding: 10px 14px; margin-top: 6px; margin-bottom: 10px; border-radius: 16px; border-color: rgba(255,255,255,0.04); }
+            .brand { gap: 10px; }
+            .brand-logo { height: 28px; }
+            .brand-text h1 { font-size: 0.9rem; }
+            .event-subtext { font-size: 0.7rem; }
+            .event-subtext select.modern-input { height: 30px !important; font-size: 0.75rem !important; padding: 0 28px 0 10px !important; }
+
+            /* Filter tabs: horizontal scroll strip */
             #vendorFilterTabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; justify-content: flex-start; gap: 4px; padding-bottom: 2px; }
             #vendorFilterTabs::-webkit-scrollbar { display: none; }
-            #vendorFilterTabs > .control-item { display: none !important; } /* Hide VENDORS, PROFILES, CHECK IN, SETTINGS, LOGOUT */
-            #vendorFilterTabs > .control-item-filter:not([style*="width: 1px"]) { display: flex !important; flex-shrink: 0; } /* Keep status filter tabs */
-            #vendorFilterTabs > .control-item-filter[style*="width: 1px"] { display: none !important; } /* Hide separator */
-            .control-item { font-size: 0.65rem; padding: 0 10px; height: 30px; }
+            #vendorFilterTabs > .control-item { display: none !important; }
+            #vendorFilterTabs > .control-item-filter:not([style*="width: 1px"]) { display: flex !important; flex-shrink: 0; }
+            #vendorFilterTabs > .control-item-filter[style*="width: 1px"] { display: none !important; }
+            .control-item { font-size: 0.6rem; padding: 0 8px; height: 26px; border-color: rgba(255,255,255,0.06); }
 
-            /* Stats cards compact */
-            .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-            .stat-card { padding: 12px 8px; border-radius: 18px; }
-            .stat-val { font-size: 1.4rem; }
-            .stat-label { font-size: 0.65rem; margin-bottom: 6px; }
-            .stat-sub { gap: 8px; }
-            .stat-sub span { font-size: 0.6rem; }
+            /* Stats cards: tight */
+            .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+            .stat-card { padding: 10px 6px; border-radius: 14px; border-color: rgba(255,255,255,0.04) !important; }
+            .stat-val { font-size: 1.2rem; }
+            .stat-label { font-size: 0.6rem; margin-bottom: 4px; }
+            .stat-sub { gap: 6px; margin-top: 4px; }
+            .stat-sub span { font-size: 0.55rem; }
 
             /* Filter/search row */
-            .filter-row { flex-direction: column; gap: 8px; align-items: stretch; }
+            .filter-row { flex-direction: column; gap: 6px; align-items: stretch; }
             .filter-row > * { width: 100% !important; min-width: 0 !important; }
-            .modern-input { padding: 10px 14px; font-size: 0.9rem; border-radius: 14px; }
-            select.modern-input { height: 42px; }
+            .modern-input { padding: 9px 12px; font-size: 0.85rem; border-radius: 12px; }
+            select.modern-input { height: 38px; }
+
+            /* Blast/refresh buttons */
+            .btn-action { padding: 8px 14px; font-size: 0.8rem; }
 
             /* TABLE → CARD LAYOUT */
             .table-container { overflow-x: visible; }
-            table { min-width: 0; border-spacing: 0 6px; }
+            table { min-width: 0; border-spacing: 0 4px; }
             thead { display: none; }
             tbody, tr, td { display: block; }
             tr.clickable-row {
-                margin-bottom: 8px; padding: 14px; border-radius: 16px;
-                background: rgba(255,255,255,0.03) !important;
-                border: 1px solid var(--glass-border) !important;
+                margin-bottom: 4px; padding: 12px; border-radius: 12px;
+                background: rgba(255,255,255,0.02) !important;
+                border: 1px solid rgba(255,255,255,0.04) !important;
                 position: relative;
             }
             td { border: none !important; padding: 0 !important; background: transparent !important; border-radius: 0 !important; }
 
-            /* Mobile card: show name + tags row, status, and actions */
-            td:nth-child(1) { display: inline; font-size: 0.75rem; } /* App # */
-            td:nth-child(2) { margin-top: 4px; } /* Name + tags */
-            td:nth-child(2) strong { font-size: 0.95rem; }
-            td:nth-child(3) { font-size: 0.75rem; margin-top: 4px; color: var(--text-muted); } /* Contact */
-            td:nth-child(3) small { display: none; } /* Hide secondary email */
-            td:nth-child(4) { display: inline-block; margin-top: 10px; } /* Status toggle */
-            td:nth-child(5) { display: inline-block; margin-left: 8px; margin-top: 10px; } /* Confirmed */
-            td:nth-child(6) { display: inline-block; margin-left: 8px; margin-top: 10px; } /* Check-in */
-            td:nth-child(7) { display: inline-block; margin-left: 8px; margin-top: 10px; } /* Email badge */
-            td:nth-child(8) { margin-top: 10px; padding-top: 10px !important; border-top: 1px solid rgba(255,255,255,0.06) !important; }
-            .action-wrapper { justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
-            .btn-icon-text { padding: 8px 14px; font-size: 0.7rem; }
-            .color-trigger-wrapper { display: none; } /* Hide color palette on mobile */
-            .btn-quick-status { padding: 6px 10px; font-size: 0.8rem; }
+            /* Card cell layout */
+            td:nth-child(1) { display: inline; font-size: 0.7rem; }
+            td:nth-child(1) span { font-size: 0.85rem !important; } /* App # */
+            td:nth-child(2) { margin-top: 2px; }
+            td:nth-child(2) strong { font-size: 0.88rem; }
+            td:nth-child(3) { font-size: 0.7rem; margin-top: 3px; color: var(--text-muted); }
+            td:nth-child(3) a { font-size: 0.7rem; }
+            td:nth-child(3) small { display: none; }
 
-            /* Review modal → full screen */
+            /* Status/badge row: inline-flex for compact layout */
+            td:nth-child(4), td:nth-child(5), td:nth-child(6), td:nth-child(7) {
+                display: inline-block; vertical-align: middle; margin-top: 8px;
+            }
+            td:nth-child(5), td:nth-child(6), td:nth-child(7) { margin-left: 4px; }
+            td:nth-child(8) { margin-top: 8px; padding-top: 8px !important; border-top: 1px solid rgba(255,255,255,0.04) !important; }
+
+            /* Compact action bar */
+            .action-wrapper { justify-content: flex-start; flex-wrap: wrap; gap: 4px; }
+            .btn-icon-text { padding: 6px 10px; font-size: 0.65rem; border-radius: 8px; border-color: rgba(255,255,255,0.06); }
+            .color-trigger-wrapper { display: none; }
+
+            /* Shrink status toggle + all badges/pills */
+            .btn-quick-status { padding: 5px 8px; font-size: 0.7rem; }
+            .status-toggle-group { border-radius: 8px; border-color: rgba(255,255,255,0.06); }
+            .status-badge { font-size: 0.6rem; padding: 3px 7px; min-width: 0; }
+            .status-pill { font-size: 0.6rem; padding: 3px 8px; }
+            .group-tag, .power-tag { font-size: 0.6rem; padding: 2px 6px; }
+
+            /* Shrink inline tag badges in vendor cards */
+            tr.clickable-row [style*="font-size: 0.65rem"] { font-size: 0.55rem !important; padding: 2px 5px !important; }
+            tr.clickable-row [style*="font-size: 0.75rem"][style*="padding: 4px 10px"] { font-size: 0.6rem !important; padding: 2px 7px !important; }
+
+            /* Review modal → full screen sheet */
             .modal-overlay { padding: 0; align-items: flex-end; }
-            .modal-content { max-width: 100%; width: 100%; max-height: 95vh; border-radius: 20px 20px 0 0; padding: 24px 16px; }
-            .review-modal-container { flex-direction: column; max-width: 100%; width: 100%; max-height: 95vh; border-radius: 20px 20px 0 0; overflow-y: auto; }
-            .review-modal-main { padding: 20px 16px; overflow-y: visible; }
-            .review-modal-sidebar { width: 100%; border-left: none; border-top: 1px solid var(--glass-border); padding: 14px 16px; overflow-y: visible; }
-            .sidebar-btn { padding: 12px 0; font-size: 0.85rem; }
-            .review-field-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+            .modal-content { max-width: 100vw; width: 100vw; max-height: 92vh; border-radius: 16px 16px 0 0; padding: 20px 14px; border: none; border-top: 1px solid rgba(255,255,255,0.06); }
+            .review-modal-container { flex-direction: column; max-width: 100vw; width: 100vw; max-height: 92vh; border-radius: 16px 16px 0 0; overflow-y: auto; border: none; border-top: 1px solid rgba(255,255,255,0.06); }
+            .review-modal-main { padding: 16px 14px; overflow-y: visible; }
+            .review-modal-sidebar { width: 100%; border-left: none; border-top: 1px solid rgba(255,255,255,0.06); padding: 12px 14px; overflow-y: visible; }
+            .sidebar-btn { padding: 10px 0; font-size: 0.8rem; border-radius: 10px; }
+            .review-field-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+            .review-field-label { font-size: 0.65rem !important; }
+            .review-field-value { font-size: 0.85rem !important; }
 
-            /* Edit modal responsive */
-            #editModal .modal-content { padding: 20px 16px; }
-            .form-grid { grid-template-columns: 1fr; gap: 16px; }
+            /* Edit modal */
+            #editModal .modal-content { padding: 18px 14px; }
+            .form-grid { grid-template-columns: 1fr; gap: 12px; }
 
-            /* Settings responsive */
-            .form-card { padding: 16px !important; border-radius: 20px !important; }
-            .settings-tabs { flex-wrap: wrap; gap: 4px; padding: 4px; }
-            .settings-tab { padding: 8px 12px; font-size: 0.75rem; flex: 1 1 auto; text-align: center; white-space: nowrap; }
+            /* Settings */
+            .form-card { padding: 14px !important; border-radius: 16px !important; border-color: rgba(255,255,255,0.04) !important; }
+            .settings-tabs { flex-wrap: nowrap; gap: 2px; padding: 3px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+            .settings-tabs::-webkit-scrollbar { display: none; }
+            .settings-tab { padding: 7px 10px; font-size: 0.65rem; flex-shrink: 0; text-align: center; white-space: nowrap; }
             .settings-section .form-grid { grid-template-columns: 1fr; }
+            .settings-section h3 { font-size: 0.9rem; }
+            .settings-section label { font-size: 0.75rem; }
 
             /* Email template editor */
-            .rich-toolbar { flex-wrap: wrap !important; }
-            .email-var-chip { font-size: 0.65rem !important; padding: 4px 8px !important; }
+            .rich-toolbar { flex-wrap: wrap !important; gap: 2px !important; }
+            .email-var-chip { font-size: 0.6rem !important; padding: 3px 6px !important; }
 
             /* Form builder */
-            .fb-add-btn { padding: 8px 16px; font-size: 0.75rem; }
+            .fb-add-btn { padding: 6px 12px; font-size: 0.7rem; }
 
             /* Bulk email modal */
-            #bulkEmailModal .modal-content { max-width: 100%; padding: 20px 16px; border-radius: 20px 20px 0 0; }
+            #bulkEmailModal .modal-content { max-width: 100vw; padding: 18px 14px; border-radius: 16px 16px 0 0; }
 
             /* Profile modal */
-            #profileModal .modal-content { max-width: 100%; padding: 20px 16px; border-radius: 20px 20px 0 0; }
+            #profileModal .modal-content { max-width: 100vw; padding: 18px 14px; border-radius: 16px 16px 0 0; }
 
             /* Check-in view */
-            #view-scan .form-card { padding: 16px !important; }
-            #view-scan input { font-size: 1.1rem !important; }
+            #view-scan .form-card { padding: 14px !important; }
+            #view-scan input { font-size: 1rem !important; }
 
-            /* Toast position above bottom nav */
-            #toast { bottom: 80px !important; }
+            /* Check-in alert modal */
+            #checkInAlert .modal-content, #alertContentBox { border-radius: 16px; }
+
+            /* Close buttons on modals */
+            .close-modal { font-size: 1.5rem; padding: 8px; }
+
+            /* Toast above bottom nav */
+            #toast { bottom: 72px !important; font-size: 0.8rem; padding: 10px 16px; }
+
+            /* Login card on mobile */
+            .login-card { padding: 28px 20px; }
         }
 
         /* --- SMALL PHONES (390px) --- */
         @media (max-width: 390px) {
-            .app-container { padding: 0 10px; }
-            .topbar { padding: 10px 12px; margin-top: 6px; margin-bottom: 8px; }
-            .brand-logo { height: 28px; }
-            .brand-text h1 { font-size: 0.9rem; }
-            .control-item { font-size: 0.6rem; padding: 0 6px; height: 28px; }
-            .stats-container { gap: 6px; }
-            .stat-card { padding: 10px 6px; }
-            .stat-val { font-size: 1.2rem; }
-            .mob-nav-btn { padding: 6px 8px; font-size: 0.55rem; }
-            .mob-nav-btn svg { width: 20px; height: 20px; }
+            .app-container { padding: 0 8px; }
+            .topbar { padding: 8px 10px; margin-top: 4px; margin-bottom: 6px; }
+            .brand-logo { height: 24px; }
+            .brand-text h1 { font-size: 0.8rem; }
+            .control-item { font-size: 0.55rem; padding: 0 6px; height: 24px; }
+            .stats-container { gap: 4px; }
+            .stat-card { padding: 8px 4px; border-radius: 10px; }
+            .stat-val { font-size: 1rem; }
+            .stat-label { font-size: 0.55rem; }
+            .stat-sub span { font-size: 0.5rem; }
+            .mob-nav-btn { padding: 4px 6px; font-size: 0.5rem; }
+            .mob-nav-btn svg { width: 18px; height: 18px; }
+            tr.clickable-row { padding: 10px; border-radius: 10px; }
+            .btn-quick-status { padding: 4px 6px; font-size: 0.65rem; }
+            .btn-icon-text { padding: 5px 8px; font-size: 0.6rem; }
+            .modern-input { padding: 8px 10px; font-size: 0.8rem; }
         }
 
         /* Bulk Email Modal Styles */
@@ -1176,6 +1224,7 @@
         </div>
         <div class="controls" id="vendorFilterTabs">
             <button onclick="setFilter('inbox')" id="nav-filter-all" class="control-item control-item-filter">ALL</button>
+            <button onclick="setFilter('new')" id="nav-new" class="control-item control-item-filter">NEW</button>
             <button onclick="setFilter('approved')" id="nav-approved" class="control-item control-item-filter">APPROVED</button>
             <button onclick="setFilter('review')" id="nav-review" class="control-item control-item-filter">REVIEW</button>
             <button onclick="setFilter('power')" id="nav-power" class="control-item control-item-filter">POWER</button>
@@ -2719,9 +2768,9 @@
 
     function setFilter(filter, preserveDropdowns = false) {
         activeFilter = filter;
-        const vendorFilters = ['inbox', 'approved', 'review', 'power', 'denied'];
+        const vendorFilters = ['inbox', 'new', 'approved', 'review', 'power', 'denied'];
         if (vendorFilters.includes(filter)) localStorage.setItem('marketLastFilter', filter);
-        document.querySelectorAll('.control-item').forEach(el => el.classList.remove('active', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan'));
+        document.querySelectorAll('.control-item').forEach(el => el.classList.remove('active', 'active-new', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan'));
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
 
         // Reset dropdowns on tab switch (unless restoring from localStorage)
@@ -2740,6 +2789,7 @@
         const filterBtn = document.getElementById(filterTabId);
         if (filterBtn) {
             if (filter === 'inbox') filterBtn.classList.add('active');
+            else if (filter === 'new') filterBtn.classList.add('active-new');
             else if (filter === 'review') filterBtn.classList.add('active-review');
             else if (filter === 'approved') filterBtn.classList.add('active-approved');
             else if (filter === 'denied') filterBtn.classList.add('active-denied');
@@ -2794,7 +2844,7 @@
         if (btn) btn.classList.add('active');
 
         if (view === 'vendors') {
-            const vendorFilters = ['inbox', 'approved', 'review', 'power', 'denied'];
+            const vendorFilters = ['inbox', 'new', 'approved', 'review', 'power', 'denied'];
             setFilter(vendorFilters.includes(activeFilter) ? activeFilter : 'inbox');
         } else if (view === 'profiles') {
             setFilter('profiles');
@@ -3356,6 +3406,7 @@
         
         return currentData.vendors.filter(v => {
             // 'inbox' now serves as a master list and does not filter out any statuses
+            if (activeFilter === 'new' && v.status !== 'Pending' && v.status !== '' && v.status != null) return false;
             if (activeFilter === 'review' && v.status !== 'Needs Review') return false;
             if (activeFilter === 'approved' && v.status !== 'Approved' && v.status !== 'Checked In') return false;
             if (activeFilter === 'denied' && v.status !== 'Denied') return false;
