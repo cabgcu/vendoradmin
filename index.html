@@ -500,36 +500,36 @@
             .topbar {
                 padding: 0; margin: 0;
                 border-radius: 0; border: none;
-                background: rgba(0,0,0,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                background: rgba(0,0,0,0.95); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
                 position: sticky; top: 0; z-index: 100;
                 flex-direction: column; gap: 0; text-align: left;
                 padding-top: env(safe-area-inset-top);
+                border-bottom: 1px solid rgba(255,255,255,0.06);
             }
             .brand {
-                gap: 8px; flex-direction: row; padding: 8px 14px;
+                gap: 6px; flex-direction: row; align-items: center; padding: 6px 12px;
             }
-            .brand-logo { height: 22px; }
-            .brand-text h1 { font-size: 0.8rem; }
-            .event-subtext { font-size: 0.65rem; gap: 4px; }
-            .event-subtext select.modern-input { height: 24px !important; font-size: 0.7rem !important; padding: 0 22px 0 8px !important; border-radius: 8px !important; }
+            .brand-logo { height: 18px; }
+            .brand-text h1 { font-size: 0.7rem; line-height: 1; }
+            .event-subtext { font-size: 0.6rem; gap: 3px; margin-top: 1px; }
+            .event-subtext select.modern-input { height: 20px !important; font-size: 0.6rem !important; padding: 0 18px 0 6px !important; border-radius: 6px !important; }
 
-            /* Filter tabs: thin horizontal strip inside topbar */
+            /* Filter tabs: single-row pill strip */
             #vendorFilterTabs {
                 width: 100%;
                 flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
                 scrollbar-width: none; justify-content: flex-start;
-                gap: 4px; padding: 4px 14px 6px; margin: 0;
-                border-top: 1px solid rgba(255,255,255,0.03);
+                gap: 4px; padding: 3px 12px 5px; margin: 0;
             }
             #vendorFilterTabs::-webkit-scrollbar { display: none; }
             #vendorFilterTabs > .control-item { display: none !important; }
             #vendorFilterTabs > .control-item-filter:not([style*="width: 1px"]) { display: flex !important; flex-shrink: 0; }
             #vendorFilterTabs > .control-item-filter[style*="width: 1px"] { display: none !important; }
-            .control-item { font-size: 0.6rem; padding: 0 10px; height: 24px; border-color: rgba(255,255,255,0.06); }
+            .control-item { font-size: 0.55rem; padding: 0 8px; height: 22px; border-radius: 6px; border-color: rgba(255,255,255,0.08); letter-spacing: 0.3px; }
 
             /* Content padding (topbar is edge-to-edge, content needs margins) */
-            .view { padding: 10px 12px 0; }
-            #view-scan, #view-settings, #view-profiles { padding: 10px 12px 0; }
+            .view { padding: 8px 12px 0; }
+            #view-scan, #view-settings, #view-profiles { padding: 8px 12px 0; }
 
             /* Stats cards: tight */
             .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
@@ -609,11 +609,13 @@
             .form-grid { grid-template-columns: 1fr; gap: 12px; }
 
             /* Settings */
-            .form-card { padding: 12px !important; border-radius: 16px !important; border-color: rgba(255,255,255,0.04) !important; }
-            #view-settings .form-card > div:first-child { flex-direction: column; gap: 8px !important; margin-bottom: 14px !important; }
-            #view-settings .form-card > div:first-child h2 { font-size: 1rem; }
-            .settings-tabs { display: grid !important; grid-template-columns: 1fr 1fr 1fr; gap: 3px; padding: 3px; margin: 0; }
-            .settings-tab { padding: 8px 4px; font-size: 0.6rem; text-align: center; white-space: nowrap; border-radius: 8px; }
+            .form-card { padding: 10px !important; border-radius: 14px !important; border-color: rgba(255,255,255,0.04) !important; }
+            #view-settings .form-card > div:first-child { flex-direction: column; gap: 6px !important; margin-bottom: 10px !important; }
+            #view-settings .form-card > div:first-child h2 { font-size: 0.9rem; }
+            .settings-tabs { display: grid !important; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; margin: 0; }
+            .settings-tab { padding: 7px 4px; font-size: 0.6rem; text-align: center; white-space: nowrap; border-radius: 7px; }
+            .tab-full { display: none !important; }
+            .tab-short { display: inline !important; }
             .settings-section .form-grid { grid-template-columns: 1fr; gap: 10px; }
             .settings-section h3 { font-size: 0.9rem; }
             .settings-section label, .settings-section .stat-label { font-size: 0.7rem; }
@@ -666,11 +668,11 @@
         @media (max-width: 390px) {
             .view { padding: 8px 8px 0; }
             #view-scan, #view-settings, #view-profiles { padding: 8px 8px 0; }
-            .brand { padding: 6px 10px; }
-            .brand-logo { height: 20px; }
-            .brand-text h1 { font-size: 0.75rem; }
-            #vendorFilterTabs { padding: 3px 10px 5px; gap: 3px; }
-            .control-item { font-size: 0.55rem; padding: 0 6px; height: 22px; }
+            .brand { padding: 5px 8px; }
+            .brand-logo { height: 16px; }
+            .brand-text h1 { font-size: 0.65rem; }
+            #vendorFilterTabs { padding: 2px 8px 4px; gap: 3px; }
+            .control-item { font-size: 0.5rem; padding: 0 6px; height: 20px; }
             .stats-container { gap: 4px; }
             .stat-card { padding: 8px 4px; border-radius: 10px; }
             .stat-val { font-size: 1rem; }
@@ -700,6 +702,8 @@
         /* Settings Sub-Tabs */
         .settings-tabs { display: flex; gap: 8px; background: var(--card-bg); padding: 6px; border-radius: var(--radius-inner); border: 1px solid var(--glass-border); overflow-x: auto; margin-bottom: 24px; }
         .settings-tab { background: transparent; border: none; color: var(--text-muted); font-size: 0.9rem; font-weight: 700; padding: 10px 20px; border-radius: var(--radius-sm); cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .tab-short { display: none; }
+        .tab-full { display: inline; }
         .settings-tab:hover { color: var(--text-main); background: var(--glass-hover); }
         .settings-tab.active { background: var(--glass-active); color: var(--text-main); box-shadow: 0 4px 12px var(--shadow-color); border: 1px solid var(--glass-border); }
 
@@ -1393,11 +1397,11 @@
                 
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <div class="settings-tabs" style="margin: 0;">
-                        <button id="stab-event" class="settings-tab active" onclick="switchSettingsTab('event')">Event Setup</button>
-                        <button id="stab-emails" class="settings-tab" onclick="switchSettingsTab('emails')">Email Templates</button>
-                        <button id="stab-form" class="settings-tab" onclick="switchSettingsTab('form')">Form Builder</button>
-                        <button id="stab-system" class="settings-tab" onclick="switchSettingsTab('system')">System & Data</button>
-                        <button id="stab-users" class="settings-tab" onclick="switchSettingsTab('users')">User Management</button>
+                        <button id="stab-event" class="settings-tab active" onclick="switchSettingsTab('event')" data-short="Event"><span class="tab-full">Event Setup</span><span class="tab-short">Event</span></button>
+                        <button id="stab-emails" class="settings-tab" onclick="switchSettingsTab('emails')" data-short="Emails"><span class="tab-full">Email Templates</span><span class="tab-short">Emails</span></button>
+                        <button id="stab-form" class="settings-tab" onclick="switchSettingsTab('form')" data-short="Forms"><span class="tab-full">Form Builder</span><span class="tab-short">Forms</span></button>
+                        <button id="stab-system" class="settings-tab" onclick="switchSettingsTab('system')" data-short="System"><span class="tab-full">System & Data</span><span class="tab-short">System</span></button>
+                        <button id="stab-users" class="settings-tab" onclick="switchSettingsTab('users')" data-short="Users"><span class="tab-full">User Management</span><span class="tab-short">Users</span></button>
                     </div>
                 </div>
             </div>
