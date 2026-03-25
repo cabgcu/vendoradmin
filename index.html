@@ -1986,7 +1986,7 @@
                 <div style="position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#050505; color:white; font-family:sans-serif; z-index:999999;">
                     <div style="font-size: 4rem; color: #FF3B30; margin-bottom: 20px;">✕</div>
                     <h2 style="color:#FF3B30; font-weight:800; margin-bottom:10px;">System Error</h2>
-                    <p style="color:#a1a1aa; text-align:center; max-width: 400px;">${err.message || 'We could not process your status automatically. Please reply directly to the email to update us.'}</p>
+                    <p style="color:#a1a1aa; text-align:center; max-width: 400px;">${(err.message || 'We could not process your status automatically. Please reply directly to the email to update us.').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
                 </div>
             `;
         }
@@ -2042,7 +2042,7 @@
                 method: "POST",
                 headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
                 body: JSON.stringify({
-                    model: getBuiltinSetting('auto_categorize', 'model') || 'google/gemini-2.0-flash-lite-preview-02-05:free',
+                    model: 'deepseek/deepseek-chat-v3-0324:free',
                     messages: [{ role: "user", content: `Categorize this vendor into one or more of these categories: ${categories.join(', ')}. Vendor description: "${description}". Respond ONLY with a JSON array of matching category names, e.g. ["Food & Beverage","Art & Prints"]. If none fit, respond ["Unique Goods"].` }]
                 })
             });
@@ -2060,7 +2060,7 @@
 
     async function aiSummarizeVendor(vendor) {
         if (!OPENROUTER_API_KEY || !vendor.description) return null;
-        const model = getBuiltinSetting('ai_vendor_summary', 'model') || 'google/gemini-2.0-flash-lite-preview-02-05:free';
+        const model = 'deepseek/deepseek-chat-v3-0324:free';
         const prompt = getBuiltinSetting('ai_vendor_summary', 'prompt') || 'Summarize this vendor application in 1-2 sentences. Focus on what they sell and any notable details.';
         try {
             const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -2395,7 +2395,9 @@
                 clearTimeout(_realtimeRefreshTimer);
                 _realtimeRefreshTimer = setTimeout(() => refreshData(null, true), 2000);
             })
-            .subscribe();
+            .subscribe((status, err) => {
+                if (err) console.error('Realtime subscription error:', err);
+            });
     }
 
     // --- DEEPSEEK V3 AI AUTOMATION ENGINE ---
@@ -2484,7 +2486,7 @@
                     const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                     
                     const scanTimeout = (getBuiltinSetting('ai_license_scan', 'timeout') || 15) * 1000;
-                    const scanModel = getBuiltinSetting('ai_license_scan', 'model') || 'google/gemini-2.0-flash-lite-preview-02-05:free';
+                    const scanModel = 'google/gemini-2.0-flash-lite-preview-02-05:free';
                     const visionController = new AbortController();
                     const visionTimeoutId = setTimeout(() => visionController.abort(), scanTimeout);
 
@@ -4702,6 +4704,7 @@
     async function sendSingleEmail(vendor, forceTemplateId = null) {
         if (currentUser.role !== 'admin') return false;
         if (!vendor || !vendor.preferred_email) return false;
+        if (!BREVO_API_KEY) { console.warn('Brevo API key not configured'); return false; }
         // Only block Pending/Needs Review for auto-sends (not forced blasts)
         if (!forceTemplateId && (vendor.status === 'Needs Review' || vendor.status === 'Pending')) return false;
 
@@ -4991,7 +4994,11 @@
         if (emailStatusInterval) clearInterval(emailStatusInterval);
         if (!isBuiltinEnabled('email_status_polling')) return;
         const pollMinutes = getBuiltinSetting('email_status_polling', 'interval') || 2;
+        let _emailPollRunning = false;
         emailStatusInterval = setInterval(async () => {
+            if (_emailPollRunning) return;
+            _emailPollRunning = true;
+            try {
             // Only poll for vendors whose email hasn't reached a terminal state
             const pendingVendors = currentData.vendors.filter(v =>
                 (v.email_sent || v.brevo_message_id) &&
@@ -5007,6 +5014,7 @@
                 updated += results.filter(r => r !== null).length;
             }
             if (updated > 0) renderTable();
+            } finally { _emailPollRunning = false; }
         }, pollMinutes * 60000);
     }
     function stopEmailStatusPolling() {
@@ -6099,12 +6107,7 @@
             icon: '🏷', color: '#BF5AF2', defaultEnabled: true,
             settings: [
                 { key: 'useAI', label: 'Use AI for better categorization', type: 'toggle', default: false,
-                  help: 'Uses OpenRouter AI to intelligently categorize vendors beyond keyword matching.' },
-                { key: 'model', label: 'AI Model', type: 'select', default: 'google/gemini-2.0-flash-lite-preview-02-05:free',
-                  options: [
-                      { value: 'google/gemini-2.0-flash-lite-preview-02-05:free', label: 'Gemini Flash (Free)' },
-                      { value: 'meta-llama/llama-4-maverick:free', label: 'Llama 4 Maverick (Free)' }
-                  ] }
+                  help: 'Uses AI to intelligently categorize vendors beyond keyword matching.' }
             ]
         },
         {
@@ -6113,12 +6116,6 @@
             description: 'Scans uploaded food licenses via AI vision.',
             icon: '🤖', color: '#0A84FF', defaultEnabled: true,
             settings: [
-                { key: 'model', label: 'AI Model', type: 'select', default: 'google/gemini-2.0-flash-lite-preview-02-05:free',
-                  options: [
-                      { value: 'google/gemini-2.0-flash-lite-preview-02-05:free', label: 'Gemini Flash (Free)' },
-                      { value: 'meta-llama/llama-4-maverick:free', label: 'Llama 4 Maverick (Free)' },
-                      { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet (Paid)' }
-                  ] },
                 { key: 'timeout', label: 'Timeout (seconds)', type: 'number', default: 15, min: 5, max: 60 }
             ]
         },
@@ -6126,11 +6123,8 @@
             id: 'email_status_polling',
             name: 'Email Delivery Tracking',
             description: 'Polls Brevo for email delivery status.',
-            icon: '📧', color: '#34C759', defaultEnabled: true,
-            settings: [
-                { key: 'interval', label: 'Poll interval (minutes)', type: 'number', default: 2, min: 1, max: 30 },
-                { key: 'batchSize', label: 'Vendors per batch', type: 'number', default: 5, min: 1, max: 20 }
-            ]
+            icon: '📧', color: '#34C759', defaultEnabled: true, hidden: true,
+            settings: []
         },
         {
             id: 'late_strike_tracking',
@@ -6147,25 +6141,21 @@
             id: 'realtime_sync',
             name: 'Realtime Data Sync',
             description: 'Live-syncs vendor data across admin sessions.',
-            icon: '🔄', color: '#30D158', defaultEnabled: true,
-            settings: [
-                { key: 'debounce', label: 'Refresh debounce (ms)', type: 'number', default: 2000, min: 500, max: 10000 }
-            ]
+            icon: '🔄', color: '#30D158', defaultEnabled: true, hidden: true,
+            settings: []
         },
         {
             id: 'form_autosave',
             name: 'Form Builder Auto-Save',
             description: 'Auto-saves form changes after editing.',
-            icon: '💾', color: '#5E5CE6', defaultEnabled: true,
-            settings: [
-                { key: 'delay', label: 'Save delay (ms)', type: 'number', default: 1500, min: 500, max: 5000 }
-            ]
+            icon: '💾', color: '#5E5CE6', defaultEnabled: true, hidden: true,
+            settings: []
         },
         {
             id: 'auto_template_select',
             name: 'Smart Email Template Selection',
             description: 'Picks email template based on vendor status.',
-            icon: '✉️', color: '#FF375F', defaultEnabled: true,
+            icon: '✉️', color: '#FF375F', defaultEnabled: true, hidden: true,
             settings: []
         },
         {
@@ -6174,12 +6164,6 @@
             description: 'Uses AI to generate a short summary of each vendor application for quick review.',
             icon: '✨', color: '#AF52DE', defaultEnabled: false,
             settings: [
-                { key: 'model', label: 'AI Model', type: 'select', default: 'google/gemini-2.0-flash-lite-preview-02-05:free',
-                  options: [
-                      { value: 'google/gemini-2.0-flash-lite-preview-02-05:free', label: 'Gemini Flash (Free)' },
-                      { value: 'meta-llama/llama-4-maverick:free', label: 'Llama 4 Maverick (Free)' },
-                      { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet (Paid)' }
-                  ] },
                 { key: 'prompt', label: 'Custom prompt', type: 'text', default: 'Summarize this vendor application in 1-2 sentences. Focus on what they sell and any notable details.',
                   help: 'The vendor description will be appended to this prompt.' }
             ]
@@ -6187,7 +6171,7 @@
         {
             id: 'ai_duplicate_detect',
             name: 'AI Duplicate Detection',
-            description: 'Uses AI to detect similar/duplicate vendor applications across events.',
+            description: 'Detects similar or duplicate vendor applications across events.',
             icon: '🔍', color: '#FF6482', defaultEnabled: false,
             settings: [
                 { key: 'sensitivity', label: 'Sensitivity', type: 'select', default: 'medium',
@@ -6260,7 +6244,7 @@
         // Apply side effects for toggling
         if (id === 'email_status_polling') {
             if (!current) { startEmailStatusPolling(); }
-            else { if (window.emailStatusInterval) clearInterval(window.emailStatusInterval); }
+            else { if (emailStatusInterval) clearInterval(emailStatusInterval); }
         }
         if (id === 'realtime_sync') {
             if (!current) { setupRealtime(); }
@@ -6282,7 +6266,7 @@
         // --- BUILT-IN ---
         const builtinEl = document.getElementById('builtinAutomationsList');
         if (!builtinEl) return;
-        builtinEl.innerHTML = BUILTIN_AUTOMATIONS.map(a => {
+        builtinEl.innerHTML = BUILTIN_AUTOMATIONS.filter(a => !a.hidden).map(a => {
             const enabled = isBuiltinEnabled(a.id);
             let settingsHtml = '';
             if (a.settings && a.settings.length > 0 && enabled) {
@@ -6455,32 +6439,40 @@
     }
 
     function openAddAutomationModal() {
-        document.getElementById('addAutomationModal').style.display = 'flex';
+        const modal = document.getElementById('addAutomationModal');
+        if (modal) modal.style.display = 'flex';
     }
 
     function closeAddAutomationModal() {
-        document.getElementById('addAutomationModal').style.display = 'none';
+        const modal = document.getElementById('addAutomationModal');
+        if (modal) modal.style.display = 'none';
         // Reset form
-        document.getElementById('autoName').value = '';
-        document.getElementById('autoTrigger').value = '';
-        document.getElementById('autoAction').value = '';
-        document.getElementById('autoConfigSection').innerHTML = '';
-        document.getElementById('autoDelaySection').style.display = 'none';
-        document.getElementById('autoDelayValue').value = '';
+        const fields = { autoName: '', autoTrigger: '', autoAction: '', autoDelayValue: '' };
+        for (const [id, val] of Object.entries(fields)) {
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        }
+        const configEl = document.getElementById('autoConfigSection');
+        if (configEl) configEl.innerHTML = '';
+        const delayEl = document.getElementById('autoDelaySection');
+        if (delayEl) delayEl.style.display = 'none';
         editingAutomationIndex = -1;
     }
 
     function updateAutoActionOptions() {
-        const trigger = document.getElementById('autoTrigger').value;
+        const triggerEl = document.getElementById('autoTrigger');
         const configEl = document.getElementById('autoConfigSection');
         const delayEl = document.getElementById('autoDelaySection');
+        const actionSel = document.getElementById('autoAction');
+        if (!triggerEl || !configEl || !delayEl || !actionSel) return;
+
+        const trigger = triggerEl.value;
 
         // Show delay for time-based triggers
         delayEl.style.display = ['post_event', 'before_event', 'app_deadline'].includes(trigger) ? 'block' : 'none';
 
         // Show target audience for event-level triggers
         const needsTarget = ['post_event', 'before_event', 'app_deadline'].includes(trigger);
-        const actionSel = document.getElementById('autoAction');
 
         // Listen for action changes to render config
         actionSel.onchange = () => renderAutoConfig(needsTarget);
@@ -6488,8 +6480,10 @@
     }
 
     function renderAutoConfig(showTarget) {
-        const action = document.getElementById('autoAction').value;
+        const actionEl = document.getElementById('autoAction');
         const configEl = document.getElementById('autoConfigSection');
+        if (!actionEl || !configEl) return;
+        const action = actionEl.value;
         let html = '';
 
         if (showTarget) {
@@ -6637,7 +6631,8 @@
                     } else if (auto.action === 'change_status' && auto.config?.status) {
                         await _supabase.from('vendors').update({ status: auto.config.status }).eq('id', vendor.id);
                     } else if (auto.action === 'send_email' && auto.config?.template) {
-                        await sendSingleEmail(vendor, auto.config.template, true);
+                        const sent = await sendSingleEmail(vendor, auto.config.template);
+                        if (!sent) addAutomationLog(`Warning: email failed for "${auto.name}" on ${vendor.first_name || ''} ${vendor.last_name || ''}`);
                     } else if (auto.action === 'add_label' && auto.config?.label) {
                         const notes = getParsedNotes(vendor.internal_notes);
                         notes.push({
