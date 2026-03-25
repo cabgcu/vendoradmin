@@ -1848,6 +1848,21 @@
                     <h3 style="margin: 0 0 6px; font-weight: 800; font-size: 1.1rem;">New Automation</h3>
                     <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom: 24px;">Set up an automated action that triggers when conditions are met.</p>
 
+                    <!-- AI PROMPT BUILDER -->
+                    <div style="margin-bottom: 24px; padding: 16px; background: rgba(191, 90, 242, 0.08); border: 1px solid rgba(191, 90, 242, 0.2); border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                            <span style="font-size: 1.2rem;">✨</span>
+                            <label class="stat-label" style="margin: 0;">AI Automation Builder</label>
+                            <span style="font-size: 0.65rem; background: rgba(191, 90, 242, 0.3); color: #BF5AF2; padding: 2px 8px; border-radius: 4px; font-weight: 600;">BETA</span>
+                        </div>
+                        <p style="color:var(--text-muted); font-size:0.75rem; margin: 0 0 12px;">Describe what you want to automate in plain language, and AI will generate the automation for you.</p>
+                        <textarea id="aiPromptInput" class="modern-input" placeholder="e.g. Send an email to all denied vendors thanking them for applying" style="min-height: 80px; resize: vertical; font-family: inherit;"></textarea>
+                        <button onclick="generateAutomationFromPrompt()" style="margin-top: 10px; width: 100%; padding: 10px 14px; background: rgba(191, 90, 242, 0.2); color: #BF5AF2; border: 1px solid rgba(191, 90, 242, 0.3); border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.8rem;">Generate from Prompt</button>
+                        <div id="aiPromptStatus" style="margin-top: 8px; font-size: 0.7rem; color: var(--text-muted); display: none;"></div>
+                    </div>
+
+                    <div style="text-align: center; margin-bottom: 20px; color: var(--text-muted); font-size: 0.75rem;">OR</div>
+
                     <div style="margin-bottom: 20px;">
                         <label class="stat-label">Automation Name</label>
                         <input type="text" id="autoName" class="modern-input" placeholder="e.g. Post-Event Survey">
@@ -2935,6 +2950,7 @@
     }
 
     // --- 3 STRIKES LATE POLICY ---
+    let previousStrikes = {}; // Track previous state to detect new strikes
     async function calculateStrikes() {
         if (!isBuiltinEnabled('late_strike_tracking')) { window.vendorStrikes = {}; return; }
         if (!currentData.vendors.length) return;
@@ -2947,7 +2963,7 @@
         oneYearAgo.setMonth(oneYearAgo.getMonth() - expiryMonths);
         const oneYearAgoISO = oneYearAgo.toISOString();
 
-        const { data: pastApps } = await _supabase.from('vendors').select('preferred_email, created_at, event_id').in('preferred_email', emails).gte('created_at', oneYearAgoISO);
+        const { data: pastApps } = await _supabase.from('vendors').select('preferred_email, created_at, event_id, id, first_name, last_name').in('preferred_email', emails).gte('created_at', oneYearAgoISO);
 
         window.vendorStrikes = {}; // Tracks specific market names they were late to: { 'email': ['Spring Fest', 'Winter Market'] }
         let totalStrikesInView = 0;
@@ -2967,10 +2983,24 @@
                         if (!window.vendorStrikes[app.preferred_email].includes(ev.name)) {
                             window.vendorStrikes[app.preferred_email].push(ev.name);
                         }
+
+                        // Check if this is a NEW strike (didn't exist before)
+                        const prevCount = previousStrikes[app.preferred_email]?.length || 0;
+                        const newCount = window.vendorStrikes[app.preferred_email].length;
+                        if (newCount > prevCount && isBuiltinEnabled('strike_email_automation')) {
+                            // Trigger strike email automation on new strike
+                            const vendor = currentData.vendors.find(v => v.preferred_email === app.preferred_email && v.id === app.id);
+                            if (vendor) {
+                                fireStrikeEmailAutomation(vendor).catch(e => console.error('Strike email error:', e));
+                            }
+                        }
                     }
                 }
             });
         }
+
+        // Update previous state for next run
+        previousStrikes = JSON.parse(JSON.stringify(window.vendorStrikes));
 
         // Sum up strikes just for analytics dashboard display
         currentData.vendors.forEach(v => {
@@ -6193,6 +6223,38 @@
                       { value: 'high', label: 'High (AI fuzzy matching)' }
                   ] }
             ]
+        },
+        {
+            id: 'strike_email_automation',
+            name: 'Strike-Based Email Automation',
+            description: 'Send customized emails at 1st, 2nd, and 3rd late application strikes.',
+            icon: '⚡', color: '#FF3B30', defaultEnabled: false,
+            settings: [
+                { key: 'strike1_enabled', label: 'Send email on 1st strike', type: 'toggle', default: true },
+                { key: 'strike1_template', label: '1st strike template', type: 'select', default: 'approved',
+                  options: [
+                      { value: 'approved', label: 'Approved' },
+                      { value: 'denied', label: 'Denied' },
+                      { value: 'power', label: 'Power Granted' },
+                      { value: 'custom', label: 'Custom' }
+                  ] },
+                { key: 'strike2_enabled', label: 'Send email on 2nd strike', type: 'toggle', default: true },
+                { key: 'strike2_template', label: '2nd strike template', type: 'select', default: 'approved',
+                  options: [
+                      { value: 'approved', label: 'Approved' },
+                      { value: 'denied', label: 'Denied' },
+                      { value: 'power', label: 'Power Granted' },
+                      { value: 'custom', label: 'Custom' }
+                  ] },
+                { key: 'strike3_enabled', label: 'Send email on 3rd+ strike', type: 'toggle', default: true },
+                { key: 'strike3_template', label: '3rd+ strike template', type: 'select', default: 'approved',
+                  options: [
+                      { value: 'approved', label: 'Approved' },
+                      { value: 'denied', label: 'Denied' },
+                      { value: 'power', label: 'Power Granted' },
+                      { value: 'custom', label: 'Custom' }
+                  ] }
+            ]
         }
     ];
 
@@ -6661,6 +6723,140 @@
                     console.error('Automation error:', e);
                     addAutomationLog(`Error in "${auto.name}": ${e.message}`);
                 }
+            }
+        }
+    }
+
+    // --- AI AUTOMATION GENERATION ---
+    async function generateAutomationFromPrompt() {
+        const prompt = document.getElementById('aiPromptInput').value.trim();
+        if (!prompt) {
+            showToast('Please describe your automation');
+            return;
+        }
+
+        const statusEl = document.getElementById('aiPromptStatus');
+        statusEl.style.display = 'block';
+        statusEl.textContent = 'Generating automation...';
+
+        try {
+            // Call Claude API to generate automation JSON
+            const response = await fetch('https://api.openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    model: 'claude-3.5-sonnet',
+                    messages: [{
+                        role: 'user',
+                        content: `You are an automation builder for a vendor management system. Generate a JSON automation configuration based on this request:
+
+"${prompt}"
+
+Return ONLY valid JSON (no markdown, no explanation) with this structure:
+{
+  "name": "descriptive automation name",
+  "trigger": "one of: on_approve, on_deny, on_new_app, on_checkin, on_late_app, post_event, before_event, app_deadline",
+  "action": "one of: send_email, change_status, add_note, add_label",
+  "config": {
+    "template": "approved|denied|power|custom (for send_email)",
+    "status": "Approved|Denied|Pending|Needs Review (for change_status)",
+    "note": "text (for add_note)",
+    "label": "text (for add_label)",
+    "detail": "human-readable description"
+  }
+}
+
+Make your best guess for the trigger and action based on the user's description. Ensure the JSON is valid.`
+                    }],
+                    max_tokens: 500
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const content = data.choices[0].message.content.trim();
+
+            // Parse the JSON
+            const automation = JSON.parse(content);
+
+            // Populate form fields
+            document.getElementById('autoName').value = automation.name || '';
+            document.getElementById('autoTrigger').value = automation.trigger || '';
+            document.getElementById('autoAction').value = automation.action || '';
+            updateAutoActionOptions();
+
+            // Wait for UI to render, then populate config fields
+            setTimeout(() => {
+                if (automation.config.template) {
+                    const tpl = document.getElementById('autoConfigTemplate');
+                    if (tpl) tpl.value = automation.config.template;
+                }
+                if (automation.config.status) {
+                    const status = document.getElementById('autoConfigStatus');
+                    if (status) status.value = automation.config.status;
+                }
+                if (automation.config.note) {
+                    const note = document.getElementById('autoConfigNote');
+                    if (note) note.value = automation.config.note;
+                }
+                if (automation.config.label) {
+                    const label = document.getElementById('autoConfigLabel');
+                    if (label) label.value = automation.config.label;
+                }
+            }, 100);
+
+            statusEl.textContent = '✓ Automation generated! Review and save below.';
+            statusEl.style.color = '#34C759';
+
+            // Clear prompt after successful generation
+            setTimeout(() => {
+                document.getElementById('aiPromptInput').value = '';
+                statusEl.style.display = 'none';
+            }, 2000);
+        } catch (e) {
+            console.error('AI generation error:', e);
+            statusEl.textContent = `✗ Error: ${e.message}`;
+            statusEl.style.color = '#FF3B30';
+        }
+    }
+
+    // --- STRIKE-BASED EMAIL AUTOMATION ---
+    async function fireStrikeEmailAutomation(vendor) {
+        // Called when a new late application is detected
+        if (!isBuiltinEnabled('strike_email_automation')) return;
+        if (!vendor.preferred_email) return;
+
+        const strikes = window.vendorStrikes[vendor.preferred_email]?.length || 0;
+        if (strikes === 0) return;
+
+        let shouldSend = false;
+        let template = 'approved';
+
+        if (strikes === 1 && getBuiltinSetting('strike_email_automation', 'strike1_enabled')) {
+            shouldSend = true;
+            template = getBuiltinSetting('strike_email_automation', 'strike1_template') || 'approved';
+        } else if (strikes === 2 && getBuiltinSetting('strike_email_automation', 'strike2_enabled')) {
+            shouldSend = true;
+            template = getBuiltinSetting('strike_email_automation', 'strike2_template') || 'approved';
+        } else if (strikes >= 3 && getBuiltinSetting('strike_email_automation', 'strike3_enabled')) {
+            shouldSend = true;
+            template = getBuiltinSetting('strike_email_automation', 'strike3_template') || 'approved';
+        }
+
+        if (shouldSend) {
+            try {
+                const sent = await sendSingleEmail(vendor, template);
+                if (sent) {
+                    addAutomationLog(`Strike email sent to ${vendor.first_name} (${strikes} strikes)`);
+                }
+            } catch(e) {
+                console.error('Strike email error:', e);
             }
         }
     }
