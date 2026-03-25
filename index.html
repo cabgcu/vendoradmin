@@ -765,8 +765,19 @@
             .settings-section select,
             .settings-section .modern-input,
             .settings-section textarea {
-                font-size: 1rem !important; /* Prevent zoom */
-                max-width: 100% !important; box-sizing: border-box !important;
+                font-size: 1rem !important;
+                width: 100% !important; max-width: 100% !important;
+                min-width: 0 !important; box-sizing: border-box !important;
+            }
+            /* Date/datetime inputs clip their native UI — force fit */
+            .settings-section input[type="date"],
+            .settings-section input[type="datetime-local"] {
+                overflow: hidden !important;
+                -webkit-appearance: none !important;
+                appearance: none !important;
+            }
+            .settings-section .form-grid > div {
+                min-width: 0 !important; overflow: hidden;
             }
 
             /* Settings cards — iOS grouped, constrained to viewport */
