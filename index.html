@@ -560,7 +560,8 @@
 
             /* ── CONTENT AREA ── */
             .view { padding: 14px 16px 0; }
-            #view-scan, #view-settings, #view-profiles { padding: 14px 16px 0; }
+            #view-scan, #view-profiles { padding: 14px 16px 0; }
+            #view-settings { padding: 8px 0 0; }
 
             /* ── STATS CARDS ── */
             .stats-container {
@@ -709,24 +710,27 @@
             .form-card {
                 padding: 0 !important; border-radius: 0 !important;
                 border: none !important; background: transparent !important;
+                max-width: 100% !important; overflow: hidden;
             }
             #view-settings .form-card > div:first-child {
-                flex-direction: column; gap: 8px !important; margin-bottom: 14px !important;
+                flex-direction: column; gap: 8px !important; margin-bottom: 10px !important;
+                padding: 0 16px;
             }
             #view-settings .form-card > div:first-child h2 { font-size: 1.05rem; font-weight: 700; }
-            #view-settings .form-card {
-                padding: 14px !important; max-width: 100% !important;
+            /* The div wrapping settings-tabs must fill width */
+            #view-settings .form-card > div:first-child > div {
+                width: 100% !important;
             }
             .settings-section {
-                padding: 0 !important;
+                padding: 0 16px !important; overflow: hidden;
             }
 
             /* Settings tabs — uniform 3-col segmented control */
             .settings-tabs {
                 display: grid !important; grid-template-columns: 1fr 1fr 1fr;
-                gap: 2px; padding: 2px; margin: 0 16px;
+                gap: 2px; padding: 2px; margin: 0;
                 background: rgba(120,120,128,0.12) !important; border-radius: 10px !important;
-                border: none !important; width: calc(100% - 32px); box-sizing: border-box;
+                border: none !important; width: 100%; box-sizing: border-box;
             }
             .settings-tab {
                 padding: 7px 0; font-size: 0.7rem; text-align: center;
@@ -758,32 +762,59 @@
             .settings-section input[type="text"],
             .settings-section input[type="date"],
             .settings-section input[type="datetime-local"],
-            .settings-section select {
-                font-size: 1rem; /* Ensure mobile zoom doesn't trigger */
+            .settings-section select,
+            .settings-section .modern-input,
+            .settings-section textarea {
+                font-size: 1rem !important; /* Prevent zoom */
+                max-width: 100% !important; box-sizing: border-box !important;
             }
 
-            /* Settings cards — iOS grouped style, mobile-optimized */
-            .settings-section > div[style*="padding: 25px"] {
-                padding: 14px !important; border-radius: 12px !important; margin-bottom: 14px !important;
-                margin-bottom: 12px !important; background: rgba(255,255,255,0.04) !important;
-                border: none !important;
+            /* Settings cards — iOS grouped, constrained to viewport */
+            .settings-section > div {
+                box-sizing: border-box !important; max-width: 100% !important; overflow: hidden;
             }
+            .settings-section > div[style*="padding: 25px"],
             .settings-section > div[style*="padding: 20px"] {
-                padding: 16px !important; border-radius: 12px !important;
+                padding: 14px !important; border-radius: 12px !important; margin-bottom: 12px !important;
                 background: rgba(255,255,255,0.04) !important; border: none !important;
             }
             .settings-section .stat-label[style*="font-size: 1rem"] { font-size: 0.82rem !important; margin-bottom: 8px !important; }
-            .settings-section p[style*="font-size:0.85rem"] { font-size: 0.78rem !important; margin-bottom: 14px !important; }
+            .settings-section p[style*="font-size:0.85rem"] { font-size: 0.78rem !important; margin-bottom: 12px !important; }
 
-            /* Settings buttons */
-            .settings-section .btn-action[style*="padding: 15px"] { padding: 14px 16px !important; font-size: 0.88rem !important; border-radius: 12px !important; }
-            .settings-section .btn-action { padding: 12px 16px; font-size: 0.82rem; border-radius: 12px; }
-            .settings-section div[style*="gap: 15px"] { gap: 8px !important; }
-            .settings-section div[style*="gap: 15px"] .btn-action { padding: 12px 10px !important; font-size: 0.75rem !important; }
+            /* Settings buttons — stack vertically */
+            .settings-section .btn-action { padding: 12px 16px; font-size: 0.82rem; border-radius: 12px; width: 100%; }
+            .settings-section div[style*="display: flex"][style*="gap: 15px"],
+            .settings-section div[style*="display:flex"][style*="gap: 15px"] {
+                flex-direction: column !important; gap: 8px !important;
+            }
+            .settings-section div[style*="display: flex"][style*="gap: 15px"] .btn-action,
+            .settings-section div[style*="display:flex"][style*="gap: 15px"] .btn-action {
+                flex: none !important; width: 100% !important;
+            }
+            /* Danger zone — stack on mobile */
+            .settings-section div[style*="justify-content:space-between"] {
+                flex-direction: column !important; gap: 12px !important;
+            }
 
             /* Email editor */
             .rich-toolbar { flex-wrap: wrap !important; gap: 4px !important; }
             .email-var-chip { font-size: 0.6rem !important; padding: 5px 10px !important; border-radius: 8px !important; }
+            /* Template variable chips — wrap and constrain */
+            .var-chip { font-size: 0.6rem !important; padding: 3px 8px !important; flex-shrink: 1 !important; white-space: nowrap; }
+            /* Template selector and default assignment dropdowns */
+            #settings-tab-emails div[style*="flex-wrap:wrap"],
+            #settings-tab-emails div[style*="flex-wrap: wrap"] {
+                gap: 6px !important;
+            }
+            #settings-tab-emails .fb-select { font-size: 0.65rem !important; max-width: 100% !important; }
+            #templateTypeSelector { width: 100% !important; min-width: 0 !important; }
+            /* All settings inner containers constrain */
+            .settings-section div[style*="padding: 20px 22px"],
+            .settings-section div[style*="padding: 25px"] {
+                padding: 14px !important;
+            }
+            /* Ensure nothing bleeds out */
+            #view-settings, #view-settings * { max-width: 100vw; }
 
             /* Form builder */
             .fb-add-btn { padding: 10px 16px; font-size: 0.78rem; border-radius: 10px; }
@@ -1913,6 +1944,9 @@
                             <option value="before_event">Before Market Date (Reminder)</option>
                             <option value="app_deadline">When Application Deadline Passes</option>
                             <option value="on_late_app">When Late Application Received</option>
+                            <option value="on_strike_1">When Vendor Reaches 1 Strike</option>
+                            <option value="on_strike_2">When Vendor Reaches 2 Strikes</option>
+                            <option value="on_strike_3">When Vendor Reaches 3+ Strikes</option>
                         </select>
                     </div>
 
@@ -3017,14 +3051,16 @@
                             window.vendorStrikes[app.preferred_email].push(ev.name);
                         }
 
-                        // Check if this is a NEW strike (didn't exist before)
+                        // Check if this is a NEW strike (didn't exist before) → fire custom automations
                         const prevCount = previousStrikes[app.preferred_email]?.length || 0;
                         const newCount = window.vendorStrikes[app.preferred_email].length;
-                        if (newCount > prevCount && isBuiltinEnabled('strike_email_automation')) {
-                            // Trigger strike email automation on new strike
+                        if (newCount > prevCount) {
                             const vendor = currentData.vendors.find(v => v.preferred_email === app.preferred_email && v.id === app.id);
                             if (vendor) {
-                                fireStrikeEmailAutomation(vendor).catch(e => console.error('Strike email error:', e));
+                                // Fire the matching strike trigger
+                                if (newCount === 1) fireAutomationTrigger('on_strike_1', vendor);
+                                else if (newCount === 2) fireAutomationTrigger('on_strike_2', vendor);
+                                else if (newCount >= 3) fireAutomationTrigger('on_strike_3', vendor);
                             }
                         }
                     }
@@ -6282,38 +6318,6 @@
                       { value: 'high', label: 'High (AI fuzzy matching)' }
                   ] }
             ]
-        },
-        {
-            id: 'strike_email_automation',
-            name: 'Strike-Based Email Automation',
-            description: 'Send customized emails at 1st, 2nd, and 3rd late application strikes.',
-            icon: '⚡', color: '#FF3B30', defaultEnabled: false,
-            settings: [
-                { key: 'strike1_enabled', label: 'Send email on 1st strike', type: 'toggle', default: true },
-                { key: 'strike1_template', label: '1st strike template', type: 'select', default: 'approved',
-                  options: [
-                      { value: 'approved', label: 'Approved' },
-                      { value: 'denied', label: 'Denied' },
-                      { value: 'power', label: 'Power Granted' },
-                      { value: 'custom', label: 'Custom' }
-                  ] },
-                { key: 'strike2_enabled', label: 'Send email on 2nd strike', type: 'toggle', default: true },
-                { key: 'strike2_template', label: '2nd strike template', type: 'select', default: 'approved',
-                  options: [
-                      { value: 'approved', label: 'Approved' },
-                      { value: 'denied', label: 'Denied' },
-                      { value: 'power', label: 'Power Granted' },
-                      { value: 'custom', label: 'Custom' }
-                  ] },
-                { key: 'strike3_enabled', label: 'Send email on 3rd+ strike', type: 'toggle', default: true },
-                { key: 'strike3_template', label: '3rd+ strike template', type: 'select', default: 'approved',
-                  options: [
-                      { value: 'approved', label: 'Approved' },
-                      { value: 'denied', label: 'Denied' },
-                      { value: 'power', label: 'Power Granted' },
-                      { value: 'custom', label: 'Custom' }
-                  ] }
-            ]
         }
     ];
 
@@ -6471,7 +6475,10 @@
                     'on_checkin': 'On Check-In',
                     'before_event': 'Before Market',
                     'app_deadline': 'Deadline Passes',
-                    'on_late_app': 'Late Application'
+                    'on_late_app': 'Late Application',
+                    'on_strike_1': '1st Strike',
+                    'on_strike_2': '2nd Strike',
+                    'on_strike_3': '3rd+ Strike'
                 }[a.trigger] || a.trigger;
                 const actionLabel = {
                     'send_email': 'Send Email',
@@ -6634,13 +6641,15 @@
         }
 
         if (action === 'send_email') {
+            // Pull templates from the library so users see all their templates
+            const tpls = emailTemplateLibrary?.templates || {};
+            const tplOptions = Object.entries(tpls).map(([id, t]) =>
+                `<option value="${id}">${t.name || id}</option>`
+            ).join('');
             html += `<div>
                 <label class="stat-label">Email Template</label>
                 <select id="autoConfigTemplate" class="modern-input">
-                    <option value="approved">Approved Template</option>
-                    <option value="denied">Denied Template</option>
-                    <option value="power">Power Granted Template</option>
-                    <option value="custom">Custom Template</option>
+                    ${tplOptions || '<option value="approved">Approved</option><option value="denied">Denied</option><option value="power">Power Granted</option><option value="custom">Custom</option>'}
                 </select>
             </div>`;
         } else if (action === 'change_status') {
@@ -6849,13 +6858,17 @@
 
         // Detect trigger from keywords
         let trigger = 'on_approve';
-        if (lower.includes('deny') || lower.includes('denied') || lower.includes('rejection')) trigger = 'on_deny';
+        if (lower.match(/strike\s*3|3rd\s*strike|three\s*strike|3\+?\s*strike/)) trigger = 'on_strike_3';
+        else if (lower.match(/strike\s*2|2nd\s*strike|two\s*strike|second\s*strike/)) trigger = 'on_strike_2';
+        else if (lower.match(/strike\s*1|1st\s*strike|one\s*strike|first\s*strike/)) trigger = 'on_strike_1';
+        else if (lower.includes('deny') || lower.includes('denied') || lower.includes('rejection')) trigger = 'on_deny';
         else if (lower.includes('new app') || lower.includes('new application') || lower.includes('receive')) trigger = 'on_new_app';
         else if (lower.includes('check in') || lower.includes('checkin')) trigger = 'on_checkin';
         else if (lower.includes('late') || lower.includes('after deadline')) trigger = 'on_late_app';
         else if (lower.includes('before') || lower.includes('reminder')) trigger = 'before_event';
         else if (lower.includes('deadline')) trigger = 'app_deadline';
         else if (lower.includes('post') || lower.includes('after market')) trigger = 'post_event';
+        else if (lower.includes('approve')) trigger = 'on_approve';
 
         // Detect action from keywords
         let action = 'send_email';
@@ -6863,10 +6876,22 @@
 
         if (lower.includes('email') || lower.includes('send') || lower.includes('message')) {
             action = 'send_email';
-            if (lower.includes('approved')) config.template = 'approved';
-            else if (lower.includes('denied') || lower.includes('rejection')) config.template = 'denied';
-            else if (lower.includes('power')) config.template = 'power';
-            else config.template = 'approved';
+            // Try to match a template from the library by keyword
+            const tpls = emailTemplateLibrary?.templates || {};
+            let matched = false;
+            for (const [id, t] of Object.entries(tpls)) {
+                if (lower.includes(id) || lower.includes((t.name || '').toLowerCase())) {
+                    config.template = id;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                if (lower.includes('denied') || lower.includes('rejection')) config.template = 'denied';
+                else if (lower.includes('power')) config.template = 'power';
+                else if (lower.includes('custom')) config.template = 'custom';
+                else config.template = 'approved';
+            }
         } else if (lower.includes('change status') || lower.includes('mark as')) {
             action = 'change_status';
             if (lower.includes('approved')) config.status = 'Approved';
@@ -6891,41 +6916,6 @@
         config.detail = prompt;
 
         return { name, trigger, action, config };
-    }
-
-    // --- STRIKE-BASED EMAIL AUTOMATION ---
-    async function fireStrikeEmailAutomation(vendor) {
-        // Called when a new late application is detected
-        if (!isBuiltinEnabled('strike_email_automation')) return;
-        if (!vendor.preferred_email) return;
-
-        const strikes = window.vendorStrikes[vendor.preferred_email]?.length || 0;
-        if (strikes === 0) return;
-
-        let shouldSend = false;
-        let template = 'approved';
-
-        if (strikes === 1 && getBuiltinSetting('strike_email_automation', 'strike1_enabled')) {
-            shouldSend = true;
-            template = getBuiltinSetting('strike_email_automation', 'strike1_template') || 'approved';
-        } else if (strikes === 2 && getBuiltinSetting('strike_email_automation', 'strike2_enabled')) {
-            shouldSend = true;
-            template = getBuiltinSetting('strike_email_automation', 'strike2_template') || 'approved';
-        } else if (strikes >= 3 && getBuiltinSetting('strike_email_automation', 'strike3_enabled')) {
-            shouldSend = true;
-            template = getBuiltinSetting('strike_email_automation', 'strike3_template') || 'approved';
-        }
-
-        if (shouldSend) {
-            try {
-                const sent = await sendSingleEmail(vendor, template);
-                if (sent) {
-                    addAutomationLog(`Strike email sent to ${vendor.first_name} (${strikes} strikes)`);
-                }
-            } catch(e) {
-                console.error('Strike email error:', e);
-            }
-        }
     }
 
     // --- USER MANAGEMENT ---
