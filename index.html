@@ -494,6 +494,7 @@
         /* Mobile-only elements — hidden on desktop */
         .mobile-status-pill { display: none; }
         .mobile-modal-close-bar { display: none; }
+        .mobile-action-btn { display: none; }
 
         /* ══════════════════════════════════════════════════════════
            MOBILE — Native App Experience (768px)
@@ -636,10 +637,17 @@
             /* Mobile status pill — inline after name */
             .mobile-status-pill {
                 display: inline-block !important; font-size: 0.6rem; font-weight: 700;
-                padding: 3px 8px; border-radius: 100px; margin-left: 8px;
+                padding: 3px 8px; border-radius: 100px; margin-left: 8px; margin-top: 4px;
                 text-transform: uppercase; letter-spacing: 0.02em; vertical-align: middle;
                 white-space: nowrap;
             }
+            /* Mobile action button — resend email */
+            .mobile-action-btn {
+                display: inline-flex !important; background: rgba(255, 149, 0, 0.15); color: #FF9500;
+                border: 1px solid rgba(255, 149, 0, 0.25); padding: 6px 8px; border-radius: 6px;
+                font-size: 0.9rem; cursor: pointer; transition: all 0.15s;
+            }
+            .mobile-action-btn:active { background: rgba(255, 149, 0, 0.25); }
             .mobile-status-pending, .mobile-status-needs-review {
                 background: rgba(255, 149, 0, 0.12); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.25);
             }
@@ -671,13 +679,16 @@
             }
             .review-modal-container::before { display: none; }
             .mobile-modal-close-bar {
-                display: block; width: 100%; padding: 14px 0 8px; cursor: pointer;
-                flex-shrink: 0; position: relative;
+                display: block; width: 100%; padding: 16px 0 12px; cursor: pointer;
+                flex-shrink: 0; position: relative; -webkit-user-select: none; user-select: none;
             }
             .mobile-modal-close-bar::after {
-                content: ''; display: block; width: 36px; height: 5px;
-                background: rgba(255,255,255,0.3); border-radius: 3px;
-                margin: 0 auto;
+                content: ''; display: block; width: 40px; height: 5px;
+                background: rgba(255,255,255,0.4); border-radius: 3px;
+                margin: 0 auto; transition: background 0.15s;
+            }
+            .mobile-modal-close-bar:active::after {
+                background: rgba(255,255,255,0.6);
             }
             .review-modal-main { padding: 16px 16px 20px; overflow-y: visible; }
             .review-modal-sidebar {
@@ -703,6 +714,12 @@
                 flex-direction: column; gap: 8px !important; margin-bottom: 14px !important;
             }
             #view-settings .form-card > div:first-child h2 { font-size: 1.05rem; font-weight: 700; }
+            #view-settings .form-card {
+                padding: 14px !important; max-width: 100% !important;
+            }
+            .settings-section {
+                padding: 0 !important;
+            }
 
             /* Settings tabs — uniform 3-col segmented control */
             .settings-tabs {
@@ -725,13 +742,29 @@
             .tab-full { display: none !important; }
             .tab-short { display: inline !important; }
 
-            .settings-section .form-grid { grid-template-columns: 1fr; gap: 14px; }
+            .settings-section .form-grid { grid-template-columns: 1fr; gap: 12px; }
             .settings-section h3 { font-size: 0.95rem; }
             .settings-section label, .settings-section .stat-label { font-size: 0.78rem; }
+            .settings-section .form-grid[style*="gap: 20px"] {
+                gap: 12px !important;
+            }
+            /* Button groups in settings should wrap and be full-width */
+            #settings-tab-event [style*="display: flex"][style*="gap: 15px"] {
+                flex-direction: column !important; gap: 10px !important;
+            }
+            #settings-tab-event [style*="display: flex"][style*="gap: 15px"] button {
+                width: 100% !important; flex: none !important;
+            }
+            .settings-section input[type="text"],
+            .settings-section input[type="date"],
+            .settings-section input[type="datetime-local"],
+            .settings-section select {
+                font-size: 1rem; /* Ensure mobile zoom doesn't trigger */
+            }
 
-            /* Settings cards — iOS grouped style */
+            /* Settings cards — iOS grouped style, mobile-optimized */
             .settings-section > div[style*="padding: 25px"] {
-                padding: 16px !important; border-radius: 12px !important;
+                padding: 14px !important; border-radius: 12px !important; margin-bottom: 14px !important;
                 margin-bottom: 12px !important; background: rgba(255,255,255,0.04) !important;
                 border: none !important;
             }
@@ -1135,7 +1168,7 @@
 <!-- REVIEW VENDOR MODAL (FULL APPLICATION RESPONSE) -->
 <div id="reviewModal" class="modal-overlay" onclick="closeReviewModal()">
     <div class="review-modal-container" onclick="event.stopPropagation()">
-        <div class="mobile-modal-close-bar" onclick="closeReviewModal()"></div>
+        <div class="mobile-modal-close-bar" onclick="closeReviewModal(); event.stopPropagation();"></div>
         <!-- LEFT: APPLICATION CONTENT -->
         <div class="review-modal-main">
             <h2 style="margin-top:0; margin-bottom:5px; font-weight: 800; font-size: 1.8rem;" id="reviewName">Vendor Name</h2>
@@ -4072,8 +4105,13 @@
             <tr class="clickable-row" style="${rowBgStyle}" draggable="true" ondragstart="handleDragStart(event, '${v.id}')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${v.id}')" onclick="openReviewModal('${v.id}')">
                 <td style="${rowBorderStyle}"><span style="color: #BF5AF2; font-weight: 800; margin-right: 8px; font-size: 1.1rem;">#${v.appNumber}</span><br><span style="font-family: monospace; letter-spacing: 1px; font-size: 0.85rem; color: var(--text-muted);">${v.student_id || 'N/A'}</span><br><span style="font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; font-weight: 600;">${submitDate}</span></td>
                 <td style="${rowBgStyle}">
-                    <strong style="font-size: 1.05rem;">${v.first_name} ${v.last_name}</strong>
-                    <span class="mobile-status-pill mobile-status-${(v.status || '').toLowerCase().replace(/\s+/g, '-')}">${v.status || 'Pending'}</span>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                        <div style="flex: 1;">
+                            <strong style="font-size: 1.05rem;">${v.first_name} ${v.last_name}</strong>
+                            <span class="mobile-status-pill mobile-status-${(v.status || '').toLowerCase().replace(/\s+/g, '-')}">${v.status || 'Pending'}</span>
+                        </div>
+                        ${canEmail ? `<button onclick="resendEmail('${v.id}'); event.stopPropagation();" class="mobile-action-btn" title="Resend email" style="flex-shrink: 0; white-space: nowrap;">📧</button>` : ''}
+                    </div>
                     ${tagsContainer}
                 </td>
                 <td style="${rowBgStyle}"><a href="mailto:${v.preferred_email}" onclick="event.stopPropagation()" style="color:var(--text-muted);">${v.preferred_email}</a><br><small style="color:var(--text-muted); opacity: 0.5;">${v.gcu_email || ''}</small></td>
@@ -4552,9 +4590,30 @@
     }
 
     function closeReviewModal() {
-        document.getElementById('reviewModal').style.display = 'none';
-        currentReviewingId = null;
+        const modal = document.getElementById('reviewModal');
+        if (modal) {
+            modal.style.display = 'none';
+            currentReviewingId = null;
+        }
     }
+
+    // Add keyboard escape key support for modal close
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' || event.keyCode === 27) {
+            const reviewModal = document.getElementById('reviewModal');
+            if (reviewModal && reviewModal.style.display === 'flex') {
+                closeReviewModal();
+            }
+            const addAutoModal = document.getElementById('addAutomationModal');
+            if (addAutoModal && addAutoModal.style.display === 'flex') {
+                closeAddAutomationModal();
+            }
+            const editModal = document.getElementById('editModal');
+            if (editModal && editModal.style.display === 'flex') {
+                closeEditModal();
+            }
+        }
+    });
 
     function openEditModal(id) {
         const vendor = currentData.vendors.find(v => v.id === id);
@@ -6727,7 +6786,7 @@
         }
     }
 
-    // --- AI AUTOMATION GENERATION ---
+    // --- AI AUTOMATION GENERATION (using free local model) ---
     async function generateAutomationFromPrompt() {
         const prompt = document.getElementById('aiPromptInput').value.trim();
         if (!prompt) {
@@ -6740,50 +6799,8 @@
         statusEl.textContent = 'Generating automation...';
 
         try {
-            // Call Claude API to generate automation JSON
-            const response = await fetch('https://api.openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    model: 'claude-3.5-sonnet',
-                    messages: [{
-                        role: 'user',
-                        content: `You are an automation builder for a vendor management system. Generate a JSON automation configuration based on this request:
-
-"${prompt}"
-
-Return ONLY valid JSON (no markdown, no explanation) with this structure:
-{
-  "name": "descriptive automation name",
-  "trigger": "one of: on_approve, on_deny, on_new_app, on_checkin, on_late_app, post_event, before_event, app_deadline",
-  "action": "one of: send_email, change_status, add_note, add_label",
-  "config": {
-    "template": "approved|denied|power|custom (for send_email)",
-    "status": "Approved|Denied|Pending|Needs Review (for change_status)",
-    "note": "text (for add_note)",
-    "label": "text (for add_label)",
-    "detail": "human-readable description"
-  }
-}
-
-Make your best guess for the trigger and action based on the user's description. Ensure the JSON is valid.`
-                    }],
-                    max_tokens: 500
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
-            }
-
-            const data = await response.json();
-            const content = data.choices[0].message.content.trim();
-
-            // Parse the JSON
-            const automation = JSON.parse(content);
+            // Use free Ollama model or fall back to pattern matching
+            const automation = await generateAutomationConfig(prompt);
 
             // Populate form fields
             document.getElementById('autoName').value = automation.name || '';
@@ -6824,6 +6841,56 @@ Make your best guess for the trigger and action based on the user's description.
             statusEl.textContent = `✗ Error: ${e.message}`;
             statusEl.style.color = '#FF3B30';
         }
+    }
+
+    // --- AUTOMATION CONFIG GENERATOR (pattern-based, no API costs) ---
+    async function generateAutomationConfig(prompt) {
+        const lower = prompt.toLowerCase();
+
+        // Detect trigger from keywords
+        let trigger = 'on_approve';
+        if (lower.includes('deny') || lower.includes('denied') || lower.includes('rejection')) trigger = 'on_deny';
+        else if (lower.includes('new app') || lower.includes('new application') || lower.includes('receive')) trigger = 'on_new_app';
+        else if (lower.includes('check in') || lower.includes('checkin')) trigger = 'on_checkin';
+        else if (lower.includes('late') || lower.includes('after deadline')) trigger = 'on_late_app';
+        else if (lower.includes('before') || lower.includes('reminder')) trigger = 'before_event';
+        else if (lower.includes('deadline')) trigger = 'app_deadline';
+        else if (lower.includes('post') || lower.includes('after market')) trigger = 'post_event';
+
+        // Detect action from keywords
+        let action = 'send_email';
+        let config = { detail: '' };
+
+        if (lower.includes('email') || lower.includes('send') || lower.includes('message')) {
+            action = 'send_email';
+            if (lower.includes('approved')) config.template = 'approved';
+            else if (lower.includes('denied') || lower.includes('rejection')) config.template = 'denied';
+            else if (lower.includes('power')) config.template = 'power';
+            else config.template = 'approved';
+        } else if (lower.includes('change status') || lower.includes('mark as')) {
+            action = 'change_status';
+            if (lower.includes('approved')) config.status = 'Approved';
+            else if (lower.includes('denied')) config.status = 'Denied';
+            else if (lower.includes('review')) config.status = 'Needs Review';
+            else config.status = 'Pending';
+        } else if (lower.includes('note') || lower.includes('flag') || lower.includes('add comment')) {
+            action = 'add_note';
+            // Extract note text if possible
+            const noteMatch = prompt.match(/(?:add note|flag|comment)[\s:]*["\']?([^"\']*)["\']?$/i);
+            config.note = noteMatch ? noteMatch[1].trim() : 'Auto-flagged by automation';
+        } else if (lower.includes('label') || lower.includes('tag')) {
+            action = 'add_label';
+            const labelMatch = prompt.match(/(?:label|tag)[\s:]*["\']?([^"\']*)["\']?$/i);
+            config.label = labelMatch ? labelMatch[1].trim() : 'Automated';
+        }
+
+        // Generate name from prompt (first 50 chars)
+        let name = prompt.substring(0, 50);
+        if (name.length === 50) name += '...';
+
+        config.detail = prompt;
+
+        return { name, trigger, action, config };
     }
 
     // --- STRIKE-BASED EMAIL AUTOMATION ---
