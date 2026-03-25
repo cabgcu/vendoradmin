@@ -2042,7 +2042,7 @@
                 method: "POST",
                 headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
                 body: JSON.stringify({
-                    model: getBuiltinSetting('auto_categorize', 'model') || 'google/gemini-2.0-flash-lite-preview-02-05:free',
+                    model: 'deepseek/deepseek-chat-v3-0324:free',
                     messages: [{ role: "user", content: `Categorize this vendor into one or more of these categories: ${categories.join(', ')}. Vendor description: "${description}". Respond ONLY with a JSON array of matching category names, e.g. ["Food & Beverage","Art & Prints"]. If none fit, respond ["Unique Goods"].` }]
                 })
             });
@@ -2060,7 +2060,7 @@
 
     async function aiSummarizeVendor(vendor) {
         if (!OPENROUTER_API_KEY || !vendor.description) return null;
-        const model = getBuiltinSetting('ai_vendor_summary', 'model') || 'google/gemini-2.0-flash-lite-preview-02-05:free';
+        const model = 'deepseek/deepseek-chat-v3-0324:free';
         const prompt = getBuiltinSetting('ai_vendor_summary', 'prompt') || 'Summarize this vendor application in 1-2 sentences. Focus on what they sell and any notable details.';
         try {
             const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -2486,7 +2486,7 @@
                     const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                     
                     const scanTimeout = (getBuiltinSetting('ai_license_scan', 'timeout') || 15) * 1000;
-                    const scanModel = getBuiltinSetting('ai_license_scan', 'model') || 'google/gemini-2.0-flash-lite-preview-02-05:free';
+                    const scanModel = 'google/gemini-2.0-flash-lite-preview-02-05:free';
                     const visionController = new AbortController();
                     const visionTimeoutId = setTimeout(() => visionController.abort(), scanTimeout);
 
@@ -6107,12 +6107,7 @@
             icon: '🏷', color: '#BF5AF2', defaultEnabled: true,
             settings: [
                 { key: 'useAI', label: 'Use AI for better categorization', type: 'toggle', default: false,
-                  help: 'Uses OpenRouter AI to intelligently categorize vendors beyond keyword matching.' },
-                { key: 'model', label: 'AI Model', type: 'select', default: 'google/gemini-2.0-flash-lite-preview-02-05:free',
-                  options: [
-                      { value: 'google/gemini-2.0-flash-lite-preview-02-05:free', label: 'Gemini Flash (Free)' },
-                      { value: 'meta-llama/llama-4-maverick:free', label: 'Llama 4 Maverick (Free)' }
-                  ] }
+                  help: 'Uses AI to intelligently categorize vendors beyond keyword matching.' }
             ]
         },
         {
@@ -6121,12 +6116,6 @@
             description: 'Scans uploaded food licenses via AI vision.',
             icon: '🤖', color: '#0A84FF', defaultEnabled: true,
             settings: [
-                { key: 'model', label: 'AI Model', type: 'select', default: 'google/gemini-2.0-flash-lite-preview-02-05:free',
-                  options: [
-                      { value: 'google/gemini-2.0-flash-lite-preview-02-05:free', label: 'Gemini Flash (Free)' },
-                      { value: 'meta-llama/llama-4-maverick:free', label: 'Llama 4 Maverick (Free)' },
-                      { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet (Paid)' }
-                  ] },
                 { key: 'timeout', label: 'Timeout (seconds)', type: 'number', default: 15, min: 5, max: 60 }
             ]
         },
@@ -6134,11 +6123,8 @@
             id: 'email_status_polling',
             name: 'Email Delivery Tracking',
             description: 'Polls Brevo for email delivery status.',
-            icon: '📧', color: '#34C759', defaultEnabled: true,
-            settings: [
-                { key: 'interval', label: 'Poll interval (minutes)', type: 'number', default: 2, min: 1, max: 30 },
-                { key: 'batchSize', label: 'Vendors per batch', type: 'number', default: 5, min: 1, max: 20 }
-            ]
+            icon: '📧', color: '#34C759', defaultEnabled: true, hidden: true,
+            settings: []
         },
         {
             id: 'late_strike_tracking',
@@ -6155,25 +6141,21 @@
             id: 'realtime_sync',
             name: 'Realtime Data Sync',
             description: 'Live-syncs vendor data across admin sessions.',
-            icon: '🔄', color: '#30D158', defaultEnabled: true,
-            settings: [
-                { key: 'debounce', label: 'Refresh debounce (ms)', type: 'number', default: 2000, min: 500, max: 10000 }
-            ]
+            icon: '🔄', color: '#30D158', defaultEnabled: true, hidden: true,
+            settings: []
         },
         {
             id: 'form_autosave',
             name: 'Form Builder Auto-Save',
             description: 'Auto-saves form changes after editing.',
-            icon: '💾', color: '#5E5CE6', defaultEnabled: true,
-            settings: [
-                { key: 'delay', label: 'Save delay (ms)', type: 'number', default: 1500, min: 500, max: 5000 }
-            ]
+            icon: '💾', color: '#5E5CE6', defaultEnabled: true, hidden: true,
+            settings: []
         },
         {
             id: 'auto_template_select',
             name: 'Smart Email Template Selection',
             description: 'Picks email template based on vendor status.',
-            icon: '✉️', color: '#FF375F', defaultEnabled: true,
+            icon: '✉️', color: '#FF375F', defaultEnabled: true, hidden: true,
             settings: []
         },
         {
@@ -6182,12 +6164,6 @@
             description: 'Uses AI to generate a short summary of each vendor application for quick review.',
             icon: '✨', color: '#AF52DE', defaultEnabled: false,
             settings: [
-                { key: 'model', label: 'AI Model', type: 'select', default: 'google/gemini-2.0-flash-lite-preview-02-05:free',
-                  options: [
-                      { value: 'google/gemini-2.0-flash-lite-preview-02-05:free', label: 'Gemini Flash (Free)' },
-                      { value: 'meta-llama/llama-4-maverick:free', label: 'Llama 4 Maverick (Free)' },
-                      { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet (Paid)' }
-                  ] },
                 { key: 'prompt', label: 'Custom prompt', type: 'text', default: 'Summarize this vendor application in 1-2 sentences. Focus on what they sell and any notable details.',
                   help: 'The vendor description will be appended to this prompt.' }
             ]
@@ -6195,7 +6171,7 @@
         {
             id: 'ai_duplicate_detect',
             name: 'AI Duplicate Detection',
-            description: 'Uses AI to detect similar/duplicate vendor applications across events.',
+            description: 'Detects similar or duplicate vendor applications across events.',
             icon: '🔍', color: '#FF6482', defaultEnabled: false,
             settings: [
                 { key: 'sensitivity', label: 'Sensitivity', type: 'select', default: 'medium',
@@ -6290,7 +6266,7 @@
         // --- BUILT-IN ---
         const builtinEl = document.getElementById('builtinAutomationsList');
         if (!builtinEl) return;
-        builtinEl.innerHTML = BUILTIN_AUTOMATIONS.map(a => {
+        builtinEl.innerHTML = BUILTIN_AUTOMATIONS.filter(a => !a.hidden).map(a => {
             const enabled = isBuiltinEnabled(a.id);
             let settingsHtml = '';
             if (a.settings && a.settings.length > 0 && enabled) {
