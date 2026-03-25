@@ -451,19 +451,24 @@
         /* --- MOBILE BOTTOM NAV --- */
         .mobile-bottom-nav {
             display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
-            background: rgba(10,10,10,0.97); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(255,255,255,0.05);
-            padding: 6px 0 calc(6px + env(safe-area-inset-bottom)); /* iPhone notch */
+            background: rgba(8,8,8,0.95);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding: 6px 0 calc(8px + env(safe-area-inset-bottom));
             justify-content: space-around; align-items: center;
         }
         .mob-nav-btn {
-            display: flex; flex-direction: column; align-items: center; gap: 2px;
-            background: none; border: none; color: var(--text-muted); font-size: 0.6rem;
-            font-weight: 600; cursor: pointer; padding: 6px 12px; font-family: inherit;
-            transition: color 0.2s; letter-spacing: 0.3px;
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            background: none; border: none; color: rgba(255,255,255,0.35); font-size: 0.55rem;
+            font-weight: 600; cursor: pointer; padding: 6px 14px; font-family: inherit;
+            transition: all 0.2s ease; letter-spacing: 0.2px; text-transform: uppercase;
+            -webkit-tap-highlight-color: transparent; position: relative;
         }
         .mob-nav-btn.active { color: #0A84FF; }
-        .mob-nav-btn svg { stroke: currentColor; }
+        .mob-nav-btn:active { transform: scale(0.92); }
+        .mob-nav-btn svg { stroke: currentColor; width: 22px; height: 22px; transition: all 0.2s ease; }
+        .mob-nav-btn.active svg { stroke-width: 2.5; }
 
         /* --- TABLET (900px) --- */
         @media (max-width: 900px) {
@@ -487,203 +492,286 @@
 
         /* --- MOBILE (768px) --- */
         @media (max-width: 768px) {
-            body { padding-bottom: 64px; }
+            body { padding-bottom: 72px; }
             .app-container { padding: 0; }
-
             .mobile-bottom-nav { display: flex; }
 
-            /* Reduce border visibility globally on mobile */
-            .frosted { border-color: rgba(255,255,255,0.05); }
+            /* Softer borders globally */
+            .frosted { border-color: rgba(255,255,255,0.04); }
             .modern-input { border-color: rgba(255,255,255,0.06); }
 
-            /* Topbar: sticky, compact, edge-to-edge */
+            /* ═══════════════════════════════════════
+               TOPBAR — Slim native app header
+               ═══════════════════════════════════════ */
             .topbar {
                 padding: 0; margin: 0;
                 border-radius: 0; border: none;
-                background: rgba(0,0,0,0.95); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+                background: rgba(8,8,8,0.96);
+                backdrop-filter: blur(30px) saturate(180%);
+                -webkit-backdrop-filter: blur(30px) saturate(180%);
                 position: sticky; top: 0; z-index: 100;
                 flex-direction: column; gap: 0; text-align: left;
                 padding-top: env(safe-area-inset-top);
-                border-bottom: 1px solid rgba(255,255,255,0.06);
             }
-            .brand {
-                gap: 6px; flex-direction: row; align-items: center; padding: 6px 12px;
-            }
-            .brand-logo { height: 18px; }
-            .brand-text h1 { font-size: 0.7rem; line-height: 1; }
-            .event-subtext { font-size: 0.6rem; gap: 3px; margin-top: 1px; }
-            .event-subtext select.modern-input { height: 20px !important; font-size: 0.6rem !important; padding: 0 18px 0 6px !important; border-radius: 6px !important; }
 
-            /* Filter tabs: single-row pill strip */
+            /* Brand row — single slim line */
+            .brand {
+                gap: 8px; flex-direction: row; align-items: center;
+                padding: 10px 16px 6px;
+            }
+            .brand-logo { height: 20px; }
+            .brand-text h1 { font-size: 0.75rem; line-height: 1; }
+            .event-subtext { font-size: 0.65rem; gap: 4px; margin-top: 2px; }
+            .event-subtext select.modern-input {
+                height: 22px !important; font-size: 0.65rem !important;
+                padding: 0 20px 0 8px !important; border-radius: 8px !important;
+                background: rgba(255,255,255,0.06) !important;
+                border-color: rgba(255,255,255,0.08) !important;
+            }
+
+            /* Filter pills — horizontal scroll strip */
             #vendorFilterTabs {
                 width: 100%;
                 flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
                 scrollbar-width: none; justify-content: flex-start;
-                gap: 4px; padding: 3px 12px 5px; margin: 0;
+                gap: 6px; padding: 6px 16px 10px; margin: 0;
             }
             #vendorFilterTabs::-webkit-scrollbar { display: none; }
             #vendorFilterTabs > .control-item { display: none !important; }
             #vendorFilterTabs > .control-item-filter:not([style*="width: 1px"]) { display: flex !important; flex-shrink: 0; }
             #vendorFilterTabs > .control-item-filter[style*="width: 1px"] { display: none !important; }
-            .control-item { font-size: 0.55rem; padding: 0 8px; height: 22px; border-radius: 6px; border-color: rgba(255,255,255,0.08); letter-spacing: 0.3px; }
+            .control-item {
+                font-size: 0.65rem; padding: 0 12px; height: 28px;
+                border-radius: 14px; border-color: rgba(255,255,255,0.1);
+                letter-spacing: 0.2px; font-weight: 600;
+                background: rgba(255,255,255,0.04);
+                transition: all 0.2s ease;
+            }
 
-            /* Content padding (topbar is edge-to-edge, content needs margins) */
-            .view { padding: 8px 12px 0; }
-            #view-scan, #view-settings, #view-profiles { padding: 8px 12px 0; }
+            /* ═══════════════════════════════════════
+               CONTENT AREA
+               ═══════════════════════════════════════ */
+            .view { padding: 12px 16px 0; }
+            #view-scan, #view-settings, #view-profiles { padding: 12px 16px 0; }
 
-            /* Stats cards: tight */
-            .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
-            .stat-card { padding: 10px 6px; border-radius: 14px; border-color: rgba(255,255,255,0.04) !important; }
-            .stat-val { font-size: 1.2rem; }
-            .stat-label { font-size: 0.6rem; margin-bottom: 4px; }
-            .stat-sub { gap: 6px; margin-top: 4px; }
-            .stat-sub span { font-size: 0.55rem; }
+            /* ═══════════════════════════════════════
+               STATS — Compact summary bar
+               ═══════════════════════════════════════ */
+            .stats-container {
+                grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px;
+            }
+            .stat-card {
+                padding: 12px 8px; border-radius: 16px;
+                border-color: rgba(255,255,255,0.04) !important;
+                background: rgba(255,255,255,0.025) !important;
+            }
+            .stat-val { font-size: 1.4rem; font-weight: 800; }
+            .stat-label { font-size: 0.6rem; margin-bottom: 3px; letter-spacing: 0.5px; text-transform: uppercase; }
+            .stat-sub { gap: 6px; margin-top: 5px; }
+            .stat-sub span { font-size: 0.55rem; font-weight: 600; }
 
-            /* Filter/search row */
-            .filter-row { flex-direction: column; gap: 6px; align-items: stretch; }
+            /* ═══════════════════════════════════════
+               SEARCH & FILTERS — Clean stacked layout
+               ═══════════════════════════════════════ */
+            .filter-row { flex-direction: column; gap: 8px; align-items: stretch; }
             .filter-row > * { width: 100% !important; min-width: 0 !important; }
-            .modern-input { padding: 9px 12px; font-size: 0.85rem; border-radius: 12px; }
-            select.modern-input { height: 38px; }
+            .modern-input {
+                padding: 12px 16px; font-size: 0.9rem; border-radius: 14px;
+                background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+            }
+            .modern-input:focus { border-color: rgba(10, 132, 255, 0.4); background: rgba(255,255,255,0.06); }
+            select.modern-input { height: 44px; }
 
-            /* Blast/refresh buttons */
-            .btn-action { padding: 8px 14px; font-size: 0.8rem; }
+            /* Action buttons */
+            .btn-action { padding: 10px 16px; font-size: 0.8rem; border-radius: 12px; }
 
-            /* TABLE → CARD LAYOUT */
+            /* ═══════════════════════════════════════
+               VENDOR CARDS — True mobile card layout
+               ═══════════════════════════════════════ */
             .table-container { overflow-x: visible; }
-            table { min-width: 0; border-spacing: 0 4px; }
+            table { min-width: 0; border-spacing: 0 6px; }
             thead { display: none; }
             tbody, tr, td { display: block; }
             tr.clickable-row {
-                margin-bottom: 4px; padding: 12px; border-radius: 12px;
-                background: rgba(255,255,255,0.02) !important;
-                border: 1px solid rgba(255,255,255,0.04) !important;
+                margin-bottom: 6px; padding: 14px 16px; border-radius: 16px;
+                background: rgba(255,255,255,0.03) !important;
+                border: 1px solid rgba(255,255,255,0.05) !important;
                 position: relative;
+                transition: background 0.15s ease;
             }
+            tr.clickable-row:active { background: rgba(255,255,255,0.06) !important; }
             td { border: none !important; padding: 0 !important; background: transparent !important; border-radius: 0 !important; }
 
-            /* Card cell layout */
-            td:nth-child(1) { display: inline; font-size: 0.7rem; }
-            td:nth-child(1) span { font-size: 0.85rem !important; } /* App # */
-            td:nth-child(2) { margin-top: 2px; }
-            td:nth-child(2) strong { font-size: 0.88rem; }
-            td:nth-child(3) { font-size: 0.7rem; margin-top: 3px; color: var(--text-muted); }
-            td:nth-child(3) a { font-size: 0.7rem; }
+            /* Card cell layout — structured like a native list item */
+            td:nth-child(1) { display: inline; font-size: 0.65rem; opacity: 0.5; }
+            td:nth-child(1) span { font-size: 0.8rem !important; font-weight: 700; opacity: 1; }
+            td:nth-child(2) { margin-top: 4px; }
+            td:nth-child(2) strong { font-size: 0.95rem; font-weight: 700; letter-spacing: -0.01em; }
+            td:nth-child(3) { font-size: 0.75rem; margin-top: 4px; color: var(--text-muted); }
+            td:nth-child(3) a { font-size: 0.75rem; }
             td:nth-child(3) small { display: none; }
 
-            /* Status/badge row: inline-flex for compact layout */
+            /* Status/badge row */
             td:nth-child(4), td:nth-child(5), td:nth-child(6), td:nth-child(7) {
-                display: inline-block; vertical-align: middle; margin-top: 8px;
+                display: inline-block; vertical-align: middle; margin-top: 10px;
             }
             td:nth-child(5), td:nth-child(6), td:nth-child(7) { margin-left: 4px; }
-            td:nth-child(8) { margin-top: 8px; padding-top: 8px !important; border-top: 1px solid rgba(255,255,255,0.04) !important; }
+            td:nth-child(8) {
+                margin-top: 10px; padding-top: 10px !important;
+                border-top: 1px solid rgba(255,255,255,0.04) !important;
+            }
 
-            /* Compact action bar */
-            .action-wrapper { justify-content: flex-start; flex-wrap: wrap; gap: 4px; }
-            .btn-icon-text { padding: 6px 10px; font-size: 0.65rem; border-radius: 8px; border-color: rgba(255,255,255,0.06); }
+            /* Action buttons in cards */
+            .action-wrapper { justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
+            .btn-icon-text {
+                padding: 8px 12px; font-size: 0.7rem; border-radius: 10px;
+                border-color: rgba(255,255,255,0.06); background: rgba(255,255,255,0.04);
+            }
             .color-trigger-wrapper { display: none; }
 
-            /* Shrink status toggle + all badges/pills */
-            .btn-quick-status { padding: 5px 8px; font-size: 0.7rem; }
-            .status-toggle-group { border-radius: 8px; border-color: rgba(255,255,255,0.06); }
-            .status-badge { font-size: 0.6rem; padding: 3px 7px; min-width: 0; }
-            .status-pill { font-size: 0.6rem; padding: 3px 8px; }
-            .group-tag, .power-tag { font-size: 0.6rem; padding: 2px 6px; }
+            /* Status toggles & badges */
+            .btn-quick-status { padding: 6px 10px; font-size: 0.7rem; border-radius: 10px; }
+            .status-toggle-group { border-radius: 10px; border-color: rgba(255,255,255,0.06); overflow: hidden; }
+            .status-badge { font-size: 0.6rem; padding: 4px 8px; min-width: 0; border-radius: 8px; }
+            .status-pill { font-size: 0.6rem; padding: 4px 10px; border-radius: 8px; }
+            .group-tag, .power-tag { font-size: 0.6rem; padding: 3px 8px; border-radius: 8px; }
 
-            /* Shrink inline tag badges in vendor cards */
-            tr.clickable-row [style*="font-size: 0.65rem"] { font-size: 0.55rem !important; padding: 2px 5px !important; }
-            tr.clickable-row [style*="font-size: 0.75rem"][style*="padding: 4px 10px"] { font-size: 0.6rem !important; padding: 2px 7px !important; }
+            /* Shrink inline tag badges */
+            tr.clickable-row [style*="font-size: 0.65rem"] { font-size: 0.55rem !important; padding: 3px 6px !important; border-radius: 6px !important; }
+            tr.clickable-row [style*="font-size: 0.75rem"][style*="padding: 4px 10px"] { font-size: 0.6rem !important; padding: 3px 8px !important; border-radius: 6px !important; }
 
-            /* Review modal → full screen sheet */
+            /* ═══════════════════════════════════════
+               MODALS — Full-screen bottom sheets
+               ═══════════════════════════════════════ */
             .modal-overlay { padding: 0; align-items: flex-end; }
-            .modal-content { max-width: 100vw; width: 100vw; max-height: 92vh; border-radius: 16px 16px 0 0; padding: 20px 14px; border: none; border-top: 1px solid rgba(255,255,255,0.06); }
-            .review-modal-container { flex-direction: column; max-width: 100vw; width: 100vw; max-height: 92vh; border-radius: 16px 16px 0 0; overflow-y: auto; border: none; border-top: 1px solid rgba(255,255,255,0.06); }
-            .review-modal-main { padding: 16px 14px; overflow-y: visible; }
-            .review-modal-sidebar { width: 100%; border-left: none; border-top: 1px solid rgba(255,255,255,0.06); padding: 12px 14px; overflow-y: visible; }
-            .sidebar-btn { padding: 10px 0; font-size: 0.8rem; border-radius: 10px; }
-            .review-field-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+            .modal-content {
+                max-width: 100vw; width: 100vw; max-height: 94vh;
+                border-radius: 20px 20px 0 0; padding: 24px 16px;
+                border: none; border-top: 1px solid rgba(255,255,255,0.08);
+                background: rgba(18,18,18,0.98);
+            }
+            .review-modal-container {
+                flex-direction: column; max-width: 100vw; width: 100vw; max-height: 94vh;
+                border-radius: 20px 20px 0 0; overflow-y: auto;
+                border: none; border-top: 1px solid rgba(255,255,255,0.08);
+                background: rgba(18,18,18,0.98);
+            }
+            .review-modal-main { padding: 20px 16px; overflow-y: visible; }
+            .review-modal-sidebar {
+                width: 100%; border-left: none;
+                border-top: 1px solid rgba(255,255,255,0.06);
+                padding: 16px; overflow-y: visible;
+            }
+            .sidebar-btn { padding: 12px 0; font-size: 0.85rem; border-radius: 12px; }
+            .review-field-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
             .review-field-label { font-size: 0.65rem !important; }
-            .review-field-value { font-size: 0.85rem !important; }
+            .review-field-value { font-size: 0.88rem !important; }
 
             /* Edit modal */
-            #editModal .modal-content { padding: 18px 14px; }
-            .form-grid { grid-template-columns: 1fr; gap: 12px; }
+            #editModal .modal-content { padding: 24px 16px; }
+            .form-grid { grid-template-columns: 1fr; gap: 14px; }
 
-            /* Settings */
-            .form-card { padding: 10px !important; border-radius: 14px !important; border-color: rgba(255,255,255,0.04) !important; }
-            #view-settings .form-card > div:first-child { flex-direction: column; gap: 6px !important; margin-bottom: 10px !important; }
-            #view-settings .form-card > div:first-child h2 { font-size: 0.9rem; }
-            .settings-tabs { display: grid !important; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; margin: 0; }
-            .settings-tab { padding: 7px 4px; font-size: 0.6rem; text-align: center; white-space: nowrap; border-radius: 7px; }
+            /* ═══════════════════════════════════════
+               SETTINGS — Native grouped sections
+               ═══════════════════════════════════════ */
+            .form-card {
+                padding: 12px !important; border-radius: 18px !important;
+                border-color: rgba(255,255,255,0.04) !important;
+                background: rgba(255,255,255,0.02) !important;
+            }
+            #view-settings .form-card > div:first-child {
+                flex-direction: column; gap: 8px !important; margin-bottom: 12px !important;
+            }
+            #view-settings .form-card > div:first-child h2 { font-size: 1rem; font-weight: 800; }
+
+            /* Settings tabs — 2-col grid with short labels */
+            .settings-tabs {
+                display: grid !important; grid-template-columns: 1fr 1fr;
+                gap: 4px; padding: 4px; margin: 0;
+                background: rgba(255,255,255,0.03) !important; border-radius: 14px !important;
+            }
+            .settings-tab {
+                padding: 10px 6px; font-size: 0.65rem; text-align: center;
+                white-space: nowrap; border-radius: 10px;
+            }
             .tab-full { display: none !important; }
             .tab-short { display: inline !important; }
-            .settings-section .form-grid { grid-template-columns: 1fr; gap: 10px; }
-            .settings-section h3 { font-size: 0.9rem; }
-            .settings-section label, .settings-section .stat-label { font-size: 0.7rem; }
+            .settings-section .form-grid { grid-template-columns: 1fr; gap: 12px; }
+            .settings-section h3 { font-size: 0.95rem; }
+            .settings-section label, .settings-section .stat-label { font-size: 0.75rem; }
 
-            /* Settings event form: compact sections */
-            .settings-section > div[style*="padding: 25px"] { padding: 14px !important; border-radius: 14px !important; margin-bottom: 16px !important; }
-            .settings-section > div[style*="padding: 20px"] { padding: 12px !important; border-radius: 14px !important; }
-            .settings-section .stat-label[style*="font-size: 1rem"] { font-size: 0.75rem !important; margin-bottom: 6px !important; }
+            /* Settings form sections */
+            .settings-section > div[style*="padding: 25px"] { padding: 16px !important; border-radius: 16px !important; margin-bottom: 14px !important; }
+            .settings-section > div[style*="padding: 20px"] { padding: 14px !important; border-radius: 16px !important; }
+            .settings-section .stat-label[style*="font-size: 1rem"] { font-size: 0.8rem !important; margin-bottom: 8px !important; }
             .settings-section p[style*="font-size:0.85rem"] { font-size: 0.75rem !important; margin-bottom: 12px !important; }
 
-            /* Shrink Update/Create buttons */
-            .settings-section .btn-action[style*="padding: 15px"] { padding: 10px 12px !important; font-size: 0.8rem !important; }
-            .settings-section .btn-action { padding: 8px 12px; font-size: 0.8rem; }
-
-            /* Form access control buttons */
-            .settings-section div[style*="gap: 15px"] { gap: 6px !important; }
-            .settings-section div[style*="gap: 15px"] .btn-action { padding: 8px 6px !important; font-size: 0.7rem !important; }
+            /* Settings buttons */
+            .settings-section .btn-action[style*="padding: 15px"] { padding: 12px 14px !important; font-size: 0.85rem !important; border-radius: 12px !important; }
+            .settings-section .btn-action { padding: 10px 14px; font-size: 0.8rem; border-radius: 12px; }
+            .settings-section div[style*="gap: 15px"] { gap: 8px !important; }
+            .settings-section div[style*="gap: 15px"] .btn-action { padding: 10px 8px !important; font-size: 0.72rem !important; }
 
             /* Email template editor */
-            .rich-toolbar { flex-wrap: wrap !important; gap: 2px !important; }
-            .email-var-chip { font-size: 0.6rem !important; padding: 3px 6px !important; }
+            .rich-toolbar { flex-wrap: wrap !important; gap: 3px !important; }
+            .email-var-chip { font-size: 0.6rem !important; padding: 4px 8px !important; border-radius: 6px !important; }
 
             /* Form builder */
-            .fb-add-btn { padding: 6px 12px; font-size: 0.7rem; }
+            .fb-add-btn { padding: 8px 14px; font-size: 0.75rem; border-radius: 10px; }
 
             /* Bulk email modal */
-            #bulkEmailModal .modal-content { max-width: 100vw; padding: 18px 14px; border-radius: 16px 16px 0 0; }
+            #bulkEmailModal .modal-content { max-width: 100vw; padding: 24px 16px; border-radius: 20px 20px 0 0; }
 
             /* Profile modal */
-            #profileModal .modal-content { max-width: 100vw; padding: 18px 14px; border-radius: 16px 16px 0 0; }
+            #profileModal .modal-content { max-width: 100vw; padding: 24px 16px; border-radius: 20px 20px 0 0; }
 
-            /* Check-in view */
-            #view-scan .form-card { padding: 14px !important; }
-            #view-scan input { font-size: 1rem !important; }
+            /* ═══════════════════════════════════════
+               CHECK-IN — Mobile-optimized scanner
+               ═══════════════════════════════════════ */
+            #view-scan .form-card { padding: 16px !important; border-radius: 18px !important; }
+            #view-scan h2 { font-size: 1.1rem !important; margin-bottom: 14px !important; }
+            #view-scan input { font-size: 1.1rem !important; padding: 14px 16px !important; border-radius: 14px !important; }
+            #view-scan div[style*="padding: 15px 25px"] {
+                padding: 12px 16px !important; border-radius: 14px !important; min-width: 0 !important;
+            }
+            #view-scan div[style*="padding: 15px 25px"] span:first-child { font-size: 1.8rem !important; }
+            #view-scan div[style*="padding: 15px 25px"] span:last-child { font-size: 0.65rem !important; margin-top: 4px !important; letter-spacing: 0.8px !important; }
 
             /* Check-in alert modal */
-            #checkInAlert .modal-content, #alertContentBox { border-radius: 16px; }
+            #checkInAlert .modal-content, #alertContentBox { border-radius: 20px; }
 
             /* Close buttons on modals */
             .close-modal { font-size: 1.5rem; padding: 8px; }
 
-            /* Toast above bottom nav */
-            #toast { bottom: 72px !important; font-size: 0.8rem; padding: 10px 16px; }
+            /* ═══════════════════════════════════════
+               BOTTOM NAV — Native tab bar
+               ═══════════════════════════════════════ */
+            #toast { bottom: 82px !important; font-size: 0.8rem; padding: 12px 20px; border-radius: 14px; }
 
-            /* Login card on mobile */
-            .login-card { padding: 28px 20px; }
+            /* Login card */
+            .login-card { padding: 32px 24px; border-radius: 24px; }
         }
 
         /* --- SMALL PHONES (390px) --- */
         @media (max-width: 390px) {
-            .view { padding: 8px 8px 0; }
-            #view-scan, #view-settings, #view-profiles { padding: 8px 8px 0; }
-            .brand { padding: 5px 8px; }
-            .brand-logo { height: 16px; }
-            .brand-text h1 { font-size: 0.65rem; }
-            #vendorFilterTabs { padding: 2px 8px 4px; gap: 3px; }
-            .control-item { font-size: 0.5rem; padding: 0 6px; height: 20px; }
-            .stats-container { gap: 4px; }
-            .stat-card { padding: 8px 4px; border-radius: 10px; }
-            .stat-val { font-size: 1rem; }
+            .view { padding: 10px 12px 0; }
+            #view-scan, #view-settings, #view-profiles { padding: 10px 12px 0; }
+            .brand { padding: 8px 12px 4px; }
+            .brand-logo { height: 18px; }
+            .brand-text h1 { font-size: 0.7rem; }
+            #vendorFilterTabs { padding: 4px 12px 8px; gap: 5px; }
+            .control-item { font-size: 0.6rem; padding: 0 10px; height: 26px; }
+            .stats-container { gap: 6px; }
+            .stat-card { padding: 10px 6px; border-radius: 14px; }
+            .stat-val { font-size: 1.2rem; }
             .stat-label { font-size: 0.55rem; }
             .stat-sub span { font-size: 0.5rem; }
-            .mob-nav-btn { padding: 4px 6px; font-size: 0.5rem; }
-            .mob-nav-btn svg { width: 18px; height: 18px; }
-            tr.clickable-row { padding: 10px; border-radius: 10px; }
-            .btn-quick-status { padding: 4px 6px; font-size: 0.65rem; }
-            .btn-icon-text { padding: 5px 8px; font-size: 0.6rem; }
-            .modern-input { padding: 8px 10px; font-size: 0.8rem; }
+            .mob-nav-btn { padding: 4px 8px; font-size: 0.5rem; }
+            .mob-nav-btn svg { width: 20px; height: 20px; }
+            tr.clickable-row { padding: 12px; border-radius: 14px; }
+            .btn-quick-status { padding: 5px 8px; font-size: 0.65rem; }
+            .btn-icon-text { padding: 6px 10px; font-size: 0.65rem; }
+            .modern-input { padding: 10px 14px; font-size: 0.85rem; }
         }
 
         /* Bulk Email Modal Styles */
@@ -2574,19 +2662,23 @@
         const emails = [...new Set(currentData.vendors.map(v => v.preferred_email).filter(Boolean))];
         if(!emails.length) return;
 
-        // We fetch ALL historical apps specifically for the vendors in the current view
-        const { data: pastApps } = await _supabase.from('vendors').select('preferred_email, created_at, event_id').in('preferred_email', emails);
-        
+        // Only count late strikes from the past year (strikes expire after 1 year)
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        const oneYearAgoISO = oneYearAgo.toISOString();
+
+        const { data: pastApps } = await _supabase.from('vendors').select('preferred_email, created_at, event_id').in('preferred_email', emails).gte('created_at', oneYearAgoISO);
+
         window.vendorStrikes = {}; // Tracks specific market names they were late to: { 'email': ['Spring Fest', 'Winter Market'] }
         let totalStrikesInView = 0;
-        
+
         if (pastApps) {
             pastApps.forEach(app => {
                 const ev = currentData.allEvents.find(e => e.id === app.event_id);
                 if (ev && ev.app_close) {
                     const appDate = new Date(app.created_at);
                     const closeDate = new Date(ev.app_close);
-                    
+
                     // If they applied AFTER the close deadline for that specific event, mark it as a strike
                     if (appDate > closeDate) {
                         if (!window.vendorStrikes[app.preferred_email]) {
@@ -2955,9 +3047,9 @@
     async function fetchAndRenderProfiles() {
         document.getElementById('loader').style.display = 'flex';
         
-        const fiveMonthsAgo = new Date();
-        fiveMonthsAgo.setMonth(fiveMonthsAgo.getMonth() - 5);
-        const isoDate = fiveMonthsAgo.toISOString();
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        const isoDate = oneYearAgo.toISOString();
 
         let eventMap = {};
         if (currentData.allEvents && currentData.allEvents.length > 0) {
