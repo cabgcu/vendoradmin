@@ -719,6 +719,10 @@
             /* Form builder */
             .fb-add-btn { padding: 8px 14px; font-size: 0.75rem; border-radius: 10px; }
 
+            /* Automations tab */
+            #settings-tab-automations .btn-action { font-size: 0.75rem; padding: 8px 14px; }
+            #addAutomationModal > div { padding: 20px 16px; border-radius: 20px 20px 0 0; max-width: 100vw; margin: auto auto 0; }
+
             /* Bulk email modal */
             #bulkEmailModal .modal-content { max-width: 100vw; padding: 24px 16px; border-radius: 20px 20px 0 0; }
 
@@ -1490,6 +1494,7 @@
                         <button id="stab-form" class="settings-tab" onclick="switchSettingsTab('form')" data-short="Forms"><span class="tab-full">Form Builder</span><span class="tab-short">Forms</span></button>
                         <button id="stab-system" class="settings-tab" onclick="switchSettingsTab('system')" data-short="System"><span class="tab-full">System & Data</span><span class="tab-short">System</span></button>
                         <button id="stab-users" class="settings-tab" onclick="switchSettingsTab('users')" data-short="Users"><span class="tab-full">User Management</span><span class="tab-short">Users</span></button>
+                        <button id="stab-automations" class="settings-tab" onclick="switchSettingsTab('automations')" data-short="Auto"><span class="tab-full">Automations</span><span class="tab-short">Auto</span></button>
                     </div>
                 </div>
             </div>
@@ -1765,7 +1770,97 @@
                     <!-- Injected by renderFormPreview -->
                 </div>
             </div>
-            
+
+            <!-- TAB 6: AUTOMATIONS -->
+            <div id="settings-tab-automations" class="settings-section" style="display:none;">
+
+                <!-- BUILT-IN AUTOMATIONS -->
+                <div style="margin-bottom:16px;">
+                    <label class="stat-label" style="color: #BF5AF2; font-size: 0.85rem; margin-bottom: 8px; letter-spacing: 1px;">BUILT-IN AUTOMATIONS</label>
+                    <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom: 16px;">Core system automations that run automatically. Toggle them on or off.</p>
+                </div>
+                <div id="builtinAutomationsList"></div>
+
+                <!-- CUSTOM AUTOMATIONS -->
+                <div style="margin-top:30px; margin-bottom:16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <label class="stat-label" style="color: #FF9500; font-size: 0.85rem; margin-bottom: 8px; letter-spacing: 1px;">CUSTOM AUTOMATIONS</label>
+                        <p style="color:var(--text-muted); font-size:0.8rem; margin: 4px 0 0;">Event-driven automations you create. Triggered automatically when conditions are met.</p>
+                    </div>
+                    <button onclick="openAddAutomationModal()" class="btn-action" style="white-space: nowrap; background: rgba(255, 149, 0, 0.15); border: 1px solid rgba(255, 149, 0, 0.3); color: #FF9500; padding: 10px 18px; font-size: 0.85rem;">+ New Automation</button>
+                </div>
+                <div id="customAutomationsList"></div>
+
+                <!-- AUTOMATION LOG -->
+                <div style="margin-top:30px; margin-bottom:16px;">
+                    <label class="stat-label" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; letter-spacing: 1px;">RECENT ACTIVITY</label>
+                </div>
+                <div id="automationLogList" style="max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 12px;">
+                    <p style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 20px 0;">No automation activity yet.</p>
+                </div>
+            </div>
+
+            <!-- ADD AUTOMATION MODAL (inline) -->
+            <div id="addAutomationModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:10010; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); padding:20px; overflow-y:auto; align-items:center; justify-content:center;">
+                <div style="background: var(--modal-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 32px; max-width: 600px; width: 100%; margin: auto; position: relative;">
+                    <button onclick="closeAddAutomationModal()" style="position:absolute; top:16px; right:20px; background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;">&times;</button>
+                    <h3 style="margin: 0 0 6px; font-weight: 800; font-size: 1.1rem;">New Automation</h3>
+                    <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom: 24px;">Set up an automated action that triggers when conditions are met.</p>
+
+                    <div style="margin-bottom: 20px;">
+                        <label class="stat-label">Automation Name</label>
+                        <input type="text" id="autoName" class="modern-input" placeholder="e.g. Post-Event Survey">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label class="stat-label">Trigger</label>
+                        <select id="autoTrigger" class="modern-input" onchange="updateAutoActionOptions()">
+                            <option value="">Select a trigger...</option>
+                            <option value="post_event">After Market Date (Post-Event)</option>
+                            <option value="on_approve">When Vendor is Approved</option>
+                            <option value="on_deny">When Vendor is Denied</option>
+                            <option value="on_new_app">When New Application Received</option>
+                            <option value="on_checkin">When Vendor Checks In</option>
+                            <option value="before_event">Before Market Date (Reminder)</option>
+                            <option value="app_deadline">When Application Deadline Passes</option>
+                            <option value="on_late_app">When Late Application Received</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label class="stat-label">Action</label>
+                        <select id="autoAction" class="modern-input">
+                            <option value="">Select an action...</option>
+                            <option value="send_email">Send Email (Template)</option>
+                            <option value="change_status">Change Vendor Status</option>
+                            <option value="add_note">Add Internal Note</option>
+                            <option value="add_label">Add Label/Tag</option>
+                        </select>
+                    </div>
+
+                    <div id="autoConfigSection" style="margin-bottom: 20px;">
+                        <!-- Dynamic config fields injected here -->
+                    </div>
+
+                    <div id="autoDelaySection" style="margin-bottom: 20px; display: none;">
+                        <label class="stat-label">Delay</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="autoDelayValue" class="modern-input" placeholder="0" min="0" style="flex: 1;">
+                            <select id="autoDelayUnit" class="modern-input" style="flex: 1;">
+                                <option value="minutes">Minutes</option>
+                                <option value="hours">Hours</option>
+                                <option value="days" selected>Days</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="closeAddAutomationModal()" class="btn-action" style="flex: 1; background: rgba(255,255,255,0.1); padding: 14px;">Cancel</button>
+                        <button onclick="saveNewAutomation()" class="btn-action" style="flex: 1; background: var(--gradient-accent); padding: 14px;">Create Automation</button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -2147,6 +2242,7 @@
             console.error("Could not load API keys", error);
         }
 
+        await loadAutomationsConfig();
         refreshData();
         setupRealtime();
         startEmailStatusPolling();
@@ -2167,6 +2263,7 @@
     let _realtimePaused = false;
 
     async function setupRealtime() {
+        if (!isBuiltinEnabled('realtime_sync')) return;
         if (realtimeSubscription) _supabase.removeChannel(realtimeSubscription);
         realtimeSubscription = _supabase.channel('public:vendors')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'vendors' }, () => {
@@ -2179,6 +2276,7 @@
 
     // --- DEEPSEEK V3 AI AUTOMATION ENGINE ---
     async function processAIQueue() {
+        if (!isBuiltinEnabled('ai_license_scan')) return;
         if (isAIQueueRunning) return;
         isAIQueueRunning = true;
 
@@ -2587,8 +2685,12 @@
                 }
                 
                 // Exclusively use the highly reliable local matching engine for categories now
-                v.autoCategories = extractVendorCategories(v.description || '');
-                if (v.autoCategories.length === 0) v.autoCategories = ['Unique Goods'];
+                if (isBuiltinEnabled('auto_categorize')) {
+                    v.autoCategories = extractVendorCategories(v.description || '');
+                    if (v.autoCategories.length === 0) v.autoCategories = ['Unique Goods'];
+                } else {
+                    v.autoCategories = v.autoCategories || ['Unique Goods'];
+                }
             });
         }
 
@@ -2658,6 +2760,7 @@
 
     // --- 3 STRIKES LATE POLICY ---
     async function calculateStrikes() {
+        if (!isBuiltinEnabled('late_strike_tracking')) { window.vendorStrikes = {}; return; }
         if (!currentData.vendors.length) return;
         const emails = [...new Set(currentData.vendors.map(v => v.preferred_email).filter(Boolean))];
         if(!emails.length) return;
@@ -3348,6 +3451,11 @@
             refreshData(null, true);
             return false;
         }
+
+        // Fire automation triggers based on new status
+        if (targetStatus === 'Approved') fireAutomationTrigger('on_approve', vendor);
+        if (targetStatus === 'Denied') fireAutomationTrigger('on_deny', vendor);
+
         return true;
     }
 
@@ -3472,6 +3580,7 @@
         
         if (newStatus === 'Checked In') {
             showScanModal('success', 'CHECKED IN', null, vendor);
+            fireAutomationTrigger('on_checkin', vendor);
         }
     }
 
@@ -4714,6 +4823,7 @@
     let emailStatusInterval = null;
     function startEmailStatusPolling() {
         if (emailStatusInterval) clearInterval(emailStatusInterval);
+        if (!isBuiltinEnabled('email_status_polling')) return;
         emailStatusInterval = setInterval(async () => {
             // Only poll for vendors whose email hasn't reached a terminal state
             const pendingVendors = currentData.vendors.filter(v =>
@@ -5088,6 +5198,9 @@
             loadFormBuilderTab();
         }
         if (tabId === 'system') {
+        }
+        if (tabId === 'automations') {
+            loadAutomationsConfig().then(() => renderAutomationsTab());
         }
     }
 
@@ -5805,6 +5918,464 @@
             refreshData(null, true);
         } else {
             showToast("Storage is already clean. No files > 5 months old found.");
+        }
+    }
+
+    // --- AUTOMATIONS ENGINE ---
+    let automationsConfig = { builtin: {}, custom: [], log: [] };
+
+    const BUILTIN_AUTOMATIONS = [
+        {
+            id: 'auto_categorize',
+            name: 'Auto-Categorize Vendors',
+            description: 'Automatically assigns category labels (Clothes, Food, Jewelry, Art, etc.) based on the vendor\'s product description when they apply.',
+            icon: '🏷',
+            color: '#BF5AF2',
+            defaultEnabled: true
+        },
+        {
+            id: 'ai_license_scan',
+            name: 'AI Food License Scanner',
+            description: 'Automatically scans uploaded food handler licenses using AI vision to check validity and expiration dates.',
+            icon: '🤖',
+            color: '#0A84FF',
+            defaultEnabled: true
+        },
+        {
+            id: 'email_status_polling',
+            name: 'Email Delivery Tracking',
+            description: 'Polls Brevo every 2 minutes to track email delivery status (sent, delivered, opened, clicked, bounced).',
+            icon: '📧',
+            color: '#34C759',
+            defaultEnabled: true
+        },
+        {
+            id: 'late_strike_tracking',
+            name: 'Late Application Strikes',
+            description: 'Tracks vendors who apply after the deadline. Strikes persist for 1 year and display warning badges on repeat offenders.',
+            icon: '⚠️',
+            color: '#FF9500',
+            defaultEnabled: true
+        },
+        {
+            id: 'realtime_sync',
+            name: 'Realtime Data Sync',
+            description: 'Live-syncs vendor data across all open admin sessions. Changes by one admin appear instantly for others.',
+            icon: '🔄',
+            color: '#30D158',
+            defaultEnabled: true
+        },
+        {
+            id: 'form_autosave',
+            name: 'Form Builder Auto-Save',
+            description: 'Automatically saves form builder changes 1.5 seconds after you stop editing. Prevents data loss.',
+            icon: '💾',
+            color: '#5E5CE6',
+            defaultEnabled: true
+        },
+        {
+            id: 'auto_template_select',
+            name: 'Smart Email Template Selection',
+            description: 'Automatically picks the correct email template based on vendor status (Approved, Denied, Power Granted, etc.).',
+            icon: '✉️',
+            color: '#FF375F',
+            defaultEnabled: true
+        }
+    ];
+
+    async function loadAutomationsConfig() {
+        const { data } = await _supabase.from('secrets').select('value').eq('name', 'MARKET_AUTOMATIONS_CONFIG').single();
+        if (data && data.value) {
+            try { automationsConfig = JSON.parse(data.value); } catch(e) { console.error('Bad automations config', e); }
+        }
+        // Ensure structure
+        if (!automationsConfig.builtin) automationsConfig.builtin = {};
+        if (!automationsConfig.custom) automationsConfig.custom = [];
+        if (!automationsConfig.log) automationsConfig.log = [];
+    }
+
+    async function saveAutomationsConfig() {
+        const json = JSON.stringify(automationsConfig);
+        const { data: existing } = await _supabase.from('secrets').select('name').eq('name', 'MARKET_AUTOMATIONS_CONFIG').single();
+        if (existing) {
+            await _supabase.from('secrets').update({ value: json }).eq('name', 'MARKET_AUTOMATIONS_CONFIG');
+        } else {
+            await _supabase.from('secrets').insert({ name: 'MARKET_AUTOMATIONS_CONFIG', value: json });
+        }
+    }
+
+    function isBuiltinEnabled(id) {
+        const def = BUILTIN_AUTOMATIONS.find(a => a.id === id);
+        if (automationsConfig.builtin.hasOwnProperty(id)) return automationsConfig.builtin[id];
+        return def ? def.defaultEnabled : true;
+    }
+
+    async function toggleBuiltinAutomation(id) {
+        const current = isBuiltinEnabled(id);
+        automationsConfig.builtin[id] = !current;
+        await saveAutomationsConfig();
+        renderAutomationsTab();
+
+        // Apply side effects for toggling
+        if (id === 'email_status_polling') {
+            if (!current) { startEmailStatusPolling(); }
+            else { if (window.emailStatusInterval) clearInterval(window.emailStatusInterval); }
+        }
+        if (id === 'realtime_sync') {
+            if (!current) { setupRealtime(); }
+            else { if (window._realtimeChannel) _supabase.removeChannel(window._realtimeChannel); }
+        }
+
+        addAutomationLog(`${!current ? 'Enabled' : 'Disabled'} "${BUILTIN_AUTOMATIONS.find(a=>a.id===id)?.name}"`);
+        showToast(`Automation ${!current ? 'enabled' : 'disabled'}`);
+    }
+
+    function addAutomationLog(message) {
+        automationsConfig.log.unshift({ time: new Date().toISOString(), message });
+        if (automationsConfig.log.length > 50) automationsConfig.log = automationsConfig.log.slice(0, 50);
+        // Save asynchronously, don't await
+        saveAutomationsConfig();
+    }
+
+    function renderAutomationsTab() {
+        // --- BUILT-IN ---
+        const builtinEl = document.getElementById('builtinAutomationsList');
+        if (!builtinEl) return;
+        builtinEl.innerHTML = BUILTIN_AUTOMATIONS.map(a => {
+            const enabled = isBuiltinEnabled(a.id);
+            return `<div style="margin-bottom:8px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); padding: 16px 18px; border-radius: 16px; display: flex; align-items: center; gap: 14px; justify-content: space-between; flex-wrap: wrap;">
+                <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:200px;">
+                    <span style="font-size:1.3rem; line-height:1;">${a.icon}</span>
+                    <div>
+                        <strong style="font-size:0.88rem; display:block; margin-bottom:3px;">${a.name}</strong>
+                        <span style="font-size:0.72rem; color:var(--text-muted); line-height:1.4; display:block;">${a.description}</span>
+                    </div>
+                </div>
+                <label class="switch switch-sm" style="flex-shrink:0;">
+                    <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleBuiltinAutomation('${a.id}')">
+                    <span class="slider"></span>
+                </label>
+            </div>`;
+        }).join('');
+
+        // --- CUSTOM ---
+        const customEl = document.getElementById('customAutomationsList');
+        if (automationsConfig.custom.length === 0) {
+            customEl.innerHTML = `<div style="text-align:center; padding:30px 20px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 16px;">
+                <p style="color:var(--text-muted); font-size:0.85rem; margin:0 0 4px;">No custom automations yet.</p>
+                <p style="color:var(--text-muted); font-size:0.72rem; margin:0;">Click "+ New Automation" to create one.</p>
+            </div>`;
+        } else {
+            customEl.innerHTML = automationsConfig.custom.map((a, i) => {
+                const triggerLabel = {
+                    'post_event': 'After Market Date',
+                    'on_approve': 'On Approve',
+                    'on_deny': 'On Deny',
+                    'on_new_app': 'New Application',
+                    'on_checkin': 'On Check-In',
+                    'before_event': 'Before Market',
+                    'app_deadline': 'Deadline Passes',
+                    'on_late_app': 'Late Application'
+                }[a.trigger] || a.trigger;
+                const actionLabel = {
+                    'send_email': 'Send Email',
+                    'change_status': 'Change Status',
+                    'add_note': 'Add Note',
+                    'add_label': 'Add Label'
+                }[a.action] || a.action;
+                const delayText = a.delay && a.delay.value > 0 ? ` (${a.delay.value} ${a.delay.unit} delay)` : '';
+                return `<div style="margin-bottom:8px; background: rgba(255, 149, 0, 0.03); border: 1px solid rgba(255, 149, 0, 0.1); padding: 16px 18px; border-radius: 16px; display: flex; align-items: center; gap: 14px; justify-content: space-between; flex-wrap: wrap;">
+                    <div style="flex:1; min-width:200px;">
+                        <strong style="font-size:0.88rem; display:block; margin-bottom:4px;">${a.name || 'Untitled'}</strong>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                            <span style="font-size:0.62rem; padding:3px 8px; border-radius:6px; background:rgba(191,90,242,0.15); color:#BF5AF2; font-weight:600;">${triggerLabel}</span>
+                            <span style="font-size:0.62rem; color:var(--text-muted);">→</span>
+                            <span style="font-size:0.62rem; padding:3px 8px; border-radius:6px; background:rgba(10,132,255,0.15); color:#0A84FF; font-weight:600;">${actionLabel}${delayText}</span>
+                        </div>
+                        ${a.config?.detail ? `<span style="font-size:0.68rem; color:var(--text-muted); display:block; margin-top:5px;">${a.config.detail}</span>` : ''}
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                        <label class="switch switch-sm">
+                            <input type="checkbox" ${a.enabled ? 'checked' : ''} onchange="toggleCustomAutomation(${i})">
+                            <span class="slider"></span>
+                        </label>
+                        <button onclick="editCustomAutomation(${i})" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem; padding:4px;" title="Edit">✏️</button>
+                        <button onclick="deleteCustomAutomation(${i})" style="background:none; border:none; color:#FF3B30; cursor:pointer; font-size:0.8rem; padding:4px;" title="Delete">🗑</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // --- LOG ---
+        const logEl = document.getElementById('automationLogList');
+        if (automationsConfig.log.length === 0) {
+            logEl.innerHTML = `<p style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 20px 0;">No automation activity yet.</p>`;
+        } else {
+            logEl.innerHTML = automationsConfig.log.slice(0, 30).map(l => {
+                const d = new Date(l.time);
+                const timeStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                return `<div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); display:flex; justify-content:space-between; gap:10px;">
+                    <span style="font-size:0.75rem; color:var(--text-main);">${l.message}</span>
+                    <span style="font-size:0.65rem; color:var(--text-muted); white-space:nowrap;">${timeStr}</span>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    async function toggleCustomAutomation(index) {
+        automationsConfig.custom[index].enabled = !automationsConfig.custom[index].enabled;
+        await saveAutomationsConfig();
+        renderAutomationsTab();
+        const a = automationsConfig.custom[index];
+        addAutomationLog(`${a.enabled ? 'Enabled' : 'Disabled'} custom: "${a.name}"`);
+        showToast(`Automation ${a.enabled ? 'enabled' : 'disabled'}`);
+    }
+
+    async function deleteCustomAutomation(index) {
+        const a = automationsConfig.custom[index];
+        if (!confirm(`Delete automation "${a.name}"?`)) return;
+        automationsConfig.custom.splice(index, 1);
+        await saveAutomationsConfig();
+        renderAutomationsTab();
+        addAutomationLog(`Deleted custom: "${a.name}"`);
+        showToast('Automation deleted');
+    }
+
+    let editingAutomationIndex = -1;
+
+    function editCustomAutomation(index) {
+        editingAutomationIndex = index;
+        const a = automationsConfig.custom[index];
+        document.getElementById('autoName').value = a.name || '';
+        document.getElementById('autoTrigger').value = a.trigger || '';
+        document.getElementById('autoAction').value = a.action || '';
+        updateAutoActionOptions();
+
+        // Restore config fields
+        if (a.config) {
+            setTimeout(() => {
+                const tplSel = document.getElementById('autoConfigTemplate');
+                if (tplSel && a.config.template) tplSel.value = a.config.template;
+                const statusSel = document.getElementById('autoConfigStatus');
+                if (statusSel && a.config.status) statusSel.value = a.config.status;
+                const noteInput = document.getElementById('autoConfigNote');
+                if (noteInput && a.config.note) noteInput.value = a.config.note;
+                const labelInput = document.getElementById('autoConfigLabel');
+                if (labelInput && a.config.label) labelInput.value = a.config.label;
+                const targetSel = document.getElementById('autoConfigTarget');
+                if (targetSel && a.config.target) targetSel.value = a.config.target;
+            }, 50);
+        }
+        if (a.delay && a.delay.value > 0) {
+            document.getElementById('autoDelaySection').style.display = 'block';
+            document.getElementById('autoDelayValue').value = a.delay.value;
+            document.getElementById('autoDelayUnit').value = a.delay.unit || 'days';
+        }
+
+        openAddAutomationModal();
+    }
+
+    function openAddAutomationModal() {
+        document.getElementById('addAutomationModal').style.display = 'flex';
+    }
+
+    function closeAddAutomationModal() {
+        document.getElementById('addAutomationModal').style.display = 'none';
+        // Reset form
+        document.getElementById('autoName').value = '';
+        document.getElementById('autoTrigger').value = '';
+        document.getElementById('autoAction').value = '';
+        document.getElementById('autoConfigSection').innerHTML = '';
+        document.getElementById('autoDelaySection').style.display = 'none';
+        document.getElementById('autoDelayValue').value = '';
+        editingAutomationIndex = -1;
+    }
+
+    function updateAutoActionOptions() {
+        const trigger = document.getElementById('autoTrigger').value;
+        const configEl = document.getElementById('autoConfigSection');
+        const delayEl = document.getElementById('autoDelaySection');
+
+        // Show delay for time-based triggers
+        delayEl.style.display = ['post_event', 'before_event', 'app_deadline'].includes(trigger) ? 'block' : 'none';
+
+        // Show target audience for event-level triggers
+        const needsTarget = ['post_event', 'before_event', 'app_deadline'].includes(trigger);
+        const actionSel = document.getElementById('autoAction');
+
+        // Listen for action changes to render config
+        actionSel.onchange = () => renderAutoConfig(needsTarget);
+        renderAutoConfig(needsTarget);
+    }
+
+    function renderAutoConfig(showTarget) {
+        const action = document.getElementById('autoAction').value;
+        const configEl = document.getElementById('autoConfigSection');
+        let html = '';
+
+        if (showTarget) {
+            html += `<div style="margin-bottom:16px;">
+                <label class="stat-label">Target Vendors</label>
+                <select id="autoConfigTarget" class="modern-input">
+                    <option value="approved">Approved Vendors</option>
+                    <option value="checked_in">Checked-In Vendors</option>
+                    <option value="all_active">All Active (Approved + Checked In)</option>
+                    <option value="denied">Denied Vendors</option>
+                    <option value="pending">Pending Vendors</option>
+                    <option value="all">All Vendors</option>
+                </select>
+            </div>`;
+        }
+
+        if (action === 'send_email') {
+            html += `<div>
+                <label class="stat-label">Email Template</label>
+                <select id="autoConfigTemplate" class="modern-input">
+                    <option value="approved">Approved Template</option>
+                    <option value="denied">Denied Template</option>
+                    <option value="power">Power Granted Template</option>
+                    <option value="custom">Custom Template</option>
+                </select>
+            </div>`;
+        } else if (action === 'change_status') {
+            html += `<div>
+                <label class="stat-label">Change To</label>
+                <select id="autoConfigStatus" class="modern-input">
+                    <option value="Approved">Approved</option>
+                    <option value="Needs Review">Needs Review</option>
+                    <option value="Denied">Denied</option>
+                    <option value="Pending">Pending</option>
+                </select>
+            </div>`;
+        } else if (action === 'add_note') {
+            html += `<div>
+                <label class="stat-label">Note Text</label>
+                <input type="text" id="autoConfigNote" class="modern-input" placeholder="e.g. Auto-flagged for review">
+            </div>`;
+        } else if (action === 'add_label') {
+            html += `<div>
+                <label class="stat-label">Label Text</label>
+                <input type="text" id="autoConfigLabel" class="modern-input" placeholder="e.g. Returning Vendor, VIP, Survey Sent">
+            </div>`;
+        }
+
+        configEl.innerHTML = html;
+    }
+
+    async function saveNewAutomation() {
+        const name = document.getElementById('autoName').value.trim();
+        const trigger = document.getElementById('autoTrigger').value;
+        const action = document.getElementById('autoAction').value;
+
+        if (!name) { showToast('Please enter a name'); return; }
+        if (!trigger) { showToast('Please select a trigger'); return; }
+        if (!action) { showToast('Please select an action'); return; }
+
+        // Gather config
+        const config = {};
+        const tplSel = document.getElementById('autoConfigTemplate');
+        if (tplSel) config.template = tplSel.value;
+        const statusSel = document.getElementById('autoConfigStatus');
+        if (statusSel) config.status = statusSel.value;
+        const noteInput = document.getElementById('autoConfigNote');
+        if (noteInput) config.note = noteInput.value;
+        const labelInput = document.getElementById('autoConfigLabel');
+        if (labelInput) config.label = labelInput.value;
+        const targetSel = document.getElementById('autoConfigTarget');
+        if (targetSel) config.target = targetSel.value;
+
+        // Build detail string for display
+        const parts = [];
+        if (config.template) parts.push(`Template: ${config.template}`);
+        if (config.status) parts.push(`Status: ${config.status}`);
+        if (config.note) parts.push(`Note: "${config.note}"`);
+        if (config.label) parts.push(`Label: "${config.label}"`);
+        if (config.target) parts.push(`Target: ${config.target}`);
+        config.detail = parts.join(' · ');
+
+        const delay = { value: 0, unit: 'days' };
+        const delayVal = document.getElementById('autoDelayValue');
+        const delayUnit = document.getElementById('autoDelayUnit');
+        if (delayVal && delayVal.value) { delay.value = parseInt(delayVal.value) || 0; delay.unit = delayUnit.value; }
+
+        const automation = { name, trigger, action, config, delay, enabled: true, created: new Date().toISOString() };
+
+        if (editingAutomationIndex >= 0) {
+            automationsConfig.custom[editingAutomationIndex] = automation;
+            addAutomationLog(`Updated custom: "${name}"`);
+        } else {
+            automationsConfig.custom.push(automation);
+            addAutomationLog(`Created custom: "${name}"`);
+        }
+
+        await saveAutomationsConfig();
+        closeAddAutomationModal();
+        renderAutomationsTab();
+        showToast(editingAutomationIndex >= 0 ? 'Automation updated' : 'Automation created');
+    }
+
+    // --- AUTOMATION EXECUTION ENGINE ---
+    // Called from quickStatus, checkIn, and refreshData to fire custom automations
+    async function fireAutomationTrigger(triggerType, vendorOrVendors) {
+        if (!automationsConfig.custom || automationsConfig.custom.length === 0) return;
+
+        const enabledAutos = automationsConfig.custom.filter(a => a.enabled && a.trigger === triggerType);
+        if (enabledAutos.length === 0) return;
+
+        const vendors = Array.isArray(vendorOrVendors) ? vendorOrVendors : [vendorOrVendors];
+
+        for (const auto of enabledAutos) {
+            for (const vendor of vendors) {
+                // Check target filter
+                if (auto.config?.target) {
+                    const status = (vendor.status || '').toLowerCase();
+                    const target = auto.config.target;
+                    if (target === 'approved' && status !== 'approved') continue;
+                    if (target === 'checked_in' && status !== 'checked in') continue;
+                    if (target === 'denied' && status !== 'denied') continue;
+                    if (target === 'pending' && status !== 'pending') continue;
+                    if (target === 'all_active' && status !== 'approved' && status !== 'checked in') continue;
+                }
+
+                // If there's a delay, we log it but don't actually delay (server-side needed for real delays)
+                if (auto.delay && auto.delay.value > 0) {
+                    addAutomationLog(`Queued "${auto.name}" for ${vendor.first_name || 'vendor'} (${auto.delay.value} ${auto.delay.unit} delay)`);
+                    continue;
+                }
+
+                // Execute action
+                try {
+                    if (auto.action === 'add_note' && auto.config?.note) {
+                        const notes = getParsedNotes(vendor.internal_notes);
+                        notes.push({
+                            id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+                            date: new Date().toISOString(),
+                            text: auto.config.note,
+                            author: 'Automation: ' + auto.name,
+                            type: 'comment'
+                        });
+                        await _supabase.from('vendors').update({ internal_notes: JSON.stringify(notes) }).eq('id', vendor.id);
+                    } else if (auto.action === 'change_status' && auto.config?.status) {
+                        await _supabase.from('vendors').update({ status: auto.config.status }).eq('id', vendor.id);
+                    } else if (auto.action === 'send_email' && auto.config?.template) {
+                        await sendSingleEmail(vendor, auto.config.template, true);
+                    } else if (auto.action === 'add_label' && auto.config?.label) {
+                        const notes = getParsedNotes(vendor.internal_notes);
+                        notes.push({
+                            id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+                            date: new Date().toISOString(),
+                            text: `Label: ${auto.config.label}`,
+                            author: 'Automation: ' + auto.name,
+                            type: 'auto_label'
+                        });
+                        await _supabase.from('vendors').update({ internal_notes: JSON.stringify(notes) }).eq('id', vendor.id);
+                    }
+                    addAutomationLog(`Ran "${auto.name}" on ${vendor.first_name || ''} ${vendor.last_name || ''}`);
+                } catch(e) {
+                    console.error('Automation error:', e);
+                    addAutomationLog(`Error in "${auto.name}": ${e.message}`);
+                }
+            }
         }
     }
 
