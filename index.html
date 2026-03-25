@@ -1986,7 +1986,7 @@
                 <div style="position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#050505; color:white; font-family:sans-serif; z-index:999999;">
                     <div style="font-size: 4rem; color: #FF3B30; margin-bottom: 20px;">✕</div>
                     <h2 style="color:#FF3B30; font-weight:800; margin-bottom:10px;">System Error</h2>
-                    <p style="color:#a1a1aa; text-align:center; max-width: 400px;">${err.message || 'We could not process your status automatically. Please reply directly to the email to update us.'}</p>
+                    <p style="color:#a1a1aa; text-align:center; max-width: 400px;">${(err.message || 'We could not process your status automatically. Please reply directly to the email to update us.').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
                 </div>
             `;
         }
@@ -2395,7 +2395,9 @@
                 clearTimeout(_realtimeRefreshTimer);
                 _realtimeRefreshTimer = setTimeout(() => refreshData(null, true), 2000);
             })
-            .subscribe();
+            .subscribe((status, err) => {
+                if (err) console.error('Realtime subscription error:', err);
+            });
     }
 
     // --- DEEPSEEK V3 AI AUTOMATION ENGINE ---
@@ -4702,6 +4704,7 @@
     async function sendSingleEmail(vendor, forceTemplateId = null) {
         if (currentUser.role !== 'admin') return false;
         if (!vendor || !vendor.preferred_email) return false;
+        if (!BREVO_API_KEY) { console.warn('Brevo API key not configured'); return false; }
         // Only block Pending/Needs Review for auto-sends (not forced blasts)
         if (!forceTemplateId && (vendor.status === 'Needs Review' || vendor.status === 'Pending')) return false;
 
@@ -4991,7 +4994,11 @@
         if (emailStatusInterval) clearInterval(emailStatusInterval);
         if (!isBuiltinEnabled('email_status_polling')) return;
         const pollMinutes = getBuiltinSetting('email_status_polling', 'interval') || 2;
+        let _emailPollRunning = false;
         emailStatusInterval = setInterval(async () => {
+            if (_emailPollRunning) return;
+            _emailPollRunning = true;
+            try {
             // Only poll for vendors whose email hasn't reached a terminal state
             const pendingVendors = currentData.vendors.filter(v =>
                 (v.email_sent || v.brevo_message_id) &&
@@ -5007,6 +5014,7 @@
                 updated += results.filter(r => r !== null).length;
             }
             if (updated > 0) renderTable();
+            } finally { _emailPollRunning = false; }
         }, pollMinutes * 60000);
     }
     function stopEmailStatusPolling() {
@@ -6260,7 +6268,7 @@
         // Apply side effects for toggling
         if (id === 'email_status_polling') {
             if (!current) { startEmailStatusPolling(); }
-            else { if (window.emailStatusInterval) clearInterval(window.emailStatusInterval); }
+            else { if (emailStatusInterval) clearInterval(emailStatusInterval); }
         }
         if (id === 'realtime_sync') {
             if (!current) { setupRealtime(); }
@@ -6455,32 +6463,40 @@
     }
 
     function openAddAutomationModal() {
-        document.getElementById('addAutomationModal').style.display = 'flex';
+        const modal = document.getElementById('addAutomationModal');
+        if (modal) modal.style.display = 'flex';
     }
 
     function closeAddAutomationModal() {
-        document.getElementById('addAutomationModal').style.display = 'none';
+        const modal = document.getElementById('addAutomationModal');
+        if (modal) modal.style.display = 'none';
         // Reset form
-        document.getElementById('autoName').value = '';
-        document.getElementById('autoTrigger').value = '';
-        document.getElementById('autoAction').value = '';
-        document.getElementById('autoConfigSection').innerHTML = '';
-        document.getElementById('autoDelaySection').style.display = 'none';
-        document.getElementById('autoDelayValue').value = '';
+        const fields = { autoName: '', autoTrigger: '', autoAction: '', autoDelayValue: '' };
+        for (const [id, val] of Object.entries(fields)) {
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        }
+        const configEl = document.getElementById('autoConfigSection');
+        if (configEl) configEl.innerHTML = '';
+        const delayEl = document.getElementById('autoDelaySection');
+        if (delayEl) delayEl.style.display = 'none';
         editingAutomationIndex = -1;
     }
 
     function updateAutoActionOptions() {
-        const trigger = document.getElementById('autoTrigger').value;
+        const triggerEl = document.getElementById('autoTrigger');
         const configEl = document.getElementById('autoConfigSection');
         const delayEl = document.getElementById('autoDelaySection');
+        const actionSel = document.getElementById('autoAction');
+        if (!triggerEl || !configEl || !delayEl || !actionSel) return;
+
+        const trigger = triggerEl.value;
 
         // Show delay for time-based triggers
         delayEl.style.display = ['post_event', 'before_event', 'app_deadline'].includes(trigger) ? 'block' : 'none';
 
         // Show target audience for event-level triggers
         const needsTarget = ['post_event', 'before_event', 'app_deadline'].includes(trigger);
-        const actionSel = document.getElementById('autoAction');
 
         // Listen for action changes to render config
         actionSel.onchange = () => renderAutoConfig(needsTarget);
@@ -6488,8 +6504,10 @@
     }
 
     function renderAutoConfig(showTarget) {
-        const action = document.getElementById('autoAction').value;
+        const actionEl = document.getElementById('autoAction');
         const configEl = document.getElementById('autoConfigSection');
+        if (!actionEl || !configEl) return;
+        const action = actionEl.value;
         let html = '';
 
         if (showTarget) {
@@ -6637,7 +6655,8 @@
                     } else if (auto.action === 'change_status' && auto.config?.status) {
                         await _supabase.from('vendors').update({ status: auto.config.status }).eq('id', vendor.id);
                     } else if (auto.action === 'send_email' && auto.config?.template) {
-                        await sendSingleEmail(vendor, auto.config.template, true);
+                        const sent = await sendSingleEmail(vendor, auto.config.template);
+                        if (!sent) addAutomationLog(`Warning: email failed for "${auto.name}" on ${vendor.first_name || ''} ${vendor.last_name || ''}`);
                     } else if (auto.action === 'add_label' && auto.config?.label) {
                         const notes = getParsedNotes(vendor.internal_notes);
                         notes.push({
