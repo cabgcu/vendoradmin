@@ -451,24 +451,25 @@
         /* --- MOBILE BOTTOM NAV --- */
         .mobile-bottom-nav {
             display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
-            background: rgba(8,8,8,0.95);
-            backdrop-filter: blur(30px) saturate(180%);
-            -webkit-backdrop-filter: blur(30px) saturate(180%);
-            border-top: 1px solid rgba(255,255,255,0.06);
-            padding: 6px 0 calc(8px + env(safe-area-inset-bottom));
-            justify-content: space-around; align-items: center;
+            background: rgba(18,18,20,0.92);
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            border-top: 0.5px solid rgba(255,255,255,0.08);
+            padding: 4px 0 calc(4px + env(safe-area-inset-bottom));
+            justify-content: space-around; align-items: stretch;
         }
         .mob-nav-btn {
-            display: flex; flex-direction: column; align-items: center; gap: 3px;
-            background: none; border: none; color: rgba(255,255,255,0.35); font-size: 0.55rem;
-            font-weight: 600; cursor: pointer; padding: 6px 14px; font-family: inherit;
-            transition: all 0.2s ease; letter-spacing: 0.2px; text-transform: uppercase;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+            background: none; border: none; color: rgba(255,255,255,0.3); font-size: 0.5rem;
+            font-weight: 500; cursor: pointer; padding: 8px 0 4px; font-family: inherit;
+            transition: color 0.15s ease; letter-spacing: 0.1px;
             -webkit-tap-highlight-color: transparent; position: relative;
+            flex: 1; min-width: 0;
         }
         .mob-nav-btn.active { color: #0A84FF; }
-        .mob-nav-btn:active { transform: scale(0.92); }
-        .mob-nav-btn svg { stroke: currentColor; width: 22px; height: 22px; transition: all 0.2s ease; }
-        .mob-nav-btn.active svg { stroke-width: 2.5; }
+        .mob-nav-btn:active { opacity: 0.6; }
+        .mob-nav-btn svg { stroke: currentColor; width: 24px; height: 24px; fill: none; }
+        .mob-nav-btn.active svg { fill: currentColor; fill-opacity: 0.1; stroke-width: 2.2; }
 
         /* --- TABLET (900px) --- */
         @media (max-width: 900px) {
@@ -490,292 +491,321 @@
             .sidebar-btn { padding: 10px 0; font-size: 0.85rem; }
         }
 
-        /* --- MOBILE (768px) --- */
+        /* ══════════════════════════════════════════════════════════
+           MOBILE — Native App Experience (768px)
+           ══════════════════════════════════════════════════════════ */
         @media (max-width: 768px) {
-            body { padding-bottom: 72px; }
+            body { padding-bottom: 66px; -webkit-user-select: none; user-select: text; }
             .app-container { padding: 0; }
             .mobile-bottom-nav { display: flex; }
+            .frosted { border-color: rgba(255,255,255,0.03); }
 
-            /* Softer borders globally */
-            .frosted { border-color: rgba(255,255,255,0.04); }
-            .modern-input { border-color: rgba(255,255,255,0.06); }
-
-            /* ═══════════════════════════════════════
-               TOPBAR — Slim native app header
-               ═══════════════════════════════════════ */
+            /* ── HEADER ── */
             .topbar {
-                padding: 0; margin: 0;
-                border-radius: 0; border: none;
-                background: rgba(8,8,8,0.96);
-                backdrop-filter: blur(30px) saturate(180%);
-                -webkit-backdrop-filter: blur(30px) saturate(180%);
+                padding: 0; margin: 0; border-radius: 0; border: none;
+                background: rgba(0,0,0,0.85);
+                backdrop-filter: blur(40px) saturate(200%);
+                -webkit-backdrop-filter: blur(40px) saturate(200%);
                 position: sticky; top: 0; z-index: 100;
-                flex-direction: column; gap: 0; text-align: left;
+                flex-direction: column; gap: 0;
                 padding-top: env(safe-area-inset-top);
             }
-
-            /* Brand row — single slim line */
             .brand {
-                gap: 8px; flex-direction: row; align-items: center;
-                padding: 10px 16px 6px;
+                gap: 10px; flex-direction: row; align-items: center;
+                padding: 12px 16px 8px;
             }
-            .brand-logo { height: 20px; }
-            .brand-text h1 { font-size: 0.75rem; line-height: 1; }
-            .event-subtext { font-size: 0.65rem; gap: 4px; margin-top: 2px; }
+            .brand-logo { height: 22px; }
+            .brand-text h1 { font-size: 0.82rem; line-height: 1.1; letter-spacing: -0.01em; }
+            .event-subtext { font-size: 0.68rem; gap: 5px; margin-top: 2px; }
             .event-subtext select.modern-input {
-                height: 22px !important; font-size: 0.65rem !important;
-                padding: 0 20px 0 8px !important; border-radius: 8px !important;
-                background: rgba(255,255,255,0.06) !important;
-                border-color: rgba(255,255,255,0.08) !important;
+                height: 24px !important; font-size: 0.68rem !important;
+                padding: 0 22px 0 8px !important; border-radius: 8px !important;
+                background: rgba(255,255,255,0.08) !important;
+                border: none !important;
             }
 
-            /* Filter pills — horizontal scroll strip */
+            /* ── FILTER PILLS ── */
             #vendorFilterTabs {
-                width: 100%;
-                flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+                width: 100%; flex-wrap: nowrap;
+                overflow-x: auto; -webkit-overflow-scrolling: touch;
                 scrollbar-width: none; justify-content: flex-start;
-                gap: 6px; padding: 6px 16px 10px; margin: 0;
+                gap: 8px; padding: 4px 16px 12px; margin: 0;
             }
             #vendorFilterTabs::-webkit-scrollbar { display: none; }
             #vendorFilterTabs > .control-item { display: none !important; }
             #vendorFilterTabs > .control-item-filter:not([style*="width: 1px"]) { display: flex !important; flex-shrink: 0; }
             #vendorFilterTabs > .control-item-filter[style*="width: 1px"] { display: none !important; }
             .control-item {
-                font-size: 0.65rem; padding: 0 12px; height: 28px;
-                border-radius: 14px; border-color: rgba(255,255,255,0.1);
-                letter-spacing: 0.2px; font-weight: 600;
-                background: rgba(255,255,255,0.04);
-                transition: all 0.2s ease;
+                font-size: 0.72rem; padding: 0 14px; height: 32px;
+                border-radius: 16px; font-weight: 600;
+                background: rgba(255,255,255,0.06);
+                border: 1px solid rgba(255,255,255,0.04) !important;
+                transition: all 0.15s ease;
+            }
+            .control-item.active, .control-item.active-new, .control-item.active-review,
+            .control-item.active-approved, .control-item.active-denied {
+                border-color: transparent !important;
             }
 
-            /* ═══════════════════════════════════════
-               CONTENT AREA
-               ═══════════════════════════════════════ */
-            .view { padding: 12px 16px 0; }
-            #view-scan, #view-settings, #view-profiles { padding: 12px 16px 0; }
+            /* ── CONTENT AREA ── */
+            .view { padding: 14px 16px 0; }
+            #view-scan, #view-settings, #view-profiles { padding: 14px 16px 0; }
 
-            /* ═══════════════════════════════════════
-               STATS — Compact summary bar
-               ═══════════════════════════════════════ */
+            /* ── STATS CARDS ── */
             .stats-container {
-                grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px;
+                display: flex !important; gap: 8px; margin-bottom: 14px;
+                overflow-x: auto; -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; padding-bottom: 2px;
             }
+            .stats-container::-webkit-scrollbar { display: none; }
             .stat-card {
-                padding: 12px 8px; border-radius: 16px;
-                border-color: rgba(255,255,255,0.04) !important;
-                background: rgba(255,255,255,0.025) !important;
+                flex: 1; min-width: 0; padding: 14px 10px; border-radius: 14px;
+                border: none !important; background: rgba(255,255,255,0.035) !important;
             }
-            .stat-val { font-size: 1.4rem; font-weight: 800; }
-            .stat-label { font-size: 0.6rem; margin-bottom: 3px; letter-spacing: 0.5px; text-transform: uppercase; }
-            .stat-sub { gap: 6px; margin-top: 5px; }
-            .stat-sub span { font-size: 0.55rem; font-weight: 600; }
+            .stat-val { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+            .stat-label {
+                font-size: 0.58rem; margin-bottom: 4px;
+                letter-spacing: 0.8px; text-transform: uppercase;
+                color: var(--text-muted); font-weight: 600;
+            }
+            .stat-sub { gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+            .stat-sub span { font-size: 0.52rem; font-weight: 700; }
 
-            /* ═══════════════════════════════════════
-               SEARCH & FILTERS — Clean stacked layout
-               ═══════════════════════════════════════ */
+            /* ── SEARCH & FILTERS ── */
             .filter-row { flex-direction: column; gap: 8px; align-items: stretch; }
             .filter-row > * { width: 100% !important; min-width: 0 !important; }
             .modern-input {
-                padding: 12px 16px; font-size: 0.9rem; border-radius: 14px;
-                background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+                padding: 13px 16px; font-size: 0.92rem; border-radius: 12px;
+                background: rgba(120,120,128,0.12); border: none;
+                color: var(--text-main);
             }
-            .modern-input:focus { border-color: rgba(10, 132, 255, 0.4); background: rgba(255,255,255,0.06); }
-            select.modern-input { height: 44px; }
+            .modern-input::placeholder { color: rgba(255,255,255,0.3); }
+            .modern-input:focus {
+                background: rgba(120,120,128,0.2);
+                outline: none; border: none;
+                box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3);
+            }
+            select.modern-input { height: 46px; border: none; }
+            .btn-action { padding: 12px 18px; font-size: 0.82rem; border-radius: 12px; font-weight: 600; }
 
-            /* Action buttons */
-            .btn-action { padding: 10px 16px; font-size: 0.8rem; border-radius: 12px; }
-
-            /* ═══════════════════════════════════════
-               VENDOR CARDS — True mobile card layout
-               ═══════════════════════════════════════ */
+            /* ── VENDOR CARDS ── */
             .table-container { overflow-x: visible; }
-            table { min-width: 0; border-spacing: 0 6px; }
+            table { min-width: 0; border-spacing: 0 0; }
             thead { display: none; }
             tbody, tr, td { display: block; }
             tr.clickable-row {
-                margin-bottom: 6px; padding: 14px 16px; border-radius: 16px;
-                background: rgba(255,255,255,0.03) !important;
-                border: 1px solid rgba(255,255,255,0.05) !important;
+                margin-bottom: 1px; padding: 16px; border-radius: 0;
+                background: transparent !important;
+                border: none !important; border-bottom: 0.5px solid rgba(255,255,255,0.06) !important;
                 position: relative;
-                transition: background 0.15s ease;
             }
-            tr.clickable-row:active { background: rgba(255,255,255,0.06) !important; }
+            tr.clickable-row:first-child { border-top: 0.5px solid rgba(255,255,255,0.06) !important; }
+            tr.clickable-row:active { background: rgba(255,255,255,0.04) !important; }
             td { border: none !important; padding: 0 !important; background: transparent !important; border-radius: 0 !important; }
 
-            /* Card cell layout — structured like a native list item */
-            td:nth-child(1) { display: inline; font-size: 0.65rem; opacity: 0.5; }
-            td:nth-child(1) span { font-size: 0.8rem !important; font-weight: 700; opacity: 1; }
-            td:nth-child(2) { margin-top: 4px; }
-            td:nth-child(2) strong { font-size: 0.95rem; font-weight: 700; letter-spacing: -0.01em; }
-            td:nth-child(3) { font-size: 0.75rem; margin-top: 4px; color: var(--text-muted); }
-            td:nth-child(3) a { font-size: 0.75rem; }
+            /* Cell layout */
+            td:nth-child(1) { display: inline; font-size: 0.62rem; opacity: 0.4; }
+            td:nth-child(1) span { font-size: 0.78rem !important; font-weight: 700; opacity: 1; }
+            td:nth-child(2) { margin-top: 3px; }
+            td:nth-child(2) strong { font-size: 1rem; font-weight: 600; letter-spacing: -0.02em; }
+            td:nth-child(3) { font-size: 0.78rem; margin-top: 3px; color: rgba(255,255,255,0.45); }
+            td:nth-child(3) a { font-size: 0.78rem; color: rgba(255,255,255,0.45); text-decoration: none; }
             td:nth-child(3) small { display: none; }
 
-            /* Status/badge row */
+            /* Status row */
             td:nth-child(4), td:nth-child(5), td:nth-child(6), td:nth-child(7) {
                 display: inline-block; vertical-align: middle; margin-top: 10px;
             }
-            td:nth-child(5), td:nth-child(6), td:nth-child(7) { margin-left: 4px; }
+            td:nth-child(5), td:nth-child(6), td:nth-child(7) { margin-left: 5px; }
             td:nth-child(8) {
                 margin-top: 10px; padding-top: 10px !important;
-                border-top: 1px solid rgba(255,255,255,0.04) !important;
+                border-top: 0.5px solid rgba(255,255,255,0.05) !important;
             }
 
-            /* Action buttons in cards */
-            .action-wrapper { justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
+            /* Actions */
+            .action-wrapper { justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
             .btn-icon-text {
-                padding: 8px 12px; font-size: 0.7rem; border-radius: 10px;
-                border-color: rgba(255,255,255,0.06); background: rgba(255,255,255,0.04);
+                padding: 8px 14px; font-size: 0.72rem; border-radius: 8px;
+                background: rgba(120,120,128,0.12); border: none; font-weight: 500;
             }
+            .btn-icon-text:active { background: rgba(120,120,128,0.24); }
             .color-trigger-wrapper { display: none; }
 
-            /* Status toggles & badges */
-            .btn-quick-status { padding: 6px 10px; font-size: 0.7rem; border-radius: 10px; }
-            .status-toggle-group { border-radius: 10px; border-color: rgba(255,255,255,0.06); overflow: hidden; }
-            .status-badge { font-size: 0.6rem; padding: 4px 8px; min-width: 0; border-radius: 8px; }
-            .status-pill { font-size: 0.6rem; padding: 4px 10px; border-radius: 8px; }
-            .group-tag, .power-tag { font-size: 0.6rem; padding: 3px 8px; border-radius: 8px; }
+            /* Status toggles */
+            .btn-quick-status {
+                padding: 7px 12px; font-size: 0.72rem; border-radius: 8px;
+                font-weight: 600;
+            }
+            .status-toggle-group { border-radius: 10px; overflow: hidden; border: none; background: rgba(120,120,128,0.12); }
+            .status-badge { font-size: 0.6rem; padding: 4px 10px; min-width: 0; border-radius: 6px; font-weight: 600; }
+            .status-pill { font-size: 0.6rem; padding: 4px 10px; border-radius: 6px; }
+            .group-tag, .power-tag { font-size: 0.6rem; padding: 3px 8px; border-radius: 6px; }
 
-            /* Shrink inline tag badges */
-            tr.clickable-row [style*="font-size: 0.65rem"] { font-size: 0.55rem !important; padding: 3px 6px !important; border-radius: 6px !important; }
-            tr.clickable-row [style*="font-size: 0.75rem"][style*="padding: 4px 10px"] { font-size: 0.6rem !important; padding: 3px 8px !important; border-radius: 6px !important; }
+            /* Shrink inline tags */
+            tr.clickable-row [style*="font-size: 0.65rem"] { font-size: 0.58rem !important; padding: 3px 7px !important; border-radius: 6px !important; }
+            tr.clickable-row [style*="font-size: 0.75rem"][style*="padding: 4px 10px"] { font-size: 0.62rem !important; padding: 3px 8px !important; border-radius: 6px !important; }
 
-            /* ═══════════════════════════════════════
-               MODALS — Full-screen bottom sheets
-               ═══════════════════════════════════════ */
+            /* ── MODALS — iOS-style sheets ── */
             .modal-overlay { padding: 0; align-items: flex-end; }
             .modal-content {
-                max-width: 100vw; width: 100vw; max-height: 94vh;
-                border-radius: 20px 20px 0 0; padding: 24px 16px;
-                border: none; border-top: 1px solid rgba(255,255,255,0.08);
-                background: rgba(18,18,18,0.98);
+                max-width: 100vw; width: 100vw; max-height: 96vh;
+                border-radius: 12px 12px 0 0; padding: 20px 16px;
+                border: none; border-top: none;
+                background: rgb(28,28,30);
+            }
+            /* Pull indicator */
+            .modal-content::before {
+                content: ''; display: block; width: 36px; height: 5px;
+                background: rgba(255,255,255,0.2); border-radius: 3px;
+                margin: 0 auto 16px;
             }
             .review-modal-container {
-                flex-direction: column; max-width: 100vw; width: 100vw; max-height: 94vh;
-                border-radius: 20px 20px 0 0; overflow-y: auto;
-                border: none; border-top: 1px solid rgba(255,255,255,0.08);
-                background: rgba(18,18,18,0.98);
+                flex-direction: column; max-width: 100vw; width: 100vw; max-height: 96vh;
+                border-radius: 12px 12px 0 0; overflow-y: auto;
+                border: none; background: rgb(28,28,30);
             }
-            .review-modal-main { padding: 20px 16px; overflow-y: visible; }
+            .review-modal-container::before {
+                content: ''; display: block; width: 36px; height: 5px;
+                background: rgba(255,255,255,0.2); border-radius: 3px;
+                margin: 12px auto 4px; flex-shrink: 0;
+            }
+            .review-modal-main { padding: 16px 16px 20px; overflow-y: visible; }
             .review-modal-sidebar {
                 width: 100%; border-left: none;
-                border-top: 1px solid rgba(255,255,255,0.06);
+                border-top: 0.5px solid rgba(255,255,255,0.08);
                 padding: 16px; overflow-y: visible;
             }
-            .sidebar-btn { padding: 12px 0; font-size: 0.85rem; border-radius: 12px; }
-            .review-field-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
-            .review-field-label { font-size: 0.65rem !important; }
-            .review-field-value { font-size: 0.88rem !important; }
+            .sidebar-btn { padding: 14px 0; font-size: 0.88rem; border-radius: 12px; font-weight: 600; }
+            .review-field-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+            .review-field-label { font-size: 0.65rem !important; letter-spacing: 0.5px !important; }
+            .review-field-value { font-size: 0.9rem !important; }
 
             /* Edit modal */
-            #editModal .modal-content { padding: 24px 16px; }
-            .form-grid { grid-template-columns: 1fr; gap: 14px; }
+            #editModal .modal-content { padding: 20px 16px; }
+            .form-grid { grid-template-columns: 1fr; gap: 16px; }
 
-            /* ═══════════════════════════════════════
-               SETTINGS — Native grouped sections
-               ═══════════════════════════════════════ */
+            /* ── SETTINGS ── */
             .form-card {
-                padding: 12px !important; border-radius: 18px !important;
-                border-color: rgba(255,255,255,0.04) !important;
-                background: rgba(255,255,255,0.02) !important;
+                padding: 0 !important; border-radius: 0 !important;
+                border: none !important; background: transparent !important;
             }
             #view-settings .form-card > div:first-child {
-                flex-direction: column; gap: 8px !important; margin-bottom: 12px !important;
+                flex-direction: column; gap: 8px !important; margin-bottom: 14px !important;
             }
-            #view-settings .form-card > div:first-child h2 { font-size: 1rem; font-weight: 800; }
+            #view-settings .form-card > div:first-child h2 { font-size: 1.05rem; font-weight: 700; }
 
-            /* Settings tabs — 2-col grid with short labels */
+            /* Settings tabs — 3-col grid */
             .settings-tabs {
-                display: grid !important; grid-template-columns: 1fr 1fr;
-                gap: 4px; padding: 4px; margin: 0;
-                background: rgba(255,255,255,0.03) !important; border-radius: 14px !important;
+                display: grid !important; grid-template-columns: 1fr 1fr 1fr;
+                gap: 0; padding: 2px; margin: 0;
+                background: rgba(120,120,128,0.12) !important; border-radius: 10px !important;
+                border: none !important;
             }
             .settings-tab {
-                padding: 10px 6px; font-size: 0.65rem; text-align: center;
-                white-space: nowrap; border-radius: 10px;
+                padding: 8px 4px; font-size: 0.62rem; text-align: center;
+                white-space: nowrap; border-radius: 8px; font-weight: 500;
+                color: var(--text-muted);
+            }
+            .settings-tab.active {
+                background: rgba(255,255,255,0.12) !important;
+                color: var(--text-main) !important;
+                font-weight: 600;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
             }
             .tab-full { display: none !important; }
             .tab-short { display: inline !important; }
-            .settings-section .form-grid { grid-template-columns: 1fr; gap: 12px; }
-            .settings-section h3 { font-size: 0.95rem; }
-            .settings-section label, .settings-section .stat-label { font-size: 0.75rem; }
 
-            /* Settings form sections */
-            .settings-section > div[style*="padding: 25px"] { padding: 16px !important; border-radius: 16px !important; margin-bottom: 14px !important; }
-            .settings-section > div[style*="padding: 20px"] { padding: 14px !important; border-radius: 16px !important; }
-            .settings-section .stat-label[style*="font-size: 1rem"] { font-size: 0.8rem !important; margin-bottom: 8px !important; }
-            .settings-section p[style*="font-size:0.85rem"] { font-size: 0.75rem !important; margin-bottom: 12px !important; }
+            .settings-section .form-grid { grid-template-columns: 1fr; gap: 14px; }
+            .settings-section h3 { font-size: 0.95rem; }
+            .settings-section label, .settings-section .stat-label { font-size: 0.78rem; }
+
+            /* Settings cards — iOS grouped style */
+            .settings-section > div[style*="padding: 25px"] {
+                padding: 16px !important; border-radius: 12px !important;
+                margin-bottom: 12px !important; background: rgba(255,255,255,0.04) !important;
+                border: none !important;
+            }
+            .settings-section > div[style*="padding: 20px"] {
+                padding: 16px !important; border-radius: 12px !important;
+                background: rgba(255,255,255,0.04) !important; border: none !important;
+            }
+            .settings-section .stat-label[style*="font-size: 1rem"] { font-size: 0.82rem !important; margin-bottom: 8px !important; }
+            .settings-section p[style*="font-size:0.85rem"] { font-size: 0.78rem !important; margin-bottom: 14px !important; }
 
             /* Settings buttons */
-            .settings-section .btn-action[style*="padding: 15px"] { padding: 12px 14px !important; font-size: 0.85rem !important; border-radius: 12px !important; }
-            .settings-section .btn-action { padding: 10px 14px; font-size: 0.8rem; border-radius: 12px; }
+            .settings-section .btn-action[style*="padding: 15px"] { padding: 14px 16px !important; font-size: 0.88rem !important; border-radius: 12px !important; }
+            .settings-section .btn-action { padding: 12px 16px; font-size: 0.82rem; border-radius: 12px; }
             .settings-section div[style*="gap: 15px"] { gap: 8px !important; }
-            .settings-section div[style*="gap: 15px"] .btn-action { padding: 10px 8px !important; font-size: 0.72rem !important; }
+            .settings-section div[style*="gap: 15px"] .btn-action { padding: 12px 10px !important; font-size: 0.75rem !important; }
 
-            /* Email template editor */
-            .rich-toolbar { flex-wrap: wrap !important; gap: 3px !important; }
-            .email-var-chip { font-size: 0.6rem !important; padding: 4px 8px !important; border-radius: 6px !important; }
+            /* Email editor */
+            .rich-toolbar { flex-wrap: wrap !important; gap: 4px !important; }
+            .email-var-chip { font-size: 0.6rem !important; padding: 5px 10px !important; border-radius: 8px !important; }
 
             /* Form builder */
-            .fb-add-btn { padding: 8px 14px; font-size: 0.75rem; border-radius: 10px; }
+            .fb-add-btn { padding: 10px 16px; font-size: 0.78rem; border-radius: 10px; }
 
-            /* Automations tab */
-            #settings-tab-automations .btn-action { font-size: 0.75rem; padding: 8px 14px; }
-            #addAutomationModal > div { padding: 20px 16px; border-radius: 20px 20px 0 0; max-width: 100vw; margin: auto auto 0; }
+            /* Automations */
+            #settings-tab-automations .btn-action { font-size: 0.78rem; padding: 10px 16px; }
+            #addAutomationModal { align-items: flex-end !important; }
+            #addAutomationModal > div {
+                padding: 20px 16px; border-radius: 12px 12px 0 0; max-width: 100vw;
+                margin: 0; background: rgb(28,28,30);
+            }
+            #addAutomationModal > div::before {
+                content: ''; display: block; width: 36px; height: 5px;
+                background: rgba(255,255,255,0.2); border-radius: 3px;
+                margin: 0 auto 16px;
+            }
 
-            /* Bulk email modal */
-            #bulkEmailModal .modal-content { max-width: 100vw; padding: 24px 16px; border-radius: 20px 20px 0 0; }
+            /* Bulk/Profile modals */
+            #bulkEmailModal .modal-content, #profileModal .modal-content {
+                max-width: 100vw; padding: 20px 16px; border-radius: 12px 12px 0 0;
+            }
 
-            /* Profile modal */
-            #profileModal .modal-content { max-width: 100vw; padding: 24px 16px; border-radius: 20px 20px 0 0; }
-
-            /* ═══════════════════════════════════════
-               CHECK-IN — Mobile-optimized scanner
-               ═══════════════════════════════════════ */
-            #view-scan .form-card { padding: 16px !important; border-radius: 18px !important; }
-            #view-scan h2 { font-size: 1.1rem !important; margin-bottom: 14px !important; }
-            #view-scan input { font-size: 1.1rem !important; padding: 14px 16px !important; border-radius: 14px !important; }
+            /* ── CHECK-IN ── */
+            #view-scan .form-card {
+                padding: 20px 16px !important; border-radius: 16px !important;
+                background: rgba(255,255,255,0.03) !important; border: none !important;
+            }
+            #view-scan h2 { font-size: 1.15rem !important; margin-bottom: 16px !important; font-weight: 700 !important; }
+            #view-scan input[type="text"] {
+                font-size: 1.1rem !important; padding: 16px !important; border-radius: 12px !important;
+                background: rgba(120,120,128,0.12) !important; border: none !important;
+                text-align: center;
+            }
             #view-scan div[style*="padding: 15px 25px"] {
-                padding: 12px 16px !important; border-radius: 14px !important; min-width: 0 !important;
+                padding: 14px 12px !important; border-radius: 12px !important; min-width: 0 !important;
             }
             #view-scan div[style*="padding: 15px 25px"] span:first-child { font-size: 1.8rem !important; }
-            #view-scan div[style*="padding: 15px 25px"] span:last-child { font-size: 0.65rem !important; margin-top: 4px !important; letter-spacing: 0.8px !important; }
+            #view-scan div[style*="padding: 15px 25px"] span:last-child {
+                font-size: 0.6rem !important; margin-top: 4px !important; letter-spacing: 1px !important;
+            }
 
-            /* Check-in alert modal */
-            #checkInAlert .modal-content, #alertContentBox { border-radius: 20px; }
+            /* Check-in alert */
+            #checkInAlert .modal-content, #alertContentBox { border-radius: 16px; }
 
-            /* Close buttons on modals */
+            /* Close buttons */
             .close-modal { font-size: 1.5rem; padding: 8px; }
 
-            /* ═══════════════════════════════════════
-               BOTTOM NAV — Native tab bar
-               ═══════════════════════════════════════ */
-            #toast { bottom: 82px !important; font-size: 0.8rem; padding: 12px 20px; border-radius: 14px; }
+            /* Toast */
+            #toast { bottom: 76px !important; font-size: 0.82rem; padding: 12px 20px; border-radius: 100px; }
 
-            /* Login card */
-            .login-card { padding: 32px 24px; border-radius: 24px; }
+            /* Login */
+            .login-card { padding: 32px 24px; border-radius: 20px; }
         }
 
-        /* --- SMALL PHONES (390px) --- */
+        /* ── SMALL PHONES (390px) ── */
         @media (max-width: 390px) {
-            .view { padding: 10px 12px 0; }
-            #view-scan, #view-settings, #view-profiles { padding: 10px 12px 0; }
-            .brand { padding: 8px 12px 4px; }
-            .brand-logo { height: 18px; }
-            .brand-text h1 { font-size: 0.7rem; }
-            #vendorFilterTabs { padding: 4px 12px 8px; gap: 5px; }
-            .control-item { font-size: 0.6rem; padding: 0 10px; height: 26px; }
-            .stats-container { gap: 6px; }
-            .stat-card { padding: 10px 6px; border-radius: 14px; }
-            .stat-val { font-size: 1.2rem; }
-            .stat-label { font-size: 0.55rem; }
-            .stat-sub span { font-size: 0.5rem; }
-            .mob-nav-btn { padding: 4px 8px; font-size: 0.5rem; }
-            .mob-nav-btn svg { width: 20px; height: 20px; }
-            tr.clickable-row { padding: 12px; border-radius: 14px; }
-            .btn-quick-status { padding: 5px 8px; font-size: 0.65rem; }
-            .btn-icon-text { padding: 6px 10px; font-size: 0.65rem; }
-            .modern-input { padding: 10px 14px; font-size: 0.85rem; }
+            .brand { padding: 10px 14px 6px; }
+            .brand-logo { height: 20px; }
+            .brand-text h1 { font-size: 0.78rem; }
+            #vendorFilterTabs { padding: 4px 14px 10px; gap: 6px; }
+            .control-item { font-size: 0.66rem; padding: 0 12px; height: 30px; }
+            .stat-card { padding: 12px 8px; }
+            .stat-val { font-size: 1.3rem; }
+            tr.clickable-row { padding: 14px; }
+            .modern-input { padding: 12px 14px; font-size: 0.88rem; }
         }
 
         /* Bulk Email Modal Styles */
@@ -1991,7 +2021,7 @@
         if (!text) return [];
         const str = text.toLowerCase();
         let found = new Set();
-        
+
         for (const [cat, keywords] of Object.entries(CATEGORY_MAP)) {
             for (const kw of keywords) {
                 const regex = new RegExp(`\\b${kw}\\b`, 'i');
@@ -2002,6 +2032,100 @@
             }
         }
         return Array.from(found);
+    }
+
+    async function aiCategorizeVendor(description) {
+        if (!OPENROUTER_API_KEY || !description) return ['Unique Goods'];
+        const categories = Object.keys(CATEGORY_MAP);
+        try {
+            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
+                body: JSON.stringify({
+                    model: getBuiltinSetting('auto_categorize', 'model') || 'google/gemini-2.0-flash-lite-preview-02-05:free',
+                    messages: [{ role: "user", content: `Categorize this vendor into one or more of these categories: ${categories.join(', ')}. Vendor description: "${description}". Respond ONLY with a JSON array of matching category names, e.g. ["Food & Beverage","Art & Prints"]. If none fit, respond ["Unique Goods"].` }]
+                })
+            });
+            const data = await res.json();
+            const text = data.choices?.[0]?.message?.content || '';
+            const match = text.match(/\[.*\]/s);
+            if (match) {
+                const parsed = JSON.parse(match[0]);
+                const valid = parsed.filter(c => categories.includes(c) || c === 'Unique Goods');
+                return valid.length > 0 ? valid : ['Unique Goods'];
+            }
+        } catch(e) { console.error('AI categorization failed:', e); }
+        return ['Unique Goods'];
+    }
+
+    async function aiSummarizeVendor(vendor) {
+        if (!OPENROUTER_API_KEY || !vendor.description) return null;
+        const model = getBuiltinSetting('ai_vendor_summary', 'model') || 'google/gemini-2.0-flash-lite-preview-02-05:free';
+        const prompt = getBuiltinSetting('ai_vendor_summary', 'prompt') || 'Summarize this vendor application in 1-2 sentences. Focus on what they sell and any notable details.';
+        try {
+            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
+                body: JSON.stringify({
+                    model,
+                    messages: [{ role: "user", content: `${prompt}\n\nVendor: ${vendor.first_name || ''} ${vendor.last_name || ''}\nBusiness: ${vendor.business_name || 'N/A'}\nDescription: ${vendor.description}` }]
+                })
+            });
+            const data = await res.json();
+            return data.choices?.[0]?.message?.content?.trim() || null;
+        } catch(e) { console.error('AI summary failed:', e); return null; }
+    }
+
+    async function runAIDuplicateDetection(vendors) {
+        if (!OPENROUTER_API_KEY || !vendors || vendors.length < 2) return [];
+        const sensitivity = getBuiltinSetting('ai_duplicate_detect', 'sensitivity') || 'medium';
+        if (sensitivity === 'low') {
+            // Simple exact match - no AI needed
+            const seen = {};
+            const dupes = [];
+            for (const v of vendors) {
+                const key = `${(v.email||'').toLowerCase()}_${(v.first_name||'').toLowerCase()}_${(v.last_name||'').toLowerCase()}`;
+                if (seen[key]) { dupes.push({ vendor1: seen[key], vendor2: v, reason: 'Exact name + email match' }); }
+                else seen[key] = v;
+            }
+            return dupes;
+        }
+        if (sensitivity === 'medium') {
+            // Fuzzy local match on names/emails
+            const dupes = [];
+            for (let i = 0; i < vendors.length; i++) {
+                for (let j = i + 1; j < vendors.length; j++) {
+                    const a = vendors[i], b = vendors[j];
+                    const emailMatch = a.email && b.email && a.email.toLowerCase() === b.email.toLowerCase();
+                    const nameMatch = a.first_name && b.first_name && a.first_name.toLowerCase() === b.first_name.toLowerCase() && a.last_name && b.last_name && a.last_name.toLowerCase() === b.last_name.toLowerCase();
+                    const bizMatch = a.business_name && b.business_name && a.business_name.toLowerCase() === b.business_name.toLowerCase();
+                    if (emailMatch || nameMatch || bizMatch) {
+                        dupes.push({ vendor1: a, vendor2: b, reason: emailMatch ? 'Same email' : nameMatch ? 'Same name' : 'Same business name' });
+                    }
+                }
+            }
+            return dupes;
+        }
+        // High sensitivity - use AI
+        const summaries = vendors.slice(0, 50).map((v, i) => `${i}: ${v.first_name||''} ${v.last_name||''} | ${v.email||''} | ${v.business_name||''} | ${(v.description||'').substring(0,80)}`).join('\n');
+        try {
+            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
+                body: JSON.stringify({
+                    model: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+                    messages: [{ role: "user", content: `Find potential duplicate vendors in this list. Look for same person, same business, or very similar applications. List:\n${summaries}\n\nRespond ONLY with JSON array of objects: [{"idx1": number, "idx2": number, "reason": "string"}]. If no duplicates found, respond [].` }]
+                })
+            });
+            const data = await res.json();
+            const text = data.choices?.[0]?.message?.content || '[]';
+            const match = text.match(/\[.*\]/s);
+            if (match) {
+                const parsed = JSON.parse(match[0]);
+                return parsed.map(d => ({ vendor1: vendors[d.idx1], vendor2: vendors[d.idx2], reason: d.reason })).filter(d => d.vendor1 && d.vendor2);
+            }
+        } catch(e) { console.error('AI duplicate detection failed:', e); }
+        return [];
     }
 
     // SUPABASE SETUP
@@ -2359,9 +2483,11 @@
                     const currentYear = new Date().getFullYear();
                     const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                     
+                    const scanTimeout = (getBuiltinSetting('ai_license_scan', 'timeout') || 15) * 1000;
+                    const scanModel = getBuiltinSetting('ai_license_scan', 'model') || 'google/gemini-2.0-flash-lite-preview-02-05:free';
                     const visionController = new AbortController();
-                    const visionTimeoutId = setTimeout(() => visionController.abort(), 15000); 
-                    
+                    const visionTimeoutId = setTimeout(() => visionController.abort(), scanTimeout);
+
                     const visionRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                         method: "POST",
                         headers: {
@@ -2371,8 +2497,7 @@
                             "X-Title": "CAB Admin System"
                         },
                         body: JSON.stringify({
-                            // Switch to a high-tier ZERO COST free vision model on OpenRouter
-                            model: "google/gemini-2.0-flash-lite-preview-02-05:free", 
+                            model: scanModel,
                             messages: [{
                                 role: "user",
                                 content: [
@@ -2684,14 +2809,52 @@
                     v.aiData = aiNote.ai_data;
                 }
                 
-                // Exclusively use the highly reliable local matching engine for categories now
                 if (isBuiltinEnabled('auto_categorize')) {
                     v.autoCategories = extractVendorCategories(v.description || '');
-                    if (v.autoCategories.length === 0) v.autoCategories = ['Unique Goods'];
+                    if (v.autoCategories.length === 0 && getBuiltinSetting('auto_categorize', 'useAI') && OPENROUTER_API_KEY) {
+                        v._needsAICategorization = true;
+                    }
+                    if (v.autoCategories.length === 0 && !v._needsAICategorization) v.autoCategories = ['Unique Goods'];
                 } else {
                     v.autoCategories = v.autoCategories || ['Unique Goods'];
                 }
             });
+
+            // Batch AI categorization for vendors that need it (non-blocking)
+            const needsAI = vendorsData.filter(v => v._needsAICategorization);
+            if (needsAI.length > 0) {
+                (async () => {
+                    for (const v of needsAI) {
+                        v.autoCategories = await aiCategorizeVendor(v.description);
+                        delete v._needsAICategorization;
+                    }
+                    renderTable();
+                })();
+            }
+
+            // AI Vendor Summary (non-blocking background task)
+            if (isBuiltinEnabled('ai_vendor_summary') && OPENROUTER_API_KEY) {
+                (async () => {
+                    const unsummarized = vendorsData.filter(v => !v._aiSummary && v.description);
+                    for (const v of unsummarized.slice(0, 20)) {
+                        v._aiSummary = await aiSummarizeVendor(v);
+                        await new Promise(r => setTimeout(r, 1500));
+                    }
+                })();
+            }
+
+            // AI Duplicate Detection (non-blocking)
+            if (isBuiltinEnabled('ai_duplicate_detect') && vendorsData.length > 1) {
+                (async () => {
+                    const dupes = await runAIDuplicateDetection(vendorsData);
+                    if (dupes.length > 0) {
+                        dupes.forEach(d => {
+                            addAutomationLog(`Potential duplicate: ${d.vendor1.first_name} ${d.vendor1.last_name} & ${d.vendor2.first_name} ${d.vendor2.last_name} (${d.reason})`);
+                        });
+                        window._detectedDuplicates = dupes;
+                    }
+                })();
+            }
         }
 
         currentData = {
@@ -2765,9 +2928,10 @@
         const emails = [...new Set(currentData.vendors.map(v => v.preferred_email).filter(Boolean))];
         if(!emails.length) return;
 
-        // Only count late strikes from the past year (strikes expire after 1 year)
+        // Configurable strike expiry (default 12 months)
+        const expiryMonths = getBuiltinSetting('late_strike_tracking', 'expiryMonths') || 12;
         const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        oneYearAgo.setMonth(oneYearAgo.getMonth() - expiryMonths);
         const oneYearAgoISO = oneYearAgo.toISOString();
 
         const { data: pastApps } = await _supabase.from('vendors').select('preferred_email, created_at, event_id').in('preferred_email', emails).gte('created_at', oneYearAgoISO);
@@ -3803,11 +3967,13 @@
             const rowBgStyle = rowColor ? `background: ${rowColor}20 !important;` : '';
             const rowBorderStyle = rowColor ? `background: ${rowColor}20 !important; border-left: 6px solid ${rowColor} !important; border-radius: 16px 0 0 16px;` : 'border-radius: 16px 0 0 16px;';
 
-            // Add 3 Strikes Penalty Badge Warning
+            // Late Strikes Badge (configurable thresholds)
             const strikes = window.vendorStrikes[v.preferred_email]?.length || 0;
-            if (strikes >= 3) {
+            const severeAt = getBuiltinSetting('late_strike_tracking', 'severeThreshold') || 3;
+            const warnAt = getBuiltinSetting('late_strike_tracking', 'threshold') || 1;
+            if (strikes >= severeAt) {
                 tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">🚨 ${strikes} LATE STRIKES</span>`);
-            } else if (strikes > 0) {
+            } else if (strikes >= warnAt) {
                 tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">⚠️ ${strikes} LATE</span>`);
             }
 
@@ -4824,6 +4990,7 @@
     function startEmailStatusPolling() {
         if (emailStatusInterval) clearInterval(emailStatusInterval);
         if (!isBuiltinEnabled('email_status_polling')) return;
+        const pollMinutes = getBuiltinSetting('email_status_polling', 'interval') || 2;
         emailStatusInterval = setInterval(async () => {
             // Only poll for vendors whose email hasn't reached a terminal state
             const pendingVendors = currentData.vendors.filter(v =>
@@ -4840,7 +5007,7 @@
                 updated += results.filter(r => r !== null).length;
             }
             if (updated > 0) renderTable();
-        }, 120000); // Every 2 minutes
+        }, pollMinutes * 60000);
     }
     function stopEmailStatusPolling() {
         if (emailStatusInterval) { clearInterval(emailStatusInterval); emailStatusInterval = null; }
@@ -5928,58 +6095,108 @@
         {
             id: 'auto_categorize',
             name: 'Auto-Categorize Vendors',
-            description: 'Automatically assigns category labels (Clothes, Food, Jewelry, Art, etc.) based on the vendor\'s product description when they apply.',
-            icon: '🏷',
-            color: '#BF5AF2',
-            defaultEnabled: true
+            description: 'Assigns category labels from product descriptions.',
+            icon: '🏷', color: '#BF5AF2', defaultEnabled: true,
+            settings: [
+                { key: 'useAI', label: 'Use AI for better categorization', type: 'toggle', default: false,
+                  help: 'Uses OpenRouter AI to intelligently categorize vendors beyond keyword matching.' },
+                { key: 'model', label: 'AI Model', type: 'select', default: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+                  options: [
+                      { value: 'google/gemini-2.0-flash-lite-preview-02-05:free', label: 'Gemini Flash (Free)' },
+                      { value: 'meta-llama/llama-4-maverick:free', label: 'Llama 4 Maverick (Free)' }
+                  ] }
+            ]
         },
         {
             id: 'ai_license_scan',
             name: 'AI Food License Scanner',
-            description: 'Automatically scans uploaded food handler licenses using AI vision to check validity and expiration dates.',
-            icon: '🤖',
-            color: '#0A84FF',
-            defaultEnabled: true
+            description: 'Scans uploaded food licenses via AI vision.',
+            icon: '🤖', color: '#0A84FF', defaultEnabled: true,
+            settings: [
+                { key: 'model', label: 'AI Model', type: 'select', default: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+                  options: [
+                      { value: 'google/gemini-2.0-flash-lite-preview-02-05:free', label: 'Gemini Flash (Free)' },
+                      { value: 'meta-llama/llama-4-maverick:free', label: 'Llama 4 Maverick (Free)' },
+                      { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet (Paid)' }
+                  ] },
+                { key: 'timeout', label: 'Timeout (seconds)', type: 'number', default: 15, min: 5, max: 60 }
+            ]
         },
         {
             id: 'email_status_polling',
             name: 'Email Delivery Tracking',
-            description: 'Polls Brevo every 2 minutes to track email delivery status (sent, delivered, opened, clicked, bounced).',
-            icon: '📧',
-            color: '#34C759',
-            defaultEnabled: true
+            description: 'Polls Brevo for email delivery status.',
+            icon: '📧', color: '#34C759', defaultEnabled: true,
+            settings: [
+                { key: 'interval', label: 'Poll interval (minutes)', type: 'number', default: 2, min: 1, max: 30 },
+                { key: 'batchSize', label: 'Vendors per batch', type: 'number', default: 5, min: 1, max: 20 }
+            ]
         },
         {
             id: 'late_strike_tracking',
             name: 'Late Application Strikes',
-            description: 'Tracks vendors who apply after the deadline. Strikes persist for 1 year and display warning badges on repeat offenders.',
-            icon: '⚠️',
-            color: '#FF9500',
-            defaultEnabled: true
+            description: 'Tracks vendors who apply after deadline.',
+            icon: '⚠️', color: '#FF9500', defaultEnabled: true,
+            settings: [
+                { key: 'expiryMonths', label: 'Strike expiry (months)', type: 'number', default: 12, min: 1, max: 36 },
+                { key: 'threshold', label: 'Warning badge at # strikes', type: 'number', default: 1, min: 1, max: 10 },
+                { key: 'severeThreshold', label: 'Severe badge at # strikes', type: 'number', default: 3, min: 2, max: 10 }
+            ]
         },
         {
             id: 'realtime_sync',
             name: 'Realtime Data Sync',
-            description: 'Live-syncs vendor data across all open admin sessions. Changes by one admin appear instantly for others.',
-            icon: '🔄',
-            color: '#30D158',
-            defaultEnabled: true
+            description: 'Live-syncs vendor data across admin sessions.',
+            icon: '🔄', color: '#30D158', defaultEnabled: true,
+            settings: [
+                { key: 'debounce', label: 'Refresh debounce (ms)', type: 'number', default: 2000, min: 500, max: 10000 }
+            ]
         },
         {
             id: 'form_autosave',
             name: 'Form Builder Auto-Save',
-            description: 'Automatically saves form builder changes 1.5 seconds after you stop editing. Prevents data loss.',
-            icon: '💾',
-            color: '#5E5CE6',
-            defaultEnabled: true
+            description: 'Auto-saves form changes after editing.',
+            icon: '💾', color: '#5E5CE6', defaultEnabled: true,
+            settings: [
+                { key: 'delay', label: 'Save delay (ms)', type: 'number', default: 1500, min: 500, max: 5000 }
+            ]
         },
         {
             id: 'auto_template_select',
             name: 'Smart Email Template Selection',
-            description: 'Automatically picks the correct email template based on vendor status (Approved, Denied, Power Granted, etc.).',
-            icon: '✉️',
-            color: '#FF375F',
-            defaultEnabled: true
+            description: 'Picks email template based on vendor status.',
+            icon: '✉️', color: '#FF375F', defaultEnabled: true,
+            settings: []
+        },
+        {
+            id: 'ai_vendor_summary',
+            name: 'AI Vendor Summary',
+            description: 'Uses AI to generate a short summary of each vendor application for quick review.',
+            icon: '✨', color: '#AF52DE', defaultEnabled: false,
+            settings: [
+                { key: 'model', label: 'AI Model', type: 'select', default: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+                  options: [
+                      { value: 'google/gemini-2.0-flash-lite-preview-02-05:free', label: 'Gemini Flash (Free)' },
+                      { value: 'meta-llama/llama-4-maverick:free', label: 'Llama 4 Maverick (Free)' },
+                      { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet (Paid)' }
+                  ] },
+                { key: 'prompt', label: 'Custom prompt', type: 'text', default: 'Summarize this vendor application in 1-2 sentences. Focus on what they sell and any notable details.',
+                  help: 'The vendor description will be appended to this prompt.' }
+            ]
+        },
+        {
+            id: 'ai_duplicate_detect',
+            name: 'AI Duplicate Detection',
+            description: 'Uses AI to detect similar/duplicate vendor applications across events.',
+            icon: '🔍', color: '#FF6482', defaultEnabled: false,
+            settings: [
+                { key: 'sensitivity', label: 'Sensitivity', type: 'select', default: 'medium',
+                  options: [
+                      { value: 'low', label: 'Low (exact matches only)' },
+                      { value: 'medium', label: 'Medium (similar names/emails)' },
+                      { value: 'high', label: 'High (AI fuzzy matching)' }
+                  ] }
+            ]
         }
     ];
 
@@ -6005,14 +6222,38 @@
     }
 
     function isBuiltinEnabled(id) {
+        const cfg = automationsConfig.builtin[id];
+        if (cfg && typeof cfg === 'object' && cfg.hasOwnProperty('enabled')) return cfg.enabled;
+        if (typeof cfg === 'boolean') return cfg;
         const def = BUILTIN_AUTOMATIONS.find(a => a.id === id);
-        if (automationsConfig.builtin.hasOwnProperty(id)) return automationsConfig.builtin[id];
         return def ? def.defaultEnabled : true;
+    }
+
+    function getBuiltinSetting(id, key) {
+        const cfg = automationsConfig.builtin[id];
+        if (cfg && typeof cfg === 'object' && cfg.settings && cfg.settings.hasOwnProperty(key)) return cfg.settings[key];
+        const def = BUILTIN_AUTOMATIONS.find(a => a.id === id);
+        const setting = def?.settings?.find(s => s.key === key);
+        return setting ? setting.default : undefined;
+    }
+
+    async function updateBuiltinSetting(id, key, value) {
+        if (!automationsConfig.builtin[id] || typeof automationsConfig.builtin[id] !== 'object') {
+            automationsConfig.builtin[id] = { enabled: isBuiltinEnabled(id), settings: {} };
+        }
+        if (!automationsConfig.builtin[id].settings) automationsConfig.builtin[id].settings = {};
+        automationsConfig.builtin[id].settings[key] = value;
+        await saveAutomationsConfig();
+        addAutomationLog(`Updated "${BUILTIN_AUTOMATIONS.find(a=>a.id===id)?.name}" setting: ${key}`);
     }
 
     async function toggleBuiltinAutomation(id) {
         const current = isBuiltinEnabled(id);
-        automationsConfig.builtin[id] = !current;
+        if (!automationsConfig.builtin[id] || typeof automationsConfig.builtin[id] !== 'object') {
+            automationsConfig.builtin[id] = { enabled: !current, settings: {} };
+        } else {
+            automationsConfig.builtin[id].enabled = !current;
+        }
         await saveAutomationsConfig();
         renderAutomationsTab();
 
@@ -6023,7 +6264,7 @@
         }
         if (id === 'realtime_sync') {
             if (!current) { setupRealtime(); }
-            else { if (window._realtimeChannel) _supabase.removeChannel(window._realtimeChannel); }
+            else { if (realtimeSubscription) _supabase.removeChannel(realtimeSubscription); }
         }
 
         addAutomationLog(`${!current ? 'Enabled' : 'Disabled'} "${BUILTIN_AUTOMATIONS.find(a=>a.id===id)?.name}"`);
@@ -6043,18 +6284,56 @@
         if (!builtinEl) return;
         builtinEl.innerHTML = BUILTIN_AUTOMATIONS.map(a => {
             const enabled = isBuiltinEnabled(a.id);
-            return `<div style="margin-bottom:8px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); padding: 16px 18px; border-radius: 16px; display: flex; align-items: center; gap: 14px; justify-content: space-between; flex-wrap: wrap;">
-                <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:200px;">
-                    <span style="font-size:1.3rem; line-height:1;">${a.icon}</span>
-                    <div>
-                        <strong style="font-size:0.88rem; display:block; margin-bottom:3px;">${a.name}</strong>
-                        <span style="font-size:0.72rem; color:var(--text-muted); line-height:1.4; display:block;">${a.description}</span>
+            let settingsHtml = '';
+            if (a.settings && a.settings.length > 0 && enabled) {
+                settingsHtml = `<div style="margin-top:12px; padding-top:12px; border-top: 0.5px solid rgba(255,255,255,0.06);">` +
+                    a.settings.map(s => {
+                        const val = getBuiltinSetting(a.id, s.key);
+                        if (s.type === 'toggle') {
+                            return `<div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 0;">
+                                <div>
+                                    <span style="font-size:0.75rem; color:var(--text-main);">${s.label}</span>
+                                    ${s.help ? `<span style="font-size:0.62rem; color:var(--text-muted); display:block; margin-top:2px;">${s.help}</span>` : ''}
+                                </div>
+                                <label class="switch switch-sm"><input type="checkbox" ${val ? 'checked' : ''} onchange="updateBuiltinSetting('${a.id}','${s.key}',this.checked)"><span class="slider"></span></label>
+                            </div>`;
+                        } else if (s.type === 'select') {
+                            return `<div style="padding: 6px 0;">
+                                <label style="font-size:0.68rem; color:var(--text-muted); display:block; margin-bottom:4px;">${s.label}</label>
+                                <select class="modern-input" style="height:36px; font-size:0.78rem; padding: 0 12px;" onchange="updateBuiltinSetting('${a.id}','${s.key}',this.value)">
+                                    ${s.options.map(o => `<option value="${o.value}" ${val === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}
+                                </select>
+                            </div>`;
+                        } else if (s.type === 'number') {
+                            return `<div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 0; gap: 12px;">
+                                <label style="font-size:0.75rem; color:var(--text-main); flex:1;">${s.label}</label>
+                                <input type="number" class="modern-input" style="width:80px; height:34px; font-size:0.78rem; padding:0 10px; text-align:center;" value="${val}" min="${s.min||0}" max="${s.max||999}" onchange="updateBuiltinSetting('${a.id}','${s.key}',parseInt(this.value))">
+                            </div>`;
+                        } else if (s.type === 'text') {
+                            return `<div style="padding: 6px 0;">
+                                <label style="font-size:0.68rem; color:var(--text-muted); display:block; margin-bottom:4px;">${s.label}</label>
+                                ${s.help ? `<span style="font-size:0.6rem; color:var(--text-muted); display:block; margin-bottom:6px;">${s.help}</span>` : ''}
+                                <textarea class="modern-input" style="height:60px; font-size:0.78rem; padding:8px 12px; resize:vertical;" onchange="updateBuiltinSetting('${a.id}','${s.key}',this.value)">${val || ''}</textarea>
+                            </div>`;
+                        }
+                        return '';
+                    }).join('') + `</div>`;
+            }
+            return `<div style="margin-bottom:6px; background: rgba(255,255,255,0.025); border: 0.5px solid rgba(255,255,255,0.05); padding: 14px 16px; border-radius: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px; justify-content: space-between;">
+                    <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                        <span style="font-size:1.2rem; line-height:1; flex-shrink:0;">${a.icon}</span>
+                        <div style="min-width:0;">
+                            <strong style="font-size:0.85rem; display:block; margin-bottom:2px;">${a.name}</strong>
+                            <span style="font-size:0.7rem; color:var(--text-muted); line-height:1.3; display:block;">${a.description}</span>
+                        </div>
                     </div>
+                    <label class="switch switch-sm" style="flex-shrink:0;">
+                        <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleBuiltinAutomation('${a.id}')">
+                        <span class="slider"></span>
+                    </label>
                 </div>
-                <label class="switch switch-sm" style="flex-shrink:0;">
-                    <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleBuiltinAutomation('${a.id}')">
-                    <span class="slider"></span>
-                </label>
+                ${settingsHtml}
             </div>`;
         }).join('');
 
