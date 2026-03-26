@@ -1282,6 +1282,11 @@
             <div class="review-field-label" id="reviewStrikesLabel" style="display:none;">Late Applications</div>
             <div class="review-field-value" id="reviewStrikes" style="display:none; color: #FF3B30; background: rgba(255, 59, 48, 0.05); border-color: rgba(255, 59, 48, 0.2); font-size: 0.95rem;"></div>
 
+            <div id="reviewCustomAnswersSection" style="display:none;">
+                <div class="review-field-label">Form Responses</div>
+                <div class="review-field-value" id="reviewCustomAnswers" style="min-height: 40px; white-space: pre-wrap;"></div>
+            </div>
+
             <div class="review-field-label">Additional Comments</div>
             <div class="review-field-value" id="reviewComments" style="min-height: 40px; white-space: pre-wrap;">-</div>
 
@@ -2217,7 +2222,7 @@
                 method: "POST",
                 headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+                    model: 'google/gemini-2.5-flash-preview-05-20:free',
                     messages: [{ role: "user", content: `Find potential duplicate vendors in this list. Look for same person, same business, or very similar applications. List:\n${summaries}\n\nRespond ONLY with JSON array of objects: [{"idx1": number, "idx2": number, "reason": "string"}]. If no duplicates found, respond [].` }]
                 })
             });
@@ -2609,8 +2614,6 @@
                     
                     const scanTimeout = (getBuiltinSetting('ai_license_scan', 'timeout') || 15) * 1000;
                     const scanModel = 'google/gemini-2.5-flash-preview-05-20:free';
-                    const visionController = new AbortController();
-                    const visionTimeoutId = setTimeout(() => visionController.abort(), scanTimeout);
 
                     const MAX_RETRIES = 2;
                     let lastApiError = null;
@@ -4460,6 +4463,41 @@
         document.getElementById('reviewComments').innerText = cleanData.finalComments || 'None';
         document.getElementById('reviewAgreements').innerText = cleanData.dbAgreements || 'None recorded';
 
+        // Show custom form question answers (non-core fields added via form builder)
+        const coreFieldIds = new Set(['section_personal', 'student_id', 'full_name_combined', 'preferred_email', 'gcu_email', 'phone', 'communication_method', 'year', 'availability', 'section_vendor', 'food_license', 'past_vendor', 'description', 'link', 'section_logistics', 'needs_power', 'section_agreements', 'agree_liability', 'agree_taxes', 'agree_safety', 'agree_terms', 'agree_media', 'additional_comments']);
+        const customQuestions = formConfig.questions.filter(q => !coreFieldIds.has(q.id) && q.type !== 'section_header' && q.type !== 'checkbox_single');
+        const customSection = document.getElementById('reviewCustomAnswersSection');
+        const customContainer = document.getElementById('reviewCustomAnswers');
+
+        if (customQuestions.length > 0) {
+            let customHtml = '';
+            const commentsText = vendor.additional_comments || '';
+            customQuestions.forEach(q => {
+                // Check if vendor has this field as a direct column
+                let answer = vendor[q.id];
+                // If not a direct column, try to find it in additional_comments as "Label: Value"
+                if (answer === undefined || answer === null) {
+                    const labelPattern = new RegExp(q.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*:\\s*(.+)', 'i');
+                    const match = commentsText.match(labelPattern);
+                    if (match) answer = match[1].trim();
+                }
+                if (answer !== undefined && answer !== null && String(answer).trim() !== '') {
+                    customHtml += `<div style="margin-bottom: 10px; padding: 10px 14px; background: rgba(10, 132, 255, 0.04); border: 1px solid rgba(10, 132, 255, 0.1); border-radius: 12px;">
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #0A84FF; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">${escapeHtml(q.label)}</div>
+                        <div style="font-size: 0.95rem; color: #fff;">${escapeHtml(String(answer))}</div>
+                    </div>`;
+                }
+            });
+            if (customHtml) {
+                customContainer.innerHTML = customHtml;
+                customSection.style.display = 'block';
+            } else {
+                customSection.style.display = 'none';
+            }
+        } else {
+            customSection.style.display = 'none';
+        }
+
         // Auto-trigger AI if it hasn't run yet, or if it needs an OCR scan upgrade
         const isFoodVendor = vendor.food_license && vendor.food_license.toLowerCase() === 'yes';
         const needsLicenseScan = isFoodVendor && (!vendor.aiData || !vendor.aiData.license_status);
@@ -5092,6 +5130,10 @@
             // If we have a messageId, filter by it for precision
             if (vendor.brevo_message_id) {
                 url += `&messageId=${encodeURIComponent(vendor.brevo_message_id)}`;
+            } else if (vendor.email_sent_at) {
+                // No messageId: scope to events after this email was sent to avoid
+                // picking up delivery events from emails sent in previous markets
+                url += `&startDate=${encodeURIComponent(vendor.email_sent_at.split('T')[0])}`;
             }
 
             const response = await fetch(url, {
