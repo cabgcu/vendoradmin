@@ -5539,12 +5539,24 @@
         if (success === 'unauthorized') showToast("API Error: Invalid Key.");
         else if (success) {
             showToast("Sent!");
-            setTimeout(() => fetchEmailStatus(vendor.id).then(() => renderTable()), 30000);
+            scheduleBrevoStatusChecks(vendor.id);
         }
         else showToast("Failed to send.");
 
         _realtimePaused = false;
         refreshData(null, true);
+    }
+
+    function scheduleBrevoStatusChecks(vendorId) {
+        [30, 90, 180].forEach(seconds => {
+            setTimeout(() => fetchEmailStatus(vendorId).then(() => renderTable()), seconds * 1000);
+        });
+    }
+
+    function scheduleBrevoBulkStatusChecks() {
+        [30, 90, 180].forEach(seconds => {
+            setTimeout(() => refreshAllEmailStatuses(true), seconds * 1000);
+        });
     }
 
     function openBulkEmailModal() {
@@ -5673,7 +5685,7 @@
         refreshData(null, true);
 
         // Auto-check delivery status after 30 seconds to catch quick deliveries
-        if (successCount > 0) setTimeout(() => refreshAllEmailStatuses(true), 30000);
+        if (successCount > 0) scheduleBrevoBulkStatusChecks();
     }
 
     async function sendCustomBlastFromSettings() {
@@ -5752,7 +5764,7 @@
 
         _realtimePaused = false;
 
-        if (successCount > 0) setTimeout(() => refreshAllEmailStatuses(true), 30000);
+        if (successCount > 0) scheduleBrevoBulkStatusChecks();
     }
 
     // SETTINGS / TEMPLATES
