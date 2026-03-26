@@ -5204,9 +5204,6 @@
                     urlsToTry.push(`https://api.brevo.com/v3/smtp/statistics/events?limit=100&sort=desc&messageId=${encodeURIComponent(normalizedMessageId)}`);
                 }
             }
-            if (vendor.email_sent_at) {
-                urlsToTry.push(`${baseEmailUrl}&startDate=${encodeURIComponent(vendor.email_sent_at)}`);
-            }
             urlsToTry.push(baseEmailUrl);
             
             let events = [];
@@ -5217,7 +5214,9 @@
                 });
 
                 if (!response.ok) {
-                    console.error('Brevo events API error:', response.status);
+                    if (response.status !== 400) {
+                        console.error('Brevo events API error:', response.status);
+                    }
                     continue;
                 }
 
