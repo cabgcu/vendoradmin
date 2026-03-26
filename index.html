@@ -2222,7 +2222,7 @@
                 method: "POST",
                 headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash-preview-05-20:free',
+                    model: 'google/gemma-3-27b-it:free',
                     messages: [{ role: "user", content: `Find potential duplicate vendors in this list. Look for same person, same business, or very similar applications. List:\n${summaries}\n\nRespond ONLY with JSON array of objects: [{"idx1": number, "idx2": number, "reason": "string"}]. If no duplicates found, respond [].` }]
                 })
             });
@@ -2613,7 +2613,8 @@
                     const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                     
                     const scanTimeout = (getBuiltinSetting('ai_license_scan', 'timeout') || 15) * 1000;
-                    const scanModel = 'google/gemini-2.5-flash-preview-05-20:free';
+                    // Gemma 3 27B supports vision and is free on OpenRouter (Gemini free models deprecated Feb 2026)
+                    const scanModel = 'google/gemma-3-27b-it:free';
 
                     const MAX_RETRIES = 2;
                     let lastApiError = null;
@@ -2954,6 +2955,13 @@
         if (vendorsData) {
             vendorsData.forEach((v, index) => {
                 v.appNumber = index + 1;
+
+                // Sanitize email status: if no email was actually sent (no timestamp and no Brevo ID),
+                // clear any stale/default email fields so they don't falsely show as emailed
+                if (!v.email_sent_at && !v.brevo_message_id) {
+                    v.email_sent = null;
+                    v.email_delivery_status = null;
+                }
                 
                 // Read historical AI tags if they exist
                 const notes = getParsedNotes(v.internal_notes);
@@ -4081,7 +4089,7 @@
                 blastBtn.style.display = 'none';
             }
             // Show refresh status button on tabs where emails are sent
-            const hasEmailedVendors = filtered.some(v => v.email_sent || v.brevo_message_id);
+            const hasEmailedVendors = filtered.some(v => v.brevo_message_id || v.email_sent_at);
             refreshStatusBtn.style.display = (hasEmailedVendors && ['approved', 'denied', 'power', 'all'].includes(activeFilter)) ? 'inline-block' : 'none';
         } else {
             blastBtn.style.display = 'none';
@@ -4106,23 +4114,27 @@
             `;
             
             // Contextual badge logic based on the active tab
+            // Only consider email "sent" if we have proof it was actually sent (email_sent_at timestamp)
             let isEmailSentForView = false;
-            
-            if (activeFilter === 'power') {
-                isEmailSentForView = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-            } else if (activeFilter === 'denied') {
-                isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-            } else if (activeFilter === 'approved') {
-                isEmailSentForView = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
-            } else {
-                if (v.status === 'Denied') {
-                    isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-                } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
+            const wasActuallySent = v.email_sent && (v.email_sent_at || v.brevo_message_id);
+
+            if (wasActuallySent) {
+                if (activeFilter === 'power') {
                     isEmailSentForView = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-                } else if (v.status === 'Approved' || v.status === 'Checked In') {
+                } else if (activeFilter === 'denied') {
+                    isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
+                } else if (activeFilter === 'approved') {
                     isEmailSentForView = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
                 } else {
-                    isEmailSentForView = false;
+                    if (v.status === 'Denied') {
+                        isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
+                    } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
+                        isEmailSentForView = (v.email_sent === 'power' || v.email_sent === 'power_denied');
+                    } else if (v.status === 'Approved' || v.status === 'Checked In') {
+                        isEmailSentForView = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
+                    } else {
+                        isEmailSentForView = false;
+                    }
                 }
             }
             
@@ -4575,7 +4587,8 @@
 
         // --- EMAIL DELIVERY STATUS SECTION ---
         const emailStatusContainer = document.getElementById('reviewEmailStatusContainer');
-        if (vendor.email_sent || vendor.brevo_message_id) {
+        const hasBeenEmailed = vendor.brevo_message_id || vendor.email_sent_at;
+        if (hasBeenEmailed) {
             const deliveryStatus = vendor.email_delivery_status || 'sent';
             const display = getEmailDeliveryDisplay(deliveryStatus);
             const sentAt = vendor.email_sent_at ? new Date(vendor.email_sent_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
@@ -5120,7 +5133,7 @@
         if (!vendor || !vendor.preferred_email) return null;
 
         // If no email has been sent yet, nothing to check
-        if (!vendor.email_sent && !vendor.brevo_message_id) return null;
+        if (!vendor.brevo_message_id && !vendor.email_sent_at) return null;
 
         try {
             // Query Brevo's transactional email events for this recipient
@@ -5220,7 +5233,7 @@
 
     // Bulk refresh email status for all vendors that have been emailed
     async function refreshAllEmailStatuses(silent = false) {
-        const emailedVendors = currentData.vendors.filter(v => v.email_sent || v.brevo_message_id);
+        const emailedVendors = currentData.vendors.filter(v => v.brevo_message_id || v.email_sent_at);
         if (emailedVendors.length === 0) {
             if (!silent) showToast('No emails have been sent yet.');
             return;
@@ -5255,7 +5268,7 @@
             try {
             // Only poll for vendors whose email hasn't reached a terminal state
             const pendingVendors = currentData.vendors.filter(v =>
-                (v.email_sent || v.brevo_message_id) &&
+                (v.brevo_message_id || v.email_sent_at) &&
                 !['opened', 'clicked', 'hardBounce', 'blocked', 'error', 'unsubscribed'].includes(v.email_delivery_status)
             );
             if (pendingVendors.length === 0) return;
@@ -5431,21 +5444,25 @@
         const listEl = document.getElementById('bulkEmailList');
         listEl.innerHTML = eligibleVendors.map(v => {
             let isSent = false;
-            
+
             // Apply the exact same contextual logic to the bulk send modal
-            if (activeFilter === 'power') {
-                isSent = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-            } else if (activeFilter === 'denied') {
-                isSent = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-            } else if (activeFilter === 'approved') {
-                isSent = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
-            } else {
-                if (v.status === 'Denied') {
-                    isSent = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-                } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
+            // Only consider email "sent" if we have proof (timestamp or message ID)
+            const bulkWasActuallySent = v.email_sent && (v.email_sent_at || v.brevo_message_id);
+            if (bulkWasActuallySent) {
+                if (activeFilter === 'power') {
                     isSent = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-                } else if (v.status === 'Approved' || v.status === 'Checked In') {
+                } else if (activeFilter === 'denied') {
+                    isSent = (v.email_sent === 'denied' || v.email_sent === 'Yes');
+                } else if (activeFilter === 'approved') {
                     isSent = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
+                } else {
+                    if (v.status === 'Denied') {
+                        isSent = (v.email_sent === 'denied' || v.email_sent === 'Yes');
+                    } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
+                        isSent = (v.email_sent === 'power' || v.email_sent === 'power_denied');
+                    } else if (v.status === 'Approved' || v.status === 'Checked In') {
+                        isSent = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
+                    }
                 }
             }
             
