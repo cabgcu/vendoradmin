@@ -4639,7 +4639,7 @@
         if (result) {
             showToast(`Email status: ${getEmailDeliveryDisplay(result.status).label}`);
         } else {
-            showToast('No delivery data found from Brevo.');
+            showToast('No new delivery data from Brevo yet.');
         }
 
         // Re-open the modal to refresh the UI
@@ -5149,7 +5149,17 @@
             const data = await response.json();
             const events = data.events || [];
 
-            if (events.length === 0) return null;
+            if (events.length === 0) {
+                // Brevo has no tracking data for this email.
+                // If the status is stale from a previous email (delivered/opened/etc),
+                // reset it to 'sent' so it reflects the current email's baseline.
+                if (vendor.email_delivery_status && vendor.email_delivery_status !== 'sent') {
+                    await _supabase.from('vendors').update({ email_delivery_status: 'sent' }).eq('id', vendorId);
+                    vendor.email_delivery_status = 'sent';
+                    return { status: 'sent', events: [], latestDate: null };
+                }
+                return null;
+            }
 
             // Priority order: higher index = higher priority status
             const statusPriority = ['sent', 'deferred', 'delivered', 'opened', 'clicked', 'softBounce', 'hardBounce', 'unsubscribed', 'blocked', 'error'];
