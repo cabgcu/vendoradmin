@@ -2300,11 +2300,7 @@
     function isStaleEmailTracking(vendor, eventId = currentData.activeId) {
         if (!vendor || (!vendor.email_sent && !vendor.brevo_message_id)) return false;
 
-        // Strict market scoping: legacy records without event scope are considered stale.
-        // This prevents old-market delivery states from appearing in new markets.
-        if (!vendor.email_sent_event_id) return true;
-
-        if (eventId && vendor.email_sent_event_id !== eventId) {
+        if (vendor.email_sent_event_id && eventId && vendor.email_sent_event_id !== eventId) {
             return true;
         }
 
