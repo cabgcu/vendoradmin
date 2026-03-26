@@ -2297,8 +2297,12 @@
 
 
 
-    function isStaleEmailTracking(vendor) {
+    function isStaleEmailTracking(vendor, eventId = currentData.activeId) {
         if (!vendor || (!vendor.email_sent && !vendor.brevo_message_id)) return false;
+
+        if (vendor.email_sent_event_id && eventId && vendor.email_sent_event_id !== eventId) {
+            return true;
+        }
 
         if (vendor.email_sent_at && vendor.created_at) {
             const sentTime = new Date(vendor.email_sent_at).getTime();
@@ -2311,27 +2315,14 @@
         return false;
     }
 
-    function hasCurrentMarketEmail(vendor) {
-        return !!(vendor && (vendor.email_sent || vendor.brevo_message_id) && !isStaleEmailTracking(vendor));
+    function hasCurrentMarketEmail(vendor, eventId = currentData.activeId) {
+        return !!(vendor && (vendor.email_sent || vendor.brevo_message_id) && !isStaleEmailTracking(vendor, eventId));
     }
 
-    function isPreContactWindow(eventObj) {
-        if (!eventObj || !eventObj.contact_date) return false;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const contactDate = new Date(eventObj.contact_date + 'T00:00:00');
-        return !Number.isNaN(contactDate.getTime()) && today < contactDate;
-    }
+    async function clearStaleEmailTracking(vendors, eventId = currentData.activeId) {
+        if (!Array.isArray(vendors) || !eventId) return;
 
-    async function clearStaleEmailTracking(vendors, activeEvent) {
-        if (!Array.isArray(vendors)) return;
-
-        const resetForNewMarket = isPreContactWindow(activeEvent);
-        const staleVendors = vendors.filter(v => {
-            if (!(v.email_sent || v.brevo_message_id)) return false;
-            if (resetForNewMarket) return true;
-            return isStaleEmailTracking(v);
-        });
+        const staleVendors = vendors.filter(v => isStaleEmailTracking(v, eventId));
         if (staleVendors.length === 0) return;
 
         for (const vendor of staleVendors) {
@@ -2339,7 +2330,8 @@
                 email_sent: null,
                 email_delivery_status: null,
                 brevo_message_id: null,
-                email_sent_at: null
+                email_sent_at: null,
+                email_sent_event_id: null
             };
 
             await _supabase.from('vendors').update(resetPayload).eq('id', vendor.id);
@@ -3063,7 +3055,7 @@
             }
         }
 
-        await clearStaleEmailTracking(vendorsData, activeEvent);
+        await clearStaleEmailTracking(vendorsData, activeId);
 
         currentData = {
             vendors: vendorsData || [],
@@ -5140,6 +5132,7 @@
                 brevo_message_id: brevoMessageId,
                 email_delivery_status: 'sent',
                 email_sent_at: new Date().toISOString(),
+                email_sent_event_id: currentData.activeId,
                 email_html_content: htmlContent,
                 email_subject: parsedSubj
             };
@@ -5153,6 +5146,7 @@
             vendor.brevo_message_id = brevoMessageId;
             vendor.email_delivery_status = 'sent';
             vendor.email_sent_at = updatePayload.email_sent_at;
+            vendor.email_sent_event_id = updatePayload.email_sent_event_id;
             vendor.email_html_content = htmlContent;
             vendor.email_subject = parsedSubj;
             if (templates.targetTemplate !== 'custom') {
