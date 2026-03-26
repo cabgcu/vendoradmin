@@ -2152,27 +2152,21 @@
         return Array.from(found);
     }
 
-    let OPENROUTER_DISABLED = localStorage.getItem('openrouter_disabled') === '1';
-    let OPENROUTER_REQUEST_IN_FLIGHT = false;
+    let OPENROUTER_DISABLED = false;
     async function callOpenRouterChat(payload) {
-        if (!OPENROUTER_API_KEY || OPENROUTER_DISABLED || OPENROUTER_REQUEST_IN_FLIGHT) return null;
-        OPENROUTER_REQUEST_IN_FLIGHT = true;
+        if (!OPENROUTER_API_KEY || OPENROUTER_DISABLED) return null;
         const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
             body: JSON.stringify(payload)
         });
-        try {
-            if (res.status === 404) {
-                OPENROUTER_DISABLED = true;
-                localStorage.setItem('openrouter_disabled', '1');
-                return null;
-            }
-            if (!res.ok) return null;
-            return await res.json();
-        } finally {
-            OPENROUTER_REQUEST_IN_FLIGHT = false;
+        if (res.status === 404) {
+            OPENROUTER_DISABLED = true;
+            console.warn('OpenRouter completions endpoint returned 404. Disabling AI calls for this session.');
+            return null;
         }
+        if (!res.ok) throw new Error(`OpenRouter error ${res.status}`);
+        return await res.json();
     }
 
     async function aiCategorizeVendor(description) {
@@ -2317,8 +2311,46 @@
 
 
 
-    function hasCurrentMarketEmail(vendor) {
-        return !!(vendor && (vendor.email_sent || vendor.brevo_message_id || vendor.email_sent_at));
+    function isStaleEmailTracking(vendor, eventId = currentData.activeId) {
+        if (!vendor || (!vendor.email_sent && !vendor.brevo_message_id)) return false;
+
+        if (vendor.email_sent_event_id && eventId && vendor.email_sent_event_id !== eventId) {
+            return true;
+        }
+
+        if (vendor.email_sent_at && vendor.created_at) {
+            const sentTime = new Date(vendor.email_sent_at).getTime();
+            const appCreatedTime = new Date(vendor.created_at).getTime();
+            if (!Number.isNaN(sentTime) && !Number.isNaN(appCreatedTime) && sentTime < appCreatedTime) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function hasCurrentMarketEmail(vendor, eventId = currentData.activeId) {
+        return !!(vendor && (vendor.email_sent || vendor.brevo_message_id) && !isStaleEmailTracking(vendor, eventId));
+    }
+
+    async function clearStaleEmailTracking(vendors, eventId = currentData.activeId) {
+        if (!Array.isArray(vendors) || !eventId) return;
+
+        const staleVendors = vendors.filter(v => isStaleEmailTracking(v, eventId));
+        if (staleVendors.length === 0) return;
+
+        for (const vendor of staleVendors) {
+            const resetPayload = {
+                email_sent: null,
+                email_delivery_status: null,
+                brevo_message_id: null,
+                email_sent_at: null,
+                email_sent_event_id: null
+            };
+
+            await _supabase.from('vendors').update(resetPayload).eq('id', vendor.id);
+            Object.assign(vendor, resetPayload);
+        }
     }
 
     function escapeHtml(str) {
@@ -2677,7 +2709,6 @@
 
                             if (visionRes.status === 404) {
                                 OPENROUTER_DISABLED = true;
-                                localStorage.setItem('openrouter_disabled', '1');
                                 licenseOcrResult = "⚠️ AI endpoint unavailable (404).";
                                 break;
                             }
@@ -3044,6 +3075,8 @@
                 })();
             }
         }
+
+        await clearStaleEmailTracking(vendorsData, activeId);
 
         currentData = {
             vendors: vendorsData || [],
@@ -4610,7 +4643,7 @@
         // --- EMAIL DELIVERY STATUS SECTION ---
         const emailStatusContainer = document.getElementById('reviewEmailStatusContainer');
         if (hasCurrentMarketEmail(vendor)) {
-            const deliveryStatus = vendor.email_delivery_status || 'pending';
+            const deliveryStatus = vendor.email_delivery_status || 'sent';
             const display = getEmailDeliveryDisplay(deliveryStatus);
             const sentAt = vendor.email_sent_at ? new Date(vendor.email_sent_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
 
@@ -5145,7 +5178,10 @@
             const updatePayload = {
                 brevo_message_id: brevoMessageId,
                 email_delivery_status: 'sent',
-                email_sent_at: new Date().toISOString()
+                email_sent_at: new Date().toISOString(),
+                email_sent_event_id: currentData.activeId,
+                email_html_content: htmlContent,
+                email_subject: parsedSubj
             };
             if (templates.targetTemplate !== 'custom') {
                 updatePayload.email_sent = templates.targetTemplate;
@@ -5174,6 +5210,9 @@
             vendor.brevo_message_id = brevoMessageId;
             vendor.email_delivery_status = 'sent';
             vendor.email_sent_at = updatePayload.email_sent_at;
+            vendor.email_sent_event_id = updatePayload.email_sent_event_id;
+            vendor.email_html_content = htmlContent;
+            vendor.email_subject = parsedSubj;
             if (templates.targetTemplate !== 'custom') {
                 vendor.email_sent = templates.targetTemplate;
             }
@@ -5198,20 +5237,20 @@
         try {
             // Query Brevo's transactional email events for this recipient
             const emailEncoded = encodeURIComponent(vendor.preferred_email);
-            const baseEmailUrl = `https://api.brevo.com/v3/smtp/statistics/events?limit=100&sort=desc&email=${emailEncoded}`;
+            const baseUrl = `https://api.brevo.com/v3/smtp/statistics/events?limit=50&email=${emailEncoded}`;
             const urlsToTry = [];
-            const sentAtMs = vendor.email_sent_at ? new Date(vendor.email_sent_at).getTime() : null;
 
-            // Try precise lookup first (raw + normalized messageId), then fallback by date/email.
+            // Try precise lookup first (messageId), then fallback to startDate-scoped lookup.
             if (vendor.brevo_message_id) {
-                const rawMessageId = String(vendor.brevo_message_id).trim();
-                const normalizedMessageId = rawMessageId.replace(/^<|>$/g, '');
-                urlsToTry.push(`https://api.brevo.com/v3/smtp/statistics/events?limit=100&sort=desc&messageId=${encodeURIComponent(rawMessageId)}`);
-                if (normalizedMessageId !== rawMessageId) {
-                    urlsToTry.push(`https://api.brevo.com/v3/smtp/statistics/events?limit=100&sort=desc&messageId=${encodeURIComponent(normalizedMessageId)}`);
-                }
+                const normalizedMessageId = String(vendor.brevo_message_id).trim().replace(/^<|>$/g, '');
+                urlsToTry.push(`${baseUrl}&messageId=${encodeURIComponent(normalizedMessageId)}`);
             }
-            urlsToTry.push(baseEmailUrl);
+            if (vendor.email_sent_at) {
+                urlsToTry.push(`${baseUrl}&startDate=${encodeURIComponent(vendor.email_sent_at.split('T')[0])}`);
+            }
+            if (urlsToTry.length === 0) {
+                urlsToTry.push(baseUrl);
+            }
             
             let events = [];
             for (const url of urlsToTry) {
@@ -5220,22 +5259,15 @@
                     headers: { 'accept': 'application/json', 'api-key': BREVO_API_KEY }
                 });
 
-                if (!response.ok) continue;
+                if (!response.ok) {
+                    console.error('Brevo events API error:', response.status);
+                    continue;
+                }
 
                 const data = await response.json();
                 const candidateEvents = data.events || [];
                 if (candidateEvents.length > 0) {
-                    const isMessageScoped = url.includes('messageId=');
-                    const toleranceMs = 24 * 60 * 60 * 1000; // tolerate clock/API timestamp drift by up to 24h
-                    const recentEvents = (!isMessageScoped && Number.isFinite(sentAtMs))
-                        ? candidateEvents.filter(evt => {
-                            const evtMs = new Date(evt.date || '').getTime();
-                            return Number.isFinite(evtMs) && evtMs >= (sentAtMs - toleranceMs);
-                          })
-                        : candidateEvents;
-
-                    if (recentEvents.length === 0) continue;
-                    events = recentEvents;
+                    events = candidateEvents;
                     break;
                 }
             }
