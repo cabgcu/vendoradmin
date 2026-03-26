@@ -5224,29 +5224,40 @@
         try {
             // Query Brevo's transactional email events for this recipient
             const emailEncoded = encodeURIComponent(vendor.preferred_email);
-            let url = `https://api.brevo.com/v3/smtp/statistics/events?limit=50&email=${emailEncoded}`;
+            const baseUrl = `https://api.brevo.com/v3/smtp/statistics/events?limit=50&email=${emailEncoded}`;
+            const urlsToTry = [];
 
-            // If we have a messageId, filter by it for precision
+            // Try precise lookup first (messageId), then fallback to startDate-scoped lookup.
             if (vendor.brevo_message_id) {
-                url += `&messageId=${encodeURIComponent(vendor.brevo_message_id)}`;
-            } else if (vendor.email_sent_at) {
-                // No messageId: scope to events after this email was sent to avoid
-                // picking up delivery events from emails sent in previous markets
-                url += `&startDate=${encodeURIComponent(vendor.email_sent_at.split('T')[0])}`;
+                const normalizedMessageId = String(vendor.brevo_message_id).trim().replace(/^<|>$/g, '');
+                urlsToTry.push(`${baseUrl}&messageId=${encodeURIComponent(normalizedMessageId)}`);
             }
-
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: { 'accept': 'application/json', 'api-key': BREVO_API_KEY }
-            });
-
-            if (!response.ok) {
-                console.error('Brevo events API error:', response.status);
-                return null;
+            if (vendor.email_sent_at) {
+                urlsToTry.push(`${baseUrl}&startDate=${encodeURIComponent(vendor.email_sent_at.split('T')[0])}`);
             }
+            if (urlsToTry.length === 0) {
+                urlsToTry.push(baseUrl);
+            }
+            
+            let events = [];
+            for (const url of urlsToTry) {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'accept': 'application/json', 'api-key': BREVO_API_KEY }
+                });
 
-            const data = await response.json();
-            const events = data.events || [];
+                if (!response.ok) {
+                    console.error('Brevo events API error:', response.status);
+                    continue;
+                }
+
+                const data = await response.json();
+                const candidateEvents = data.events || [];
+                if (candidateEvents.length > 0) {
+                    events = candidateEvents;
+                    break;
+                }
+            }
 
             if (events.length === 0) {
                 // No delivery events yet from Brevo for this market email.
