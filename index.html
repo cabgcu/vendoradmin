@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>CAB Student Market Admin</title>
     
@@ -1681,11 +1682,19 @@
                         </div>
                     </div>
 
-                    <div style="display:flex; gap: 15px; flex-wrap: wrap;">
-                        <button onclick="updateActiveEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: var(--gradient-success);">Update ACTIVE Event</button>
-                        <button onclick="createNewEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: rgba(255,255,255,0.1);">Create as NEW Event</button>
-                    </div>
+                <div style="display:flex; gap: 15px; flex-wrap: wrap;">
+                    <button onclick="updateActiveEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: var(--gradient-success);">Update ACTIVE Event</button>
+                    <button onclick="createNewEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: rgba(255,255,255,0.1);">Create as NEW Event</button>
                 </div>
+            </div>
+
+            <div style="margin-bottom:30px; background: rgba(255, 149, 0, 0.06); border: 1px solid rgba(255, 149, 0, 0.25); padding: 20px; border-radius: 16px;">
+                <label class="stat-label" style="color: #FF9500;">Email Delivery Status (Current Market)</label>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
+                    <span style="font-size:0.82rem; color:var(--text-muted);">If the new market has stale Brevo status checkmarks, reset everything back to unsent/unchecked.</span>
+                    <button onclick="resetCurrentMarketEmailTracking()" class="btn-action" style="background: rgba(255, 149, 0, 0.2); border: 1px solid rgba(255, 149, 0, 0.4); color: #FF9500;">Reset Current Market Delivery Status</button>
+                </div>
+            </div>
                 
                 <div style="padding: 20px; border: 1px solid rgba(255, 59, 48, 0.3); border-radius: 16px; background: rgba(255, 59, 48, 0.05);">
                     <label class="stat-label" style="color: #FF3B30;">Danger Zone</label>
@@ -2143,19 +2152,33 @@
         return Array.from(found);
     }
 
+    let OPENROUTER_DISABLED = localStorage.getItem('openrouter_disabled') === '1';
+    async function callOpenRouterChat(payload) {
+        if (!OPENROUTER_API_KEY || OPENROUTER_DISABLED) return null;
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
+            body: JSON.stringify(payload)
+        });
+        if (res.status === 404) {
+            OPENROUTER_DISABLED = true;
+            localStorage.setItem('openrouter_disabled', '1');
+            console.warn('OpenRouter completions endpoint returned 404. Disabling AI calls.');
+            return null;
+        }
+        if (!res.ok) throw new Error(`OpenRouter error ${res.status}`);
+        return await res.json();
+    }
+
     async function aiCategorizeVendor(description) {
         if (!OPENROUTER_API_KEY || !description) return ['Unique Goods'];
         const categories = Object.keys(CATEGORY_MAP);
         try {
-            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
-                body: JSON.stringify({
-                    model: 'deepseek/deepseek-chat-v3-0324:free',
-                    messages: [{ role: "user", content: `Categorize this vendor into one or more of these categories: ${categories.join(', ')}. Vendor description: "${description}". Respond ONLY with a JSON array of matching category names, e.g. ["Food & Beverage","Art & Prints"]. If none fit, respond ["Unique Goods"].` }]
-                })
+            const data = await callOpenRouterChat({
+                model: 'deepseek/deepseek-chat-v3-0324:free',
+                messages: [{ role: "user", content: `Categorize this vendor into one or more of these categories: ${categories.join(', ')}. Vendor description: "${description}". Respond ONLY with a JSON array of matching category names, e.g. ["Food & Beverage","Art & Prints"]. If none fit, respond ["Unique Goods"].` }]
             });
-            const data = await res.json();
+            if (!data) return ['Unique Goods'];
             const text = data.choices?.[0]?.message?.content || '';
             const match = text.match(/\[.*\]/s);
             if (match) {
@@ -2172,15 +2195,11 @@
         const model = 'deepseek/deepseek-chat-v3-0324:free';
         const prompt = getBuiltinSetting('ai_vendor_summary', 'prompt') || 'Summarize this vendor application in 1-2 sentences. Focus on what they sell and any notable details.';
         try {
-            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
-                body: JSON.stringify({
-                    model,
-                    messages: [{ role: "user", content: `${prompt}\n\nVendor: ${vendor.first_name || ''} ${vendor.last_name || ''}\nBusiness: ${vendor.business_name || 'N/A'}\nDescription: ${vendor.description}` }]
-                })
+            const data = await callOpenRouterChat({
+                model,
+                messages: [{ role: "user", content: `${prompt}\n\nVendor: ${vendor.first_name || ''} ${vendor.last_name || ''}\nBusiness: ${vendor.business_name || 'N/A'}\nDescription: ${vendor.description}` }]
             });
-            const data = await res.json();
+            if (!data) return null;
             return data.choices?.[0]?.message?.content?.trim() || null;
         } catch(e) { console.error('AI summary failed:', e); return null; }
     }
@@ -2218,15 +2237,11 @@
         // High sensitivity - use AI
         const summaries = vendors.slice(0, 50).map((v, i) => `${i}: ${v.first_name||''} ${v.last_name||''} | ${v.email||''} | ${v.business_name||''} | ${(v.description||'').substring(0,80)}`).join('\n');
         try {
-            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
-                body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash-preview-05-20:free',
-                    messages: [{ role: "user", content: `Find potential duplicate vendors in this list. Look for same person, same business, or very similar applications. List:\n${summaries}\n\nRespond ONLY with JSON array of objects: [{"idx1": number, "idx2": number, "reason": "string"}]. If no duplicates found, respond [].` }]
-                })
+            const data = await callOpenRouterChat({
+                model: 'google/gemini-2.5-flash-preview-05-20:free',
+                messages: [{ role: "user", content: `Find potential duplicate vendors in this list. Look for same person, same business, or very similar applications. List:\n${summaries}\n\nRespond ONLY with JSON array of objects: [{"idx1": number, "idx2": number, "reason": "string"}]. If no duplicates found, respond [].` }]
             });
-            const data = await res.json();
+            if (!data) return [];
             const text = data.choices?.[0]?.message?.content || '[]';
             const match = text.match(/\[.*\]/s);
             if (match) {
@@ -2294,6 +2309,12 @@
         { id: 'agree_media', type: 'checkbox_single', label: 'Media Acknowledgment', hint: 'I acknowledge and accept that GCU Student Engagement...', required: true, width: 'full', isCore: false },
         { id: 'additional_comments', type: 'textarea', label: 'Additional Comments or Requests', hint: '', required: false, width: 'full', isCore: true }
     ];
+
+
+
+    function hasCurrentMarketEmail(vendor) {
+        return !!(vendor && (vendor.email_sent || vendor.brevo_message_id));
+    }
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -2619,6 +2640,7 @@
                     let lastApiError = null;
 
                     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+                        if (OPENROUTER_DISABLED) break;
                         if (attempt > 0) await new Promise(r => setTimeout(r, 2000 * attempt));
 
                         const retryController = new AbortController();
@@ -2647,6 +2669,13 @@
                             });
 
                             clearTimeout(retryTimeoutId);
+
+                            if (visionRes.status === 404) {
+                                OPENROUTER_DISABLED = true;
+                                localStorage.setItem('openrouter_disabled', '1');
+                                licenseOcrResult = "⚠️ AI endpoint unavailable (404).";
+                                break;
+                            }
 
                             if (visionRes.ok) {
                                 const visionData = await visionRes.json();
@@ -4081,7 +4110,7 @@
                 blastBtn.style.display = 'none';
             }
             // Show refresh status button on tabs where emails are sent
-            const hasEmailedVendors = filtered.some(v => v.email_sent || v.brevo_message_id);
+            const hasEmailedVendors = filtered.some(v => hasCurrentMarketEmail(v));
             refreshStatusBtn.style.display = (hasEmailedVendors && ['approved', 'denied', 'power', 'all'].includes(activeFilter)) ? 'inline-block' : 'none';
         } else {
             blastBtn.style.display = 'none';
@@ -4575,8 +4604,8 @@
 
         // --- EMAIL DELIVERY STATUS SECTION ---
         const emailStatusContainer = document.getElementById('reviewEmailStatusContainer');
-        if (vendor.email_sent || vendor.brevo_message_id) {
-            const deliveryStatus = vendor.email_delivery_status || 'sent';
+        if (hasCurrentMarketEmail(vendor)) {
+            const deliveryStatus = vendor.email_delivery_status || 'pending';
             const display = getEmailDeliveryDisplay(deliveryStatus);
             const sentAt = vendor.email_sent_at ? new Date(vendor.email_sent_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
 
@@ -4622,8 +4651,34 @@
             `;
             emailStatusContainer.style.display = 'block';
         } else {
-            emailStatusContainer.style.display = 'none';
-            emailStatusContainer.innerHTML = '';
+            const steps = ['sent', 'delivered', 'opened', 'clicked'];
+            const emptyStepsHtml = steps.map(step => {
+                const stepDisplay = getEmailDeliveryDisplay(step);
+                return `<div style="display: flex; align-items: center; gap: 7px;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div style="width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; font-weight: 800; background: rgba(255,255,255,0.08); color: var(--text-muted);"></div>
+                    </div>
+                    <span style="font-size: 0.7rem; font-weight: 500; color: var(--text-muted); letter-spacing: 0.3px;">${stepDisplay.label}</span>
+                </div>`;
+            }).join('');
+
+            emailStatusContainer.innerHTML = `
+                <div style="background: rgba(142, 142, 147, 0.08); border: 1px solid rgba(142, 142, 147, 0.25); padding: 12px; border-radius: 16px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                        <span style="font-size: 0.95rem;">✉️</span>
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-weight: 700; font-size: 0.75rem; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.5px;">No Email Sent Yet</div>
+                            <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 1px;">Send an email first to start Brevo tracking.</div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 10px;">${emptyStepsHtml}</div>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="sidebar-btn sidebar-btn-sm" style="flex:1; opacity:0.5; cursor:not-allowed;" disabled>View Email</button>
+                        <button class="sidebar-btn sidebar-btn-sm" style="flex:1; opacity:0.5; cursor:not-allowed;" disabled>Refresh</button>
+                    </div>
+                </div>
+            `;
+            emailStatusContainer.style.display = 'block';
         }
 
         document.getElementById('reviewModal').style.display = 'flex';
@@ -4636,7 +4691,7 @@
 
         const result = await fetchEmailStatus(vendorId);
 
-        if (result) {
+        if (result && result.status) {
             showToast(`Email status: ${getEmailDeliveryDisplay(result.status).label}`);
         } else {
             showToast('No new delivery data from Brevo yet.');
@@ -5085,22 +5140,35 @@
             const updatePayload = {
                 brevo_message_id: brevoMessageId,
                 email_delivery_status: 'sent',
-                email_sent_at: new Date().toISOString(),
-                email_html_content: htmlContent,
-                email_subject: parsedSubj
+                email_sent_at: new Date().toISOString()
             };
             if (templates.targetTemplate !== 'custom') {
                 updatePayload.email_sent = templates.targetTemplate;
             }
 
-            await _supabase.from('vendors').update(updatePayload).eq('id', vendor.id);
+            let { error: updateErr } = await _supabase.from('vendors').update(updatePayload).eq('id', vendor.id);
+            if (updateErr) {
+                // Fallback for older schemas that may not have optional email content columns.
+                console.warn('Primary email tracking update failed, retrying minimal payload:', updateErr);
+                const fallbackPayload = {
+                    brevo_message_id: brevoMessageId,
+                    email_delivery_status: 'sent',
+                    email_sent_at: updatePayload.email_sent_at
+                };
+                if (templates.targetTemplate !== 'custom') {
+                    fallbackPayload.email_sent = templates.targetTemplate;
+                }
+                const { error: fallbackErr } = await _supabase.from('vendors').update(fallbackPayload).eq('id', vendor.id);
+                if (fallbackErr) {
+                    console.error('Fallback email tracking update failed:', fallbackErr);
+                    return false;
+                }
+            }
 
             // Update local state for immediate UI reflection
             vendor.brevo_message_id = brevoMessageId;
             vendor.email_delivery_status = 'sent';
             vendor.email_sent_at = updatePayload.email_sent_at;
-            vendor.email_html_content = htmlContent;
-            vendor.email_subject = parsedSubj;
             if (templates.targetTemplate !== 'custom') {
                 vendor.email_sent = templates.targetTemplate;
             }
@@ -5120,45 +5188,66 @@
         if (!vendor || !vendor.preferred_email) return null;
 
         // If no email has been sent yet, nothing to check
-        if (!vendor.email_sent && !vendor.brevo_message_id) return null;
+        if (!hasCurrentMarketEmail(vendor)) return null;
 
         try {
             // Query Brevo's transactional email events for this recipient
             const emailEncoded = encodeURIComponent(vendor.preferred_email);
-            let url = `https://api.brevo.com/v3/smtp/statistics/events?limit=50&email=${emailEncoded}`;
+            const baseEmailUrl = `https://api.brevo.com/v3/smtp/statistics/events?limit=100&sort=desc&email=${emailEncoded}`;
+            const urlsToTry = [];
+            const sentAtMs = vendor.email_sent_at ? new Date(vendor.email_sent_at).getTime() : null;
 
-            // If we have a messageId, filter by it for precision
+            // Try precise lookup first (raw + normalized messageId), then fallback by date/email.
             if (vendor.brevo_message_id) {
-                url += `&messageId=${encodeURIComponent(vendor.brevo_message_id)}`;
-            } else if (vendor.email_sent_at) {
-                // No messageId: scope to events after this email was sent to avoid
-                // picking up delivery events from emails sent in previous markets
-                url += `&startDate=${encodeURIComponent(vendor.email_sent_at.split('T')[0])}`;
+                const rawMessageId = String(vendor.brevo_message_id).trim();
+                const normalizedMessageId = rawMessageId.replace(/^<|>$/g, '');
+                urlsToTry.push(`https://api.brevo.com/v3/smtp/statistics/events?limit=100&sort=desc&messageId=${encodeURIComponent(rawMessageId)}`);
+                if (normalizedMessageId !== rawMessageId) {
+                    urlsToTry.push(`https://api.brevo.com/v3/smtp/statistics/events?limit=100&sort=desc&messageId=${encodeURIComponent(normalizedMessageId)}`);
+                }
             }
+            urlsToTry.push(baseEmailUrl);
+            
+            let events = [];
+            for (const url of urlsToTry) {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'accept': 'application/json', 'api-key': BREVO_API_KEY }
+                });
 
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: { 'accept': 'application/json', 'api-key': BREVO_API_KEY }
-            });
+                if (!response.ok) {
+                    if (response.status !== 400) {
+                        console.error('Brevo events API error:', response.status);
+                    }
+                    continue;
+                }
 
-            if (!response.ok) {
-                console.error('Brevo events API error:', response.status);
-                return null;
+                const data = await response.json();
+                const candidateEvents = data.events || [];
+                if (candidateEvents.length > 0) {
+                    const isMessageScoped = url.includes('messageId=');
+                    const toleranceMs = 24 * 60 * 60 * 1000; // tolerate clock/API timestamp drift by up to 24h
+                    const recentEvents = (!isMessageScoped && Number.isFinite(sentAtMs))
+                        ? candidateEvents.filter(evt => {
+                            const evtMs = new Date(evt.date || '').getTime();
+                            return Number.isFinite(evtMs) && evtMs >= (sentAtMs - toleranceMs);
+                          })
+                        : candidateEvents;
+
+                    if (recentEvents.length === 0) continue;
+                    events = recentEvents;
+                    break;
+                }
             }
-
-            const data = await response.json();
-            const events = data.events || [];
 
             if (events.length === 0) {
-                // Brevo has no tracking data for this email.
-                // If the status is stale from a previous email (delivered/opened/etc),
-                // reset it to 'sent' so it reflects the current email's baseline.
-                if (vendor.email_delivery_status && vendor.email_delivery_status !== 'sent') {
-                    await _supabase.from('vendors').update({ email_delivery_status: 'sent' }).eq('id', vendorId);
-                    vendor.email_delivery_status = 'sent';
-                    return { status: 'sent', events: [], latestDate: null };
+                // No delivery events yet from Brevo for this market email.
+                // Keep it visually unchecked in UI by storing null status.
+                if (vendor.email_delivery_status !== null) {
+                    await _supabase.from('vendors').update({ email_delivery_status: null }).eq('id', vendorId);
+                    vendor.email_delivery_status = null;
                 }
-                return null;
+                return { status: null, events: [], latestDate: null };
             }
 
             // Priority order: higher index = higher priority status
@@ -5204,6 +5293,7 @@
     // Returns display properties for an email delivery status
     function getEmailDeliveryDisplay(status) {
         const map = {
+            'pending':      { label: 'No Delivery Data Yet', color: '#8E8E93', icon: '⏱', bg: 'rgba(142, 142, 147, 0.1)' },
             'sent':         { label: 'Sent',        color: '#0A84FF', icon: '📤', bg: 'rgba(10, 132, 255, 0.1)' },
             'deferred':     { label: 'Deferred',    color: '#FF9500', icon: '⏳', bg: 'rgba(255, 149, 0, 0.1)' },
             'delivered':    { label: 'Delivered',    color: '#34C759', icon: '✓',  bg: 'rgba(52, 199, 89, 0.1)' },
@@ -5220,7 +5310,7 @@
 
     // Bulk refresh email status for all vendors that have been emailed
     async function refreshAllEmailStatuses(silent = false) {
-        const emailedVendors = currentData.vendors.filter(v => v.email_sent || v.brevo_message_id);
+        const emailedVendors = currentData.vendors.filter(v => hasCurrentMarketEmail(v));
         if (emailedVendors.length === 0) {
             if (!silent) showToast('No emails have been sent yet.');
             return;
@@ -5241,6 +5331,30 @@
         if (updated > 0) renderTable();
     }
 
+    async function resetCurrentMarketEmailTracking() {
+        if (!currentData.activeId) return;
+        if (!confirm('Reset email delivery status for ALL applications in this market?')) return;
+
+        const resetPayload = {
+            email_sent: null,
+            email_delivery_status: null,
+            brevo_message_id: null,
+            email_sent_at: null
+        };
+
+        const { error } = await _supabase.from('vendors').update(resetPayload).eq('event_id', currentData.activeId);
+        if (error) {
+            console.error('Failed to reset email tracking:', error);
+            showToast('Failed to reset email tracking.');
+            return;
+        }
+
+        currentData.vendors.forEach(v => Object.assign(v, resetPayload));
+        showToast('Email delivery status reset for this market.');
+        renderTable();
+        if (currentReviewingId) openReviewModal(currentReviewingId);
+    }
+
     // Auto-poll email delivery statuses every 2 minutes for vendors
     // whose status hasn't reached a final state yet
     let emailStatusInterval = null;
@@ -5255,7 +5369,7 @@
             try {
             // Only poll for vendors whose email hasn't reached a terminal state
             const pendingVendors = currentData.vendors.filter(v =>
-                (v.email_sent || v.brevo_message_id) &&
+                hasCurrentMarketEmail(v) &&
                 !['opened', 'clicked', 'hardBounce', 'blocked', 'error', 'unsubscribed'].includes(v.email_delivery_status)
             );
             if (pendingVendors.length === 0) return;
@@ -5393,12 +5507,24 @@
         if (success === 'unauthorized') showToast("API Error: Invalid Key.");
         else if (success) {
             showToast("Sent!");
-            setTimeout(() => fetchEmailStatus(vendor.id).then(() => renderTable()), 30000);
+            scheduleBrevoStatusChecks(vendor.id);
         }
         else showToast("Failed to send.");
 
         _realtimePaused = false;
         refreshData(null, true);
+    }
+
+    function scheduleBrevoStatusChecks(vendorId) {
+        [30, 90, 180].forEach(seconds => {
+            setTimeout(() => fetchEmailStatus(vendorId).then(() => renderTable()), seconds * 1000);
+        });
+    }
+
+    function scheduleBrevoBulkStatusChecks() {
+        [30, 90, 180].forEach(seconds => {
+            setTimeout(() => refreshAllEmailStatuses(true), seconds * 1000);
+        });
     }
 
     function openBulkEmailModal() {
@@ -5527,7 +5653,7 @@
         refreshData(null, true);
 
         // Auto-check delivery status after 30 seconds to catch quick deliveries
-        if (successCount > 0) setTimeout(() => refreshAllEmailStatuses(true), 30000);
+        if (successCount > 0) scheduleBrevoBulkStatusChecks();
     }
 
     async function sendCustomBlastFromSettings() {
@@ -5606,7 +5732,7 @@
 
         _realtimePaused = false;
 
-        if (successCount > 0) setTimeout(() => refreshAllEmailStatuses(true), 30000);
+        if (successCount > 0) scheduleBrevoBulkStatusChecks();
     }
 
     // SETTINGS / TEMPLATES
