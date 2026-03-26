@@ -2305,8 +2305,46 @@
 
 
 
-    function hasCurrentMarketEmail(vendor) {
-        return !!(vendor && (vendor.email_sent || vendor.brevo_message_id));
+    function isStaleEmailTracking(vendor, eventId = currentData.activeId) {
+        if (!vendor || (!vendor.email_sent && !vendor.brevo_message_id)) return false;
+
+        if (vendor.email_sent_event_id && eventId && vendor.email_sent_event_id !== eventId) {
+            return true;
+        }
+
+        if (vendor.email_sent_at && vendor.created_at) {
+            const sentTime = new Date(vendor.email_sent_at).getTime();
+            const appCreatedTime = new Date(vendor.created_at).getTime();
+            if (!Number.isNaN(sentTime) && !Number.isNaN(appCreatedTime) && sentTime < appCreatedTime) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function hasCurrentMarketEmail(vendor, eventId = currentData.activeId) {
+        return !!(vendor && (vendor.email_sent || vendor.brevo_message_id) && !isStaleEmailTracking(vendor, eventId));
+    }
+
+    async function clearStaleEmailTracking(vendors, eventId = currentData.activeId) {
+        if (!Array.isArray(vendors) || !eventId) return;
+
+        const staleVendors = vendors.filter(v => isStaleEmailTracking(v, eventId));
+        if (staleVendors.length === 0) return;
+
+        for (const vendor of staleVendors) {
+            const resetPayload = {
+                email_sent: null,
+                email_delivery_status: null,
+                brevo_message_id: null,
+                email_sent_at: null,
+                email_sent_event_id: null
+            };
+
+            await _supabase.from('vendors').update(resetPayload).eq('id', vendor.id);
+            Object.assign(vendor, resetPayload);
+        }
     }
 
     function escapeHtml(str) {
@@ -3024,6 +3062,8 @@
                 })();
             }
         }
+
+        await clearStaleEmailTracking(vendorsData, activeId);
 
         currentData = {
             vendors: vendorsData || [],
@@ -4590,7 +4630,7 @@
         // --- EMAIL DELIVERY STATUS SECTION ---
         const emailStatusContainer = document.getElementById('reviewEmailStatusContainer');
         if (hasCurrentMarketEmail(vendor)) {
-            const deliveryStatus = vendor.email_delivery_status || 'pending';
+            const deliveryStatus = vendor.email_delivery_status || 'sent';
             const display = getEmailDeliveryDisplay(deliveryStatus);
             const sentAt = vendor.email_sent_at ? new Date(vendor.email_sent_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
 
@@ -5126,6 +5166,7 @@
                 brevo_message_id: brevoMessageId,
                 email_delivery_status: 'sent',
                 email_sent_at: new Date().toISOString(),
+                email_sent_event_id: currentData.activeId,
                 email_html_content: htmlContent,
                 email_subject: parsedSubj
             };
@@ -5156,6 +5197,7 @@
             vendor.brevo_message_id = brevoMessageId;
             vendor.email_delivery_status = 'sent';
             vendor.email_sent_at = updatePayload.email_sent_at;
+            vendor.email_sent_event_id = updatePayload.email_sent_event_id;
             vendor.email_html_content = htmlContent;
             vendor.email_subject = parsedSubj;
             if (templates.targetTemplate !== 'custom') {
@@ -5182,24 +5224,20 @@
         try {
             // Query Brevo's transactional email events for this recipient
             const emailEncoded = encodeURIComponent(vendor.preferred_email);
-            const baseEmailUrl = `https://api.brevo.com/v3/smtp/statistics/events?limit=50&email=${emailEncoded}`;
+            const baseUrl = `https://api.brevo.com/v3/smtp/statistics/events?limit=50&email=${emailEncoded}`;
             const urlsToTry = [];
-            const sentAtMs = vendor.email_sent_at ? new Date(vendor.email_sent_at).getTime() : null;
 
-            // Try precise lookup first (raw + normalized messageId), then fallback by date/email.
+            // Try precise lookup first (messageId), then fallback to startDate-scoped lookup.
             if (vendor.brevo_message_id) {
-                const rawMessageId = String(vendor.brevo_message_id).trim();
-                const normalizedMessageId = rawMessageId.replace(/^<|>$/g, '');
-                urlsToTry.push(`https://api.brevo.com/v3/smtp/statistics/events?limit=50&messageId=${encodeURIComponent(rawMessageId)}`);
-                if (normalizedMessageId !== rawMessageId) {
-                    urlsToTry.push(`https://api.brevo.com/v3/smtp/statistics/events?limit=50&messageId=${encodeURIComponent(normalizedMessageId)}`);
-                }
+                const normalizedMessageId = String(vendor.brevo_message_id).trim().replace(/^<|>$/g, '');
+                urlsToTry.push(`${baseUrl}&messageId=${encodeURIComponent(normalizedMessageId)}`);
             }
             if (vendor.email_sent_at) {
-                urlsToTry.push(`${baseEmailUrl}&startDate=${encodeURIComponent(vendor.email_sent_at)}`);
-                urlsToTry.push(`${baseEmailUrl}&startDate=${encodeURIComponent(vendor.email_sent_at.split('T')[0])}`);
+                urlsToTry.push(`${baseUrl}&startDate=${encodeURIComponent(vendor.email_sent_at.split('T')[0])}`);
             }
-            urlsToTry.push(baseEmailUrl);
+            if (urlsToTry.length === 0) {
+                urlsToTry.push(baseUrl);
+            }
             
             let events = [];
             for (const url of urlsToTry) {
@@ -5216,17 +5254,7 @@
                 const data = await response.json();
                 const candidateEvents = data.events || [];
                 if (candidateEvents.length > 0) {
-                    const isMessageScoped = url.includes('messageId=');
-                    const toleranceMs = 24 * 60 * 60 * 1000; // tolerate clock/API timestamp drift by up to 24h
-                    const recentEvents = (!isMessageScoped && Number.isFinite(sentAtMs))
-                        ? candidateEvents.filter(evt => {
-                            const evtMs = new Date(evt.date || '').getTime();
-                            return Number.isFinite(evtMs) && evtMs >= (sentAtMs - toleranceMs);
-                          })
-                        : candidateEvents;
-
-                    if (recentEvents.length === 0) continue;
-                    events = recentEvents;
+                    events = candidateEvents;
                     break;
                 }
             }
