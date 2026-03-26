@@ -1681,11 +1681,19 @@
                         </div>
                     </div>
 
-                    <div style="display:flex; gap: 15px; flex-wrap: wrap;">
-                        <button onclick="updateActiveEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: var(--gradient-success);">Update ACTIVE Event</button>
-                        <button onclick="createNewEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: rgba(255,255,255,0.1);">Create as NEW Event</button>
-                    </div>
+                <div style="display:flex; gap: 15px; flex-wrap: wrap;">
+                    <button onclick="updateActiveEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: var(--gradient-success);">Update ACTIVE Event</button>
+                    <button onclick="createNewEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: rgba(255,255,255,0.1);">Create as NEW Event</button>
                 </div>
+            </div>
+
+            <div style="margin-bottom:30px; background: rgba(255, 149, 0, 0.06); border: 1px solid rgba(255, 149, 0, 0.25); padding: 20px; border-radius: 16px;">
+                <label class="stat-label" style="color: #FF9500;">Email Delivery Status (Current Market)</label>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
+                    <span style="font-size:0.82rem; color:var(--text-muted);">If the new market has stale Brevo status checkmarks, reset everything back to unsent/unchecked.</span>
+                    <button onclick="resetCurrentMarketEmailTracking()" class="btn-action" style="background: rgba(255, 149, 0, 0.2); border: 1px solid rgba(255, 149, 0, 0.4); color: #FF9500;">Reset Current Market Delivery Status</button>
+                </div>
+            </div>
                 
                 <div style="padding: 20px; border: 1px solid rgba(255, 59, 48, 0.3); border-radius: 16px; background: rgba(255, 59, 48, 0.05);">
                     <label class="stat-label" style="color: #FF3B30;">Danger Zone</label>
@@ -4682,7 +4690,7 @@
 
         const result = await fetchEmailStatus(vendorId);
 
-        if (result) {
+        if (result && result.status) {
             showToast(`Email status: ${getEmailDeliveryDisplay(result.status).label}`);
         } else {
             showToast('No new delivery data from Brevo yet.');
@@ -5198,15 +5206,13 @@
             const events = data.events || [];
 
             if (events.length === 0) {
-                // Brevo has no tracking data for this email.
-                // If the status is stale from a previous email (delivered/opened/etc),
-                // reset it to 'sent' so it reflects the current email's baseline.
-                if (vendor.email_delivery_status && vendor.email_delivery_status !== 'sent') {
-                    await _supabase.from('vendors').update({ email_delivery_status: 'sent' }).eq('id', vendorId);
-                    vendor.email_delivery_status = 'sent';
-                    return { status: 'sent', events: [], latestDate: null };
+                // No delivery events yet from Brevo for this market email.
+                // Keep it visually unchecked in UI by storing null status.
+                if (vendor.email_delivery_status !== null) {
+                    await _supabase.from('vendors').update({ email_delivery_status: null }).eq('id', vendorId);
+                    vendor.email_delivery_status = null;
                 }
-                return null;
+                return { status: null, events: [], latestDate: null };
             }
 
             // Priority order: higher index = higher priority status
@@ -5252,6 +5258,7 @@
     // Returns display properties for an email delivery status
     function getEmailDeliveryDisplay(status) {
         const map = {
+            'pending':      { label: 'No Delivery Data Yet', color: '#8E8E93', icon: '⏱', bg: 'rgba(142, 142, 147, 0.1)' },
             'sent':         { label: 'Sent',        color: '#0A84FF', icon: '📤', bg: 'rgba(10, 132, 255, 0.1)' },
             'deferred':     { label: 'Deferred',    color: '#FF9500', icon: '⏳', bg: 'rgba(255, 149, 0, 0.1)' },
             'delivered':    { label: 'Delivered',    color: '#34C759', icon: '✓',  bg: 'rgba(52, 199, 89, 0.1)' },
@@ -5287,6 +5294,30 @@
 
         if (!silent && updated > 0) showToast(`Updated ${updated} email statuses.`);
         if (updated > 0) renderTable();
+    }
+
+    async function resetCurrentMarketEmailTracking() {
+        if (!currentData.activeId) return;
+        if (!confirm('Reset email delivery status for ALL applications in this market?')) return;
+
+        const resetPayload = {
+            email_sent: null,
+            email_delivery_status: null,
+            brevo_message_id: null,
+            email_sent_at: null
+        };
+
+        const { error } = await _supabase.from('vendors').update(resetPayload).eq('event_id', currentData.activeId);
+        if (error) {
+            console.error('Failed to reset email tracking:', error);
+            showToast('Failed to reset email tracking.');
+            return;
+        }
+
+        currentData.vendors.forEach(v => Object.assign(v, resetPayload));
+        showToast('Email delivery status reset for this market.');
+        renderTable();
+        if (currentReviewingId) openReviewModal(currentReviewingId);
     }
 
     // Auto-poll email delivery statuses every 2 minutes for vendors
