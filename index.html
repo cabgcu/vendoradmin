@@ -1583,7 +1583,7 @@
         <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px;">
             <div>
                 <h2 style="margin:0; font-weight: 800;">Vendor Profiles</h2>
-                <p style="color:var(--text-muted); font-size: 0.95rem; margin-top: 5px;">Showing unique vendors from the last 5 months across all events.</p>
+                <p style="color:var(--text-muted); font-size: 0.95rem; margin-top: 5px;"><span id="profilesTimeframeText">Loading profiles...</span></p>
             </div>
             <div style="flex: 1; min-width: 250px; max-width: 400px;">
                 <input type="text" id="profileSearch" class="modern-input" placeholder="Search profiles by name, email, or ID..." onkeyup="renderProfilesTable()">
@@ -1835,8 +1835,8 @@
                 <!-- Storage Cleanup -->
                 <div style="margin-bottom:30px; background: rgba(255, 149, 0, 0.05); border: 1px solid rgba(255, 149, 0, 0.2); padding: 25px; border-radius: 20px;">
                     <label class="stat-label" style="color: #FF9500; font-size: 1rem; margin-bottom: 10px;">Storage Space Cleanup</label>
-                    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Supabase limits free storage to 50MB. Click below to permanently delete food license images attached to applications that are older than 5 months. The vendor profile will remain, but the image file will be erased.</p>
-                    <button onclick="runStorageCleanup()" class="btn-action" style="background: var(--gradient-warning); color: #000; padding: 12px 24px;">🗑 Delete Old Files (> 5 Months)</button>
+                    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Supabase limits free storage to 50MB. Click below to permanently delete food license images attached to applications older than <span id="storageCleanupMonths">12</span> months. The vendor profile will remain, but the image file will be erased.</p>
+                    <button onclick="runStorageCleanup()" class="btn-action" style="background: var(--gradient-warning); color: #000; padding: 12px 24px;">🗑 Delete Old Files (> <span id="storageCleanupButtonMonths">12</span> Months)</button>
                 </div>
 
                 <!-- System Settings & API Keys -->
@@ -2504,13 +2504,15 @@
             });
     }
 
-    // --- DEEPSEEK V3 AI AUTOMATION ENGINE ---
+    // --- AI AUTOMATION ENGINE ---
     async function processAIQueue() {
         if (!isBuiltinEnabled('ai_license_scan')) return;
         if (isAIQueueRunning) return;
         isAIQueueRunning = true;
 
         const BATCH_SIZE = 5; // BULK PROCESS: Run up to 5 AI scans simultaneously
+        const MAX_QUEUE_RETRIES = 2; // Retry failed vendors up to 2 times
+        let queueRetryCount = 0;
 
         while (true) {
             // Find all eligible vendors and grab the next batch
@@ -2523,26 +2525,42 @@
 
                 const notes = getParsedNotes(v.internal_notes);
                 const aiNote = notes.find(n => n.type === 'ai_analysis');
-                
+
                 // Needs OCR if it's a food vendor and has no license_status
                 if (!aiNote || !aiNote.ai_data || !aiNote.ai_data.license_status) return true;
-                
+
+                // Auto-rescan if previous scan result was a failure/warning (not a valid result)
+                if (aiNote && aiNote.ai_data && aiNote.ai_data.license_status) {
+                    const status = aiNote.ai_data.license_status;
+                    if (status.includes('API failed') || status.includes('System error') || status.includes('timed out')) return true;
+                }
+
                 return false;
             }).slice(0, BATCH_SIZE);
 
-            if (batch.length === 0) break; // Queue empty!
+            if (batch.length === 0) {
+                // If there are failed vendors and we haven't exhausted retries, clear failures and retry
+                if (failedAIVendors.size > 0 && queueRetryCount < MAX_QUEUE_RETRIES) {
+                    queueRetryCount++;
+                    console.log(`AI Queue: Retrying ${failedAIVendors.size} failed vendors (attempt ${queueRetryCount}/${MAX_QUEUE_RETRIES})`);
+                    failedAIVendors.clear();
+                    await new Promise(r => setTimeout(r, 5000)); // Wait 5s before retry pass
+                    continue;
+                }
+                break; // Queue truly empty or retries exhausted
+            }
 
             // Fire them all off concurrently!
             const results = await Promise.all(batch.map(v => runDeepSeekAnalysis(v)));
-            
+
             // If we hit an unrecoverable auth error (e.g. 401/402 out of credits), stop the entire queue
             if (results.includes('auth_error')) {
                 console.error("Stopping AI Queue: OpenRouter Auth or Credit issue detected.");
-                break; 
+                break;
             }
-            
+
             // Wait 2.5 seconds before the next batch to respect OpenRouter API rate limits
-            await new Promise(r => setTimeout(r, 2500)); 
+            await new Promise(r => setTimeout(r, 2500));
         }
 
         isAIQueueRunning = false;
@@ -2590,51 +2608,78 @@
                     const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                     
                     const scanTimeout = (getBuiltinSetting('ai_license_scan', 'timeout') || 15) * 1000;
-                    const scanModel = 'google/gemini-2.0-flash-lite-preview-02-05:free';
+                    const scanModel = 'google/gemini-2.5-flash-preview-05-20:free';
                     const visionController = new AbortController();
                     const visionTimeoutId = setTimeout(() => visionController.abort(), scanTimeout);
 
-                    const visionRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                        method: "POST",
-                        headers: {
-                            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                            "Content-Type": "application/json",
-                            "HTTP-Referer": window.location.href,
-                            "X-Title": "CAB Admin System"
-                        },
-                        body: JSON.stringify({
-                            model: scanModel,
-                            messages: [{
-                                role: "user",
-                                content: [
-                                    { type: "text", text: `You are a strict health inspector reviewing a food handler's license. The CURRENT DATE is ${currentDateStr} (Year: ${currentYear}). Read the image carefully. 1. Identify the Issue Date or Expiration Date. 2. If it has an Issue Date and says 'Valid for 3 Years', add 3 to the issue year (e.g. 2023 + 3 = 2026). 3. CRITICAL: If the expiration year is ${currentYear} or greater, the license IS VALID. Do NOT mark it expired! Respond ONLY in valid JSON: {"is_valid_license": boolean, "expiration_date": "string (e.g. 'July 2026') or 'Not Found'", "is_expired": boolean, "notes": "Brief explanation of dates found"}` },
-                                    { type: "image_url", image_url: { url: vendor.food_license_link } }
-                                ]
-                            }]
-                        }),
-                        signal: visionController.signal
-                    });
-                    
-                    clearTimeout(visionTimeoutId);
+                    const MAX_RETRIES = 2;
+                    let lastApiError = null;
 
-                    if (visionRes.ok) {
-                        const visionData = await visionRes.json();
-                        let rawV = visionData.choices[0].message.content.replace(/```json/gi, '').replace(/```/g, '').trim();
-                        const vJson = JSON.parse(rawV);
-                        
-                        if (!vJson.is_valid_license) {
-                            licenseOcrResult = `🚨 Invalid or Unreadable License (${vJson.notes}).`;
-                        } else if (vJson.is_expired) {
-                            licenseOcrResult = `🚨 Food License is EXPIRED! (Expired on ${vJson.expiration_date}).`;
-                        } else {
-                            licenseOcrResult = `✅ Food License is Valid (Expires: ${vJson.expiration_date}).`;
+                    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+                        if (attempt > 0) await new Promise(r => setTimeout(r, 2000 * attempt));
+
+                        const retryController = new AbortController();
+                        const retryTimeoutId = setTimeout(() => retryController.abort(), scanTimeout);
+
+                        try {
+                            const visionRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                                method: "POST",
+                                headers: {
+                                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                                    "Content-Type": "application/json",
+                                    "HTTP-Referer": window.location.href,
+                                    "X-Title": "CAB Admin System"
+                                },
+                                body: JSON.stringify({
+                                    model: scanModel,
+                                    messages: [{
+                                        role: "user",
+                                        content: [
+                                            { type: "text", text: `You are a strict health inspector reviewing a food handler's license. The CURRENT DATE is ${currentDateStr} (Year: ${currentYear}). Read the image carefully. 1. Identify the Issue Date or Expiration Date. 2. If it has an Issue Date and says 'Valid for 3 Years', add 3 to the issue year (e.g. 2023 + 3 = 2026). 3. CRITICAL: If the expiration year is ${currentYear} or greater, the license IS VALID. Do NOT mark it expired! Respond ONLY in valid JSON: {"is_valid_license": boolean, "expiration_date": "string (e.g. 'July 2026') or 'Not Found'", "is_expired": boolean, "notes": "Brief explanation of dates found"}` },
+                                            { type: "image_url", image_url: { url: vendor.food_license_link } }
+                                        ]
+                                    }]
+                                }),
+                                signal: retryController.signal
+                            });
+
+                            clearTimeout(retryTimeoutId);
+
+                            if (visionRes.ok) {
+                                const visionData = await visionRes.json();
+                                let rawV = visionData.choices[0].message.content.replace(/```json/gi, '').replace(/```/g, '').trim();
+                                const vJson = JSON.parse(rawV);
+
+                                if (!vJson.is_valid_license) {
+                                    licenseOcrResult = `🚨 Invalid or Unreadable License (${vJson.notes}).`;
+                                } else if (vJson.is_expired) {
+                                    licenseOcrResult = `🚨 Food License is EXPIRED! (Expired on ${vJson.expiration_date}).`;
+                                } else {
+                                    licenseOcrResult = `✅ Food License is Valid (Expires: ${vJson.expiration_date}).`;
+                                }
+                                lastApiError = null;
+                                break;
+                            } else if (visionRes.status === 401 || visionRes.status === 402) {
+                                throw new Error("auth_error");
+                            } else {
+                                lastApiError = `HTTP ${visionRes.status}`;
+                                if (attempt === MAX_RETRIES) {
+                                    licenseOcrResult = "⚠️ API failed to scan license image.";
+                                }
+                            }
+                        } catch (retryErr) {
+                            clearTimeout(retryTimeoutId);
+                            if (retryErr.message === "auth_error") throw retryErr;
+                            lastApiError = retryErr;
+                            if (attempt === MAX_RETRIES) {
+                                licenseOcrResult = retryErr.name === "AbortError" ? "⚠️ Image scan timed out." : "⚠️ API failed to scan license image.";
+                            }
                         }
-                    } else {
-                        licenseOcrResult = "⚠️ API failed to scan license image.";
                     }
                 } catch (e) {
                     console.error("Vision OCR Error:", e);
-                    licenseOcrResult = e.name === "AbortError" ? "⚠️ Image scan timed out." : "⚠️ System error while scanning license image.";
+                    if (e.message === "auth_error") throw e;
+                    licenseOcrResult = "⚠️ System error while scanning license image.";
                 }
             }
 
@@ -3436,10 +3481,19 @@
     // VENDOR PROFILES LOGIC
     async function fetchAndRenderProfiles() {
         document.getElementById('loader').style.display = 'flex';
-        
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-        const isoDate = oneYearAgo.toISOString();
+
+        const lookbackMonths = getBuiltinSetting('vendor_profiles_lookback', 'months') || 12;
+
+        // Update the description text to reflect actual timeframe
+        const timeframeText = document.getElementById('profilesTimeframeText');
+        if (timeframeText) {
+            const monthLabel = lookbackMonths === 1 ? 'month' : 'months';
+            timeframeText.innerText = `Showing unique vendors from the last ${lookbackMonths} ${monthLabel} across all events.`;
+        }
+
+        const lookbackDate = new Date();
+        lookbackDate.setMonth(lookbackDate.getMonth() - lookbackMonths);
+        const isoDate = lookbackDate.toISOString();
 
         let eventMap = {};
         if (currentData.allEvents && currentData.allEvents.length > 0) {
@@ -6179,15 +6233,16 @@
     }
 
     async function runStorageCleanup() {
-        if (!confirm("This will permanently delete food license files older than 5 months from your Supabase storage to free up space.\n\nProceed?")) return;
+        const lookbackMonths = getBuiltinSetting('vendor_profiles_lookback', 'months') || 12;
+        if (!confirm(`This will permanently delete food license files older than ${lookbackMonths} months from your Supabase storage to free up space.\n\nProceed?`)) return;
 
         document.getElementById('loader').style.display = 'flex';
         const loaderText = document.querySelector('#loader span');
         loaderText.innerText = 'CLEANING...';
 
-        const fiveMonthsAgo = new Date();
-        fiveMonthsAgo.setMonth(fiveMonthsAgo.getMonth() - 5);
-        const isoDate = fiveMonthsAgo.toISOString();
+        const cleanupDate = new Date();
+        cleanupDate.setMonth(cleanupDate.getMonth() - lookbackMonths);
+        const isoDate = cleanupDate.toISOString();
 
         // Find vendors older than 5 months with a non-empty food license link
         const { data, error } = await _supabase.from('vendors')
@@ -6329,6 +6384,15 @@
                       { value: 'high', label: 'High (AI fuzzy matching)' }
                   ] }
             ]
+        },
+        {
+            id: 'vendor_profiles_lookback',
+            name: 'Vendor Profiles Archive',
+            description: 'Controls the time period for vendor profiles and storage cleanup.',
+            icon: '📋', color: '#A2845E', defaultEnabled: true, hidden: true,
+            settings: [
+                { key: 'months', label: 'Lookback period (months)', type: 'number', default: 12, min: 1, max: 36 }
+            ]
         }
     ];
 
@@ -6341,6 +6405,15 @@
         if (!automationsConfig.builtin) automationsConfig.builtin = {};
         if (!automationsConfig.custom) automationsConfig.custom = [];
         if (!automationsConfig.log) automationsConfig.log = [];
+        updateLookbackUI();
+    }
+
+    function updateLookbackUI() {
+        const lookbackMonths = getBuiltinSetting('vendor_profiles_lookback', 'months') || 12;
+        const cleanupMonthsEl = document.getElementById('storageCleanupMonths');
+        const cleanupButtonEl = document.getElementById('storageCleanupButtonMonths');
+        if (cleanupMonthsEl) cleanupMonthsEl.innerText = lookbackMonths;
+        if (cleanupButtonEl) cleanupButtonEl.innerText = lookbackMonths;
     }
 
     async function saveAutomationsConfig() {
@@ -6377,6 +6450,11 @@
         automationsConfig.builtin[id].settings[key] = value;
         await saveAutomationsConfig();
         addAutomationLog(`Updated "${BUILTIN_AUTOMATIONS.find(a=>a.id===id)?.name}" setting: ${key}`);
+
+        // Update UI after profile lookback settings change
+        if (id === 'vendor_profiles_lookback' && key === 'months') {
+            updateLookbackUI();
+        }
     }
 
     async function toggleBuiltinAutomation(id) {
