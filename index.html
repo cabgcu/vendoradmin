@@ -3019,6 +3019,13 @@
         if (vendorsData) {
             vendorsData.forEach((v, index) => {
                 v.appNumber = index + 1;
+
+                // Sanitize email status: if no email was actually sent (no timestamp and no Brevo ID),
+                // clear any stale/default email fields so they don't falsely show as emailed
+                if (!v.email_sent_at && !v.brevo_message_id) {
+                    v.email_sent = null;
+                    v.email_delivery_status = null;
+                }
                 
                 // Read historical AI tags if they exist
                 const notes = getParsedNotes(v.internal_notes);
@@ -4173,23 +4180,27 @@
             `;
             
             // Contextual badge logic based on the active tab
+            // Only consider email "sent" if we have proof it was actually sent (email_sent_at timestamp)
             let isEmailSentForView = false;
-            
-            if (activeFilter === 'power') {
-                isEmailSentForView = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-            } else if (activeFilter === 'denied') {
-                isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-            } else if (activeFilter === 'approved') {
-                isEmailSentForView = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
-            } else {
-                if (v.status === 'Denied') {
-                    isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-                } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
+            const wasActuallySent = v.email_sent && (v.email_sent_at || v.brevo_message_id);
+
+            if (wasActuallySent) {
+                if (activeFilter === 'power') {
                     isEmailSentForView = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-                } else if (v.status === 'Approved' || v.status === 'Checked In') {
+                } else if (activeFilter === 'denied') {
+                    isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
+                } else if (activeFilter === 'approved') {
                     isEmailSentForView = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
                 } else {
-                    isEmailSentForView = false;
+                    if (v.status === 'Denied') {
+                        isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
+                    } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
+                        isEmailSentForView = (v.email_sent === 'power' || v.email_sent === 'power_denied');
+                    } else if (v.status === 'Approved' || v.status === 'Checked In') {
+                        isEmailSentForView = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
+                    } else {
+                        isEmailSentForView = false;
+                    }
                 }
             }
             
@@ -5589,21 +5600,25 @@
         const listEl = document.getElementById('bulkEmailList');
         listEl.innerHTML = eligibleVendors.map(v => {
             let isSent = false;
-            
+
             // Apply the exact same contextual logic to the bulk send modal
-            if (activeFilter === 'power') {
-                isSent = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-            } else if (activeFilter === 'denied') {
-                isSent = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-            } else if (activeFilter === 'approved') {
-                isSent = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
-            } else {
-                if (v.status === 'Denied') {
-                    isSent = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-                } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
+            // Only consider email "sent" if we have proof (timestamp or message ID)
+            const bulkWasActuallySent = v.email_sent && (v.email_sent_at || v.brevo_message_id);
+            if (bulkWasActuallySent) {
+                if (activeFilter === 'power') {
                     isSent = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-                } else if (v.status === 'Approved' || v.status === 'Checked In') {
+                } else if (activeFilter === 'denied') {
+                    isSent = (v.email_sent === 'denied' || v.email_sent === 'Yes');
+                } else if (activeFilter === 'approved') {
                     isSent = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
+                } else {
+                    if (v.status === 'Denied') {
+                        isSent = (v.email_sent === 'denied' || v.email_sent === 'Yes');
+                    } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
+                        isSent = (v.email_sent === 'power' || v.email_sent === 'power_denied');
+                    } else if (v.status === 'Approved' || v.status === 'Checked In') {
+                        isSent = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
+                    }
                 }
             }
             
