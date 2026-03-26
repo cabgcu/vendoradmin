@@ -5172,7 +5172,7 @@
 
             // Capture the messageId from Brevo's response for delivery tracking
             const responseData = await response.json();
-            const brevoMessageId = responseData.messageId || null;
+            const brevoMessageId = responseData.messageId || responseData.messageIds?.[0] || responseData.id || null;
 
             // Only overwrite their master database email_sent status if it was a core approval/denial
             const updatePayload = {
