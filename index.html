@@ -5174,7 +5174,24 @@
                 updatePayload.email_sent = templates.targetTemplate;
             }
 
-            await _supabase.from('vendors').update(updatePayload).eq('id', vendor.id);
+            let { error: updateErr } = await _supabase.from('vendors').update(updatePayload).eq('id', vendor.id);
+            if (updateErr) {
+                // Fallback for older schemas that may not have optional email content columns.
+                console.warn('Primary email tracking update failed, retrying minimal payload:', updateErr);
+                const fallbackPayload = {
+                    brevo_message_id: brevoMessageId,
+                    email_delivery_status: 'sent',
+                    email_sent_at: updatePayload.email_sent_at
+                };
+                if (templates.targetTemplate !== 'custom') {
+                    fallbackPayload.email_sent = templates.targetTemplate;
+                }
+                const { error: fallbackErr } = await _supabase.from('vendors').update(fallbackPayload).eq('id', vendor.id);
+                if (fallbackErr) {
+                    console.error('Fallback email tracking update failed:', fallbackErr);
+                    return false;
+                }
+            }
 
             // Update local state for immediate UI reflection
             vendor.brevo_message_id = brevoMessageId;
