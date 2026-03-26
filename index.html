@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>CAB Student Market Admin</title>
     
@@ -2151,19 +2152,32 @@
         return Array.from(found);
     }
 
+    let OPENROUTER_DISABLED = false;
+    async function callOpenRouterChat(payload) {
+        if (!OPENROUTER_API_KEY || OPENROUTER_DISABLED) return null;
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
+            body: JSON.stringify(payload)
+        });
+        if (res.status === 404) {
+            OPENROUTER_DISABLED = true;
+            console.warn('OpenRouter completions endpoint returned 404. Disabling AI calls for this session.');
+            return null;
+        }
+        if (!res.ok) throw new Error(`OpenRouter error ${res.status}`);
+        return await res.json();
+    }
+
     async function aiCategorizeVendor(description) {
         if (!OPENROUTER_API_KEY || !description) return ['Unique Goods'];
         const categories = Object.keys(CATEGORY_MAP);
         try {
-            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
-                body: JSON.stringify({
-                    model: 'deepseek/deepseek-chat-v3-0324:free',
-                    messages: [{ role: "user", content: `Categorize this vendor into one or more of these categories: ${categories.join(', ')}. Vendor description: "${description}". Respond ONLY with a JSON array of matching category names, e.g. ["Food & Beverage","Art & Prints"]. If none fit, respond ["Unique Goods"].` }]
-                })
+            const data = await callOpenRouterChat({
+                model: 'deepseek/deepseek-chat-v3-0324:free',
+                messages: [{ role: "user", content: `Categorize this vendor into one or more of these categories: ${categories.join(', ')}. Vendor description: "${description}". Respond ONLY with a JSON array of matching category names, e.g. ["Food & Beverage","Art & Prints"]. If none fit, respond ["Unique Goods"].` }]
             });
-            const data = await res.json();
+            if (!data) return ['Unique Goods'];
             const text = data.choices?.[0]?.message?.content || '';
             const match = text.match(/\[.*\]/s);
             if (match) {
@@ -2180,15 +2194,11 @@
         const model = 'deepseek/deepseek-chat-v3-0324:free';
         const prompt = getBuiltinSetting('ai_vendor_summary', 'prompt') || 'Summarize this vendor application in 1-2 sentences. Focus on what they sell and any notable details.';
         try {
-            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
-                body: JSON.stringify({
-                    model,
-                    messages: [{ role: "user", content: `${prompt}\n\nVendor: ${vendor.first_name || ''} ${vendor.last_name || ''}\nBusiness: ${vendor.business_name || 'N/A'}\nDescription: ${vendor.description}` }]
-                })
+            const data = await callOpenRouterChat({
+                model,
+                messages: [{ role: "user", content: `${prompt}\n\nVendor: ${vendor.first_name || ''} ${vendor.last_name || ''}\nBusiness: ${vendor.business_name || 'N/A'}\nDescription: ${vendor.description}` }]
             });
-            const data = await res.json();
+            if (!data) return null;
             return data.choices?.[0]?.message?.content?.trim() || null;
         } catch(e) { console.error('AI summary failed:', e); return null; }
     }
@@ -2226,15 +2236,11 @@
         // High sensitivity - use AI
         const summaries = vendors.slice(0, 50).map((v, i) => `${i}: ${v.first_name||''} ${v.last_name||''} | ${v.email||''} | ${v.business_name||''} | ${(v.description||'').substring(0,80)}`).join('\n');
         try {
-            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
-                body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash-preview-05-20:free',
-                    messages: [{ role: "user", content: `Find potential duplicate vendors in this list. Look for same person, same business, or very similar applications. List:\n${summaries}\n\nRespond ONLY with JSON array of objects: [{"idx1": number, "idx2": number, "reason": "string"}]. If no duplicates found, respond [].` }]
-                })
+            const data = await callOpenRouterChat({
+                model: 'google/gemini-2.5-flash-preview-05-20:free',
+                messages: [{ role: "user", content: `Find potential duplicate vendors in this list. Look for same person, same business, or very similar applications. List:\n${summaries}\n\nRespond ONLY with JSON array of objects: [{"idx1": number, "idx2": number, "reason": "string"}]. If no duplicates found, respond [].` }]
             });
-            const data = await res.json();
+            if (!data) return [];
             const text = data.choices?.[0]?.message?.content || '[]';
             const match = text.match(/\[.*\]/s);
             if (match) {
@@ -2671,6 +2677,7 @@
                     let lastApiError = null;
 
                     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+                        if (OPENROUTER_DISABLED) break;
                         if (attempt > 0) await new Promise(r => setTimeout(r, 2000 * attempt));
 
                         const retryController = new AbortController();
@@ -2699,6 +2706,12 @@
                             });
 
                             clearTimeout(retryTimeoutId);
+
+                            if (visionRes.status === 404) {
+                                OPENROUTER_DISABLED = true;
+                                licenseOcrResult = "⚠️ AI endpoint unavailable (404).";
+                                break;
+                            }
 
                             if (visionRes.ok) {
                                 const visionData = await visionRes.json();
