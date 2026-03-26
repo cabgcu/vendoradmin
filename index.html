@@ -2613,7 +2613,7 @@
                     const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                     
                     const scanTimeout = (getBuiltinSetting('ai_license_scan', 'timeout') || 15) * 1000;
-                    const scanModel = 'google/gemini-2.5-flash-preview-05-20:free';
+                    const scanModel = 'nvidia/nemotron-nano-12b-v2-vl:free';
 
                     const MAX_RETRIES = 2;
                     let lastApiError = null;
