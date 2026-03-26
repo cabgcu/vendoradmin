@@ -2295,6 +2295,58 @@
         { id: 'additional_comments', type: 'textarea', label: 'Additional Comments or Requests', hint: '', required: false, width: 'full', isCore: true }
     ];
 
+
+
+    function isStaleEmailTracking(vendor) {
+        if (!vendor || (!vendor.email_sent && !vendor.brevo_message_id)) return false;
+
+        if (vendor.email_sent_at && vendor.created_at) {
+            const sentTime = new Date(vendor.email_sent_at).getTime();
+            const appCreatedTime = new Date(vendor.created_at).getTime();
+            if (!Number.isNaN(sentTime) && !Number.isNaN(appCreatedTime) && sentTime < appCreatedTime) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function hasCurrentMarketEmail(vendor) {
+        return !!(vendor && (vendor.email_sent || vendor.brevo_message_id) && !isStaleEmailTracking(vendor));
+    }
+
+    function isPreContactWindow(eventObj) {
+        if (!eventObj || !eventObj.contact_date) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const contactDate = new Date(eventObj.contact_date + 'T00:00:00');
+        return !Number.isNaN(contactDate.getTime()) && today < contactDate;
+    }
+
+    async function clearStaleEmailTracking(vendors, activeEvent) {
+        if (!Array.isArray(vendors)) return;
+
+        const resetForNewMarket = isPreContactWindow(activeEvent);
+        const staleVendors = vendors.filter(v => {
+            if (!(v.email_sent || v.brevo_message_id)) return false;
+            if (resetForNewMarket) return true;
+            return isStaleEmailTracking(v);
+        });
+        if (staleVendors.length === 0) return;
+
+        for (const vendor of staleVendors) {
+            const resetPayload = {
+                email_sent: null,
+                email_delivery_status: null,
+                brevo_message_id: null,
+                email_sent_at: null
+            };
+
+            await _supabase.from('vendors').update(resetPayload).eq('id', vendor.id);
+            Object.assign(vendor, resetPayload);
+        }
+    }
+
     function escapeHtml(str) {
         if (!str) return '';
         return String(str)
@@ -3010,6 +3062,8 @@
                 })();
             }
         }
+
+        await clearStaleEmailTracking(vendorsData, activeEvent);
 
         currentData = {
             vendors: vendorsData || [],
@@ -4081,7 +4135,7 @@
                 blastBtn.style.display = 'none';
             }
             // Show refresh status button on tabs where emails are sent
-            const hasEmailedVendors = filtered.some(v => v.email_sent || v.brevo_message_id);
+            const hasEmailedVendors = filtered.some(v => hasCurrentMarketEmail(v));
             refreshStatusBtn.style.display = (hasEmailedVendors && ['approved', 'denied', 'power', 'all'].includes(activeFilter)) ? 'inline-block' : 'none';
         } else {
             blastBtn.style.display = 'none';
@@ -4575,7 +4629,7 @@
 
         // --- EMAIL DELIVERY STATUS SECTION ---
         const emailStatusContainer = document.getElementById('reviewEmailStatusContainer');
-        if (vendor.email_sent || vendor.brevo_message_id) {
+        if (hasCurrentMarketEmail(vendor)) {
             const deliveryStatus = vendor.email_delivery_status || 'sent';
             const display = getEmailDeliveryDisplay(deliveryStatus);
             const sentAt = vendor.email_sent_at ? new Date(vendor.email_sent_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
@@ -5120,7 +5174,7 @@
         if (!vendor || !vendor.preferred_email) return null;
 
         // If no email has been sent yet, nothing to check
-        if (!vendor.email_sent && !vendor.brevo_message_id) return null;
+        if (!hasCurrentMarketEmail(vendor)) return null;
 
         try {
             // Query Brevo's transactional email events for this recipient
@@ -5220,7 +5274,7 @@
 
     // Bulk refresh email status for all vendors that have been emailed
     async function refreshAllEmailStatuses(silent = false) {
-        const emailedVendors = currentData.vendors.filter(v => v.email_sent || v.brevo_message_id);
+        const emailedVendors = currentData.vendors.filter(v => hasCurrentMarketEmail(v));
         if (emailedVendors.length === 0) {
             if (!silent) showToast('No emails have been sent yet.');
             return;
@@ -5255,7 +5309,7 @@
             try {
             // Only poll for vendors whose email hasn't reached a terminal state
             const pendingVendors = currentData.vendors.filter(v =>
-                (v.email_sent || v.brevo_message_id) &&
+                hasCurrentMarketEmail(v) &&
                 !['opened', 'clicked', 'hardBounce', 'blocked', 'error', 'unsubscribed'].includes(v.email_delivery_status)
             );
             if (pendingVendors.length === 0) return;
