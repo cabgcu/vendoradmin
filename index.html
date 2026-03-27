@@ -4418,10 +4418,13 @@
         if (error) showToast("Error syncing color to database");
     }
 
-    function openReviewModal(id) {
+    async function openReviewModal(id) {
+        // Reload form config to ensure vendor view shows latest questions from form builder
+        await loadFormBuilderConfig();
+
         const vendor = currentData.vendors.find(v => v.id === id);
         if (!vendor) return;
-        
+
         currentReviewingId = id;
         
         const submitDate = vendor.created_at ? new Date(vendor.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown Date';
@@ -4541,57 +4544,59 @@
         document.getElementById('reviewComments').innerText = cleanData.finalComments || 'None';
         document.getElementById('reviewAgreements').innerText = cleanData.dbAgreements || 'None recorded';
 
-        // Show custom form question answers (non-core fields added via form builder)
-        const coreFieldIds = new Set(['section_personal', 'student_id', 'full_name_combined', 'preferred_email', 'gcu_email', 'phone', 'communication_method', 'year', 'availability', 'section_vendor', 'food_license', 'past_vendor', 'description', 'link', 'section_logistics', 'needs_power', 'section_agreements', 'agree_liability', 'agree_taxes', 'agree_safety', 'agree_terms', 'agree_media', 'additional_comments']);
-        const customQuestions = formConfig.questions.filter(q => !coreFieldIds.has(q.id) && q.type !== 'section_header');
-        const customSection = document.getElementById('reviewCustomAnswersSection');
-        const customContainer = document.getElementById('reviewCustomAnswers');
+        // === DYNAMIC FORM QUESTIONS SECTION ===
+        // Display ALL questions from the form config (updated in real-time from form builder)
+        const questionSection = document.getElementById('reviewCustomAnswersSection');
+        const questionContainer = document.getElementById('reviewCustomAnswers');
 
-        if (customQuestions.length > 0) {
-            let customHtml = '';
-            const commentsText = vendor.additional_comments || '';
-            // Collect labels of custom questions so we can strip them from Additional Comments
-            const customLabels = [];
-            customQuestions.forEach(q => {
-                // Check if vendor has this field as a direct column
+        // Filter to non-section questions and exclude some admin-specific fields
+        const displayQuestions = formConfig.questions.filter(q =>
+            q.type !== 'section_header' &&
+            q.id !== 'student_id' &&  // Student ID shown separately above
+            q.id !== 'full_name_combined' &&  // Name shown separately above
+            q.id !== 'preferred_email' &&  // Email shown separately above
+            q.id !== 'gcu_email' &&  // GCU email shown separately above
+            q.id !== 'phone' &&  // Phone shown separately above
+            q.id !== 'communication_method' &&  // Shown separately
+            q.id !== 'year' &&  // Shown separately
+            q.id !== 'availability' &&  // Shown separately
+            q.id !== 'food_license' &&  // Food license shown separately
+            q.id !== 'needs_power' &&  // Power request shown in tags
+            q.id !== 'past_vendor' &&  // Shown separately
+            q.id !== 'description' &&  // Vendor description shown separately
+            q.id !== 'link' &&  // Link shown separately
+            q.id !== 'agree_liability' &&
+            q.id !== 'agree_taxes' &&
+            q.id !== 'agree_safety' &&
+            q.id !== 'agree_terms' &&
+            q.id !== 'agree_media' &&
+            q.id !== 'additional_comments'  // Additional comments shown separately
+        );
+
+        if (displayQuestions.length > 0) {
+            let questionsHtml = '';
+            displayQuestions.forEach(q => {
                 let answer = vendor[q.id];
-                // For checkbox_single, treat true/checked as "Yes"
+
+                // Handle checkbox_single type
                 if (q.type === 'checkbox_single') {
                     if (answer === true || answer === 'true' || answer === 'Yes') answer = 'Yes';
                     else if (answer === false || answer === 'false' || answer === 'No') answer = 'No';
                 }
-                // If not a direct column, try to find it in additional_comments as "Label: Value"
-                if (answer === undefined || answer === null) {
-                    const escapedLabel = q.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const labelPattern = new RegExp(escapedLabel + '\\s*:\\s*(.+)', 'i');
-                    const match = commentsText.match(labelPattern);
-                    if (match) {
-                        answer = match[1].trim();
-                        customLabels.push(q.label);
-                    }
-                } else {
-                    customLabels.push(q.label);
-                }
+
                 const hasAnswer = answer !== undefined && answer !== null && String(answer).trim() !== '';
-                customHtml += `<div>
-                    <div class="review-field-label">${escapeHtml(q.label)}</div>
-                    <div class="review-field-value" style="margin-bottom:12px;">${hasAnswer ? escapeHtml(String(answer)) : '<span style="color: var(--text-muted); font-style: italic;">Not answered</span>'}</div>
+                const answerDisplay = hasAnswer ? escapeHtml(String(answer)) : '<span style="color: var(--text-muted); font-style: italic;">Not answered</span>';
+
+                questionsHtml += `<div>
+                    <div class="review-field-label">${escapeHtml(q.label)}${q.required ? '<span style="color:#FF453A;">*</span>' : ''}</div>
+                    <div class="review-field-value" style="margin-bottom:12px; word-break:break-word;">${answerDisplay}</div>
                 </div>`;
             });
-            customContainer.innerHTML = customHtml;
-            customSection.style.display = 'block';
 
-            // Strip custom question "Label: Value" lines from Additional Comments to avoid duplication
-            if (customLabels.length > 0) {
-                const commentsLines = (cleanData.finalComments || '').split('\n');
-                const filteredLines = commentsLines.filter(line => {
-                    const trimmed = line.trim();
-                    return !customLabels.some(label => trimmed.toLowerCase().startsWith(label.toLowerCase() + ':'));
-                });
-                document.getElementById('reviewComments').innerText = filteredLines.join('\n').trim() || 'None';
-            }
+            questionContainer.innerHTML = questionsHtml;
+            questionSection.style.display = 'block';
         } else {
-            customSection.style.display = 'none';
+            questionSection.style.display = 'none';
         }
 
         // Auto-trigger AI if it hasn't run yet, or if it needs an OCR scan upgrade
