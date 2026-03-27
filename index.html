@@ -2237,7 +2237,7 @@
         const summaries = vendors.slice(0, 50).map((v, i) => `${i}: ${v.first_name||''} ${v.last_name||''} | ${v.email||''} | ${v.business_name||''} | ${(v.description||'').substring(0,80)}`).join('\n');
         try {
             const data = await callOpenRouterChat({
-                model: 'google/gemini-2.5-flash-preview-05-20:free',
+                model: 'deepseek/deepseek-chat-v3-0324:free',
                 messages: [{ role: "user", content: `Find potential duplicate vendors in this list. Look for same person, same business, or very similar applications. List:\n${summaries}\n\nRespond ONLY with JSON array of objects: [{"idx1": number, "idx2": number, "reason": "string"}]. If no duplicates found, respond [].` }]
             });
             if (!data) return [];
