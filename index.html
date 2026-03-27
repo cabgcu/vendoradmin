@@ -2237,7 +2237,7 @@
         const summaries = vendors.slice(0, 50).map((v, i) => `${i}: ${v.first_name||''} ${v.last_name||''} | ${v.email||''} | ${v.business_name||''} | ${(v.description||'').substring(0,80)}`).join('\n');
         try {
             const data = await callOpenRouterChat({
-                model: 'google/gemini-2.5-flash-preview-05-20:free',
+                model: 'deepseek/deepseek-chat-v3-0324:free',
                 messages: [{ role: "user", content: `Find potential duplicate vendors in this list. Look for same person, same business, or very similar applications. List:\n${summaries}\n\nRespond ONLY with JSON array of objects: [{"idx1": number, "idx2": number, "reason": "string"}]. If no duplicates found, respond [].` }]
             });
             if (!data) return [];
@@ -4658,13 +4658,16 @@
             const display = getEmailDeliveryDisplay(deliveryStatus);
             const sentAt = vendor.email_sent_at ? new Date(vendor.email_sent_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
 
-            // Build the status step tracker
+            // Build the status step tracker - only show progress steps when
+            // Brevo has returned real tracking data (delivered or higher).
+            // When status is just 'sent', show a simple badge instead.
             const steps = ['sent', 'delivered', 'opened', 'clicked'];
             const negativeStatuses = ['hardBounce', 'softBounce', 'blocked', 'error'];
             const isNegative = negativeStatuses.includes(deliveryStatus);
+            const hasTrackingData = deliveryStatus !== 'sent' && !isNegative;
 
             let verticalStepsHtml = '';
-            if (!isNegative) {
+            if (hasTrackingData) {
                 const currentIdx = steps.indexOf(deliveryStatus);
                 verticalStepsHtml = steps.map((step, i) => {
                     const stepDisplay = getEmailDeliveryDisplay(step);
@@ -4681,9 +4684,12 @@
                 }).join('');
             }
 
+            // For 'sent' status with no further tracking, show a waiting message
+            const waitingHtml = (deliveryStatus === 'sent' && !isNegative) ? `<div style="font-size: 0.7rem; color: var(--text-muted); padding: 4px 0;">Waiting for delivery confirmation...</div>` : '';
+
             emailStatusContainer.innerHTML = `
                 <div style="background: ${display.bg}; border: 1px solid ${display.color}30; padding: 12px; border-radius: 16px; margin-bottom: 16px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: ${isNegative || verticalStepsHtml ? '10px' : '0'};">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: ${isNegative || verticalStepsHtml || waitingHtml ? '10px' : '0'};">
                         <span style="font-size: 0.95rem;">${display.icon}</span>
                         <div style="flex:1; min-width:0;">
                             <div style="font-weight: 700; font-size: 0.75rem; color: ${display.color}; text-transform: uppercase; letter-spacing: 0.5px;">${display.label}</div>
@@ -4692,6 +4698,7 @@
                     </div>
                     ${isNegative ? `<div style="font-size: 0.7rem; color: ${display.color}; font-weight: 600; padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 8px;">${deliveryStatus === 'hardBounce' ? 'Bounced — invalid address' : deliveryStatus === 'softBounce' ? 'Soft bounce — may retry' : deliveryStatus === 'blocked' ? 'Blocked by server' : 'Delivery error'}</div>` : ''}
                     ${verticalStepsHtml ? `<div style="margin-bottom: 10px;">${verticalStepsHtml}</div>` : ''}
+                    ${waitingHtml}
                     <div style="display: flex; gap: 6px;">
                         <button onclick="openEmailPreviewModal('${vendor.id}'); event.stopPropagation();" class="sidebar-btn sidebar-btn-sm" style="flex:1; background: rgba(191, 90, 242, 0.1); border-color: rgba(191, 90, 242, 0.25); color: #BF5AF2;">View Email</button>
                         <button onclick="checkSingleEmailStatus('${vendor.id}'); event.stopPropagation();" class="sidebar-btn sidebar-btn-sm" style="flex:1; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--text-muted);" id="refreshEmailStatusBtn">Refresh</button>
