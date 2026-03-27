@@ -1775,6 +1775,8 @@
                     <button type="button" class="var-chip" onclick="richInsertVar('{{CONFIRM_DEADLINE}}', 'Confirm Deadline')">Deadline</button>
                     <button type="button" class="var-chip confirm" onclick="richInsertVar('{{CONFIRM_LINK}}', 'Confirm Link')">Confirm Link</button>
                     <button type="button" class="var-chip decline" onclick="richInsertVar('{{DECLINE_LINK}}', 'Decline Link')">Decline Link</button>
+                    <button type="button" class="var-chip" style="background:rgba(10,132,255,0.15); border-color:rgba(10,132,255,0.3); color:#0A84FF;" onclick="richInsertVar('{{POWER_CONFIRM_LINK}}', 'Confirm Power')">Confirm Power</button>
+                    <button type="button" class="var-chip" style="background:rgba(255,149,0,0.15); border-color:rgba(255,149,0,0.3); color:#FF9500;" onclick="richInsertVar('{{POWER_DECLINE_LINK}}', 'No Power Needed')">No Power Needed</button>
                 </div>
 
                 <!-- Editable email preview — you edit directly in the email -->
@@ -2023,11 +2025,17 @@
         const urlParams = new URLSearchParams(window.location.search);
         const confirmId = urlParams.get('confirm');
         const declineId = urlParams.get('decline');
-        
+        const confirmPowerId = urlParams.get('confirm_power');
+        const declinePowerId = urlParams.get('decline_power');
+
         if (confirmId) {
             handleVendorConfirmation(confirmId, 'confirm');
         } else if (declineId) {
             handleVendorConfirmation(declineId, 'decline');
+        } else if (confirmPowerId) {
+            handlePowerConfirmation(confirmPowerId, 'confirm');
+        } else if (declinePowerId) {
+            handlePowerConfirmation(declinePowerId, 'decline');
         } else {
             const savedAuth = localStorage.getItem('cab_market_auth');
             if (savedAuth) {
@@ -2104,6 +2112,69 @@
                     <div style="font-size: 4rem; color: #FF3B30; margin-bottom: 20px;">✕</div>
                     <h2 style="color:#FF3B30; font-weight:800; margin-bottom:10px;">System Error</h2>
                     <p style="color:#a1a1aa; text-align:center; max-width: 400px;">${(err.message || 'We could not process your status automatically. Please reply directly to the email to update us.').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                </div>
+            `;
+        }
+    }
+
+    async function handlePowerConfirmation(id, action) {
+        try {
+            const loginScreen = document.getElementById('login-screen');
+            if (loginScreen) loginScreen.style.display = 'none';
+
+            const isConfirming = action === 'confirm';
+            const accentColor = isConfirming ? '#0A84FF' : '#FF9500';
+
+            const msgDiv = document.createElement('div');
+            msgDiv.id = 'confirmation-loading-screen';
+            msgDiv.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#050505; color:white; font-family:var(--font-stack); z-index:999999;";
+            msgDiv.innerHTML = `<div class="spinner" style="margin-bottom:20px; width:40px; height:40px; border-top-color:${accentColor};"></div><h2 style="font-weight:800;">${isConfirming ? 'Confirming power request...' : 'Updating power status...'}</h2>`;
+            document.body.appendChild(msgDiv);
+
+            const { data: vData } = await _supabase.from('vendors').select('internal_notes, needs_power').eq('id', id).single();
+            let notes = getParsedNotes(vData?.internal_notes);
+
+            if (isConfirming) {
+                notes.unshift({
+                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
+                    date: new Date().toISOString(),
+                    text: "⚡ Vendor confirmed they still need power access.",
+                    author: 'System',
+                    type: 'power_update'
+                });
+                const { error } = await _supabase.from('vendors').update({ needs_power: 'Yes', power_confirmed: true, internal_notes: JSON.stringify(notes) }).eq('id', id);
+                if (error) throw error;
+
+                msgDiv.innerHTML = `
+                    <div style="font-size: 5rem; color: #0A84FF; margin-bottom: 20px; text-shadow: 0 0 30px rgba(10, 132, 255, 0.4);">⚡</div>
+                    <h2 style="color:#0A84FF; margin-bottom: 15px; font-weight:800; font-size:2.2rem;">Power Confirmed!</h2>
+                    <p style="color:var(--text-muted); font-size:1.1rem; max-width:400px; text-align:center;">Your power request has been confirmed. Please remember to bring your own extension cords to the market!</p>
+                `;
+            } else {
+                notes.unshift({
+                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
+                    date: new Date().toISOString(),
+                    text: "🔌 Vendor indicated they no longer need power access.",
+                    author: 'System',
+                    type: 'power_update'
+                });
+                const { error } = await _supabase.from('vendors').update({ needs_power: 'No', power_confirmed: false, internal_notes: JSON.stringify(notes) }).eq('id', id);
+                if (error) throw error;
+
+                msgDiv.innerHTML = `
+                    <div style="font-size: 5rem; color: #FF9500; margin-bottom: 20px; text-shadow: 0 0 30px rgba(255, 149, 0, 0.4);">🔌</div>
+                    <h2 style="color:#FF9500; margin-bottom: 15px; font-weight:800; font-size:2.2rem;">Power Released</h2>
+                    <p style="color:var(--text-muted); font-size:1.1rem; max-width:400px; text-align:center;">Your power spot has been released. You're still confirmed for the market — just without a power source. Thank you for letting us know!</p>
+                `;
+            }
+
+        } catch (err) {
+            console.error("Power Confirmation Error:", err);
+            document.body.innerHTML = `
+                <div style="position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#050505; color:white; font-family:sans-serif; z-index:999999;">
+                    <div style="font-size: 4rem; color: #FF3B30; margin-bottom: 20px;">✕</div>
+                    <h2 style="color:#FF3B30; font-weight:800; margin-bottom:10px;">System Error</h2>
+                    <p style="color:#a1a1aa; text-align:center; max-width: 400px;">${(err.message || 'We could not process your power status. Please reply directly to the email to update us.').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
                 </div>
             `;
         }
@@ -2364,7 +2435,7 @@
 
     const DEFAULTS = {
         approved: { subj: "CAB Student Market: You're Approved!", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWe are so excited to have you showcase your items at the market.\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}\n\nMore details regarding setup time, maps, and rules will follow closer to the event date.\n\n– CAB Student Market Team" },
-        power: { subj: "CAB Student Market: Approved (Power Access)", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWe have noted your request for electricity and have secured a spot for you near a power source. Please ensure you bring your own extension cords.\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team" },
+        power: { subj: "CAB Student Market: Approved (Power Access)", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWe have noted your request for electricity and have secured a spot for you near a power source. Please ensure you bring your own extension cords.\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}\n\n**Do you still need power?**\n{{POWER_CONFIRM_LINK}}\n{{POWER_DECLINE_LINK}}\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team" },
         power_denied: { subj: "CAB Student Market: Approved (No Power Available)", body: "Hello {{FIRST}}!\n\nCongratulations, your application for {{MARKET_NAME}} has been APPROVED!\n\nWhile we would love to accommodate your request for power, unfortunately, all electricity spaces have been filled. You are still approved to participate, but you will not have access to a power source.\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}\n\nMore details will follow closer to the event date.\n\n– CAB Student Market Team" },
         denied: { subj: "CAB Student Market Application Update", body: "Hello {{FIRST}},\n\nThank you so much for applying to {{MARKET_NAME}}.\n\nUnfortunately, due to overwhelming demand and limited space, we are unable to accept your application at this time.\n\nWe highly encourage you to apply for our future markets!\n\n– CAB Student Market Team" },
         custom: { subj: "Important Update from CAB Student Market", body: "Hello {{FIRST}},\n\n[Type your custom mass email message here]\n\n– CAB Student Market Team" }
@@ -5064,15 +5135,17 @@
         return { subj, body, targetTemplate };
     }
 
-    function parseEmailVariables(str, vendor, confirmUrl = "#", declineUrl = "#") {
+    function parseEmailVariables(str, vendor, confirmUrl = "#", declineUrl = "#", powerConfirmUrl = "#", powerDeclineUrl = "#") {
         const ev = currentData.activeEvent || {};
-        
+
         // Date formatters
         const formatDate = (dStr) => dStr ? new Date(dStr + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
         const formatDateTime = (dtStr) => dtStr ? new Date(dtStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) + ' at ' + new Date(dtStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
 
         const finalConfirmLink = `<a href="${confirmUrl}" style="display:inline-block; padding:12px 24px; background-color:#34C759; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 5px 10px 0;">✓ Confirm Attendance</a>`;
         const finalDeclineLink = `<a href="${declineUrl}" style="display:inline-block; padding:12px 24px; background-color:#FF3B30; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 0;">✕ Can't Make It</a>`;
+        const finalPowerConfirmLink = `<a href="${powerConfirmUrl}" style="display:inline-block; padding:12px 24px; background-color:#0A84FF; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 5px 10px 0;">⚡ Confirm Power</a>`;
+        const finalPowerDeclineLink = `<a href="${powerDeclineUrl}" style="display:inline-block; padding:12px 24px; background-color:#FF9500; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 0;">🔌 No Longer Need Power</a>`;
 
         return str.replace(/\{\{FIRST\}\}/g, vendor?.first_name || 'Alex')
                   .replace(/\{\{MARKET_NAME\}\}/g, ev.name || 'Student Market')
@@ -5084,7 +5157,9 @@
                   .replace(/\{\{CONTACT_DATE\}\}/g, formatDate(ev.contact_date))
                   .replace(/\{\{CONFIRM_DEADLINE\}\}/g, formatDate(ev.confirm_date))
                   .replace(/\{\{CONFIRM_LINK\}\}/g, finalConfirmLink)
-                  .replace(/\{\{DECLINE_LINK\}\}/g, finalDeclineLink);
+                  .replace(/\{\{DECLINE_LINK\}\}/g, finalDeclineLink)
+                  .replace(/\{\{POWER_CONFIRM_LINK\}\}/g, finalPowerConfirmLink)
+                  .replace(/\{\{POWER_DECLINE_LINK\}\}/g, finalPowerDeclineLink);
     }
 
     async function sendSingleEmail(vendor, forceTemplateId = null) {
@@ -5115,20 +5190,26 @@
 
         const confirmUrl = `${baseUrl}?confirm=${vendor.id}`;
         const declineUrl = `${baseUrl}?decline=${vendor.id}`;
-        
-        let rawBody = parseEmailVariables(templates.body, vendor, confirmUrl, declineUrl);
-        
+        const powerConfirmUrl = `${baseUrl}?confirm_power=${vendor.id}`;
+        const powerDeclineUrl = `${baseUrl}?decline_power=${vendor.id}`;
+
+        let rawBody = parseEmailVariables(templates.body, vendor, confirmUrl, declineUrl, powerConfirmUrl, powerDeclineUrl);
+
         let htmlBodyStr = rawBody.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
         let plainTextStr = rawBody.replace(/\*\*(.*?)\*\*/g, '$1');
-        
-        // Clean up the confirm link specifically for Plain Text email clients
+
+        // Clean up links for Plain Text email clients
         const finalConfirmLink = `<a href="${confirmUrl}" style="display:inline-block; padding:12px 24px; background-color:#34C759; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 5px 10px 0;">✓ Confirm Attendance</a>`;
         const finalDeclineLink = `<a href="${declineUrl}" style="display:inline-block; padding:12px 24px; background-color:#FF3B30; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 0;">✕ Can't Make It</a>`;
-        
+        const finalPowerConfirmLink = `<a href="${powerConfirmUrl}" style="display:inline-block; padding:12px 24px; background-color:#0A84FF; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 5px 10px 0;">⚡ Confirm Power</a>`;
+        const finalPowerDeclineLink = `<a href="${powerDeclineUrl}" style="display:inline-block; padding:12px 24px; background-color:#FF9500; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 0;">🔌 No Longer Need Power</a>`;
+
         plainTextStr = plainTextStr.replace(finalConfirmLink, `\n\nConfirm Attendance Here: ${confirmUrl}\n`);
         plainTextStr = plainTextStr.replace(finalDeclineLink, `\nDecline/Cancel Spot Here: ${declineUrl}\n`);
+        plainTextStr = plainTextStr.replace(finalPowerConfirmLink, `\n\nConfirm Power Here: ${powerConfirmUrl}\n`);
+        plainTextStr = plainTextStr.replace(finalPowerDeclineLink, `\nNo Longer Need Power: ${powerDeclineUrl}\n`);
 
-        let parsedSubj = parseEmailVariables(templates.subj, vendor, confirmUrl, declineUrl);
+        let parsedSubj = parseEmailVariables(templates.subj, vendor, confirmUrl, declineUrl, powerConfirmUrl, powerDeclineUrl);
 
         let finalBannerUrl = currentData.bannerUrl || "";
         finalBannerUrl = processImageUrl(finalBannerUrl);
@@ -5494,10 +5575,12 @@
 
         const confirmUrl = `${baseUrl}?confirm=${vendor.id}`;
         const declineUrl = `${baseUrl}?decline=${vendor.id}`;
+        const powerConfirmUrl = `${baseUrl}?confirm_power=${vendor.id}`;
+        const powerDeclineUrl = `${baseUrl}?decline_power=${vendor.id}`;
 
-        let rawBody = parseEmailVariables(templates.body, vendor, confirmUrl, declineUrl);
+        let rawBody = parseEmailVariables(templates.body, vendor, confirmUrl, declineUrl, powerConfirmUrl, powerDeclineUrl);
         let htmlBodyStr = rawBody.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
-        let parsedSubj = parseEmailVariables(templates.subj, vendor, confirmUrl, declineUrl);
+        let parsedSubj = parseEmailVariables(templates.subj, vendor, confirmUrl, declineUrl, powerConfirmUrl, powerDeclineUrl);
 
         let finalBannerUrl = currentData.bannerUrl || "";
         finalBannerUrl = processImageUrl(finalBannerUrl);
@@ -5936,7 +6019,8 @@
         '{{MARKET_DATE}}': 'Market Date', '{{MARKET_TIME}}': 'Market Time',
         '{{APP_OPENS}}': 'App Opens', '{{APP_CLOSES}}': 'App Closes',
         '{{CONTACT_DATE}}': 'Contact Date', '{{CONFIRM_DEADLINE}}': 'Confirm Deadline',
-        '{{CONFIRM_LINK}}': 'Confirm Link', '{{DECLINE_LINK}}': 'Decline Link'
+        '{{CONFIRM_LINK}}': 'Confirm Link', '{{DECLINE_LINK}}': 'Decline Link',
+        '{{POWER_CONFIRM_LINK}}': 'Confirm Power', '{{POWER_DECLINE_LINK}}': 'No Power Needed'
     };
 
     // Convert stored plain text (with **bold** and {{VAR}}) to rich editor HTML
@@ -5947,7 +6031,11 @@
         // Convert {{VAR}} to styled pill spans
         html = html.replace(/\{\{(.*?)\}\}/g, (match) => {
             const label = VAR_LABELS[match] || match;
-            const extraClass = match === '{{CONFIRM_LINK}}' ? ' link-var' : match === '{{DECLINE_LINK}}' ? ' decline-var' : '';
+            let extraClass = '';
+            if (match === '{{CONFIRM_LINK}}') extraClass = ' link-var';
+            else if (match === '{{DECLINE_LINK}}') extraClass = ' decline-var';
+            else if (match === '{{POWER_CONFIRM_LINK}}') extraClass = ' link-var';
+            else if (match === '{{POWER_DECLINE_LINK}}') extraClass = ' decline-var';
             return `<span class="email-var${extraClass}" contenteditable="false" data-var="${match}">${label}</span>`;
         });
         // Convert newlines to <br> but keep as divs for contenteditable
@@ -6023,7 +6111,9 @@
     function richInsertVar(varCode, label) {
         const editor = document.getElementById('richEmailEditor');
         editor.focus();
-        const extraClass = varCode === '{{CONFIRM_LINK}}' ? ' link-var' : varCode === '{{DECLINE_LINK}}' ? ' decline-var' : '';
+        let extraClass = '';
+        if (varCode === '{{CONFIRM_LINK}}' || varCode === '{{POWER_CONFIRM_LINK}}') extraClass = ' link-var';
+        else if (varCode === '{{DECLINE_LINK}}' || varCode === '{{POWER_DECLINE_LINK}}') extraClass = ' decline-var';
         const pill = `<span class="email-var${extraClass}" contenteditable="false" data-var="${varCode}">${label}</span>&nbsp;`;
         document.execCommand('insertHTML', false, pill);
         richEditorChanged();
@@ -8063,6 +8153,41 @@
                     break;
                 }
 
+                // --- Confirm or decline power ---
+                case 'SM_CONFIRM_POWER': {
+                    const { vendorId } = payload;
+                    const { data: vData } = await _supabase.from('vendors').select('internal_notes').eq('id', vendorId).single();
+                    let notes = getParsedNotes(vData?.internal_notes);
+                    notes.unshift({
+                        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
+                        date: new Date().toISOString(),
+                        text: "⚡ Vendor confirmed they still need power access.",
+                        author: 'System',
+                        type: 'power_update'
+                    });
+                    const { error } = await _supabase.from('vendors').update({ needs_power: 'Yes', power_confirmed: true, internal_notes: JSON.stringify(notes) }).eq('id', vendorId);
+                    if (error) throw error;
+                    respond({ success: true });
+                    break;
+                }
+
+                case 'SM_DECLINE_POWER': {
+                    const { vendorId } = payload;
+                    const { data: vData } = await _supabase.from('vendors').select('internal_notes').eq('id', vendorId).single();
+                    let notes = getParsedNotes(vData?.internal_notes);
+                    notes.unshift({
+                        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
+                        date: new Date().toISOString(),
+                        text: "🔌 Vendor indicated they no longer need power access.",
+                        author: 'System',
+                        type: 'power_update'
+                    });
+                    const { error } = await _supabase.from('vendors').update({ needs_power: 'No', power_confirmed: false, internal_notes: JSON.stringify(notes) }).eq('id', vendorId);
+                    if (error) throw error;
+                    respond({ success: true });
+                    break;
+                }
+
                 // --- Resend status email ---
                 case 'SM_RESEND_EMAIL': {
                     const { appId, eventId } = payload;
@@ -8097,8 +8222,12 @@
                     if (baseUrl && !baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
                     const confirmUrl = `${baseUrl}?confirm=${vendor.id}`;
                     const declineUrl = `${baseUrl}?decline=${vendor.id}`;
+                    const powerConfirmUrl = `${baseUrl}?confirm_power=${vendor.id}`;
+                    const powerDeclineUrl = `${baseUrl}?decline_power=${vendor.id}`;
                     const finalConfirmLink = `<a href="${confirmUrl}" style="display:inline-block; padding:12px 24px; background-color:#34C759; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 5px 10px 0;">✓ Confirm Attendance</a>`;
                     const finalDeclineLink = `<a href="${declineUrl}" style="display:inline-block; padding:12px 24px; background-color:#FF3B30; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 0;">✕ Can't Make It</a>`;
+                    const finalPowerConfirmLink = `<a href="${powerConfirmUrl}" style="display:inline-block; padding:12px 24px; background-color:#0A84FF; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 5px 10px 0;">⚡ Confirm Power</a>`;
+                    const finalPowerDeclineLink = `<a href="${powerDeclineUrl}" style="display:inline-block; padding:12px 24px; background-color:#FF9500; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 0;">🔌 No Longer Need Power</a>`;
 
                     const fmtDate = (d) => d ? new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '';
                     const fmtDT   = (d) => d ? new Date(d).toLocaleDateString('en-US',{month:'long',day:'numeric'})+' at '+new Date(d).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '';
@@ -8115,11 +8244,15 @@
                         .replace(/\{\{CONFIRM_DEADLINE\}\}/g, fmtDate(evt.confirm_date))
                         .replace(/\{\{CONFIRM_LINK\}\}/g, finalConfirmLink)
                         .replace(/\{\{DECLINE_LINK\}\}/g, finalDeclineLink)
+                        .replace(/\{\{POWER_CONFIRM_LINK\}\}/g, finalPowerConfirmLink)
+                        .replace(/\{\{POWER_DECLINE_LINK\}\}/g, finalPowerDeclineLink)
                         .replace(/\{\{EVENT\}\}/g, evt.name);
 
                     let plainText = rawBody.replace(/\*\*(.*?)\*\*/g,'$1');
                     plainText = plainText.replace(finalConfirmLink, `\n\nConfirm Attendance Here: ${confirmUrl}\n`);
                     plainText = plainText.replace(finalDeclineLink, `\nDecline/Cancel Spot Here: ${declineUrl}\n`);
+                    plainText = plainText.replace(finalPowerConfirmLink, `\n\nConfirm Power Here: ${powerConfirmUrl}\n`);
+                    plainText = plainText.replace(finalPowerDeclineLink, `\nNo Longer Need Power: ${powerDeclineUrl}\n`);
                     const htmlBody = rawBody.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
                     const parsedSubj = (subj||'').replace(/\{\{FIRST\}\}/g, vendor.first_name).replace(/\{\{MARKET_NAME\}\}/g, evt.name).replace(/\{\{EVENT\}\}/g, evt.name);
 
