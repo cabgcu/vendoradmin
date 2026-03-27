@@ -7972,6 +7972,34 @@
                         .order('created_at', { ascending: false })
                         .limit(1);
                     if (error) throw error;
+
+                    // Check if food license was verified by AI — if not, strip link to force resubmission
+                    if (data && data[0] && data[0].food_license_link) {
+                        const v = data[0];
+                        const link = v.food_license_link;
+                        let licenseVerified = false;
+
+                        // Check if link is already invalid
+                        if (!link || link === 'Deleted to save space' || link === 'Archived Google Drive Link' || link.includes('drive.google.com')) {
+                            licenseVerified = false;
+                        } else {
+                            // Check AI scan result from internal_notes
+                            try {
+                                const notes = getParsedNotes(v.internal_notes);
+                                const aiNote = notes.find(n => n.type === 'ai_analysis' && n.ai_data && n.ai_data.license_status);
+                                if (aiNote) {
+                                    licenseVerified = aiNote.ai_data.license_status.includes('✅');
+                                }
+                                // If no AI note exists, license was never verified
+                            } catch(e) {}
+                        }
+
+                        if (!licenseVerified) {
+                            data[0].food_license_link = null;
+                            data[0]._food_license_needs_resubmit = true;
+                        }
+                    }
+
                     respond(data || []);
                     break;
                 }
