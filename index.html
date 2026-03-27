@@ -5125,8 +5125,9 @@
             body = currentData.customBody;
         }
 
-        // Auto-inject the confirm/decline link into ALL approval emails if missing
-        if (['approved', 'power', 'power_denied'].includes(targetTemplate)) {
+        // Auto-inject the confirm/decline link into approval emails if missing
+        // Skip 'power' template — it has its own power-specific confirm buttons
+        if (['approved', 'power_denied'].includes(targetTemplate)) {
             if (body && !body.includes('{{CONFIRM_LINK}}')) {
                 body += "\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}";
             }
@@ -5378,12 +5379,8 @@
             if (vendor.brevo_message_id) {
                 const rawId = String(vendor.brevo_message_id).trim();
                 const withoutBrackets = rawId.replace(/^<|>$/g, '');
-                const withBrackets = rawId.startsWith('<') ? rawId : `<${withoutBrackets}>`;
-                // Try without angle brackets first, then with
+                // Brevo API rejects angle-bracket messageIds with 400, so only use the clean ID
                 urlsToTry.push(`${baseUrl}&messageId=${encodeURIComponent(withoutBrackets)}`);
-                if (withoutBrackets !== withBrackets) {
-                    urlsToTry.push(`${baseUrl}&messageId=${encodeURIComponent(withBrackets)}`);
-                }
             }
             if (vendor.email_sent_at) {
                 urlsToTry.push(`${baseUrl}&startDate=${encodeURIComponent(vendor.email_sent_at.split('T')[0])}&sort=desc`);
