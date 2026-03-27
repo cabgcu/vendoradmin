@@ -4549,34 +4549,45 @@
         const questionSection = document.getElementById('reviewCustomAnswersSection');
         const questionContainer = document.getElementById('reviewCustomAnswers');
 
-        // Filter to non-section questions and exclude some admin-specific fields
+        // Parse custom_answers JSON if it exists
+        let customAnswersObj = {};
+        if (vendor.custom_answers) {
+            try {
+                customAnswersObj = typeof vendor.custom_answers === 'string' ? JSON.parse(vendor.custom_answers) : vendor.custom_answers;
+            } catch (e) {
+                console.warn('Failed to parse custom_answers:', e);
+            }
+        }
+
+        // Filter to non-section questions and exclude hardcoded display fields
         const displayQuestions = formConfig.questions.filter(q =>
             q.type !== 'section_header' &&
-            q.id !== 'student_id' &&  // Student ID shown separately above
-            q.id !== 'full_name_combined' &&  // Name shown separately above
-            q.id !== 'preferred_email' &&  // Email shown separately above
-            q.id !== 'gcu_email' &&  // GCU email shown separately above
-            q.id !== 'phone' &&  // Phone shown separately above
-            q.id !== 'communication_method' &&  // Shown separately
-            q.id !== 'year' &&  // Shown separately
-            q.id !== 'availability' &&  // Shown separately
-            q.id !== 'food_license' &&  // Food license shown separately
-            q.id !== 'needs_power' &&  // Power request shown in tags
-            q.id !== 'past_vendor' &&  // Shown separately
-            q.id !== 'description' &&  // Vendor description shown separately
-            q.id !== 'link' &&  // Link shown separately
+            q.id !== 'student_id' &&
+            q.id !== 'full_name_combined' &&
+            q.id !== 'preferred_email' &&
+            q.id !== 'gcu_email' &&
+            q.id !== 'phone' &&
+            q.id !== 'communication_method' &&
+            q.id !== 'year' &&
+            q.id !== 'availability' &&
+            q.id !== 'food_license' &&
+            q.id !== 'needs_power' &&
+            q.id !== 'past_vendor' &&
+            q.id !== 'description' &&
+            q.id !== 'link' &&
             q.id !== 'agree_liability' &&
             q.id !== 'agree_taxes' &&
             q.id !== 'agree_safety' &&
             q.id !== 'agree_terms' &&
             q.id !== 'agree_media' &&
-            q.id !== 'additional_comments'  // Additional comments shown separately
+            q.id !== 'additional_comments'
         );
 
         if (displayQuestions.length > 0) {
             let questionsHtml = '';
             displayQuestions.forEach(q => {
-                let answer = vendor[q.id];
+                // First check regular fields, then custom_answers JSON
+                let answer = vendor[q.id] !== undefined ? vendor[q.id] : customAnswersObj[q.id];
 
                 // Handle checkbox_single type
                 if (q.type === 'checkbox_single') {
