@@ -4572,10 +4572,10 @@
                 } else {
                     customLabels.push(q.label);
                 }
-                const displayAnswer = (answer !== undefined && answer !== null && String(answer).trim() !== '') ? escapeHtml(String(answer)) : '<span style="color: var(--text-muted); font-style: italic;">No answer</span>';
-                customHtml += `<div style="margin-bottom: 10px; padding: 10px 14px; background: rgba(10, 132, 255, 0.04); border: 1px solid rgba(10, 132, 255, 0.1); border-radius: 12px;">
-                    <div style="font-size: 0.75rem; font-weight: 700; color: #0A84FF; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">${escapeHtml(q.label)}</div>
-                    <div style="font-size: 0.95rem; color: #fff;">${displayAnswer}</div>
+                const hasAnswer = answer !== undefined && answer !== null && String(answer).trim() !== '';
+                customHtml += `<div>
+                    <div class="review-field-label">${escapeHtml(q.label)}</div>
+                    <div class="review-field-value" style="margin-bottom:12px;">${hasAnswer ? escapeHtml(String(answer)) : '<span style="color: var(--text-muted); font-style: italic;">Not answered</span>'}</div>
                 </div>`;
             });
             customContainer.innerHTML = customHtml;
