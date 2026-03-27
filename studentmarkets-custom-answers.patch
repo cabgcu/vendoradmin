@@ -1,0 +1,56 @@
+From c81cb56a931c9142e6a20564966ce036cf7adad1 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 27 Mar 2026 00:44:03 +0000
+Subject: [PATCH] Save custom form question answers in additional_comments
+
+Custom questions added via the admin form builder (non-core fields like
+wattage) were silently dropped during submission. Now collects their
+answers as "Label: Value" lines and appends them to additional_comments
+so they appear in the admin review modal.
+
+https://claude.ai/code/session_01JErazshnauH2BHqQVYzYtj
+---
+ index.html | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/index.html b/index.html
+index 4306915..71ac0ff 100644
+--- a/index.html
++++ b/index.html
+@@ -1287,7 +1287,8 @@
+         const submitLoader = document.getElementById('submitLoader');
+         
+         const basePayload = { status: 'Pending', email_sent: 'No', first_name: '', last_name: '' };
+-        let agreements = []; 
++        let agreements = [];
++        let customAnswers = [];
+ 
+         for(let q of formConfig.questions) {
+             if(q.type==='section_header') continue;
+@@ -1307,9 +1308,11 @@
+             }
+             
+             if(q.isCore) {
+-                basePayload[q.id] = val; 
++                basePayload[q.id] = val;
+             } else if (q.type === 'checkbox_single' && el.checked) {
+                 agreements.push(q.label);
++            } else if (q.type !== 'checkbox_single' && val) {
++                customAnswers.push(q.label + ': ' + val);
+             }
+         }
+         
+@@ -1346,6 +1349,10 @@
+ 
+             submitBtnText.innerText = "Saving Application...";
+             basePayload.additional_comments = document.getElementById('form_additional_comments')?.value.trim() || '';
++            if (customAnswers.length > 0) {
++                const sep = basePayload.additional_comments ? '\n' : '';
++                basePayload.additional_comments += sep + customAnswers.join('\n');
++            }
+             
+             // Look up existing applications for this student in the selected markets
+             const { data: existingApps } = await _supabase.from('vendors')
+-- 
+2.43.0
+
