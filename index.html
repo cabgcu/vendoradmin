@@ -1284,8 +1284,7 @@
             <div class="review-field-value" id="reviewStrikes" style="display:none; color: #FF3B30; background: rgba(255, 59, 48, 0.05); border-color: rgba(255, 59, 48, 0.2); font-size: 0.95rem;"></div>
 
             <div id="reviewCustomAnswersSection" style="display:none;">
-                <div class="review-field-label">Form Responses</div>
-                <div class="review-field-value" id="reviewCustomAnswers" style="min-height: 40px; white-space: pre-wrap;"></div>
+                <div id="reviewCustomAnswers"></div>
             </div>
 
             <div class="review-field-label">Additional Comments</div>
@@ -4585,7 +4584,8 @@
 
         if (displayQuestions.length > 0) {
             let questionsHtml = '';
-            displayQuestions.forEach(q => {
+
+            displayQuestions.forEach((q, idx) => {
                 // First check regular fields, then custom_answers JSON
                 let answer = vendor[q.id] !== undefined ? vendor[q.id] : customAnswersObj[q.id];
 
@@ -4596,12 +4596,13 @@
                 }
 
                 const hasAnswer = answer !== undefined && answer !== null && String(answer).trim() !== '';
-                const answerDisplay = hasAnswer ? escapeHtml(String(answer)) : '<span style="color: var(--text-muted); font-style: italic;">Not answered</span>';
+                const answerText = hasAnswer ? escapeHtml(String(answer)) : 'Not answered';
+                const answerStyle = hasAnswer ? 'min-height: 40px; white-space: pre-wrap;' : 'color: var(--text-muted); font-style: italic; min-height: 40px;';
 
-                questionsHtml += `<div>
-                    <div class="review-field-label">${escapeHtml(q.label)}${q.required ? '<span style="color:#FF453A;">*</span>' : ''}</div>
-                    <div class="review-field-value" style="margin-bottom:12px; word-break:break-word;">${answerDisplay}</div>
-                </div>`;
+                questionsHtml += `
+                    <div class="review-field-label">${escapeHtml(q.label)}</div>
+                    <div class="review-field-value" style="${answerStyle}">${answerText}</div>
+                `;
             });
 
             questionContainer.innerHTML = questionsHtml;
