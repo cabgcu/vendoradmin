@@ -5383,7 +5383,9 @@
                 urlsToTry.push(`${baseUrl}&messageId=${encodeURIComponent(withoutBrackets)}`);
             }
             if (vendor.email_sent_at) {
-                urlsToTry.push(`${baseUrl}&startDate=${encodeURIComponent(vendor.email_sent_at.split('T')[0])}&sort=desc`);
+                const startDate = vendor.email_sent_at.split('T')[0];
+                const endDate = new Date().toISOString().split('T')[0];
+                urlsToTry.push(`${baseUrl}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}&sort=desc`);
             }
             // Broadest fallback — recent events for this email address
             urlsToTry.push(`${baseUrl}&sort=desc`);
@@ -5396,7 +5398,8 @@
                 });
 
                 if (!response.ok) {
-                    console.error('Brevo events API error:', response.status);
+                    const errBody = await response.text().catch(() => '');
+                    console.warn('Brevo events API error:', response.status, errBody);
                     continue;
                 }
 
