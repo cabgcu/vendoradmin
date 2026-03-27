@@ -5258,17 +5258,22 @@
             const baseUrl = `https://api.brevo.com/v3/smtp/statistics/events?limit=50&email=${emailEncoded}`;
             const urlsToTry = [];
 
-            // Try precise lookup first (messageId), then fallback to startDate-scoped lookup.
+            // Try precise lookup first (messageId both formats), then fallback to date-scoped lookup.
             if (vendor.brevo_message_id) {
-                const normalizedMessageId = String(vendor.brevo_message_id).trim().replace(/^<|>$/g, '');
-                urlsToTry.push(`${baseUrl}&messageId=${encodeURIComponent(normalizedMessageId)}`);
+                const rawId = String(vendor.brevo_message_id).trim();
+                const withoutBrackets = rawId.replace(/^<|>$/g, '');
+                const withBrackets = rawId.startsWith('<') ? rawId : `<${withoutBrackets}>`;
+                // Try without angle brackets first, then with
+                urlsToTry.push(`${baseUrl}&messageId=${encodeURIComponent(withoutBrackets)}`);
+                if (withoutBrackets !== withBrackets) {
+                    urlsToTry.push(`${baseUrl}&messageId=${encodeURIComponent(withBrackets)}`);
+                }
             }
             if (vendor.email_sent_at) {
-                urlsToTry.push(`${baseUrl}&startDate=${encodeURIComponent(vendor.email_sent_at.split('T')[0])}`);
+                urlsToTry.push(`${baseUrl}&startDate=${encodeURIComponent(vendor.email_sent_at.split('T')[0])}&sort=desc`);
             }
-            if (urlsToTry.length === 0) {
-                urlsToTry.push(baseUrl);
-            }
+            // Broadest fallback — recent events for this email address
+            urlsToTry.push(`${baseUrl}&sort=desc`);
             
             let events = [];
             for (const url of urlsToTry) {
@@ -5283,7 +5288,12 @@
                 }
 
                 const data = await response.json();
-                const candidateEvents = data.events || [];
+                let candidateEvents = data.events || [];
+                // For broad queries (no messageId), filter to events after the email was sent
+                if (candidateEvents.length > 0 && vendor.email_sent_at && !url.includes('messageId=')) {
+                    const sentTime = new Date(vendor.email_sent_at).getTime() - 60000; // 1 min tolerance
+                    candidateEvents = candidateEvents.filter(evt => new Date(evt.date).getTime() >= sentTime);
+                }
                 if (candidateEvents.length > 0) {
                     events = candidateEvents;
                     break;
@@ -5291,13 +5301,13 @@
             }
 
             if (events.length === 0) {
-                // No delivery events yet from Brevo for this market email.
-                // Keep it visually unchecked in UI by storing null status.
-                if (vendor.email_delivery_status !== null) {
-                    await _supabase.from('vendors').update({ email_delivery_status: null }).eq('id', vendorId);
-                    vendor.email_delivery_status = null;
+                // No delivery events from Brevo yet. Keep status as 'sent'
+                // since we know the email was dispatched (hasCurrentMarketEmail passed).
+                if (vendor.email_delivery_status !== 'sent') {
+                    await _supabase.from('vendors').update({ email_delivery_status: 'sent' }).eq('id', vendorId);
+                    vendor.email_delivery_status = 'sent';
                 }
-                return { status: null, events: [], latestDate: null };
+                return { status: 'sent', events: [], latestDate: null };
             }
 
             // Priority order: higher index = higher priority status
