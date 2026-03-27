@@ -2283,29 +2283,29 @@
     // Form Builder State
     let formConfig = { headerUrl: "", eventTitle: "", eventDesc: "", questions: [] };
     const defaultQuestions = [
-        { id: 'section_personal', type: 'section_header', label: 'Personal Information', width: 'full', isCore: true },
-        { id: 'student_id', type: 'number', label: 'Student ID Number', hint: 'Type your ID and tap Next to auto-fill your info!', required: true, width: 'full', isCore: true },
-        { id: 'full_name_combined', type: 'text', label: 'First and Last Name', hint: '', required: true, width: 'full', isCore: false },
-        { id: 'preferred_email', type: 'email', label: 'Preferred Email', hint: 'Vendor confirmation emails will be sent to your preferred email!', required: true, width: 'full', isCore: true },
-        { id: 'gcu_email', type: 'email', label: 'GCU Email', hint: '', required: true, width: 'full', isCore: true },
-        { id: 'phone', type: 'tel', label: 'Phone Number', hint: '', required: true, width: 'half', isCore: true },
-        { id: 'communication_method', type: 'dropdown', label: 'Preferred Communication Method', hint: '', options: 'Email, Text', required: true, width: 'half', isCore: true },
-        { id: 'year', type: 'dropdown', label: 'What year are you at GCU?', hint: '', options: 'Freshman, Sophomore, Junior, Senior', required: true, width: 'half', isCore: true },
-        { id: 'availability', type: 'dropdown', label: 'Will you be available for the duration of the market?', hint: '', options: 'Yes, No', required: true, width: 'half', isCore: true },
-        { id: 'section_vendor', type: 'section_header', label: 'Vendor Details', width: 'full', isCore: true },
-        { id: 'food_license', type: 'dropdown', label: 'If you are selling food, do you have your food handlers\' license?', hint: '', options: 'Yes, No, Not applicable', required: true, width: 'full', isCore: true },
-        { id: 'past_vendor', type: 'dropdown', label: 'Have you ever worked with CAB at a student market before?', hint: '', options: 'Yes, No', required: true, width: 'full', isCore: true },
-        { id: 'description', type: 'textarea', label: 'Vendor/Project Description', hint: '', required: true, width: 'full', isCore: true },
-        { id: 'link', type: 'text', label: 'Social Media Handle or Website', hint: 'This is not your personal social media account...', required: true, width: 'full', isCore: true },
-        { id: 'section_logistics', type: 'section_header', label: 'Electricity Vendors', width: 'full', isCore: true },
-        { id: 'needs_power', type: 'dropdown', label: 'Do you need to be by an outlet or have access to a power source?', hint: '', options: 'Yes, No', required: true, width: 'full', isCore: true },
-        { id: 'section_agreements', type: 'section_header', label: 'Check the boxes to acknowledge', width: 'full', isCore: false },
-        { id: 'agree_liability', type: 'checkbox_single', label: 'Liability Acknowledgment', hint: 'I acknowledge that CAB and Grand Canyon University are not responsible...', required: true, width: 'full', isCore: false },
-        { id: 'agree_taxes', type: 'checkbox_single', label: 'Taxes Acknowledgment', hint: 'I acknowledge that as the seller I am fully responsible for claiming income...', required: true, width: 'full', isCore: false },
-        { id: 'agree_safety', type: 'checkbox_single', label: 'Safety Acknowledgment', hint: 'I acknowledge that if I as a vendor cannot maintain a safe...', required: true, width: 'full', isCore: false },
-        { id: 'agree_terms', type: 'checkbox_single', label: 'Terms Acknowledgment', hint: 'By applying for student market you acknowledge our terms...', required: true, width: 'full', isCore: false },
-        { id: 'agree_media', type: 'checkbox_single', label: 'Media Acknowledgment', hint: 'I acknowledge and accept that GCU Student Engagement...', required: true, width: 'full', isCore: false },
-        { id: 'additional_comments', type: 'textarea', label: 'Additional Comments or Requests', hint: '', required: false, width: 'full', isCore: true }
+        { id: 'section_personal', type: 'section_header', label: 'Personal Information', width: 'full', isCore: true, autofill: false },
+        { id: 'student_id', type: 'number', label: 'Student ID Number', hint: 'Type your ID and tap Next to auto-fill your info!', required: true, width: 'full', isCore: true, autofill: false },
+        { id: 'full_name_combined', type: 'text', label: 'First and Last Name', hint: '', required: true, width: 'full', isCore: false, autofill: true },
+        { id: 'preferred_email', type: 'email', label: 'Preferred Email', hint: 'Vendor confirmation emails will be sent to your preferred email!', required: true, width: 'full', isCore: true, autofill: true },
+        { id: 'gcu_email', type: 'email', label: 'GCU Email', hint: '', required: true, width: 'full', isCore: true, autofill: true },
+        { id: 'phone', type: 'tel', label: 'Phone Number', hint: '', required: true, width: 'half', isCore: true, autofill: true },
+        { id: 'communication_method', type: 'dropdown', label: 'Preferred Communication Method', hint: '', options: 'Email, Text', required: true, width: 'half', isCore: true, autofill: true },
+        { id: 'year', type: 'dropdown', label: 'What year are you at GCU?', hint: '', options: 'Freshman, Sophomore, Junior, Senior', required: true, width: 'half', isCore: true, autofill: true },
+        { id: 'availability', type: 'dropdown', label: 'Will you be available for the duration of the market?', hint: '', options: 'Yes, No', required: true, width: 'half', isCore: true, autofill: true },
+        { id: 'section_vendor', type: 'section_header', label: 'Vendor Details', width: 'full', isCore: true, autofill: false },
+        { id: 'food_license', type: 'dropdown', label: 'If you are selling food, do you have your food handlers\' license?', hint: '', options: 'Yes, No, Not applicable', required: true, width: 'full', isCore: true, autofill: true },
+        { id: 'past_vendor', type: 'dropdown', label: 'Have you ever worked with CAB at a student market before?', hint: '', options: 'Yes, No', required: true, width: 'full', isCore: true, autofill: true },
+        { id: 'description', type: 'textarea', label: 'Vendor/Project Description', hint: '', required: true, width: 'full', isCore: true, autofill: true },
+        { id: 'link', type: 'text', label: 'Social Media Handle or Website', hint: 'This is not your personal social media account...', required: true, width: 'full', isCore: true, autofill: true },
+        { id: 'section_logistics', type: 'section_header', label: 'Electricity Vendors', width: 'full', isCore: true, autofill: false },
+        { id: 'needs_power', type: 'dropdown', label: 'Do you need to be by an outlet or have access to a power source?', hint: '', options: 'Yes, No', required: true, width: 'full', isCore: true, autofill: true },
+        { id: 'section_agreements', type: 'section_header', label: 'Check the boxes to acknowledge', width: 'full', isCore: false, autofill: false },
+        { id: 'agree_liability', type: 'checkbox_single', label: 'Liability Acknowledgment', hint: 'I acknowledge that CAB and Grand Canyon University are not responsible...', required: true, width: 'full', isCore: false, autofill: false },
+        { id: 'agree_taxes', type: 'checkbox_single', label: 'Taxes Acknowledgment', hint: 'I acknowledge that as the seller I am fully responsible for claiming income...', required: true, width: 'full', isCore: false, autofill: false },
+        { id: 'agree_safety', type: 'checkbox_single', label: 'Safety Acknowledgment', hint: 'I acknowledge that if I as a vendor cannot maintain a safe...', required: true, width: 'full', isCore: false, autofill: false },
+        { id: 'agree_terms', type: 'checkbox_single', label: 'Terms Acknowledgment', hint: 'By applying for student market you acknowledge our terms...', required: true, width: 'full', isCore: false, autofill: false },
+        { id: 'agree_media', type: 'checkbox_single', label: 'Media Acknowledgment', hint: 'I acknowledge and accept that GCU Student Engagement...', required: true, width: 'full', isCore: false, autofill: false },
+        { id: 'additional_comments', type: 'textarea', label: 'Additional Comments or Requests', hint: '', required: false, width: 'full', isCore: true, autofill: false }
     ];
 
 
@@ -7424,29 +7424,41 @@
     function buildConditionEditor(i, q) {
         const parents = getConditionalParents(i);
         if (parents.length === 0) return '';
-        const cond = q.condition || {};
-        const hasCondition = cond.parentIndex !== undefined && cond.parentIndex !== null;
+        const conditions = q.conditions || [];
+        const hasConditions = conditions.length > 0;
         let html = `<div style="margin-top:8px; padding:8px 10px; background:rgba(255,170,0,0.04); border:1px solid rgba(255,170,0,0.12); border-radius:10px; font-size:0.75rem;" onclick="event.stopPropagation()">`;
-        html += `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">`;
-        html += `<button class="fb-pill ${hasCondition ? 'fb-pill-active' : ''}" style="font-size:0.7rem; padding:4px 10px; border-color:rgba(255,170,0,0.3); ${hasCondition ? 'background:rgba(255,170,0,0.15); color:#FFA800;' : ''}" onclick="toggleCondition(${i})">${hasCondition ? '&#9889; Conditional' : '+ Add condition'}</button>`;
-        if (hasCondition) {
+
+        // Header button to toggle first condition
+        html += `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:${hasConditions ? '8px' : '0'};"><button class="fb-pill ${hasConditions ? 'fb-pill-active' : ''}" style="font-size:0.7rem; padding:4px 10px; border-color:rgba(255,170,0,0.3); ${hasConditions ? 'background:rgba(255,170,0,0.15); color:#FFA800;' : ''}" onclick="toggleCondition(${i})">${hasConditions ? '&#9889; Conditional' : '+ Add condition'}</button></div>`;
+
+        // Existing conditions (show each)
+        conditions.forEach((cond, condIdx) => {
             const parentQ = formConfig.questions[cond.parentIndex];
             const vals = parentQ ? getParentValues(parentQ) : [];
-            html += `<span style="color:var(--text-muted);">Show when</span>`;
-            html += `<select class="fb-select" style="font-size:0.7rem; max-width:160px;" onchange="setConditionParent(${i}, parseInt(this.value))">`;
+            html += `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:6px; padding:6px; background:rgba(255,170,0,0.08); border-radius:6px;">`;
+            html += `<span style="color:var(--text-muted); font-size:0.7rem;">Show when</span>`;
+            html += `<select class="fb-select" style="font-size:0.7rem; max-width:160px;" onchange="setConditionParent(${i}, ${condIdx}, parseInt(this.value))">`;
             parents.forEach(({ q: pq, idx }) => {
                 html += `<option value="${idx}" ${cond.parentIndex === idx ? 'selected' : ''}>${escapeHtml(pq.label)}</option>`;
             });
             html += `</select>`;
-            html += `<span style="color:var(--text-muted);">=</span>`;
-            html += `<select class="fb-select" style="font-size:0.7rem; max-width:120px;" onchange="setConditionValue(${i}, this.value)">`;
+            html += `<span style="color:var(--text-muted); font-size:0.7rem;">=</span>`;
+            html += `<select class="fb-select" style="font-size:0.7rem; max-width:120px;" onchange="setConditionValue(${i}, ${condIdx}, this.value)">`;
             vals.forEach(v => {
                 html += `<option value="${escapeHtml(v)}" ${cond.value === v ? 'selected' : ''}>${escapeHtml(v)}</option>`;
             });
             html += `</select>`;
-            html += `<button class="fb-pill fb-pill-danger" style="font-size:0.65rem; padding:3px 8px;" onclick="removeCondition(${i})">&#10005;</button>`;
+            html += `<button class="fb-pill fb-pill-danger" style="font-size:0.65rem; padding:3px 8px;" onclick="removeCondition(${i}, ${condIdx})">&#10005;</button>`;
+            if (condIdx < conditions.length - 1) html += `<span style="color:#FFA800; margin-left:auto; font-weight:bold;">AND</span>`;
+            html += `</div>`;
+        });
+
+        // Add more conditions button
+        if (hasConditions) {
+            html += `<button class="fb-pill" style="font-size:0.7rem; padding:3px 8px; border-color:rgba(255,170,0,0.3); background:rgba(255,170,0,0.08); color:#FFA800; margin-top:4px;" onclick="addCondition(${i})">+ Add another condition</button>`;
         }
-        html += `</div></div>`;
+
+        html += `</div>`;
         return html;
     }
 
@@ -7454,37 +7466,55 @@
         const parents = getConditionalParents(i);
         if (parents.length === 0) return;
         const q = formConfig.questions[i];
-        if (q.condition && q.condition.parentIndex !== undefined) {
-            delete q.condition;
+        if (!q.conditions) q.conditions = [];
+
+        if (q.conditions.length > 0) {
+            q.conditions = [];
         } else {
             const parent = parents[parents.length - 1];
             const vals = getParentValues(parent.q);
-            q.condition = { parentIndex: parent.idx, value: vals[0] || '' };
+            q.conditions = [{ parentIndex: parent.idx, value: vals[0] || '' }];
         }
         renderFormPreview();
         scheduleFormAutoSave();
     }
 
-    function setConditionParent(i, parentIdx) {
+    function addCondition(i) {
+        const parents = getConditionalParents(i);
+        if (parents.length === 0) return;
         const q = formConfig.questions[i];
-        if (!q.condition) q.condition = {};
-        q.condition.parentIndex = parentIdx;
-        const parentQ = formConfig.questions[parentIdx];
-        const vals = parentQ ? getParentValues(parentQ) : [];
-        q.condition.value = vals[0] || '';
+        if (!q.conditions) q.conditions = [];
+        const parent = parents[parents.length - 1];
+        const vals = getParentValues(parent.q);
+        q.conditions.push({ parentIndex: parent.idx, value: vals[0] || '' });
         renderFormPreview();
         scheduleFormAutoSave();
     }
 
-    function setConditionValue(i, val) {
+    function setConditionParent(i, condIdx, parentIdx) {
         const q = formConfig.questions[i];
-        if (!q.condition) q.condition = {};
-        q.condition.value = val;
+        if (!q.conditions) q.conditions = [];
+        if (!q.conditions[condIdx]) q.conditions[condIdx] = {};
+        q.conditions[condIdx].parentIndex = parentIdx;
+        const parentQ = formConfig.questions[parentIdx];
+        const vals = parentQ ? getParentValues(parentQ) : [];
+        q.conditions[condIdx].value = vals[0] || '';
+        renderFormPreview();
         scheduleFormAutoSave();
     }
 
-    function removeCondition(i) {
-        delete formConfig.questions[i].condition;
+    function setConditionValue(i, condIdx, val) {
+        const q = formConfig.questions[i];
+        if (!q.conditions) q.conditions = [];
+        if (!q.conditions[condIdx]) q.conditions[condIdx] = {};
+        q.conditions[condIdx].value = val;
+        scheduleFormAutoSave();
+    }
+
+    function removeCondition(i, condIdx) {
+        const q = formConfig.questions[i];
+        if (!q.conditions) q.conditions = [];
+        q.conditions.splice(condIdx, 1);
         renderFormPreview();
         scheduleFormAutoSave();
     }
@@ -7540,14 +7570,21 @@
 
         // --- Fields ---
         formConfig.questions.forEach((q, i) => {
+            // Migrate old condition format to new conditions array
+            if (q.condition && !q.conditions) {
+                q.conditions = [q.condition];
+                delete q.condition;
+            }
+
             const isActive = activeFormField === i;
             const isProtected = q.id === 'student_id' || q.id === 'full_name_combined';
             const isSection = q.type === 'section_header';
             const reqMark = q.required ? `<span style="color:#FF453A; margin-left:3px;">*</span>` : '';
             const icon = typeIcons[q.type] || '';
-            const hasCondition = q.condition && q.condition.parentIndex !== undefined;
-            const condParent = hasCondition ? formConfig.questions[q.condition.parentIndex] : null;
-            const condIndent = hasCondition ? 'margin-left:24px; border-left:2px solid rgba(255,170,0,0.2); padding-left:12px;' : '';
+            const hasConditions = q.conditions && q.conditions.length > 0;
+            const firstCondition = hasConditions ? q.conditions[0] : null;
+            const condParent = firstCondition ? formConfig.questions[firstCondition.parentIndex] : null;
+            const condIndent = hasConditions ? 'margin-left:24px; border-left:2px solid rgba(255,170,0,0.2); padding-left:12px;' : '';
 
             // --- Section headers ---
             if (isSection) {
@@ -7571,8 +7608,14 @@
             // --- Regular fields ---
             const dragAttrs = !isActive ? `draggable="true" ondragstart="fbDragStart(event,${i})" ondragover="fbDragOver(event,${i})" ondragleave="fbDragLeave(event)" ondrop="fbDrop(event,${i})" ondragend="fbDragEnd()"` : '';
             html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" ${dragAttrs} onclick="selectFormField(${i})" style="margin-bottom:4px; padding:12px 14px; border-radius:14px; border:1px solid ${isActive ? 'rgba(10,132,255,0.25)' : 'transparent'}; ${isActive ? 'background:rgba(10,132,255,0.03);' : ''} ${q.width === 'half' ? 'width:48%; display:inline-block; margin-right:2%; vertical-align:top;' : ''} ${condIndent}">`;
-            if (hasCondition && !isActive && condParent) {
-                html += `<div style="font-size:0.65rem; color:#FFA800; margin-bottom:6px; opacity:0.7;">&#9889; Shows when "${escapeHtml(condParent.label)}" = ${escapeHtml(q.condition.value)}</div>`;
+            if (hasConditions && !isActive) {
+                const condLabels = q.conditions.map(cond => {
+                    const cp = formConfig.questions[cond.parentIndex];
+                    return cp ? `"${escapeHtml(cp.label)}" = ${escapeHtml(cond.value)}` : '';
+                }).filter(Boolean).join(' AND ');
+                if (condLabels) {
+                    html += `<div style="font-size:0.65rem; color:#FFA800; margin-bottom:6px; opacity:0.7;">&#9889; Shows when ${condLabels}</div>`;
+                }
             }
 
             if (isActive) {
@@ -7597,6 +7640,7 @@
                         <option value="half" ${q.width==='half'?'selected':''}>Half width</option>
                     </select>
                     <button class="fb-pill ${q.required?'fb-pill-active':''}" onclick="updateQ(${i},'required',${!q.required})">Required</button>
+                    <button class="fb-pill ${q.autofill !== false ? 'fb-pill-active' : ''}" style="font-size:0.7rem; padding:4px 10px; border-color:rgba(52,199,89,0.3); ${q.autofill !== false ? 'background:rgba(52,199,89,0.15); color:#34C759;' : ''}" onclick="updateQ(${i},'autofill',${q.autofill === false ? 'true' : 'false'})">Autofill</button>
                     <span style="flex:1;"></span>
                     <button class="fb-pill" onclick="moveQ(${i},-1)" ${i===0?'disabled':''}>&#9650;</button>
                     <button class="fb-pill" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''}>&#9660;</button>
@@ -7667,14 +7711,16 @@
     }
 
     function addCustomQuestion(t) {
+        const isSection = t === 'section_header';
         formConfig.questions.push({
             id: 'q_'+Date.now(),
-            type: t === 'section_header' ? 'section_header' : 'text',
-            label: t === 'section_header' ? 'New Section' : 'New Question',
+            type: isSection ? 'section_header' : 'text',
+            label: isSection ? 'New Section' : 'New Question',
             width: 'full',
             required: false,
             isCore: false,
-            options: t === 'dropdown' ? 'Option 1, Option 2' : ''
+            options: t === 'dropdown' ? 'Option 1, Option 2' : '',
+            autofill: isSection ? false : true  // Enable autofill by default for custom questions
         });
         activeFormField = formConfig.questions.length - 1;
         renderFormPreview();
@@ -7700,9 +7746,11 @@
         [formConfig.questions[i], formConfig.questions[n]] = [formConfig.questions[n], formConfig.questions[i]];
         // Update condition parentIndex references when questions move
         formConfig.questions.forEach((q) => {
-            if (q.condition && q.condition.parentIndex !== undefined) {
-                if (q.condition.parentIndex === i) q.condition.parentIndex = n;
-                else if (q.condition.parentIndex === n) q.condition.parentIndex = i;
+            if (q.conditions && q.conditions.length > 0) {
+                q.conditions.forEach(cond => {
+                    if (cond.parentIndex === i) cond.parentIndex = n;
+                    else if (cond.parentIndex === n) cond.parentIndex = i;
+                });
             }
         });
         activeFormField = n;
@@ -7715,7 +7763,7 @@
         if (k === 'type') {
             if (v === 'dropdown' && !formConfig.questions[i].options) formConfig.questions[i].options = 'Option 1, Option 2';
             renderFormPreview();
-        } else if (k === 'width' || k === 'required') {
+        } else if (k === 'width' || k === 'required' || k === 'autofill') {
             renderFormPreview();
         }
         scheduleFormAutoSave();
@@ -7762,14 +7810,18 @@
 
         // Update condition parentIndex references
         formConfig.questions.forEach((q) => {
-            if (q.condition && q.condition.parentIndex !== undefined) {
-                let pi = q.condition.parentIndex;
-                if (pi === fromIndex) pi = toIndex;
-                else {
-                    if (fromIndex < toIndex) { if (pi > fromIndex && pi <= toIndex) pi--; }
-                    else { if (pi >= toIndex && pi < fromIndex) pi++; }
-                }
-                q.condition.parentIndex = pi;
+            if (q.conditions && q.conditions.length > 0) {
+                q.conditions.forEach(cond => {
+                    if (cond.parentIndex !== undefined) {
+                        let pi = cond.parentIndex;
+                        if (pi === fromIndex) pi = toIndex;
+                        else {
+                            if (fromIndex < toIndex) { if (pi > fromIndex && pi <= toIndex) pi--; }
+                            else { if (pi >= toIndex && pi < fromIndex) pi++; }
+                        }
+                        cond.parentIndex = pi;
+                    }
+                });
             }
         });
 
