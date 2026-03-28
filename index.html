@@ -2223,31 +2223,92 @@
     }
 
     let OPENROUTER_DISABLED = false;
+    const OPENROUTER_DEFAULT_COOLDOWN_MS = 60000;
+
+    if (typeof globalThis.OPENROUTER_RATE_LIMIT_UNTIL !== 'number') globalThis.OPENROUTER_RATE_LIMIT_UNTIL = 0;
+    if (typeof globalThis.OPENROUTER_LAST_RATE_LIMIT_LOG_AT !== 'number') globalThis.OPENROUTER_LAST_RATE_LIMIT_LOG_AT = 0;
+
+    function getOpenRouterRateLimitUntil() {
+        return typeof globalThis.OPENROUTER_RATE_LIMIT_UNTIL === 'number' ? globalThis.OPENROUTER_RATE_LIMIT_UNTIL : 0;
+    }
+
+    function setOpenRouterRateLimitCooldown(delayMs) {
+        const now = Date.now();
+        const normalizedDelay = Math.max(0, Number(delayMs) || 0);
+        globalThis.OPENROUTER_RATE_LIMIT_UNTIL = Math.max(getOpenRouterRateLimitUntil(), now + normalizedDelay);
+    }
+
+    function maybeLogRateLimitCooldown() {
+        const now = Date.now();
+        const rateLimitUntil = getOpenRouterRateLimitUntil();
+        const lastLogAt = typeof globalThis.OPENROUTER_LAST_RATE_LIMIT_LOG_AT === 'number' ? globalThis.OPENROUTER_LAST_RATE_LIMIT_LOG_AT : 0;
+        if (now < rateLimitUntil && (now - lastLogAt > 10000)) {
+            globalThis.OPENROUTER_LAST_RATE_LIMIT_LOG_AT = now;
+            console.warn(`OpenRouter is rate-limited. Skipping AI requests for ${Math.ceil((rateLimitUntil - now) / 1000)}s.`);
+        }
+    }
+    function parseRetryAfterMs(retryAfterHeader) {
+        if (!retryAfterHeader) return null;
+        const seconds = Number(retryAfterHeader);
+        if (!Number.isNaN(seconds) && seconds >= 0) return seconds * 1000;
+        const retryDate = Date.parse(retryAfterHeader);
+        if (!Number.isNaN(retryDate)) {
+            const delay = retryDate - Date.now();
+            return delay > 0 ? delay : 0;
+        }
+        return null;
+    }
+
     async function callOpenRouterChat(payload) {
         if (!OPENROUTER_API_KEY || OPENROUTER_DISABLED) return null;
+        if (Date.now() < getOpenRouterRateLimitUntil()) {
+            maybeLogRateLimitCooldown();
+            return null;
+        }
         try {
-            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": window.location.href,
-                    "X-Title": "CAB Admin System"
-                },
-                body: JSON.stringify(payload)
-            });
+            const max429Retries = 2;
+            let lastStatus = null;
+            for (let attempt = 0; attempt <= max429Retries; attempt++) {
+                const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": window.location.href,
+                        "X-Title": "CAB Admin System"
+                    },
+                    body: JSON.stringify(payload)
+                });
+                lastStatus = res.status;
 
-            if (res.status === 401 || res.status === 403) {
-                OPENROUTER_DISABLED = true;
-                console.warn(`OpenRouter API returned ${res.status}. AI features disabled for this session. Check your API key in Settings.`);
+                if (res.status === 401 || res.status === 403) {
+                    OPENROUTER_DISABLED = true;
+                    console.warn(`OpenRouter API returned ${res.status}. AI features disabled for this session. Check your API key in Settings.`);
+                    return null;
+                }
+                if (res.status === 404) {
+                    console.warn("OpenRouter endpoint returned 404. Verify API base URL/account access in Settings.");
+                    return null;
+                }
+                if (res.status === 429 && attempt < max429Retries) {
+                    const retryAfterMs = parseRetryAfterMs(res.headers.get('Retry-After'));
+                    const backoffMs = Math.min(8000, 800 * (2 ** attempt));
+                    const jitterMs = Math.floor(Math.random() * 250);
+                    const delayMs = Math.max(retryAfterMs ?? 0, backoffMs + jitterMs);
+                    setOpenRouterRateLimitCooldown(delayMs);
+                    console.warn(`OpenRouter rate limited (429). Retrying in ${delayMs}ms (attempt ${attempt + 1}/${max429Retries}).`);
+                    await new Promise(r => setTimeout(r, delayMs));
+                    continue;
+                }
+                if (!res.ok) throw new Error(`OpenRouter error ${res.status}`);
+                return await res.json();
+            }
+            if (lastStatus === 429) {
+                setOpenRouterRateLimitCooldown(OPENROUTER_DEFAULT_COOLDOWN_MS);
+                console.warn(`OpenRouter rate limit persisted after retries. Cooling down for ${Math.ceil(OPENROUTER_DEFAULT_COOLDOWN_MS / 1000)}s and using fallback behavior.`);
                 return null;
             }
-            if (res.status === 404) {
-                console.warn("OpenRouter endpoint returned 404. Verify API base URL/account access in Settings.");
-                return null;
-            }
-            if (!res.ok) throw new Error(`OpenRouter error ${res.status}`);
-            return await res.json();
+            throw new Error(`OpenRouter error ${lastStatus ?? 'unknown'}`);
         } catch (err) {
             if (err.message?.includes('OpenRouter error')) throw err;
             console.warn('OpenRouter request failed:', err.message);
@@ -3183,9 +3244,19 @@
             const needsAI = vendorsData.filter(v => v._needsAICategorization);
             if (needsAI.length > 0) {
                 (async () => {
-                    for (const v of needsAI) {
+                    for (let i = 0; i < needsAI.length; i++) {
+                        const v = needsAI[i];
+                        if (Date.now() < getOpenRouterRateLimitUntil()) {
+                            maybeLogRateLimitCooldown();
+                            for (let j = i; j < needsAI.length; j++) {
+                                needsAI[j].autoCategories = needsAI[j].autoCategories?.length ? needsAI[j].autoCategories : ['Unique Goods'];
+                                delete needsAI[j]._needsAICategorization;
+                            }
+                            break;
+                        }
                         v.autoCategories = await aiCategorizeVendor(v.description);
                         delete v._needsAICategorization;
+                        await new Promise(r => setTimeout(r, 1200));
                     }
                     renderTable();
                 })();
