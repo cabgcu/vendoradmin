@@ -1857,7 +1857,7 @@
                 <!-- System Settings & API Keys -->
                 <div style="display: none; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px;">
                     <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">System Configuration & API Keys</label>
-                    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Set your live website URL (to ensure email confirmation links work) and your AI/Email API keys here. They are stored securely in your Supabase database so GitHub cannot scan them.</p>
+                    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Set your live website URL (to ensure email confirmation links work) and your AI/Email API keys here. Delivery tracking now scopes Brevo logs to each market using message IDs, tracking tags, and subject matching. These values are stored securely in Supabase (not GitHub).</p>
                     
                     <div class="form-grid" style="gap: 16px; margin-bottom: 20px;">
                         <div style="grid-column: 1 / -1;">
@@ -2409,6 +2409,59 @@
         return !!(vendor && (vendor.email_sent || vendor.brevo_message_id) && !isStaleEmailTracking(vendor, eventId));
     }
 
+    function safeTrackingSlug(value) {
+        return String(value || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, 48) || 'na';
+    }
+
+    function generateEmailTrackingToken(vendor, templateType, eventId = currentData.activeId) {
+        const timestamp = Date.now();
+        const vendorId = safeTrackingSlug(vendor?.id || vendor?.preferred_email || 'vendor');
+        const templateSlug = safeTrackingSlug(templateType || vendor?.email_sent || 'status');
+        const marketSlug = safeTrackingSlug(eventId || currentData.activeId || 'market');
+        return `sm-${marketSlug}-${templateSlug}-${vendorId}-${timestamp}`;
+    }
+
+    function buildBrevoTrackingTags(vendor, templateType, eventId = currentData.activeId) {
+        const marketId = safeTrackingSlug(eventId || currentData.activeId || 'unknown');
+        const templateSlug = safeTrackingSlug(templateType || vendor?.email_sent || 'status');
+        return [
+            `market-${marketId}`,
+            `template-${templateSlug}`,
+            'cab-student-market'
+        ];
+    }
+
+    function normalizeBrevoMessageId(messageId) {
+        if (!messageId) return '';
+        return String(messageId).trim().replace(/^<|>$/g, '');
+    }
+
+    function eventMatchesVendorTracking(evt, vendor) {
+        if (!evt || !vendor) return false;
+
+        const expectedMessageId = normalizeBrevoMessageId(vendor.brevo_message_id);
+        const eventMessageId = normalizeBrevoMessageId(evt.messageId || evt['message-id'] || evt.message_id || evt.messageid);
+        if (expectedMessageId && eventMessageId && expectedMessageId === eventMessageId) return true;
+
+        if (vendor.email_tracking_token) {
+            const token = String(vendor.email_tracking_token);
+            const tags = Array.isArray(evt.tags) ? evt.tags : [];
+            const tagHit = tags.some(t => String(t) === token);
+            const headerHit = String(evt['X-CAB-Tracking'] || evt['x-cab-tracking'] || '').includes(token);
+            if (tagHit || headerHit) return true;
+        }
+
+        if (vendor.email_subject && evt.subject) {
+            return String(evt.subject).trim() === String(vendor.email_subject).trim();
+        }
+
+        return false;
+    }
+
     async function clearStaleEmailTracking(vendors, eventId = currentData.activeId) {
         if (!Array.isArray(vendors) || !eventId) return;
 
@@ -2421,7 +2474,8 @@
                 email_delivery_status: null,
                 brevo_message_id: null,
                 email_sent_at: null,
-                email_sent_event_id: null
+                email_sent_event_id: null,
+                email_tracking_token: null
             };
 
             await _supabase.from('vendors').update(resetPayload).eq('id', vendor.id);
@@ -3093,6 +3147,7 @@
                 if (!v.email_sent_at && !v.brevo_message_id) {
                     v.email_sent = null;
                     v.email_delivery_status = null;
+                    v.email_tracking_token = null;
                 }
                 
                 // Read historical AI tags if they exist
@@ -5277,12 +5332,21 @@
         </body>
         </html>`;
 
+        const trackingToken = generateEmailTrackingToken(vendor, templates.targetTemplate, currentData.activeId);
+        const trackingTags = [...buildBrevoTrackingTags(vendor, templates.targetTemplate, currentData.activeId), trackingToken];
+
         const payload = {
             sender: { name: SENDER_NAME, email: SENDER_EMAIL },
             to: [{ email: vendor.preferred_email, name: `${vendor.first_name} ${vendor.last_name}`.trim() }],
             subject: parsedSubj,
             htmlContent: htmlContent,
-            textContent: plainTextStr
+            textContent: plainTextStr,
+            tags: trackingTags,
+            headers: {
+                'X-CAB-Tracking': trackingToken,
+                'X-CAB-Market-ID': String(currentData.activeId || ''),
+                'X-CAB-Template': String(templates.targetTemplate || '')
+            }
         };
         
         try {
@@ -5313,6 +5377,7 @@
                 email_delivery_status: 'sent',
                 email_sent_at: new Date().toISOString(),
                 email_sent_event_id: currentData.activeId,
+                email_tracking_token: trackingToken,
                 email_html_content: htmlContent,
                 email_subject: parsedSubj
             };
@@ -5327,7 +5392,8 @@
                 const fallbackPayload = {
                     brevo_message_id: brevoMessageId,
                     email_delivery_status: 'sent',
-                    email_sent_at: updatePayload.email_sent_at
+                    email_sent_at: updatePayload.email_sent_at,
+                    email_sent_event_id: currentData.activeId
                 };
                 if (templates.targetTemplate !== 'custom') {
                     fallbackPayload.email_sent = templates.targetTemplate;
@@ -5344,6 +5410,7 @@
             vendor.email_delivery_status = 'sent';
             vendor.email_sent_at = updatePayload.email_sent_at;
             vendor.email_sent_event_id = updatePayload.email_sent_event_id;
+            vendor.email_tracking_token = trackingToken;
             vendor.email_html_content = htmlContent;
             vendor.email_subject = parsedSubj;
             if (templates.targetTemplate !== 'custom') {
@@ -5375,8 +5442,7 @@
 
             // Try precise lookup first (messageId both formats), then fallback to date-scoped lookup.
             if (vendor.brevo_message_id) {
-                const rawId = String(vendor.brevo_message_id).trim();
-                const withoutBrackets = rawId.replace(/^<|>$/g, '');
+                const withoutBrackets = normalizeBrevoMessageId(vendor.brevo_message_id);
                 // Brevo API rejects angle-bracket messageIds with 400, so only use the clean ID
                 urlsToTry.push(`${baseUrl}&messageId=${encodeURIComponent(withoutBrackets)}`);
             }
@@ -5403,6 +5469,16 @@
 
                 const data = await response.json();
                 let candidateEvents = data.events || [];
+
+                // If Brevo returns events from the same inbox, aggressively narrow to
+                // this vendor email send using messageId, tracking token/tag, or subject.
+                if (candidateEvents.length > 0) {
+                    const strictMatches = candidateEvents.filter(evt => eventMatchesVendorTracking(evt, vendor));
+                    if (strictMatches.length > 0) {
+                        candidateEvents = strictMatches;
+                    }
+                }
+
                 // For broad queries (no messageId), filter to events after the email was sent
                 if (candidateEvents.length > 0 && vendor.email_sent_at && !url.includes('messageId=')) {
                     const sentTime = new Date(vendor.email_sent_at).getTime() - 60000; // 1 min tolerance
@@ -5513,7 +5589,9 @@
             email_sent: null,
             email_delivery_status: null,
             brevo_message_id: null,
-            email_sent_at: null
+            email_sent_at: null,
+            email_sent_event_id: null,
+            email_tracking_token: null
         };
 
         const { error } = await _supabase.from('vendors').update(resetPayload).eq('event_id', currentData.activeId);
@@ -8264,6 +8342,8 @@
 
                     const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;"><table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f3f4f6;padding:20px;"><tr><td align="center"><table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.05);">${bannerUrl?`<tr><td align="center" style="padding:0;"><img src="${bannerUrl}" width="600" style="display:block;width:100%;max-width:100%;height:auto;border:0;"></td></tr>`:""}<tr><td align="center" style="background-color:#ffffff;padding:40px 30px 20px;"><h1 style="margin:0;font-size:24px;font-weight:800;color:#111;text-transform:uppercase;">${headingText}</h1><p style="margin:12px 0 0;font-size:12px;font-weight:700;color:#fff;background-color:${statusColor};display:inline-block;padding:6px 16px;text-transform:uppercase;letter-spacing:1px;border-radius:20px;">${statusBadgeText}</p></td></tr><tr><td style="padding:10px 40px 40px;background-color:#ffffff;font-size:16px;color:#333;line-height:1.6;">${htmlBody}</td></tr>${qrHtml}<tr><td align="center" style="background-color:#f9fafb;padding:20px;border-top:1px solid #eaeaea;"><p style="margin:0;font-size:12px;font-weight:600;color:#aaa;text-transform:uppercase;">&copy; Canyon Activities Board</p></td></tr></table></td></tr></table></body></html>`;
 
+                    const trackingToken = generateEmailTrackingToken(vendor, targetTemplate, eventId);
+                    const trackingTags = [...buildBrevoTrackingTags(vendor, targetTemplate, eventId), trackingToken];
                     const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
                         method: 'POST',
                         headers: { 'accept': 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
@@ -8272,10 +8352,26 @@
                             to: [{ email: vendor.preferred_email, name: `${vendor.first_name} ${vendor.last_name}` }],
                             subject: parsedSubj,
                             htmlContent: fullHtml,
-                            textContent: plainText
+                            textContent: plainText,
+                            tags: trackingTags,
+                            headers: {
+                                'X-CAB-Tracking': trackingToken,
+                                'X-CAB-Market-ID': String(eventId || ''),
+                                'X-CAB-Template': String(targetTemplate || '')
+                            }
                         })
                     });
                     if (!resp.ok) throw new Error("Email service failed");
+                    const respData = await resp.json().catch(() => ({}));
+                    const brevoMessageId = respData.messageId || respData.messageIds?.[0] || respData.id || null;
+                    await _supabase.from('vendors').update({
+                        brevo_message_id: brevoMessageId,
+                        email_delivery_status: 'sent',
+                        email_sent_at: new Date().toISOString(),
+                        email_sent_event_id: eventId,
+                        email_tracking_token: trackingToken,
+                        email_subject: parsedSubj
+                    }).eq('id', vendor.id);
                     respond({ success: true });
                     break;
                 }
