@@ -3209,7 +3209,7 @@
                     if (v.autoCategories.length === 0 && getBuiltinSetting('auto_categorize', 'useAI') && OPENROUTER_API_KEY) {
                         v._needsAICategorization = true;
                     }
-                    if (v.autoCategories.length === 0 && !v._needsAICategorization) v.autoCategories = ['Unique Goods'];
+                    if (v.autoCategories.length === 0 && !v._needsAICategorization) v.autoCategories = [];
                 } else {
                     v.autoCategories = v.autoCategories || ['Unique Goods'];
                 }
