@@ -2223,31 +2223,62 @@
     }
 
     let OPENROUTER_DISABLED = false;
+    function parseRetryAfterMs(retryAfterHeader) {
+        if (!retryAfterHeader) return null;
+        const seconds = Number(retryAfterHeader);
+        if (!Number.isNaN(seconds) && seconds >= 0) return seconds * 1000;
+        const retryDate = Date.parse(retryAfterHeader);
+        if (!Number.isNaN(retryDate)) {
+            const delay = retryDate - Date.now();
+            return delay > 0 ? delay : 0;
+        }
+        return null;
+    }
+
     async function callOpenRouterChat(payload) {
         if (!OPENROUTER_API_KEY || OPENROUTER_DISABLED) return null;
         try {
-            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": window.location.href,
-                    "X-Title": "CAB Admin System"
-                },
-                body: JSON.stringify(payload)
-            });
+            const max429Retries = 3;
+            let lastStatus = null;
+            for (let attempt = 0; attempt <= max429Retries; attempt++) {
+                const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": window.location.href,
+                        "X-Title": "CAB Admin System"
+                    },
+                    body: JSON.stringify(payload)
+                });
+                lastStatus = res.status;
 
-            if (res.status === 401 || res.status === 403) {
-                OPENROUTER_DISABLED = true;
-                console.warn(`OpenRouter API returned ${res.status}. AI features disabled for this session. Check your API key in Settings.`);
+                if (res.status === 401 || res.status === 403) {
+                    OPENROUTER_DISABLED = true;
+                    console.warn(`OpenRouter API returned ${res.status}. AI features disabled for this session. Check your API key in Settings.`);
+                    return null;
+                }
+                if (res.status === 404) {
+                    console.warn("OpenRouter endpoint returned 404. Verify API base URL/account access in Settings.");
+                    return null;
+                }
+                if (res.status === 429 && attempt < max429Retries) {
+                    const retryAfterMs = parseRetryAfterMs(res.headers.get('Retry-After'));
+                    const backoffMs = Math.min(8000, 800 * (2 ** attempt));
+                    const jitterMs = Math.floor(Math.random() * 250);
+                    const delayMs = Math.max(retryAfterMs ?? 0, backoffMs + jitterMs);
+                    console.warn(`OpenRouter rate limited (429). Retrying in ${delayMs}ms (attempt ${attempt + 1}/${max429Retries}).`);
+                    await new Promise(r => setTimeout(r, delayMs));
+                    continue;
+                }
+                if (!res.ok) throw new Error(`OpenRouter error ${res.status}`);
+                return await res.json();
+            }
+            if (lastStatus === 429) {
+                console.warn('OpenRouter rate limit persisted after retries. Using fallback behavior.');
                 return null;
             }
-            if (res.status === 404) {
-                console.warn("OpenRouter endpoint returned 404. Verify API base URL/account access in Settings.");
-                return null;
-            }
-            if (!res.ok) throw new Error(`OpenRouter error ${res.status}`);
-            return await res.json();
+            throw new Error(`OpenRouter error ${lastStatus ?? 'unknown'}`);
         } catch (err) {
             if (err.message?.includes('OpenRouter error')) throw err;
             console.warn('OpenRouter request failed:', err.message);
@@ -3186,6 +3217,7 @@
                     for (const v of needsAI) {
                         v.autoCategories = await aiCategorizeVendor(v.description);
                         delete v._needsAICategorization;
+                        await new Promise(r => setTimeout(r, 1200));
                     }
                     renderTable();
                 })();
