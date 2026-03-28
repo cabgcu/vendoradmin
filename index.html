@@ -2480,37 +2480,6 @@
         return false;
     }
 
-    function isMissingColumnError(err) {
-        const msg = `${err?.message || ''} ${err?.details || ''} ${err?.hint || ''}`.toLowerCase();
-        return msg.includes('column') && (msg.includes('does not exist') || msg.includes('schema cache'));
-    }
-
-    async function updateVendorWithAdaptivePayload(vendorId, payload, optionalKeys = []) {
-        if (!vendorId || !payload) return { ok: false, error: new Error('Missing vendorId/payload') };
-
-        const cleanBase = {};
-        Object.entries(payload).forEach(([k, v]) => {
-            if (v !== undefined) cleanBase[k] = v;
-        });
-
-        const attempts = [cleanBase];
-        for (let i = 0; i < optionalKeys.length; i++) {
-            const reduced = { ...cleanBase };
-            for (let j = 0; j <= i; j++) delete reduced[optionalKeys[j]];
-            attempts.push(reduced);
-        }
-
-        let lastError = null;
-        for (const candidate of attempts) {
-            const { error } = await _supabase.from('vendors').update(candidate).eq('id', vendorId);
-            if (!error) return { ok: true, appliedPayload: candidate };
-            lastError = error;
-            if (!isMissingColumnError(error)) break;
-        }
-
-        return { ok: false, error: lastError };
-    }
-
     async function clearStaleEmailTracking(vendors, eventId = currentData.activeId) {
         if (!Array.isArray(vendors) || !eventId) return;
 
@@ -5442,20 +5411,34 @@
                 updatePayload.email_sent = templates.targetTemplate;
             }
 
-            const adaptive = await updateVendorWithAdaptivePayload(
-                vendor.id,
-                updatePayload,
-                ['email_tracking_token', 'email_html_content', 'email_subject', 'email_sent_event_id']
-            );
-            if (!adaptive.ok) {
-                console.error('Email tracking update failed:', adaptive.error);
-                return false;
+            let { error: updateErr } = await _supabase.from('vendors').update(updatePayload).eq('id', vendor.id);
+            if (updateErr) {
+                // Fallback for older schemas that may not have optional email content columns.
+                console.warn('Primary email tracking update failed, retrying minimal payload:', updateErr);
+                const fallbackPayload = {
+                    brevo_message_id: brevoMessageId,
+                    email_delivery_status: 'sent',
+                    email_sent_at: updatePayload.email_sent_at,
+                    email_sent_event_id: currentData.activeId
+                };
+                if (templates.targetTemplate !== 'custom') {
+                    fallbackPayload.email_sent = templates.targetTemplate;
+                }
+                const { error: fallbackErr } = await _supabase.from('vendors').update(fallbackPayload).eq('id', vendor.id);
+                if (fallbackErr) {
+                    console.error('Fallback email tracking update failed:', fallbackErr);
+                    return false;
+                }
             }
 
             // Update local state for immediate UI reflection
             vendor.brevo_message_id = brevoMessageId;
             vendor.email_delivery_status = 'sent';
-            Object.assign(vendor, adaptive.appliedPayload);
+            vendor.email_sent_at = updatePayload.email_sent_at;
+            vendor.email_sent_event_id = updatePayload.email_sent_event_id;
+            vendor.email_tracking_token = trackingToken;
+            vendor.email_html_content = htmlContent;
+            vendor.email_subject = parsedSubj;
             if (templates.targetTemplate !== 'custom') {
                 vendor.email_sent = templates.targetTemplate;
             }
@@ -8421,20 +8404,14 @@
                     if (!resp.ok) throw new Error("Email service failed");
                     const respData = await resp.json().catch(() => ({}));
                     const brevoMessageId = respData.messageId || respData.messageIds?.[0] || respData.id || null;
-                    const resendUpdate = {
+                    await _supabase.from('vendors').update({
                         brevo_message_id: brevoMessageId,
                         email_delivery_status: 'sent',
                         email_sent_at: new Date().toISOString(),
                         email_sent_event_id: eventId,
                         email_tracking_token: trackingToken,
                         email_subject: parsedSubj
-                    };
-                    const resendAdaptive = await updateVendorWithAdaptivePayload(
-                        vendor.id,
-                        resendUpdate,
-                        ['email_tracking_token', 'email_subject', 'email_sent_event_id']
-                    );
-                    if (!resendAdaptive.ok) throw resendAdaptive.error || new Error('Tracking update failed');
+                    }).eq('id', vendor.id);
                     respond({ success: true });
                     break;
                 }
