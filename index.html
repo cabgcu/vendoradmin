@@ -2291,14 +2291,15 @@
     }
 
     async function aiCategorizeVendor(description) {
-        if (!OPENROUTER_API_KEY || !description) return ['Unique Goods'];
+        if (!description) return ['Unique Goods'];
+        if (!OPENROUTER_API_KEY) return null;
         const categories = Object.keys(CATEGORY_MAP);
         try {
             const data = await callOpenRouterChat({
                 model: 'google/gemma-3-27b-it:free',
                 messages: [{ role: "user", content: `Categorize this vendor into one or more of these categories: ${categories.join(', ')}. Vendor description: "${description}". Respond ONLY with a JSON array of matching category names, e.g. ["Food & Beverage","Art & Prints"]. If none fit, respond ["Unique Goods"].` }]
             });
-            if (!data) return ['Unique Goods'];
+            if (!data) return null;
             const text = data.choices?.[0]?.message?.content || '';
             const match = text.match(/\[.*\]/s);
             if (match) {
@@ -2307,7 +2308,7 @@
                 return valid.length > 0 ? valid : ['Unique Goods'];
             }
         } catch(e) { console.error('AI categorization failed:', e); }
-        return ['Unique Goods'];
+        return null;
     }
 
     async function aiSummarizeVendor(vendor) {
@@ -3233,6 +3234,13 @@
                         await new Promise(r => setTimeout(r, 1200));
                     }
                     renderTable();
+                    if (retryNeeded && !AI_CATEGORIZATION_RETRY_TIMER) {
+                        const delayMs = Math.max(3000, getOpenRouterRateLimitUntil() - Date.now() + 500);
+                        AI_CATEGORIZATION_RETRY_TIMER = setTimeout(async () => {
+                            AI_CATEGORIZATION_RETRY_TIMER = null;
+                            await refreshData();
+                        }, delayMs);
+                    }
                 })();
             }
 
@@ -5457,8 +5465,7 @@
                 }
                 const { error: fallbackErr } = await updateVendorWithSchemaFallback(vendor.id, fallbackPayload);
                 if (fallbackErr) {
-                    console.error('Fallback email tracking update failed:', fallbackErr);
-                    return false;
+                    console.warn('Fallback email tracking update failed; email was still sent successfully:', fallbackErr);
                 }
             }
 
