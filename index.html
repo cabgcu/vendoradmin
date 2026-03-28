@@ -2226,14 +2226,32 @@
     async function callOpenRouterChat(payload) {
         if (!OPENROUTER_API_KEY || OPENROUTER_DISABLED) return null;
         try {
-            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json", "X-Title": "CAB Admin System" },
-                body: JSON.stringify(payload)
-            });
-            if (res.status === 401 || res.status === 403 || res.status === 404) {
+            const urls = [
+                "https://openrouter.ai/api/v1/chat/completions",
+                "https://openrouter.ai/v1/chat/completions"
+            ];
+            let res = null;
+
+            for (const url of urls) {
+                res = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                        "Content-Type": "application/json",
+                        "X-Title": "CAB Admin System"
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (res.status !== 404) break;
+            }
+
+            if (res.status === 401 || res.status === 403) {
                 OPENROUTER_DISABLED = true;
                 console.warn(`OpenRouter API returned ${res.status}. AI features disabled for this session. Check your API key in Settings.`);
+                return null;
+            }
+            if (res.status === 404) {
+                console.warn("OpenRouter endpoint returned 404. Verify API base URL/account access in Settings.");
                 return null;
             }
             if (!res.ok) throw new Error(`OpenRouter error ${res.status}`);
@@ -2478,8 +2496,8 @@
                 email_tracking_token: null
             };
 
-            await _supabase.from('vendors').update(resetPayload).eq('id', vendor.id);
-            Object.assign(vendor, resetPayload);
+            const result = await updateVendorWithAdaptivePayload(vendor.id, resetPayload, ['email_tracking_token', 'email_sent_event_id']);
+            if (result.ok) Object.assign(vendor, result.appliedPayload);
         }
     }
 
@@ -2806,31 +2824,39 @@
                         const retryTimeoutId = setTimeout(() => retryController.abort(), scanTimeout);
 
                         try {
-                            const visionRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                                method: "POST",
-                                headers: {
-                                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                                    "Content-Type": "application/json",
-                                    "HTTP-Referer": window.location.href,
-                                    "X-Title": "CAB Admin System"
-                                },
-                                body: JSON.stringify({
-                                    model: scanModel,
-                                    messages: [{
-                                        role: "user",
-                                        content: [
-                                            { type: "text", text: `You are a strict health inspector reviewing a food handler's license. The CURRENT DATE is ${currentDateStr} (Year: ${currentYear}). Read the image carefully. 1. Identify the Issue Date or Expiration Date. 2. If it has an Issue Date and says 'Valid for 3 Years', add 3 to the issue year (e.g. 2023 + 3 = 2026). 3. CRITICAL: If the expiration year is ${currentYear} or greater, the license IS VALID. Do NOT mark it expired! Respond ONLY in valid JSON: {"is_valid_license": boolean, "expiration_date": "string (e.g. 'July 2026') or 'Not Found'", "is_expired": boolean, "notes": "Brief explanation of dates found"}` },
-                                            { type: "image_url", image_url: { url: vendor.food_license_link } }
-                                        ]
-                                    }]
-                                }),
-                                signal: retryController.signal
-                            });
+                            const visionPayload = {
+                                model: scanModel,
+                                messages: [{
+                                    role: "user",
+                                    content: [
+                                        { type: "text", text: `You are a strict health inspector reviewing a food handler's license. The CURRENT DATE is ${currentDateStr} (Year: ${currentYear}). Read the image carefully. 1. Identify the Issue Date or Expiration Date. 2. If it has an Issue Date and says 'Valid for 3 Years', add 3 to the issue year (e.g. 2023 + 3 = 2026). 3. CRITICAL: If the expiration year is ${currentYear} or greater, the license IS VALID. Do NOT mark it expired! Respond ONLY in valid JSON: {"is_valid_license": boolean, "expiration_date": "string (e.g. 'July 2026') or 'Not Found'", "is_expired": boolean, "notes": "Brief explanation of dates found"}` },
+                                        { type: "image_url", image_url: { url: vendor.food_license_link } }
+                                    ]
+                                }]
+                            };
+                            const visionUrls = [
+                                "https://openrouter.ai/api/v1/chat/completions",
+                                "https://openrouter.ai/v1/chat/completions"
+                            ];
+                            let visionRes = null;
+                            for (const url of visionUrls) {
+                                visionRes = await fetch(url, {
+                                    method: "POST",
+                                    headers: {
+                                        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                                        "Content-Type": "application/json",
+                                        "HTTP-Referer": window.location.href,
+                                        "X-Title": "CAB Admin System"
+                                    },
+                                    body: JSON.stringify(visionPayload),
+                                    signal: retryController.signal
+                                });
+                                if (visionRes.status !== 404) break;
+                            }
 
                             clearTimeout(retryTimeoutId);
 
                             if (visionRes.status === 404) {
-                                OPENROUTER_DISABLED = true;
                                 licenseOcrResult = "⚠️ AI endpoint unavailable (404).";
                                 break;
                             }
@@ -5594,14 +5620,28 @@
             email_tracking_token: null
         };
 
-        const { error } = await _supabase.from('vendors').update(resetPayload).eq('event_id', currentData.activeId);
-        if (error) {
-            console.error('Failed to reset email tracking:', error);
+        const resetVariants = [
+            resetPayload,
+            { ...resetPayload, email_tracking_token: undefined },
+            { ...resetPayload, email_tracking_token: undefined, email_sent_event_id: undefined }
+        ];
+        let resetError = null;
+        let appliedResetPayload = resetPayload;
+        for (const variant of resetVariants) {
+            const cleanVariant = {};
+            Object.entries(variant).forEach(([k, v]) => { if (v !== undefined) cleanVariant[k] = v; });
+            const { error } = await _supabase.from('vendors').update(cleanVariant).eq('event_id', currentData.activeId);
+            if (!error) { appliedResetPayload = cleanVariant; resetError = null; break; }
+            resetError = error;
+            if (!isMissingColumnError(error)) break;
+        }
+        if (resetError) {
+            console.error('Failed to reset email tracking:', resetError);
             showToast('Failed to reset email tracking.');
             return;
         }
 
-        currentData.vendors.forEach(v => Object.assign(v, resetPayload));
+        currentData.vendors.forEach(v => Object.assign(v, appliedResetPayload));
         showToast('Email delivery status reset for this market.');
         renderTable();
         if (currentReviewingId) openReviewModal(currentReviewingId);
