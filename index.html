@@ -2844,7 +2844,7 @@
                     let lastApiError = null;
 
                     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-                        if (OPENROUTER_DISABLED) break;
+                        if (!OPENROUTER_API_KEY) break;
                         if (attempt > 0) await new Promise(r => setTimeout(r, 2000 * attempt));
 
                         const retryController = new AbortController();
@@ -5440,20 +5440,22 @@
                 updatePayload.email_sent = templates.targetTemplate;
             }
 
-            let { error: updateErr } = await _supabase.from('vendors').update(updatePayload).eq('id', vendor.id);
+            let { error: updateErr, payload: attemptedPrimaryPayload } = await updateVendorWithSchemaFallback(vendor.id, updatePayload);
             if (updateErr) {
                 // Fallback for older schemas that may not have optional email content columns.
                 console.warn('Primary email tracking update failed, retrying minimal payload:', updateErr);
                 const fallbackPayload = {
                     brevo_message_id: brevoMessageId,
                     email_delivery_status: 'sent',
-                    email_sent_at: updatePayload.email_sent_at,
-                    email_sent_event_id: currentData.activeId
+                    email_sent_at: updatePayload.email_sent_at
                 };
                 if (templates.targetTemplate !== 'custom') {
                     fallbackPayload.email_sent = templates.targetTemplate;
                 }
-                const { error: fallbackErr } = await _supabase.from('vendors').update(fallbackPayload).eq('id', vendor.id);
+                if (Object.prototype.hasOwnProperty.call(attemptedPrimaryPayload, 'email_sent_event_id')) {
+                    fallbackPayload.email_sent_event_id = currentData.activeId;
+                }
+                const { error: fallbackErr } = await updateVendorWithSchemaFallback(vendor.id, fallbackPayload);
                 if (fallbackErr) {
                     console.error('Fallback email tracking update failed:', fallbackErr);
                     return false;
