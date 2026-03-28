@@ -2226,22 +2226,23 @@
     async function callOpenRouterChat(payload) {
         if (!OPENROUTER_API_KEY || OPENROUTER_DISABLED) return null;
         try {
-            const postChat = async (requestPayload) => fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                    "Content-Type": "application/json",
-                    "X-Title": "CAB Admin System",
-                    "HTTP-Referer": window.location.href
-                },
-                body: JSON.stringify(requestPayload)
-            });
-            let res = await postChat(payload);
+            const urls = [
+                "https://openrouter.ai/api/v1/chat/completions",
+                "https://openrouter.ai/v1/chat/completions"
+            ];
+            let res = null;
 
-            // 404 is commonly "model not found" on OpenRouter. Retry once with a stable fallback model.
-            if (res.status === 404 && payload?.model && payload.model !== 'openrouter/auto') {
-                const retryPayload = { ...payload, model: 'openrouter/auto' };
-                res = await postChat(retryPayload);
+            for (const url of urls) {
+                res = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                        "Content-Type": "application/json",
+                        "X-Title": "CAB Admin System"
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (res.status !== 404) break;
             }
 
             if (res.status === 401 || res.status === 403) {
@@ -2250,7 +2251,7 @@
                 return null;
             }
             if (res.status === 404) {
-                console.warn("OpenRouter returned 404 (model or route unavailable). Try a different model in settings.");
+                console.warn("OpenRouter endpoint returned 404. Verify API base URL/account access in Settings.");
                 return null;
             }
             if (!res.ok) throw new Error(`OpenRouter error ${res.status}`);
@@ -2477,37 +2478,6 @@
         }
 
         return false;
-    }
-
-    function isMissingColumnError(err) {
-        const msg = `${err?.message || ''} ${err?.details || ''} ${err?.hint || ''}`.toLowerCase();
-        return msg.includes('column') && (msg.includes('does not exist') || msg.includes('schema cache'));
-    }
-
-    async function updateVendorWithAdaptivePayload(vendorId, payload, optionalKeys = []) {
-        if (!vendorId || !payload) return { ok: false, error: new Error('Missing vendorId/payload') };
-
-        const cleanBase = {};
-        Object.entries(payload).forEach(([k, v]) => {
-            if (v !== undefined) cleanBase[k] = v;
-        });
-
-        const attempts = [cleanBase];
-        for (let i = 0; i < optionalKeys.length; i++) {
-            const reduced = { ...cleanBase };
-            for (let j = 0; j <= i; j++) delete reduced[optionalKeys[j]];
-            attempts.push(reduced);
-        }
-
-        let lastError = null;
-        for (const candidate of attempts) {
-            const { error } = await _supabase.from('vendors').update(candidate).eq('id', vendorId);
-            if (!error) return { ok: true, appliedPayload: candidate };
-            lastError = error;
-            if (!isMissingColumnError(error)) break;
-        }
-
-        return { ok: false, error: lastError };
     }
 
     async function clearStaleEmailTracking(vendors, eventId = currentData.activeId) {
@@ -2864,17 +2834,25 @@
                                     ]
                                 }]
                             };
-                            let visionRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                                method: "POST",
-                                headers: {
-                                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                                    "Content-Type": "application/json",
-                                    "HTTP-Referer": window.location.href,
-                                    "X-Title": "CAB Admin System"
-                                },
-                                body: JSON.stringify(visionPayload),
-                                signal: retryController.signal
-                            });
+                            const visionUrls = [
+                                "https://openrouter.ai/api/v1/chat/completions",
+                                "https://openrouter.ai/v1/chat/completions"
+                            ];
+                            let visionRes = null;
+                            for (const url of visionUrls) {
+                                visionRes = await fetch(url, {
+                                    method: "POST",
+                                    headers: {
+                                        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                                        "Content-Type": "application/json",
+                                        "HTTP-Referer": window.location.href,
+                                        "X-Title": "CAB Admin System"
+                                    },
+                                    body: JSON.stringify(visionPayload),
+                                    signal: retryController.signal
+                                });
+                                if (visionRes.status !== 404) break;
+                            }
 
                             clearTimeout(retryTimeoutId);
 
@@ -5433,20 +5411,34 @@
                 updatePayload.email_sent = templates.targetTemplate;
             }
 
-            const adaptive = await updateVendorWithAdaptivePayload(
-                vendor.id,
-                updatePayload,
-                ['email_tracking_token', 'email_html_content', 'email_subject', 'email_sent_event_id']
-            );
-            if (!adaptive.ok) {
-                console.error('Email tracking update failed:', adaptive.error);
-                return false;
+            let { error: updateErr } = await _supabase.from('vendors').update(updatePayload).eq('id', vendor.id);
+            if (updateErr) {
+                // Fallback for older schemas that may not have optional email content columns.
+                console.warn('Primary email tracking update failed, retrying minimal payload:', updateErr);
+                const fallbackPayload = {
+                    brevo_message_id: brevoMessageId,
+                    email_delivery_status: 'sent',
+                    email_sent_at: updatePayload.email_sent_at,
+                    email_sent_event_id: currentData.activeId
+                };
+                if (templates.targetTemplate !== 'custom') {
+                    fallbackPayload.email_sent = templates.targetTemplate;
+                }
+                const { error: fallbackErr } = await _supabase.from('vendors').update(fallbackPayload).eq('id', vendor.id);
+                if (fallbackErr) {
+                    console.error('Fallback email tracking update failed:', fallbackErr);
+                    return false;
+                }
             }
 
             // Update local state for immediate UI reflection
             vendor.brevo_message_id = brevoMessageId;
             vendor.email_delivery_status = 'sent';
-            Object.assign(vendor, adaptive.appliedPayload);
+            vendor.email_sent_at = updatePayload.email_sent_at;
+            vendor.email_sent_event_id = updatePayload.email_sent_event_id;
+            vendor.email_tracking_token = trackingToken;
+            vendor.email_html_content = htmlContent;
+            vendor.email_subject = parsedSubj;
             if (templates.targetTemplate !== 'custom') {
                 vendor.email_sent = templates.targetTemplate;
             }
@@ -8412,20 +8404,14 @@
                     if (!resp.ok) throw new Error("Email service failed");
                     const respData = await resp.json().catch(() => ({}));
                     const brevoMessageId = respData.messageId || respData.messageIds?.[0] || respData.id || null;
-                    const resendUpdate = {
+                    await _supabase.from('vendors').update({
                         brevo_message_id: brevoMessageId,
                         email_delivery_status: 'sent',
                         email_sent_at: new Date().toISOString(),
                         email_sent_event_id: eventId,
                         email_tracking_token: trackingToken,
                         email_subject: parsedSubj
-                    };
-                    const resendAdaptive = await updateVendorWithAdaptivePayload(
-                        vendor.id,
-                        resendUpdate,
-                        ['email_tracking_token', 'email_subject', 'email_sent_event_id']
-                    );
-                    if (!resendAdaptive.ok) throw resendAdaptive.error || new Error('Tracking update failed');
+                    }).eq('id', vendor.id);
                     respond({ success: true });
                     break;
                 }
