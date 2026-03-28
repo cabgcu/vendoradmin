@@ -2223,23 +2223,6 @@
     }
 
     let OPENROUTER_DISABLED = false;
-    let OPENROUTER_RATE_LIMIT_UNTIL = 0;
-    let OPENROUTER_LAST_RATE_LIMIT_LOG_AT = 0;
-    const OPENROUTER_DEFAULT_COOLDOWN_MS = 60000;
-
-    function setOpenRouterRateLimitCooldown(delayMs) {
-        const now = Date.now();
-        const normalizedDelay = Math.max(0, Number(delayMs) || 0);
-        OPENROUTER_RATE_LIMIT_UNTIL = Math.max(OPENROUTER_RATE_LIMIT_UNTIL, now + normalizedDelay);
-    }
-
-    function maybeLogRateLimitCooldown() {
-        const now = Date.now();
-        if (now < OPENROUTER_RATE_LIMIT_UNTIL && (now - OPENROUTER_LAST_RATE_LIMIT_LOG_AT > 10000)) {
-            OPENROUTER_LAST_RATE_LIMIT_LOG_AT = now;
-            console.warn(`OpenRouter is rate-limited. Skipping AI requests for ${Math.ceil((OPENROUTER_RATE_LIMIT_UNTIL - now) / 1000)}s.`);
-        }
-    }
     function parseRetryAfterMs(retryAfterHeader) {
         if (!retryAfterHeader) return null;
         const seconds = Number(retryAfterHeader);
@@ -2259,7 +2242,7 @@
             return null;
         }
         try {
-            const max429Retries = 2;
+            const max429Retries = 3;
             let lastStatus = null;
             for (let attempt = 0; attempt <= max429Retries; attempt++) {
                 const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -2288,7 +2271,6 @@
                     const backoffMs = Math.min(8000, 800 * (2 ** attempt));
                     const jitterMs = Math.floor(Math.random() * 250);
                     const delayMs = Math.max(retryAfterMs ?? 0, backoffMs + jitterMs);
-                    setOpenRouterRateLimitCooldown(delayMs);
                     console.warn(`OpenRouter rate limited (429). Retrying in ${delayMs}ms (attempt ${attempt + 1}/${max429Retries}).`);
                     await new Promise(r => setTimeout(r, delayMs));
                     continue;
@@ -2297,8 +2279,7 @@
                 return await res.json();
             }
             if (lastStatus === 429) {
-                setOpenRouterRateLimitCooldown(OPENROUTER_DEFAULT_COOLDOWN_MS);
-                console.warn(`OpenRouter rate limit persisted after retries. Cooling down for ${Math.ceil(OPENROUTER_DEFAULT_COOLDOWN_MS / 1000)}s and using fallback behavior.`);
+                console.warn('OpenRouter rate limit persisted after retries. Using fallback behavior.');
                 return null;
             }
             throw new Error(`OpenRouter error ${lastStatus ?? 'unknown'}`);
