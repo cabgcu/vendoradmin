@@ -2237,6 +2237,10 @@
 
     async function callOpenRouterChat(payload) {
         if (!OPENROUTER_API_KEY || OPENROUTER_DISABLED) return null;
+        if (Date.now() < OPENROUTER_RATE_LIMIT_UNTIL) {
+            maybeLogRateLimitCooldown();
+            return null;
+        }
         try {
             const max429Retries = 3;
             let lastStatus = null;
@@ -3214,7 +3218,16 @@
             const needsAI = vendorsData.filter(v => v._needsAICategorization);
             if (needsAI.length > 0) {
                 (async () => {
-                    for (const v of needsAI) {
+                    for (let i = 0; i < needsAI.length; i++) {
+                        const v = needsAI[i];
+                        if (Date.now() < OPENROUTER_RATE_LIMIT_UNTIL) {
+                            maybeLogRateLimitCooldown();
+                            for (let j = i; j < needsAI.length; j++) {
+                                needsAI[j].autoCategories = needsAI[j].autoCategories?.length ? needsAI[j].autoCategories : ['Unique Goods'];
+                                delete needsAI[j]._needsAICategorization;
+                            }
+                            break;
+                        }
                         v.autoCategories = await aiCategorizeVendor(v.description);
                         delete v._needsAICategorization;
                         await new Promise(r => setTimeout(r, 1200));
