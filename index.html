@@ -2222,16 +2222,7 @@
         return Array.from(found);
     }
 
-    const MISSING_VENDOR_COLUMNS = new Set();
-
-    if (typeof OPENROUTER_RATE_LIMIT_UNTIL === 'undefined') globalThis.OPENROUTER_RATE_LIMIT_UNTIL = 0;
-    if (typeof globalThis.OPENROUTER_RATE_LIMIT_UNTIL !== 'number') globalThis.OPENROUTER_RATE_LIMIT_UNTIL = 0;
-    if (typeof globalThis.OPENROUTER_LAST_RATE_LIMIT_LOG_AT !== 'number') globalThis.OPENROUTER_LAST_RATE_LIMIT_LOG_AT = 0;
-    var OPENROUTER_RATE_LIMIT_UNTIL = globalThis.OPENROUTER_RATE_LIMIT_UNTIL;
-
-    function getOpenRouterRateLimitUntil() {
-        return typeof globalThis.OPENROUTER_RATE_LIMIT_UNTIL === 'number' ? globalThis.OPENROUTER_RATE_LIMIT_UNTIL : 0;
-    }
+    let OPENROUTER_DISABLED = false;
     function parseRetryAfterMs(retryAfterHeader) {
         if (!retryAfterHeader) return null;
         const seconds = Number(retryAfterHeader);
@@ -2244,71 +2235,54 @@
         return null;
     }
 
-    function extractMissingColumnFromPostgrestError(err) {
-        const message = err?.message || '';
-        const match = message.match(/Could not find the '([^']+)' column/i);
-        return match ? match[1] : null;
-    }
-
-    async function updateVendorWithSchemaFallback(vendorId, payload) {
-        const sanitized = Object.fromEntries(
-            Object.entries(payload).filter(([key, value]) => value !== undefined && !MISSING_VENDOR_COLUMNS.has(key))
-        );
-
-        let { error } = await _supabase.from('vendors').update(sanitized).eq('id', vendorId);
-        if (!error) return { error: null, payload: sanitized };
-
-        if (error.code === 'PGRST204') {
-            const missingColumn = extractMissingColumnFromPostgrestError(error);
-            if (missingColumn && Object.prototype.hasOwnProperty.call(sanitized, missingColumn)) {
-                MISSING_VENDOR_COLUMNS.add(missingColumn);
-                const retryPayload = { ...sanitized };
-                delete retryPayload[missingColumn];
-                const retry = await _supabase.from('vendors').update(retryPayload).eq('id', vendorId);
-                return { error: retry.error, payload: retryPayload };
-            }
-        }
-        return { error, payload: sanitized };
-    }
-    globalThis.updateVendorWithSchemaFallback = updateVendorWithSchemaFallback;
-
-    async function updateVendorRecord(vendorId, payload) {
-        if (typeof globalThis.updateVendorWithSchemaFallback === 'function') {
-            return await globalThis.updateVendorWithSchemaFallback(vendorId, payload);
-        }
-        const { error } = await _supabase.from('vendors').update(payload).eq('id', vendorId);
-        return { error, payload };
-    }
-
     async function callOpenRouterChat(payload) {
-        if (!OPENROUTER_API_KEY) return null;
+        if (!OPENROUTER_API_KEY || OPENROUTER_DISABLED) return null;
+        if (Date.now() < OPENROUTER_RATE_LIMIT_UNTIL) {
+            maybeLogRateLimitCooldown();
+            return null;
+        }
         try {
-            const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": window.location.href,
-                    "X-Title": "CAB Admin System"
-                },
-                body: JSON.stringify(payload)
-            });
-            if (res.status === 401 || res.status === 403) {
-                console.warn(`OpenRouter API returned ${res.status}. Check your API key/limits in Settings.`);
+            const max429Retries = 3;
+            let lastStatus = null;
+            for (let attempt = 0; attempt <= max429Retries; attempt++) {
+                const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": window.location.href,
+                        "X-Title": "CAB Admin System"
+                    },
+                    body: JSON.stringify(payload)
+                });
+                lastStatus = res.status;
+
+                if (res.status === 401 || res.status === 403) {
+                    OPENROUTER_DISABLED = true;
+                    console.warn(`OpenRouter API returned ${res.status}. AI features disabled for this session. Check your API key in Settings.`);
+                    return null;
+                }
+                if (res.status === 404) {
+                    console.warn("OpenRouter endpoint returned 404. Verify API base URL/account access in Settings.");
+                    return null;
+                }
+                if (res.status === 429 && attempt < max429Retries) {
+                    const retryAfterMs = parseRetryAfterMs(res.headers.get('Retry-After'));
+                    const backoffMs = Math.min(8000, 800 * (2 ** attempt));
+                    const jitterMs = Math.floor(Math.random() * 250);
+                    const delayMs = Math.max(retryAfterMs ?? 0, backoffMs + jitterMs);
+                    console.warn(`OpenRouter rate limited (429). Retrying in ${delayMs}ms (attempt ${attempt + 1}/${max429Retries}).`);
+                    await new Promise(r => setTimeout(r, delayMs));
+                    continue;
+                }
+                if (!res.ok) throw new Error(`OpenRouter error ${res.status}`);
+                return await res.json();
+            }
+            if (lastStatus === 429) {
+                console.warn('OpenRouter rate limit persisted after retries. Using fallback behavior.');
                 return null;
             }
-            if (res.status === 404) {
-                console.warn("OpenRouter endpoint returned 404. Verify API base URL/account access in Settings.");
-                return null;
-            }
-            if (res.status === 429) {
-                const retryAfterMs = parseRetryAfterMs(res.headers.get('Retry-After'));
-                const secs = retryAfterMs != null ? Math.ceil(retryAfterMs / 1000) : null;
-                console.warn(`OpenRouter rate limited (429).${secs != null ? ` Retry after ~${secs}s.` : ''}`);
-                return null;
-            }
-            if (!res.ok) throw new Error(`OpenRouter error ${res.status}`);
-            return await res.json();
+            throw new Error(`OpenRouter error ${lastStatus ?? 'unknown'}`);
         } catch (err) {
             if (err.message?.includes('OpenRouter error')) throw err;
             console.warn('OpenRouter request failed:', err.message);
@@ -3247,17 +3221,26 @@
                 (async () => {
                     for (let i = 0; i < needsAI.length; i++) {
                         const v = needsAI[i];
-                        const aiCategories = await aiCategorizeVendor(v.description);
-                        if (Array.isArray(aiCategories) && aiCategories.length > 0) {
-                            v.autoCategories = aiCategories;
-                            delete v._needsAICategorization;
-                        } else {
-                            v.autoCategories = v.autoCategories?.length ? v.autoCategories : [];
-                            delete v._needsAICategorization;
+                        if (Date.now() < OPENROUTER_RATE_LIMIT_UNTIL) {
+                            maybeLogRateLimitCooldown();
+                            for (let j = i; j < needsAI.length; j++) {
+                                needsAI[j].autoCategories = needsAI[j].autoCategories?.length ? needsAI[j].autoCategories : ['Unique Goods'];
+                                delete needsAI[j]._needsAICategorization;
+                            }
+                            break;
                         }
+                        v.autoCategories = await aiCategorizeVendor(v.description);
+                        delete v._needsAICategorization;
                         await new Promise(r => setTimeout(r, 1200));
                     }
                     renderTable();
+                    if (retryNeeded && !AI_CATEGORIZATION_RETRY_TIMER) {
+                        const delayMs = Math.max(3000, getOpenRouterRateLimitUntil() - Date.now() + 500);
+                        AI_CATEGORIZATION_RETRY_TIMER = setTimeout(async () => {
+                            AI_CATEGORIZATION_RETRY_TIMER = null;
+                            await refreshData();
+                        }, delayMs);
+                    }
                 })();
             }
 
@@ -5465,7 +5448,7 @@
                 updatePayload.email_sent = templates.targetTemplate;
             }
 
-            let { error: updateErr, payload: attemptedPrimaryPayload } = await updateVendorRecord(vendor.id, updatePayload);
+            let { error: updateErr, payload: attemptedPrimaryPayload } = await updateVendorWithSchemaFallback(vendor.id, updatePayload);
             if (updateErr) {
                 // Fallback for older schemas that may not have optional email content columns.
                 console.warn('Primary email tracking update failed, retrying minimal payload:', updateErr);
@@ -5480,7 +5463,7 @@
                 if (Object.prototype.hasOwnProperty.call(attemptedPrimaryPayload, 'email_sent_event_id')) {
                     fallbackPayload.email_sent_event_id = currentData.activeId;
                 }
-                const { error: fallbackErr } = await updateVendorRecord(vendor.id, fallbackPayload);
+                const { error: fallbackErr } = await updateVendorWithSchemaFallback(vendor.id, fallbackPayload);
                 if (fallbackErr) {
                     console.warn('Fallback email tracking update failed; email was still sent successfully:', fallbackErr);
                 }
