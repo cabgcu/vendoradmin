@@ -1572,12 +1572,13 @@
             </div>
 
             <!-- FORM ACCESS CONTROL -->
-            <div style="margin-bottom: 30px; background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.2); padding: 20px; border-radius: 20px;">
-                <label class="stat-label" style="color: #0A84FF; font-size: 0.9rem; margin-bottom: 12px;">Quick Form Access</label>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button onclick="setFormOverride('auto')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1; min-width: 120px; padding: 10px;">Auto</button>
-                    <button onclick="setFormOverride('open')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1; min-width: 120px; padding: 10px;">Force OPEN</button>
-                    <button onclick="setFormOverride('closed')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1; min-width: 120px; padding: 10px;">Force CLOSED</button>
+            <div style="margin-bottom: 30px; background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.2); padding: 25px; border-radius: 20px;">
+                <label class="stat-label" style="color: #0A84FF; font-size: 1rem; margin-bottom: 10px;">Public Form Access Control (This Market Only)</label>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Override the automatic schedule to manually force the public application form open or closed for this specific market.</p>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button id="form-status-auto-scan" onclick="setFormOverride('auto')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1;">Auto (Use Dates)</button>
+                    <button id="form-status-open-scan" onclick="setFormOverride('open')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1;">Force OPEN</button>
+                    <button id="form-status-closed-scan" onclick="setFormOverride('closed')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1;">Force CLOSED</button>
                 </div>
             </div>
 
