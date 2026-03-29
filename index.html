@@ -3225,7 +3225,10 @@
             const vendorsWithBrevoId = vendorsData.filter(v => v.brevo_message_id);
             console.log(`refreshData: Fetched ${vendorsData.length} vendors. ${vendorsWithStatus.length} have email_delivery_status, ${vendorsWithBrevoId.length} have brevo_message_id`);
             if (vendorsWithStatus.length > 0) {
-                console.log(`refreshData: Vendors with delivery status:`, vendorsWithStatus.map(v => ({ id: v.id, status: v.email_delivery_status, email: v.preferred_email, sent_at: v.email_sent_at, brevo_id: v.brevo_message_id })));
+                vendorsWithStatus.forEach(v => {
+                    const sanitizeTrigger = !v.email_sent_at && !v.brevo_message_id;
+                    console.log(`refreshData: Vendor ${v.id} (${v.preferred_email}): status=${v.email_delivery_status}, sent_at=${v.email_sent_at}, brevo_id=${v.brevo_message_id}, app_status=${v.status}, will_sanitize=${sanitizeTrigger}`);
+                });
             }
 
             vendorsData.forEach((v, index) => {
@@ -4306,6 +4309,13 @@
     function renderTable() {
         const filtered = getFilteredVendorsForCurrentView();
         const vendorsWithStatus = filtered.filter(v => v.email_delivery_status && v.email_delivery_status !== 'sent');
+
+        // Debug: Check if any vendors in all data have status but not in filtered view
+        const allWithStatus = currentData.vendors.filter(v => v.email_delivery_status && v.email_delivery_status !== 'sent');
+        if (allWithStatus.length > 0 && vendorsWithStatus.length === 0) {
+            console.warn(`renderTable: MISMATCH! All data has ${allWithStatus.length} with non-sent status, but filtered view has 0. Excluded vendors:`, allWithStatus.map(v => ({ id: v.id, email: v.preferred_email, status: v.status, filter_applied: activeFilter })));
+        }
+
         if (vendorsWithStatus.length > 0) {
             console.log(`renderTable: Rendering ${filtered.length} vendors, ${vendorsWithStatus.length} with non-sent delivery status:`, vendorsWithStatus.map(v => ({ id: v.id, status: v.email_delivery_status, email: v.preferred_email })));
         } else {
