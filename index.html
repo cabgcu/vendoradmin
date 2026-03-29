@@ -4508,8 +4508,8 @@
                 ? `<button onclick="checkIn('${v.id}', false, this); event.stopPropagation();" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`
                 : `<span style="color:var(--text-muted); font-size:0.75rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">${v.status}</span>`;
 
-            // Only allow resend email if they aren't pending and user is admin
-            const canEmail = currentUser.role === 'admin' && v.status !== 'Needs Review' && v.status !== 'Pending';
+            // Only allow resend email if they aren't pending, user is admin, and viewing a specific filter (not all applicants)
+            const canEmail = currentUser.role === 'admin' && v.status !== 'Needs Review' && v.status !== 'Pending' && ['approved', 'denied', 'power'].includes(activeFilter);
 
             const submitDate = v.created_at ? new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown Date';
 
