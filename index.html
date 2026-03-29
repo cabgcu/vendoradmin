@@ -3224,77 +3224,11 @@
                 
                 if (isBuiltinEnabled('auto_categorize')) {
                     v.autoCategories = extractVendorCategories(v.description || '');
-                    if (v.autoCategories.length === 0) {
-                        // Check cache first before flagging for AI
-                        const cached = _aiCategoryCache[v.id];
-                        if (cached && cached.description === (v.description || '')) {
-                            v.autoCategories = cached.categories;
-                        } else if (getBuiltinSetting('auto_categorize', 'useAI') && OPENROUTER_API_KEY) {
-                            v._needsAICategorization = true;
-                        }
-                    }
-                    if (v.autoCategories.length === 0 && !v._needsAICategorization) v.autoCategories = [];
+                    if (v.autoCategories.length === 0) v.autoCategories = [];
                 } else {
                     v.autoCategories = v.autoCategories || ['Unique Goods'];
                 }
             });
-
-            // Batch AI categorization for vendors that need it (non-blocking)
-            // Skip entirely if we're in rate-limit cooldown — use fallback categories
-            const needsAI = vendorsData.filter(v => v._needsAICategorization);
-            if (needsAI.length > 0 && Date.now() >= OPENROUTER_RATE_LIMIT_UNTIL) {
-                (async () => {
-                    let retryNeeded = false;
-                    for (let i = 0; i < needsAI.length; i++) {
-                        const v = needsAI[i];
-                        if (Date.now() < OPENROUTER_RATE_LIMIT_UNTIL) {
-                            maybeLogRateLimitCooldown();
-                            retryNeeded = true;
-                            for (let j = i; j < needsAI.length; j++) {
-                                needsAI[j].autoCategories = needsAI[j].autoCategories?.length ? needsAI[j].autoCategories : ['Unique Goods'];
-                                delete needsAI[j]._needsAICategorization;
-                            }
-                            break;
-                        }
-                        v.autoCategories = await aiCategorizeVendor(v.description);
-                        delete v._needsAICategorization;
-                        if (v.autoCategories && v.autoCategories.length > 0) {
-                            _aiCategoryCache[v.id] = { categories: v.autoCategories, description: v.description || '' };
-                        }
-                        if (v.autoCategories === null) {
-                            // AI call failed (likely rate limited) — abort remaining vendors
-                            retryNeeded = true;
-                            for (let j = i + 1; j < needsAI.length; j++) {
-                                needsAI[j].autoCategories = needsAI[j].autoCategories?.length ? needsAI[j].autoCategories : ['Unique Goods'];
-                                delete needsAI[j]._needsAICategorization;
-                            }
-                            break;
-                        }
-                        await new Promise(r => setTimeout(r, 1200));
-                    }
-                    renderTable();
-                    if (retryNeeded && !AI_CATEGORIZATION_RETRY_TIMER) {
-                        const delayMs = Math.max(3000, getOpenRouterRateLimitUntil() - Date.now() + 500);
-                        AI_CATEGORIZATION_RETRY_TIMER = setTimeout(async () => {
-                            AI_CATEGORIZATION_RETRY_TIMER = null;
-                            await refreshData();
-                        }, delayMs);
-                    }
-                })();
-            } else if (needsAI.length > 0) {
-                // Rate-limited — assign fallback categories, don't call API
-                needsAI.forEach(v => {
-                    v.autoCategories = v.autoCategories?.length ? v.autoCategories : ['Unique Goods'];
-                    delete v._needsAICategorization;
-                });
-                if (!AI_CATEGORIZATION_RETRY_TIMER) {
-                    const delayMs = Math.max(3000, OPENROUTER_RATE_LIMIT_UNTIL - Date.now() + 500);
-                    AI_CATEGORIZATION_RETRY_TIMER = setTimeout(async () => {
-                        AI_CATEGORIZATION_RETRY_TIMER = null;
-                        await refreshData();
-                    }, delayMs);
-                }
-            }
 
             // AI Vendor Summary (non-blocking background task)
             if (isBuiltinEnabled('ai_vendor_summary') && OPENROUTER_API_KEY) {
@@ -6903,12 +6837,9 @@
         {
             id: 'auto_categorize',
             name: 'Auto-Categorize Vendors',
-            description: 'Assigns category labels from product descriptions.',
+            description: 'Assigns category labels from product descriptions using keyword matching.',
             icon: '🏷', color: '#BF5AF2', defaultEnabled: true,
-            settings: [
-                { key: 'useAI', label: 'Use AI for better categorization', type: 'toggle', default: false,
-                  help: 'Uses AI to intelligently categorize vendors beyond keyword matching.' }
-            ]
+            settings: []
         },
         {
             id: 'ai_license_scan',
