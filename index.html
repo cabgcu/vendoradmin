@@ -1722,36 +1722,6 @@
                     <label class="filter-checkbox"><input type="radio" name="email-filter" value="email-clicked" onchange="renderTable()"> 🔗 Clicked</label>
                 </div>
 
-                <!-- SORT OPTIONS -->
-                <div class="filter-section" style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 15px;">
-                    <div class="filter-section-title">⬇️ Sort By</div>
-                    <select id="sortFilter" class="modern-input" style="width: 100%; padding: 8px;" onchange="localStorage.setItem('marketLastSort', this.value); renderTable()">
-                        <option value="default">Default Order</option>
-                        <option value="az">Name: A-Z</option>
-                        <option value="za">Name: Z-A</option>
-                        <option value="custom">Custom (Drag & Drop)</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- RIGHT CONTENT: VENDORS -->
-            <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                <!-- TOP ACTION BAR -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: rgba(15, 15, 15, 0.4); border-bottom: 1px solid rgba(255, 255, 255, 0.08); gap: 15px;">
-                    <div style="flex: 1; font-size: 0.85rem; color: var(--text-muted);">
-                        Showing <strong id="vendorCountDisplay">0</strong> applicants
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button onclick="toggleAllVendorCheckboxes(true)" id="selectAllBtn" class="btn-action" style="padding: 10px 16px; font-size: 0.85rem; display: none;">Select All</button>
-                        <button onclick="toggleAllVendorCheckboxes(false)" id="clearAllBtn" class="btn-action" style="padding: 10px 16px; font-size: 0.85rem; display: none;">Clear</button>
-                        <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; padding: 10px 16px; font-size: 0.85rem; display: none; background: var(--gradient-accent);">📧 Email Selected</button>
-                    </div>
-                </div>
-
-                <!-- VENDOR CARDS GRID -->
-                <div id="vendorCardsContainer" style="flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; align-content: start;">
-                    <!-- Populated by renderTable() -->
-                </div>
             </div>
         </div>
     </div>
@@ -1760,15 +1730,26 @@
     <div id="view-scan" class="view" style="display:none;">
         <div class="frosted form-card">
             <h2 style="text-align:center; margin-bottom:20px; font-weight: 800;">CHECK IN VENDORS</h2>
-            
+
             <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; text-align: center; flex-wrap: wrap;">
                 <div style="background: rgba(52, 199, 89, 0.1); border: 1px solid rgba(52, 199, 89, 0.3); padding: 15px 25px; border-radius: 20px; flex: 1; min-width: 140px;">
                     <span style="font-size: 2.2rem; font-weight: 800; color: #34C759; display: block; line-height: 1;" id="scanStatIn">0</span>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 8px;">Checked In</span>
                 </div>
-                <div style="background: rgba(255, 149, 0, 0.1); border: 1px solid rgba(255, 149, 0, 0.3); padding: 15px 25px; border-radius: 20px; flex: 1; min-width: 140px;">
-                    <span style="font-size: 2.2rem; font-weight: 800; color: #FF9500; display: block; line-height: 1;" id="scanStatWaiting">0</span>
-                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 8px;">Waiting</span>
+                <div style="background: rgba(52, 199, 89, 0.1); border: 1px solid rgba(52, 199, 89, 0.3); padding: 15px 25px; border-radius: 20px; flex: 1; min-width: 140px;">
+                    <span style="font-size: 2.2rem; font-weight: 800; color: #34C759; display: block; line-height: 1;" id="scanStatWaiting">0</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 8px;">Confirmed</span>
+                </div>
+            </div>
+
+            <!-- FORM ACCESS CONTROL -->
+            <div style="margin-bottom: 30px; background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.2); padding: 25px; border-radius: 20px;">
+                <label class="stat-label" style="color: #0A84FF; font-size: 1rem; margin-bottom: 10px;">Public Form Access Control (This Market Only)</label>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Override the automatic schedule to manually force the public application form open or closed for this specific market.</p>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button id="form-status-auto-scan" onclick="setFormOverride('auto')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1;">Auto (Use Dates)</button>
+                    <button id="form-status-open-scan" onclick="setFormOverride('open')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1;">Force OPEN</button>
+                    <button id="form-status-closed-scan" onclick="setFormOverride('closed')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1;">Force CLOSED</button>
                 </div>
             </div>
 
@@ -2402,32 +2383,39 @@
 
     // --- AUTO-CATEGORIZER ENGINE ---
     const CATEGORY_MAP = {
-        'Clothes': ['clothes', 'clothing', 'shirt', 'shirts', 'pants', 'hoodie', 'hoodies', 'vintage', 'thrift', 'apparel', 'hats', 'sweatshirts', 't-shirt', 'tshirt', 'shorts', 'jeans', 'denim'],
-        'Food': ['cookies', 'baked goods', 'brownies', 'drinks', 'coffee', 'lemonade', 'candy', 'snack', 'food', 'bread', 'cakes', 'pastries'],
-        'Jewelry': ['jewelry', 'necklace', 'rings', 'bracelet', 'earrings', 'silver', 'gold', 'beaded', 'jewlery', 'pendants'],
-        'Crafts': ['craft', 'crafts', 'handmade', 'diy', 'resin', 'clay', 'crochet', 'knit', 'yarn', 'amigurumi', 'plushies', 'beanie', 'ribbon', 'bouquet', 'floral', 'flowers', 'plant', 'sew', 'sewing', 'machine sew', 'embroider', 'embroidery'],
-        'Art & Prints': ['art', 'prints', 'painting', 'canvas', 'drawing', 'portraits', 'illustrations', 'watercolor', 'poster', 'posters'],
-        'Accessories': ['stickers', 'decals', 'stationery', 'keychains', 'keychain', 'pins', 'buttons', 'bookmarks', 'tote', 'bag', 'bags', 'accessories', 'key', 'cover', 'covers', 'wallet'],
-        'Beauty & Care': ['lip gloss', 'lip balm', 'cosmetics', 'makeup', 'skincare', 'lotion', 'soap', 'body butter', 'perfume', 'fragrance'],
-        'Home Decor': ['decor', 'candles', 'ceramics', 'pottery', 'glassware', 'coaster', 'tufting', 'rug', 'rugs'],
-        'Services & Experiences': ['henna', 'tattoo', 'tarot', 'reading', 'massage', 'hair', 'nails', 'face paint', 'service', 'services', 'tooth gem', 'gem']
+        'Apparel & Fashion': ['clothes', 'clothing', 'shirt', 'shirts', 'pants', 'hoodie', 'hoodies', 'vintage', 'thrift', 'apparel', 'hats', 'sweatshirts', 't-shirt', 'tshirt', 'shorts', 'jeans', 'denim', 'jacket', 'dress', 'dresses', 'skirt', 'coat', 'sweater', 'blazer', 'shoe', 'shoes', 'boots', 'sneakers', 'hat', 'cap', 'scarf', 'gloves', 'socks', 'vest', 'cardigan', 'leggings', 'swimsuit', 'athletic', 'yoga', 'activewear', 'fashion', 'style', 'wear'],
+        'Beverages & Snacks': ['cookies', 'baked goods', 'brownies', 'drinks', 'coffee', 'lemonade', 'candy', 'snack', 'snacks', 'food', 'bread', 'cakes', 'pastries', 'dessert', 'tea', 'juice', 'smoothie', 'granola', 'chips', 'popcorn', 'chocolate', 'fudge', 'caramel', 'truffles', 'cupcake', 'donuts', 'muffins', 'cookies', 'brownies', 'energy bar', 'gummies', 'treat', 'snack', 'bake', 'baked', 'edible', 'homemade food'],
+        'Handmade Jewelry': ['jewelry', 'necklace', 'rings', 'bracelet', 'earrings', 'silver', 'gold', 'beaded', 'jewlery', 'pendants', 'anklet', 'choker', 'chain', 'charm', 'locket', 'ring', 'ear', 'wrist', 'neck'],
+        'Stationery & Office': ['stickers', 'decals', 'stationery', 'keychains', 'keychain', 'pins', 'buttons', 'bookmarks', 'notebook', 'notepad', 'planner', 'pen', 'pencil', 'journal', 'diary', 'cards', 'stationary', 'office', 'writing', 'paper', 'post-it', 'sticky', 'gift tag', 'label', 'washi', 'tape'],
+        'Tech Accessories': ['phone case', 'phone', 'cable', 'charger', 'screen protector', 'tech', 'tech accessories', 'usb', 'wireless', 'headphone', 'speaker', 'laptop', 'tablet', 'computer', 'gaming', 'airpod', 'case', 'cord', 'adapter', 'electronic', 'device'],
+        'Beauty & Skincare': ['lip gloss', 'lip balm', 'cosmetics', 'makeup', 'skincare', 'lotion', 'soap', 'body butter', 'perfume', 'fragrance', 'serum', 'moisturizer', 'cleanser', 'mask', 'treatment', 'deodorant', 'shampoo', 'conditioner', 'face', 'skin', 'lip', 'body', 'cream', 'oil', 'essence', 'balm', 'gloss', 'powder', 'eyeliner', 'mascara', 'blush'],
+        'Home & Kitchen': ['decor', 'candles', 'ceramics', 'pottery', 'glassware', 'coaster', 'coasters', 'tufting', 'rug', 'rugs', 'blanket', 'pillow', 'curtain', 'wall art', 'plant', 'plants', 'vase', 'planter', 'kitchen', 'utensil', 'dish', 'mug', 'cup', 'bowl', 'plate', 'table', 'furniture', 'decoration', 'home'],
+        'Handmade & Crafts': ['craft', 'crafts', 'handmade', 'diy', 'resin', 'clay', 'crochet', 'knit', 'yarn', 'amigurumi', 'plushies', 'plushie', 'beanie', 'ribbon', 'bouquet', 'floral', 'flowers', 'flower', 'sew', 'sewing', 'machine sew', 'embroider', 'embroidery', 'weave', 'macrame', 'woodwork', 'leather', 'epoxy', 'dyed', 'tie dye', 'etched', 'custom'],
+        'Art & Prints': ['art', 'prints', 'painting', 'canvas', 'drawing', 'portraits', 'illustrations', 'watercolor', 'poster', 'posters', 'digital art', 'acrylic', 'oil paint', 'sketch', 'graphic', 'animation', 'artwork', 'gallery', 'original', 'print', 'fine art'],
+        'Entertainment & Gaming': ['game', 'games', 'card', 'cards', 'puzzle', 'puzzles', 'collectible', 'collectibles', 'figurine', 'figure', 'model', 'dice', 'board game', 'trading card', 'anime', 'manga', 'comic', 'fantasy', 'play', 'toy', 'action figure'],
+        'Personal Services': ['henna', 'tattoo', 'tarot', 'reading', 'massage', 'hair', 'nails', 'nail', 'face paint', 'service', 'services', 'tooth gem', 'gem', 'lashes', 'eyelash', 'makeup artist', 'hair styling', 'consultation', 'piercing', 'salon', 'beauty service', 'spiritual']
     };
 
     function extractVendorCategories(text) {
-        if (!text) return [];
+        if (!text) return ['Handmade & Crafts']; // Default if no description
         const str = text.toLowerCase();
         let found = new Set();
 
         for (const [cat, keywords] of Object.entries(CATEGORY_MAP)) {
             for (const kw of keywords) {
-                const regex = new RegExp(`\\b${kw}\\b`, 'i');
+                // Simple approach: check if keyword exists as a whole word
+                const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                // Match with word boundaries - works with punctuation, spaces, start/end
+                const regex = new RegExp(`\\b${escaped}\\b`, 'i');
                 if (regex.test(str)) {
                     found.add(cat);
                     break;
                 }
             }
         }
-        return Array.from(found);
+
+        // Default only if still nothing found
+        return found.size > 0 ? Array.from(found) : ['Handmade & Crafts'];
     }
 
     let OPENROUTER_DISABLED = false;
@@ -2516,21 +2504,21 @@
     }
 
     async function aiCategorizeVendor(description) {
-        if (!description) return ['Unique Goods'];
+        if (!description) return ['Handmade & Crafts'];
         if (!OPENROUTER_API_KEY) return null;
         const categories = Object.keys(CATEGORY_MAP);
         try {
             const data = await callOpenRouterChat({
                 model: 'google/gemma-3-27b-it:free',
-                messages: [{ role: "user", content: `Categorize this vendor into one or more of these categories: ${categories.join(', ')}. Vendor description: "${description}". Respond ONLY with a JSON array of matching category names, e.g. ["Food & Beverage","Art & Prints"]. If none fit, respond ["Unique Goods"].` }]
+                messages: [{ role: "user", content: `Categorize this vendor into one or more of these categories: ${categories.join(', ')}. Vendor description: "${description}". Respond ONLY with a JSON array of matching category names, e.g. ["Beverages & Snacks","Art & Prints"]. If none fit perfectly, choose the closest match.` }]
             });
             if (!data) return null;
             const text = data.choices?.[0]?.message?.content || '';
             const match = text.match(/\[.*\]/s);
             if (match) {
                 const parsed = JSON.parse(match[0]);
-                const valid = parsed.filter(c => categories.includes(c) || c === 'Unique Goods');
-                return valid.length > 0 ? valid : ['Unique Goods'];
+                const valid = parsed.filter(c => categories.includes(c));
+                return valid.length > 0 ? valid : ['Handmade & Crafts'];
             }
         } catch(e) { console.error('AI categorization failed:', e); }
         return null;
@@ -2896,8 +2884,6 @@
         // --- APPLY PERMISSIONS ---
         if (currentUser && currentUser.role !== 'admin') {
             document.getElementById('nav-settings').style.display = 'none';
-            const blastBtn = document.getElementById('blastBtn');
-            if (blastBtn) blastBtn.style.display = 'none';
         } else {
             document.getElementById('nav-settings').style.display = 'flex';
         }
@@ -3072,12 +3058,28 @@
             }
 
             let licenseOcrResult = "⚠️ Failed to verify.";
-            
+
             if (!vendor.food_license_link || vendor.food_license_link.trim() === '') {
                 licenseOcrResult = "🚨 Claimed food license, but no file provided.";
             } else if (vendor.food_license_link.includes('drive.google.com')) {
                 licenseOcrResult = "⚠️ Cannot auto-scan Google Drive links. Manual check required.";
-            } else if (vendor.food_license_link.startsWith('http')) {
+            } else {
+                const fileExt = vendor.food_license_link.toLowerCase().split('.').pop().split('?')[0];
+                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt);
+                const isPdf = fileExt === 'pdf';
+
+                if (isPdf) {
+                    licenseOcrResult = "⚠️ PDF detected - AI cannot scan PDFs. Manual verification required.";
+                } else if (!isImage) {
+                    licenseOcrResult = `⚠️ File type .${fileExt.toUpperCase()} not supported for AI scan. Manual check needed.`;
+                }
+            }
+
+            if (vendor.food_license_link && !vendor.food_license_link.includes('drive.google.com') && vendor.food_license_link.startsWith('http')) {
+                const fileExt = vendor.food_license_link.toLowerCase().split('.').pop().split('?')[0];
+                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt);
+
+                if (isImage) {
                 try {
                     const currentYear = new Date().getFullYear();
                     const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -3160,6 +3162,7 @@
                     console.error("Vision OCR Error:", e);
                     if (e.message === "auth_error") throw e;
                     licenseOcrResult = "⚠️ System error while scanning license image.";
+                }
                 }
             }
 
@@ -3304,11 +3307,11 @@
         currentData.vendors.forEach(v => {
             if (v.autoCategories && v.autoCategories.length > 0) {
                 v.autoCategories.forEach(c => {
-                    if (['other', 'misc', 'specialty', 'general', 'uncategorized', 'unique goods'].includes(c.toLowerCase())) c = 'Unique Goods';
+                    if (['other', 'misc', 'specialty', 'general', 'uncategorized', 'unique goods', 'undefined'].includes(c.toLowerCase())) c = 'Handmade & Crafts';
                     categoryCounts[c] = (categoryCounts[c] || 0) + 1;
                 });
             } else {
-                categoryCounts['Unique Goods'] = (categoryCounts['Unique Goods'] || 0) + 1;
+                categoryCounts['Handmade & Crafts'] = (categoryCounts['Handmade & Crafts'] || 0) + 1;
             }
         });
         
@@ -3458,12 +3461,9 @@
                     v.aiData = aiNote.ai_data;
                 }
                 
-                if (isBuiltinEnabled('auto_categorize')) {
-                    v.autoCategories = extractVendorCategories(v.description || '');
-                    if (v.autoCategories.length === 0) v.autoCategories = ['Unique Goods'];
-                } else {
-                    v.autoCategories = v.autoCategories || ['Unique Goods'];
-                }
+                // Always recalculate categories from description (not using stored value)
+                v.autoCategories = extractVendorCategories(v.description || '');
+                if (v.autoCategories.length === 0) v.autoCategories = ['Handmade & Crafts'];
             });
 
             // AI Vendor Summary (non-blocking background task)
@@ -3674,17 +3674,18 @@
         matched.forEach(v => {
             const d = document.createElement('div');
             d.className = "manual-result-item";
-            
+
             const isFoodLicense = v.food_license && v.food_license.toLowerCase() === 'yes';
             const isFoodCategory = v.autoCategories && v.autoCategories.includes('Food');
-            
+
             let foodBadge = '';
             if (isFoodLicense) foodBadge = '<span style="color: #FF9500; font-weight: bold; font-size: 0.75rem;">[FOOD LICENSE]</span> ';
             else if (isFoodCategory) foodBadge = '<span style="color: #0A84FF; font-weight: bold; font-size: 0.75rem;">[FOOD]</span> ';
-            
+
             const powerBadge = v.needs_power === 'Yes' ? '<span style="color: #FFD60A; font-weight: bold; font-size: 0.75rem;">[POWER]</span> ' : '';
 
             let btnHtml = '';
+            // Show check-in button for approved vendors (regardless of confirmation) or already checked in
             if (v.status === 'Approved' || v.status === 'Checked In') {
                 btnHtml = `<button class="btn-action" style="padding: 6px 16px; font-size: 0.8rem; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}" onclick="checkIn('${v.id}', false, this)">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`;
             } else {
@@ -3819,13 +3820,13 @@
 
         // Update Check-In Screen Stats
         const checkedInCount = currentData.vendors.filter(v => v.status === 'Checked In').length;
-        const waitingCount = currentData.vendors.filter(v => v.status === 'Approved').length; // Approved but not yet checked in
+        const confirmedCount = currentData.vendors.filter(v => v.attendance_confirmed === true).length;
 
         const scanStatIn = document.getElementById('scanStatIn');
         const scanStatWaiting = document.getElementById('scanStatWaiting');
-        
+
         if (scanStatIn) scanStatIn.innerText = checkedInCount;
-        if (scanStatWaiting) scanStatWaiting.innerText = waitingCount;
+        if (scanStatWaiting) scanStatWaiting.innerText = confirmedCount;
     }
 
     function setFilter(filter, preserveDropdowns = false) {
@@ -3933,17 +3934,34 @@
     }
 
     function updateFormStatusUI(status) {
+        // Update settings buttons
         document.querySelectorAll('#form-status-auto, #form-status-open, #form-status-closed').forEach(btn => {
             btn.style.background = 'rgba(255,255,255,0.1)';
             btn.style.boxShadow = 'none';
         });
-        
+
+        // Update scan screen buttons
+        document.querySelectorAll('#form-status-auto-scan, #form-status-open-scan, #form-status-closed-scan').forEach(btn => {
+            btn.style.background = 'rgba(255,255,255,0.1)';
+            btn.style.boxShadow = 'none';
+        });
+
+        // Highlight active settings button
         const activeBtn = document.getElementById(`form-status-${status}`);
         if (activeBtn) {
             if (status === 'auto') activeBtn.style.background = 'var(--gradient-accent)';
             if (status === 'open') activeBtn.style.background = 'var(--gradient-success)';
             if (status === 'closed') activeBtn.style.background = 'var(--gradient-danger)';
             activeBtn.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
+        }
+
+        // Highlight active scan button
+        const activeScanBtn = document.getElementById(`form-status-${status}-scan`);
+        if (activeScanBtn) {
+            if (status === 'auto') activeScanBtn.style.background = 'var(--gradient-accent)';
+            if (status === 'open') activeScanBtn.style.background = 'var(--gradient-success)';
+            if (status === 'closed') activeScanBtn.style.background = 'var(--gradient-danger)';
+            activeScanBtn.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
         }
     }
 
@@ -4013,11 +4031,11 @@
             let cats = v.autoCategories;
             if (!cats || cats.length === 0) {
                 cats = extractVendorCategories(v.description || '');
-                if (cats.length === 0) cats = ['Unique Goods'];
+                if (cats.length === 0) cats = ['Handmade & Crafts'];
             }
             
             // Clean out legacy "Other" from past profile saves
-            cats = cats.map(c => ['other', 'misc', 'specialty', 'general', 'uncategorized', 'unique goods'].includes(c.toLowerCase()) ? 'Unique Goods' : c);
+            cats = cats.map(c => ['other', 'misc', 'specialty', 'general', 'uncategorized', 'unique goods', 'undefined'].includes(c.toLowerCase()) ? 'Handmade & Crafts' : c);
 
             if (!profilesMap[email]) {
                 profilesMap[email] = {
@@ -4632,24 +4650,6 @@
             if (email) emailCounts[email] = (emailCounts[email] || 0) + 1;
         });
 
-        // Update vendor count display
-        const countDisplay = document.getElementById('vendorCountDisplay');
-        if (countDisplay) countDisplay.textContent = filtered.length;
-
-        // Show/hide select all buttons
-        const selectAllBtn = document.getElementById('selectAllBtn');
-        const clearAllBtn = document.getElementById('clearAllBtn');
-        if (selectAllBtn && clearAllBtn) {
-            selectAllBtn.style.display = filtered.length > 0 ? 'block' : 'none';
-            clearAllBtn.style.display = filtered.length > 0 ? 'block' : 'none';
-        }
-
-        // Show email button for admin
-        const blastBtn = document.getElementById('blastBtn');
-        if (blastBtn) {
-            blastBtn.style.display = (currentUser.role === 'admin' && filtered.length > 0) ? 'block' : 'none';
-            blastBtn.innerText = '📧 Email Selected';
-        }
 
         const cardContainer = document.getElementById('vendorCardsContainer');
 
@@ -4753,10 +4753,8 @@
         if (draggedVendorId && draggedVendorId !== targetId) {
             let currentOrder = JSON.parse(localStorage.getItem('market_custom_order_' + currentData.activeId) || '[]');
 
-            // Sync with any new vendors
-            currentData.vendors.forEach(v => {
-                if (!currentOrder.includes(v.id)) currentOrder.push(v.id);
-            });
+            // Only allow resend email if they aren't pending, user is admin, and viewing a specific filter (not all applicants)
+            const canEmail = currentUser.role === 'admin' && v.status !== 'Needs Review' && v.status !== 'Pending' && ['approved', 'denied', 'power'].includes(activeFilter);
 
             const fromIdx = currentOrder.indexOf(draggedVendorId);
             let toIdx = currentOrder.indexOf(targetId);
@@ -5099,10 +5097,22 @@
 
         const fLinkEl = document.getElementById('reviewFoodLink');
         if (vendor.food_license_link) {
-            fLinkEl.innerHTML = `
-                <a href="${vendor.food_license_link}" target="_blank" style="color:#0A84FF; font-weight:bold; display:block; margin-bottom:8px;">Open File ↗</a>
-                <img src="${processImageUrl(vendor.food_license_link)}" style="max-width:100%; max-height:200px; border-radius:16px; border:1px solid rgba(255,255,255,0.2);" onerror="this.style.display='none'">
-            `;
+            const fileUrl = vendor.food_license_link;
+            const fileExtension = fileUrl.toLowerCase().split('.').pop().split('?')[0]; // Get extension, ignore query params
+            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension);
+            const isPdf = fileExtension === 'pdf';
+
+            let previewHtml = `<a href="${fileUrl}" target="_blank" style="color:#0A84FF; font-weight:bold; display:block; margin-bottom:8px;">📥 Download File ↗</a>`;
+
+            if (isImage) {
+                previewHtml += `<img src="${processImageUrl(fileUrl)}" style="max-width:100%; max-height:200px; border-radius:16px; border:1px solid rgba(255,255,255,0.2); object-fit:contain;" onerror="this.style.display='none'">`;
+            } else if (isPdf) {
+                previewHtml += `<iframe src="${fileUrl}" style="width:100%; height:300px; border:1px solid rgba(255,255,255,0.2); border-radius:16px;" frameborder="0"></iframe>`;
+            } else {
+                previewHtml += `<div style="background:rgba(255,255,255,0.05); padding:16px; border-radius:16px; border:1px solid rgba(255,255,255,0.1); color:var(--text-muted); text-align:center; font-size:0.9rem;">File type: .${fileExtension.toUpperCase()}</div>`;
+            }
+
+            fLinkEl.innerHTML = previewHtml;
         } else {
             fLinkEl.innerHTML = `<span style="color:var(--text-muted);">N/A</span>`;
         }
@@ -6200,9 +6210,22 @@
             return;
         }
 
-        // Get currently selected vendors from checkboxes
-        const selectedCheckboxes = document.querySelectorAll('.vendor-card-checkbox:checked');
-        const selectedVendorIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+        // Sync activeFilter with current UI state to fix display glitch
+        const activeBtn = document.querySelector('.control-item.active, .control-item[class*="active-"]');
+        if (activeBtn) {
+            const btnId = activeBtn.id;
+            if (btnId === 'nav-filter-all' || btnId === 'nav-inbox') activeFilter = 'inbox';
+            else if (btnId === 'nav-new') activeFilter = 'new';
+            else if (btnId === 'nav-approved') activeFilter = 'approved';
+            else if (btnId === 'nav-review') activeFilter = 'review';
+            else if (btnId === 'nav-power') activeFilter = 'power';
+            else if (btnId === 'nav-denied') activeFilter = 'denied';
+        }
+
+        if (activeFilter === 'inbox' || activeFilter === 'review') {
+            showToast("Cannot send emails from this tab.");
+            return;
+        }
 
         if (selectedVendorIds.length === 0) {
             showToast("Please select at least one vendor to email.");
