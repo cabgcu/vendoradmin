@@ -5761,6 +5761,11 @@
     function startEmailStatusPolling() {
         if (emailStatusInterval) clearInterval(emailStatusInterval);
         if (!isBuiltinEnabled('email_status_polling')) return;
+        // Don't poll — webhook updates are real-time and more reliable
+        // Polling conflicts with webhook updates and causes race conditions
+        console.log('Email status polling disabled (using webhook instead)');
+        return;
+
         const pollMinutes = getBuiltinSetting('email_status_polling', 'interval') || 2;
         let _emailPollRunning = false;
         emailStatusInterval = setInterval(async () => {
