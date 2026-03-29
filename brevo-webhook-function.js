@@ -64,17 +64,27 @@ Deno.serve(async (req) => {
     })
 
     // Initialize Supabase client with service key
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_KEY')
+    if (!serviceKey) {
+      console.error('ERROR: SUPABASE_SERVICE_KEY not set in environment')
+      return new Response(JSON.stringify({ error: 'Service key missing' }), { status: 500 })
+    }
+
+    const supabase = createClient(SUPABASE_URL, serviceKey)
+    console.log('Supabase client initialized')
 
     // Find vendors with this email
+    console.log(`Querying vendors with email: ${email}`)
     const { data: vendors, error: queryErr } = await supabase
       .from('vendors')
-      .select('id, email_delivery_status, brevo_message_id')
+      .select('id, email_delivery_status, brevo_message_id, preferred_email')
       .eq('preferred_email', email)
+
+    console.log('Query result:', { queryErr, vendorCount: vendors?.length || 0 })
 
     if (queryErr) {
       console.error('Query error:', queryErr)
-      return new Response(JSON.stringify({ error: 'Database error' }), { status: 500 })
+      return new Response(JSON.stringify({ error: 'Database error', details: queryErr.message }), { status: 500 })
     }
 
     if (!vendors || vendors.length === 0) {
@@ -82,20 +92,25 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: 'No matching vendor' }), { status: 200 })
     }
 
+    console.log(`Found ${vendors.length} vendor(s) for ${email}:`, vendors.map(v => ({ id: v.id, current_status: v.email_delivery_status })))
+
     // Update each matching vendor
     let updated = 0
     for (const vendor of vendors) {
+      console.log(`Processing vendor ${vendor.id}, checking messageId...`)
       // If messageId provided, verify it matches
       if (messageId && vendor.brevo_message_id) {
         const stored = String(vendor.brevo_message_id).trim().replace(/^<|>$/g, '')
         const event_id = String(messageId).trim().replace(/^<|>$/g, '')
+        console.log(`MessageId check: stored="${stored}" vs event="${event_id}"`)
         if (stored !== event_id) {
-          console.log(`MessageId mismatch for vendor ${vendor.id}: ${stored} !== ${event_id}`)
+          console.log(`MessageId mismatch for vendor ${vendor.id}, skipping`)
           continue
         }
       }
 
       // Update the vendor
+      console.log(`Updating vendor ${vendor.id} to status: ${status}`)
       const { error: updateErr } = await supabase
         .from('vendors')
         .update({ email_delivery_status: status })
@@ -109,6 +124,7 @@ Deno.serve(async (req) => {
       }
     }
 
+    console.log(`Webhook processing complete: ${updated} vendor(s) updated`)
     return new Response(
       JSON.stringify({ success: true, status, email, updated }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
