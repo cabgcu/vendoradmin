@@ -2745,7 +2745,15 @@
         if (realtimeSubscription) _supabase.removeChannel(realtimeSubscription);
         realtimeSubscription = _supabase.channel('public:vendors')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'vendors' }, (payload) => {
-                console.log('Realtime event received:', payload);
+                const { eventType, new: newRecord, old: oldRecord } = payload;
+                console.log('Realtime event received:', {
+                    eventType,
+                    new_email_delivery_status: newRecord?.email_delivery_status,
+                    old_email_delivery_status: oldRecord?.email_delivery_status,
+                    new_record_id: newRecord?.id,
+                    event_id: newRecord?.event_id,
+                    preferred_email: newRecord?.preferred_email
+                });
                 if (_realtimePaused) {
                     console.log('Realtime paused, skipping refresh');
                     return;
