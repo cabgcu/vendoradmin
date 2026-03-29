@@ -140,4 +140,3 @@ Deno.serve(async (req) => {
 })
 
 console.log('Brevo webhook Edge Function loaded and ready')
-})
