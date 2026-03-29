@@ -2720,6 +2720,7 @@
         }
 
         await loadAutomationsConfig();
+        if (BREVO_API_KEY) testBrevoApiAccess();
         refreshData();
         setupRealtime();
         startEmailStatusPolling();
@@ -5501,6 +5502,21 @@
             return true;
         } catch (error) {
             console.error(`Failed to send to ${vendor.preferred_email}:`, error);
+            return false;
+        }
+    }
+
+    // Test Brevo API key access
+    async function testBrevoApiAccess() {
+        try {
+            const res = await fetch('https://api.brevo.com/v3/account', {
+                headers: { 'api-key': BREVO_API_KEY, 'accept': 'application/json' }
+            });
+            const data = await res.json();
+            console.log('Brevo API key test:', { status: res.status, account: data.email || data.message || 'unknown' });
+            return res.ok;
+        } catch (err) {
+            console.error('Brevo API test failed:', err);
             return false;
         }
     }
