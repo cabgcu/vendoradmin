@@ -3273,12 +3273,9 @@
                     v.aiData = aiNote.ai_data;
                 }
                 
-                if (isBuiltinEnabled('auto_categorize')) {
-                    v.autoCategories = extractVendorCategories(v.description || '');
-                    if (v.autoCategories.length === 0) v.autoCategories = ['Handmade & Crafts'];
-                } else {
-                    v.autoCategories = v.autoCategories || ['Handmade & Crafts'];
-                }
+                // Always recalculate categories from description (not using stored value)
+                v.autoCategories = extractVendorCategories(v.description || '');
+                if (v.autoCategories.length === 0) v.autoCategories = ['Handmade & Crafts'];
             });
 
             // AI Vendor Summary (non-blocking background task)
