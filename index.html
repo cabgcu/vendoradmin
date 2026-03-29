@@ -4658,26 +4658,6 @@
             return;
         }
 
-        // Sort filtered vendors
-        const sortVal = document.getElementById('sortFilter')?.value || 'default';
-        if (sortVal === 'az') {
-            filtered.sort((a, b) => (a.first_name || '').localeCompare(b.first_name || ''));
-        } else if (sortVal === 'za') {
-            filtered.sort((a, b) => (b.first_name || '').localeCompare(a.first_name || ''));
-        } else if (sortVal === 'custom') {
-            let customOrder = JSON.parse(localStorage.getItem('market_custom_order_' + currentData.activeId) || '[]');
-            filtered.sort((a, b) => {
-                let idxA = customOrder.indexOf(a.id);
-                let idxB = customOrder.indexOf(b.id);
-                if (idxA === -1 && idxB === -1) return a.appNumber - b.appNumber;
-                if (idxA === -1) return 1;
-                if (idxB === -1) return -1;
-                return idxA - idxB;
-            });
-        } else {
-            filtered.sort((a, b) => a.appNumber - b.appNumber);
-        }
-
         const generateCardHtml = (v) => {
             // Status badge
             let statusTag = '';
@@ -4732,105 +4712,6 @@
         };
 
         cardContainer.innerHTML = filtered.map(v => generateCardHtml(v)).join('');
-
-            // Late Strikes Badge (configurable thresholds)
-            const strikes = window.vendorStrikes[v.preferred_email]?.length || 0;
-            const severeAt = getBuiltinSetting('late_strike_tracking', 'severeThreshold') || 3;
-            const warnAt = getBuiltinSetting('late_strike_tracking', 'threshold') || 1;
-            if (strikes >= severeAt) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">🚨 ${strikes} LATE STRIKES</span>`);
-            } else if (strikes >= warnAt) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">⚠️ ${strikes} LATE</span>`);
-            }
-
-            const emailKey = (v.preferred_email || '').toLowerCase();
-            if (emailKey && emailCounts[emailKey] > 1) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">🚨 DUPLICATE APP</span>`);
-            }
-
-            const hasFoodLicense = v.food_license && v.food_license.toLowerCase() === 'yes';
-            
-            // Use the local matched tags
-            let displayTags = v.autoCategories;
-            
-            if (displayTags && displayTags.length > 0) {
-                displayTags.forEach(cat => {
-                    // Prevent redundant 'food' tags if they already have the hardcoded license badge
-                    if (!(cat.toLowerCase().includes('food') && hasFoodLicense)) {
-                        tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(10, 132, 255, 0.1); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">${cat}</span>`);
-                    }
-                });
-            }
-
-            if (hasFoodLicense) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap;">FOOD LICENSE</span>`);
-            }
-
-            if (v.needs_power === 'Yes') {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 214, 10, 0.15); color: #FFD60A; border: 1px solid rgba(255, 214, 10, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap;">POWER</span>`);
-            }
-
-            const tagsContainer = tagsArray.length > 0 ? `<div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">${tagsArray.join('')}</div>` : '';
-
-            const attState = getAttendanceState(v);
-            let confirmedCell = '';
-            if (attState === 'confirmed') {
-                confirmedCell = '<span style="color: #34C759; font-weight: 800; background: rgba(52, 199, 89, 0.1); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(52, 199, 89, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✓ Confirmed</span>';
-            } else if (attState === 'declined') {
-                confirmedCell = '<span style="color: #FF3B30; font-weight: 800; background: rgba(255, 59, 48, 0.1); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(255, 59, 48, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✕ Declined</span>';
-            } else {
-                confirmedCell = '<span style="color: var(--text-muted); font-weight: 700; font-size: 0.7rem; background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(255, 255, 255, 0.1); text-transform: uppercase; white-space: nowrap;">Awaiting Reply</span>';
-            }
-
-            const checkInCell = isAppr
-                ? `<button onclick="checkIn('${v.id}', false, this); event.stopPropagation();" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`
-                : `<span style="color:var(--text-muted); font-size:0.75rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">${v.status}</span>`;
-
-            // Only allow resend email if they aren't pending and user is admin
-            const canEmail = currentUser.role === 'admin' && v.status !== 'Needs Review' && v.status !== 'Pending';
-
-            const submitDate = v.created_at ? new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown Date';
-
-            return `
-            <tr class="clickable-row" style="${rowBgStyle}" draggable="true" ondragstart="handleDragStart(event, '${v.id}')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${v.id}')" onclick="openReviewModal('${v.id}')">
-                <td style="${rowBorderStyle}"><span style="color: #BF5AF2; font-weight: 800; margin-right: 8px; font-size: 1.1rem;">#${v.appNumber}</span><br><span style="font-family: monospace; letter-spacing: 1px; font-size: 0.85rem; color: var(--text-muted);">${v.student_id || 'N/A'}</span><br><span style="font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; font-weight: 600;">${submitDate}</span></td>
-                <td style="${rowBgStyle}">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-                        <div style="flex: 1;">
-                            <strong style="font-size: 1.05rem;">${v.first_name} ${v.last_name}</strong>
-                            <span class="mobile-status-pill mobile-status-${(v.status || '').toLowerCase().replace(/\s+/g, '-')}">${v.status || 'Pending'}</span>
-                        </div>
-                        ${canEmail ? `<button onclick="resendEmail('${v.id}'); event.stopPropagation();" class="mobile-action-btn" title="Resend email" style="flex-shrink: 0; white-space: nowrap;">📧</button>` : ''}
-                    </div>
-                    ${tagsContainer}
-                </td>
-                <td style="${rowBgStyle}"><a href="mailto:${v.preferred_email}" onclick="event.stopPropagation()" style="color:var(--text-muted);">${v.preferred_email}</a><br><small style="color:var(--text-muted); opacity: 0.5;">${v.gcu_email || ''}</small></td>
-                <td style="${rowBgStyle}">${statusToggle}</td>
-                <td style="${rowBgStyle}">${confirmedCell}</td>
-                <td style="${rowBgStyle}">${checkInCell}</td>
-                <td style="${rowBgStyle}">${emailSentBadge}</td>
-                <td style="${rowBgStyle}">
-                    <div class="action-wrapper" onclick="event.stopPropagation()">
-                        <div class="color-trigger-wrapper">
-                            <button class="btn-icon-text" title="Color Code" style="margin: 0; background: ${rowColor || 'rgba(255,255,255,0.05)'}; color: ${rowColor ? '#000' : 'white'}; cursor: default;">🎨</button>
-                            <div class="color-palette-inline">
-                                <div class="color-dot" style="background: #FF3B30;" onclick="saveVendorColor('${v.id}', '#FF3B30'); event.stopPropagation();" title="Red"></div>
-                                <div class="color-dot" style="background: #FF9500;" onclick="saveVendorColor('${v.id}', '#FF9500'); event.stopPropagation();" title="Orange"></div>
-                                <div class="color-dot" style="background: #FFCC00;" onclick="saveVendorColor('${v.id}', '#FFCC00'); event.stopPropagation();" title="Yellow"></div>
-                                <div class="color-dot" style="background: #34C759;" onclick="saveVendorColor('${v.id}', '#34C759'); event.stopPropagation();" title="Green"></div>
-                                <div class="color-dot" style="background: #0A84FF;" onclick="saveVendorColor('${v.id}', '#0A84FF'); event.stopPropagation();" title="Blue"></div>
-                                <div class="color-dot" style="background: #BF5AF2;" onclick="saveVendorColor('${v.id}', '#BF5AF2'); event.stopPropagation();" title="Purple"></div>
-                                <div class="color-dot clear" onclick="saveVendorColor('${v.id}', '#ffffff'); event.stopPropagation();" title="Clear Color">✕</div>
-                            </div>
-                        </div>
-                        <button onclick="openEditModal('${v.id}')" class="btn-icon-text" title="Edit Application">Edit</button>
-                        <button onclick="resendEmail('${v.id}')" class="btn-icon-text" title="Send Status Email" style="${canEmail ? '' : 'display:none;'}">Email</button>
-                        <button onclick="deleteVendor('${v.id}')" class="btn-icon-text danger" title="Delete">Del</button>
-                    </div>
-                </td>
-            </tr>
-            `;
-        };
 
         tbody.innerHTML = filtered.map(v => generateRowHtml(v)).join('');
     }
