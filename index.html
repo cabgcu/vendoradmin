@@ -2212,17 +2212,17 @@
 
     // --- AUTO-CATEGORIZER ENGINE ---
     const CATEGORY_MAP = {
-        'Apparel & Fashion': ['clothes', 'clothing', 'shirt', 'shirts', 'pants', 'hoodie', 'hoodies', 'vintage', 'thrift', 'apparel', 'hats', 'sweatshirts', 't-shirt', 'tshirt', 'shorts', 'jeans', 'denim', 'jacket', 'dress', 'dresses', 'skirt', 'coat', 'sweater', 'blazer', 'shoe', 'shoes', 'boots', 'sneakers', 'hat', 'cap', 'scarf', 'gloves', 'socks'],
-        'Beverages & Snacks': ['cookies', 'baked goods', 'brownies', 'drinks', 'coffee', 'lemonade', 'candy', 'snack', 'snacks', 'food', 'bread', 'cakes', 'pastries', 'dessert', 'tea', 'juice', 'smoothie', 'granola', 'chips', 'popcorn', 'chocolate', 'fudge', 'caramel', 'truffles', 'cupcake'],
-        'Handmade Jewelry': ['jewelry', 'necklace', 'rings', 'bracelet', 'earrings', 'silver', 'gold', 'beaded', 'jewlery', 'pendants', 'anklet', 'choker', 'chain', 'charm', 'locket'],
-        'Stationery & Office': ['stickers', 'decals', 'stationery', 'keychains', 'keychain', 'pins', 'buttons', 'bookmarks', 'notebook', 'notepad', 'planner', 'pen', 'pencil', 'journal', 'diary', 'cards', 'stationary', 'office'],
-        'Tech Accessories': ['phone case', 'phone', 'cable', 'charger', 'screen protector', 'tech', 'tech accessories', 'usb', 'wireless', 'headphone', 'speaker', 'laptop', 'tablet', 'computer', 'gaming'],
-        'Beauty & Skincare': ['lip gloss', 'lip balm', 'cosmetics', 'makeup', 'skincare', 'lotion', 'soap', 'body butter', 'perfume', 'fragrance', 'serum', 'moisturizer', 'cleanser', 'mask', 'treatment', 'deodorant', 'shampoo', 'conditioner'],
-        'Home & Kitchen': ['decor', 'candles', 'ceramics', 'pottery', 'glassware', 'coaster', 'coasters', 'tufting', 'rug', 'rugs', 'blanket', 'pillow', 'curtain', 'wall art', 'plant', 'plants', 'vase', 'planter', 'kitchen', 'utensil', 'dish'],
-        'Handmade & Crafts': ['craft', 'crafts', 'handmade', 'diy', 'resin', 'clay', 'crochet', 'knit', 'yarn', 'amigurumi', 'plushies', 'plushie', 'beanie', 'ribbon', 'bouquet', 'floral', 'flowers', 'flower', 'sew', 'sewing', 'machine sew', 'embroider', 'embroidery', 'weave', 'macrame', 'woodwork', 'leather'],
-        'Art & Prints': ['art', 'prints', 'painting', 'canvas', 'drawing', 'portraits', 'illustrations', 'watercolor', 'poster', 'posters', 'digital art', 'acrylic', 'oil paint', 'sketch', 'graphic', 'animation'],
-        'Entertainment & Gaming': ['game', 'games', 'card', 'cards', 'puzzle', 'puzzles', 'collectible', 'collectibles', 'figurine', 'figure', 'model', 'dice', 'board game', 'trading card', 'anime', 'manga', 'comic'],
-        'Personal Services': ['henna', 'tattoo', 'tarot', 'reading', 'massage', 'hair', 'nails', 'nail', 'face paint', 'service', 'services', 'tooth gem', 'gem', 'lashes', 'eyelash', 'makeup artist', 'hair styling', 'consultation', 'piercing']
+        'Apparel & Fashion': ['clothes', 'clothing', 'shirt', 'shirts', 'pants', 'hoodie', 'hoodies', 'vintage', 'thrift', 'apparel', 'hats', 'sweatshirts', 't-shirt', 'tshirt', 'shorts', 'jeans', 'denim', 'jacket', 'dress', 'dresses', 'skirt', 'coat', 'sweater', 'blazer', 'shoe', 'shoes', 'boots', 'sneakers', 'hat', 'cap', 'scarf', 'gloves', 'socks', 'vest', 'cardigan', 'leggings', 'swimsuit', 'athletic', 'yoga', 'activewear', 'fashion', 'style', 'wear'],
+        'Beverages & Snacks': ['cookies', 'baked goods', 'brownies', 'drinks', 'coffee', 'lemonade', 'candy', 'snack', 'snacks', 'food', 'bread', 'cakes', 'pastries', 'dessert', 'tea', 'juice', 'smoothie', 'granola', 'chips', 'popcorn', 'chocolate', 'fudge', 'caramel', 'truffles', 'cupcake', 'donuts', 'muffins', 'cookies', 'brownies', 'energy bar', 'gummies', 'treat', 'snack', 'bake', 'baked', 'edible', 'homemade food'],
+        'Handmade Jewelry': ['jewelry', 'necklace', 'rings', 'bracelet', 'earrings', 'silver', 'gold', 'beaded', 'jewlery', 'pendants', 'anklet', 'choker', 'chain', 'charm', 'locket', 'ring', 'ear', 'wrist', 'neck'],
+        'Stationery & Office': ['stickers', 'decals', 'stationery', 'keychains', 'keychain', 'pins', 'buttons', 'bookmarks', 'notebook', 'notepad', 'planner', 'pen', 'pencil', 'journal', 'diary', 'cards', 'stationary', 'office', 'writing', 'paper', 'post-it', 'sticky', 'gift tag', 'label', 'washi', 'tape'],
+        'Tech Accessories': ['phone case', 'phone', 'cable', 'charger', 'screen protector', 'tech', 'tech accessories', 'usb', 'wireless', 'headphone', 'speaker', 'laptop', 'tablet', 'computer', 'gaming', 'airpod', 'case', 'cord', 'adapter', 'electronic', 'device'],
+        'Beauty & Skincare': ['lip gloss', 'lip balm', 'cosmetics', 'makeup', 'skincare', 'lotion', 'soap', 'body butter', 'perfume', 'fragrance', 'serum', 'moisturizer', 'cleanser', 'mask', 'treatment', 'deodorant', 'shampoo', 'conditioner', 'face', 'skin', 'lip', 'body', 'cream', 'oil', 'essence', 'balm', 'gloss', 'powder', 'eyeliner', 'mascara', 'blush'],
+        'Home & Kitchen': ['decor', 'candles', 'ceramics', 'pottery', 'glassware', 'coaster', 'coasters', 'tufting', 'rug', 'rugs', 'blanket', 'pillow', 'curtain', 'wall art', 'plant', 'plants', 'vase', 'planter', 'kitchen', 'utensil', 'dish', 'mug', 'cup', 'bowl', 'plate', 'table', 'furniture', 'decoration', 'home'],
+        'Handmade & Crafts': ['craft', 'crafts', 'handmade', 'diy', 'resin', 'clay', 'crochet', 'knit', 'yarn', 'amigurumi', 'plushies', 'plushie', 'beanie', 'ribbon', 'bouquet', 'floral', 'flowers', 'flower', 'sew', 'sewing', 'machine sew', 'embroider', 'embroidery', 'weave', 'macrame', 'woodwork', 'leather', 'epoxy', 'dyed', 'tie dye', 'etched', 'custom'],
+        'Art & Prints': ['art', 'prints', 'painting', 'canvas', 'drawing', 'portraits', 'illustrations', 'watercolor', 'poster', 'posters', 'digital art', 'acrylic', 'oil paint', 'sketch', 'graphic', 'animation', 'artwork', 'gallery', 'original', 'print', 'fine art'],
+        'Entertainment & Gaming': ['game', 'games', 'card', 'cards', 'puzzle', 'puzzles', 'collectible', 'collectibles', 'figurine', 'figure', 'model', 'dice', 'board game', 'trading card', 'anime', 'manga', 'comic', 'fantasy', 'play', 'toy', 'action figure'],
+        'Personal Services': ['henna', 'tattoo', 'tarot', 'reading', 'massage', 'hair', 'nails', 'nail', 'face paint', 'service', 'services', 'tooth gem', 'gem', 'lashes', 'eyelash', 'makeup artist', 'hair styling', 'consultation', 'piercing', 'salon', 'beauty service', 'spiritual']
     };
 
     function extractVendorCategories(text) {
@@ -2232,14 +2232,28 @@
 
         for (const [cat, keywords] of Object.entries(CATEGORY_MAP)) {
             for (const kw of keywords) {
-                const regex = new RegExp(`\\b${kw}\\b`, 'i');
+                // Create a regex that matches the keyword with word boundaries or as part of a larger word
+                const regex = new RegExp(`(\\b|\\s)${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\b|\\s)`, 'i');
                 if (regex.test(str)) {
                     found.add(cat);
                     break;
                 }
             }
         }
-        // If nothing matched, default to Handmade & Crafts
+
+        // If nothing matched, try a looser match by looking for partial keywords
+        if (found.size === 0) {
+            for (const [cat, keywords] of Object.entries(CATEGORY_MAP)) {
+                for (const kw of keywords) {
+                    if (str.includes(kw.toLowerCase())) {
+                        found.add(cat);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Default only if still nothing found
         return found.size > 0 ? Array.from(found) : ['Handmade & Crafts'];
     }
 
