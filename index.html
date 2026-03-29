@@ -2887,12 +2887,28 @@
             }
 
             let licenseOcrResult = "⚠️ Failed to verify.";
-            
+
             if (!vendor.food_license_link || vendor.food_license_link.trim() === '') {
                 licenseOcrResult = "🚨 Claimed food license, but no file provided.";
             } else if (vendor.food_license_link.includes('drive.google.com')) {
                 licenseOcrResult = "⚠️ Cannot auto-scan Google Drive links. Manual check required.";
-            } else if (vendor.food_license_link.startsWith('http')) {
+            } else {
+                const fileExt = vendor.food_license_link.toLowerCase().split('.').pop().split('?')[0];
+                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt);
+                const isPdf = fileExt === 'pdf';
+
+                if (isPdf) {
+                    licenseOcrResult = "⚠️ PDF detected - AI cannot scan PDFs. Manual verification required.";
+                } else if (!isImage) {
+                    licenseOcrResult = `⚠️ File type .${fileExt.toUpperCase()} not supported for AI scan. Manual check needed.`;
+                }
+            }
+
+            if (vendor.food_license_link && !vendor.food_license_link.includes('drive.google.com') && vendor.food_license_link.startsWith('http')) {
+                const fileExt = vendor.food_license_link.toLowerCase().split('.').pop().split('?')[0];
+                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt);
+
+                if (isImage) {
                 try {
                     const currentYear = new Date().getFullYear();
                     const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -2975,6 +2991,7 @@
                     console.error("Vision OCR Error:", e);
                     if (e.message === "auth_error") throw e;
                     licenseOcrResult = "⚠️ System error while scanning license image.";
+                }
                 }
             }
 
