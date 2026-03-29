@@ -10,8 +10,10 @@ const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_KEY') // Set this in
 // Map Brevo event types to our status
 const eventMap = {
   'sent': 'sent',
+  'request': 'sent',
   'delivered': 'delivered',
   'opened': 'opened',
+  'unique_opened': 'opened',
   'click': 'clicked',
   'clicks': 'clicked',
   'hardBounce': 'hardBounce',
@@ -55,6 +57,11 @@ Deno.serve(async (req) => {
 
     // Map to our status
     const status = eventMap[eventType] || eventType
+    console.log('Event type mapping:', {
+      received: eventType,
+      mapped: status,
+      mapped_correctly: eventType in eventMap
+    })
 
     // Initialize Supabase client with service key
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
