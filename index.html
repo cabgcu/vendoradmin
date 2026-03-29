@@ -5273,7 +5273,8 @@
         // Progressively strip columns that may not exist in the schema
         const stripLevels = [
             ['email_html_content', 'email_subject', 'email_tracking_token', 'email_sent_event_id'],
-            ['brevo_message_id', 'email_delivery_status', 'email_sent_at']
+            ['brevo_message_id', 'email_delivery_status', 'email_sent_at'],
+            ['email_sent'] // Last resort: if even email_sent fails, we can't track at all
         ];
         let reduced = { ...payload };
         for (const cols of stripLevels) {
