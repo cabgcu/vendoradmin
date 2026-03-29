@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     const { data: vendors, error: queryErr } = await supabase
       .from('vendors')
       .select('id, email_delivery_status, brevo_message_id, preferred_email')
-      .eq('preferred_email', email)
+      .ilike('preferred_email', email)
 
     if (queryErr) {
       console.log('QUERY_ERROR: ' + queryErr.message)
