@@ -2280,22 +2280,24 @@
                     console.warn("OpenRouter endpoint returned 404. Verify API base URL/account access in Settings.");
                     return null;
                 }
-                if (res.status === 429 && attempt < max429Retries) {
+                if (res.status === 429) {
+                    if (attempt < max429Retries) {
+                        const retryAfterMs = parseRetryAfterMs(res.headers.get('Retry-After'));
+                        const backoffMs = Math.min(8000, 800 * (2 ** attempt));
+                        const jitterMs = Math.floor(Math.random() * 250);
+                        const delayMs = Math.max(retryAfterMs ?? 0, backoffMs + jitterMs);
+                        console.warn(`OpenRouter rate limited (429). Retrying in ${delayMs}ms (attempt ${attempt + 1}/${max429Retries}).`);
+                        await new Promise(r => setTimeout(r, delayMs));
+                        continue;
+                    }
+                    // All retries exhausted — set global cooldown so other callers back off
                     const retryAfterMs = parseRetryAfterMs(res.headers.get('Retry-After'));
-                    const backoffMs = Math.min(8000, 800 * (2 ** attempt));
-                    const jitterMs = Math.floor(Math.random() * 250);
-                    const delayMs = Math.max(retryAfterMs ?? 0, backoffMs + jitterMs);
-                    console.warn(`OpenRouter rate limited (429). Retrying in ${delayMs}ms (attempt ${attempt + 1}/${max429Retries}).`);
-                    await new Promise(r => setTimeout(r, delayMs));
-                    continue;
+                    OPENROUTER_RATE_LIMIT_UNTIL = Date.now() + (retryAfterMs || 30000);
+                    console.warn(`OpenRouter rate limit persisted after ${max429Retries} retries. Cooling down for ${Math.ceil((retryAfterMs || 30000) / 1000)}s.`);
+                    return null;
                 }
                 if (!res.ok) throw new Error(`OpenRouter error ${res.status}`);
                 return await res.json();
-            }
-            if (lastStatus === 429) {
-                OPENROUTER_RATE_LIMIT_UNTIL = Date.now() + 30000; // 30s cooldown after exhausting retries
-                console.warn('OpenRouter rate limit persisted after retries. Cooling down for 30s.');
-                return null;
             }
             throw new Error(`OpenRouter error ${lastStatus ?? 'unknown'}`);
         } catch (err) {
@@ -3247,8 +3249,16 @@
                             break;
                         }
                         v.autoCategories = await aiCategorizeVendor(v.description);
-                        if (v.autoCategories === null) retryNeeded = true;
                         delete v._needsAICategorization;
+                        if (v.autoCategories === null) {
+                            // AI call failed (likely rate limited) — abort remaining vendors
+                            retryNeeded = true;
+                            for (let j = i + 1; j < needsAI.length; j++) {
+                                needsAI[j].autoCategories = needsAI[j].autoCategories?.length ? needsAI[j].autoCategories : ['Unique Goods'];
+                                delete needsAI[j]._needsAICategorization;
+                            }
+                            break;
+                        }
                         await new Promise(r => setTimeout(r, 1200));
                     }
                     renderTable();
@@ -5298,7 +5308,23 @@
     }
 
     async function updateVendorWithSchemaFallback(vendorId, payload) {
-        const { error, data } = await _supabase.from('vendors').update(payload).eq('id', vendorId);
+        const { error } = await _supabase.from('vendors').update(payload).eq('id', vendorId);
+        if (error) {
+            // If a column doesn't exist (400/42703), try stripping optional columns one at a time
+            const optionalCols = ['email_html_content', 'email_subject', 'email_tracking_token', 'email_sent_event_id'];
+            let reduced = { ...payload };
+            let stripped = false;
+            for (const col of optionalCols) {
+                if (col in reduced) {
+                    delete reduced[col];
+                    stripped = true;
+                }
+            }
+            if (stripped && Object.keys(reduced).length > 0) {
+                const { error: retryErr } = await _supabase.from('vendors').update(reduced).eq('id', vendorId);
+                return { error: retryErr, payload: reduced };
+            }
+        }
         return { error: error, payload: payload };
     }
 
