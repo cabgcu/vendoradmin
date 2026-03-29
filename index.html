@@ -3224,7 +3224,7 @@
                 
                 if (isBuiltinEnabled('auto_categorize')) {
                     v.autoCategories = extractVendorCategories(v.description || '');
-                    if (v.autoCategories.length === 0) v.autoCategories = [];
+                    if (v.autoCategories.length === 0) v.autoCategories = ['Unique Goods'];
                 } else {
                     v.autoCategories = v.autoCategories || ['Unique Goods'];
                 }
