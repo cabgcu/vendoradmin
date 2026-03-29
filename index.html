@@ -4954,6 +4954,11 @@
         const btn = document.getElementById('refreshEmailStatusBtn');
         if (btn) { btn.innerText = 'Checking...'; btn.disabled = true; }
 
+        // Disabled — webhook updates are real-time
+        showToast('Email status updates in real-time via webhook. No polling needed.');
+        if (btn) { btn.innerText = 'Refresh'; btn.disabled = false; }
+        return;
+
         const result = await fetchEmailStatus(vendorId);
 
         if (result && result.status) {
@@ -5694,25 +5699,9 @@
 
     // Bulk refresh email status for all vendors that have been emailed
     async function refreshAllEmailStatuses(silent = false) {
-        const emailedVendors = currentData.vendors.filter(v => hasCurrentMarketEmail(v));
-        if (emailedVendors.length === 0) {
-            if (!silent) showToast('No emails have been sent yet.');
-            return;
-        }
-
-        if (!silent) showToast(`Checking delivery status for ${emailedVendors.length} emails...`);
-
-        // Process in batches of 5 to avoid rate limits
-        const batchSize = 5;
-        let updated = 0;
-        for (let i = 0; i < emailedVendors.length; i += batchSize) {
-            const batch = emailedVendors.slice(i, i + batchSize);
-            const results = await Promise.all(batch.map(v => fetchEmailStatus(v.id)));
-            updated += results.filter(r => r !== null).length;
-        }
-
-        if (!silent && updated > 0) showToast(`Updated ${updated} email statuses.`);
-        if (updated > 0) renderTable();
+        // Disabled — webhook updates are real-time
+        if (!silent) showToast('Email statuses update in real-time via webhook.');
+        return;
     }
 
     async function resetCurrentMarketEmailTracking() {
