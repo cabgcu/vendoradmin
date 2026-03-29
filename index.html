@@ -1544,7 +1544,6 @@
                     <option value="color">Sort by Color</option>
                 </select>
 
-                <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; flex-shrink: 0; display: none; height: 50px;">Send Emails...</button>
             </div>
         </div>
         
@@ -2696,8 +2695,6 @@
         // --- APPLY PERMISSIONS ---
         if (currentUser && currentUser.role !== 'admin') {
             document.getElementById('nav-settings').style.display = 'none';
-            const blastBtn = document.getElementById('blastBtn');
-            if (blastBtn) blastBtn.style.display = 'none';
         } else {
             document.getElementById('nav-settings').style.display = 'flex';
         }
@@ -4366,23 +4363,6 @@
             if (email) emailCounts[email] = (emailCounts[email] || 0) + 1;
         });
 
-        const blastBtn = document.getElementById('blastBtn');
-        if (currentUser.role === 'admin') {
-            if (activeFilter === 'approved') {
-                blastBtn.style.display = 'inline-block';
-                blastBtn.innerText = 'Send Approved Emails...';
-            } else if (activeFilter === 'denied') {
-                blastBtn.style.display = 'inline-block';
-                blastBtn.innerText = 'Send Denied Emails...';
-            } else if (activeFilter === 'power') {
-                blastBtn.style.display = 'inline-block';
-                blastBtn.innerText = 'Send Power Emails...';
-            } else {
-                blastBtn.style.display = 'none';
-            }
-        } else {
-            blastBtn.style.display = 'none';
-        }
 
         const tbody = document.getElementById('vendorTableBody');
         
