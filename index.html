@@ -2741,15 +2741,24 @@
     let _realtimePaused = false;
 
     async function setupRealtime() {
-        if (!isBuiltinEnabled('realtime_sync')) return;
+        // Always enable realtime for webhook updates
         if (realtimeSubscription) _supabase.removeChannel(realtimeSubscription);
         realtimeSubscription = _supabase.channel('public:vendors')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'vendors' }, () => {
-                if (_realtimePaused) return;
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'vendors' }, (payload) => {
+                console.log('Realtime event received:', payload);
+                if (_realtimePaused) {
+                    console.log('Realtime paused, skipping refresh');
+                    return;
+                }
                 clearTimeout(_realtimeRefreshTimer);
-                _realtimeRefreshTimer = setTimeout(() => refreshData(null, true), 2000);
+                console.log('Scheduling refreshData for realtime update');
+                _realtimeRefreshTimer = setTimeout(() => {
+                    console.log('Executing refreshData from realtime event');
+                    refreshData(null, true);
+                }, 500); // Faster than 2000ms
             })
             .subscribe((status, err) => {
+                console.log('Realtime subscription status:', status);
                 if (err) console.error('Realtime subscription error:', err);
             });
     }
