@@ -2414,6 +2414,7 @@
     let bannerDeleted = false;
 
     // AI & Strike State
+    const _aiCategoryCache = {}; // vendorId -> { categories, description }
     let isAIQueueRunning = false;
     const aiAnalyzingSet = new Set();
     const failedAIVendors = new Set(); 
@@ -3223,8 +3224,14 @@
                 
                 if (isBuiltinEnabled('auto_categorize')) {
                     v.autoCategories = extractVendorCategories(v.description || '');
-                    if (v.autoCategories.length === 0 && getBuiltinSetting('auto_categorize', 'useAI') && OPENROUTER_API_KEY) {
-                        v._needsAICategorization = true;
+                    if (v.autoCategories.length === 0) {
+                        // Check cache first before flagging for AI
+                        const cached = _aiCategoryCache[v.id];
+                        if (cached && cached.description === (v.description || '')) {
+                            v.autoCategories = cached.categories;
+                        } else if (getBuiltinSetting('auto_categorize', 'useAI') && OPENROUTER_API_KEY) {
+                            v._needsAICategorization = true;
+                        }
                     }
                     if (v.autoCategories.length === 0 && !v._needsAICategorization) v.autoCategories = [];
                 } else {
@@ -3233,8 +3240,9 @@
             });
 
             // Batch AI categorization for vendors that need it (non-blocking)
+            // Skip entirely if we're in rate-limit cooldown — use fallback categories
             const needsAI = vendorsData.filter(v => v._needsAICategorization);
-            if (needsAI.length > 0) {
+            if (needsAI.length > 0 && Date.now() >= OPENROUTER_RATE_LIMIT_UNTIL) {
                 (async () => {
                     let retryNeeded = false;
                     for (let i = 0; i < needsAI.length; i++) {
@@ -3250,6 +3258,9 @@
                         }
                         v.autoCategories = await aiCategorizeVendor(v.description);
                         delete v._needsAICategorization;
+                        if (v.autoCategories && v.autoCategories.length > 0) {
+                            _aiCategoryCache[v.id] = { categories: v.autoCategories, description: v.description || '' };
+                        }
                         if (v.autoCategories === null) {
                             // AI call failed (likely rate limited) — abort remaining vendors
                             retryNeeded = true;
@@ -3270,6 +3281,19 @@
                         }, delayMs);
                     }
                 })();
+            } else if (needsAI.length > 0) {
+                // Rate-limited — assign fallback categories, don't call API
+                needsAI.forEach(v => {
+                    v.autoCategories = v.autoCategories?.length ? v.autoCategories : ['Unique Goods'];
+                    delete v._needsAICategorization;
+                });
+                if (!AI_CATEGORIZATION_RETRY_TIMER) {
+                    const delayMs = Math.max(3000, OPENROUTER_RATE_LIMIT_UNTIL - Date.now() + 500);
+                    AI_CATEGORIZATION_RETRY_TIMER = setTimeout(async () => {
+                        AI_CATEGORIZATION_RETRY_TIMER = null;
+                        await refreshData();
+                    }, delayMs);
+                }
             }
 
             // AI Vendor Summary (non-blocking background task)
@@ -5308,21 +5332,24 @@
     }
 
     async function updateVendorWithSchemaFallback(vendorId, payload) {
+        // Try full payload first
         const { error } = await _supabase.from('vendors').update(payload).eq('id', vendorId);
-        if (error) {
-            // If a column doesn't exist (400/42703), try stripping optional columns one at a time
-            const optionalCols = ['email_html_content', 'email_subject', 'email_tracking_token', 'email_sent_event_id'];
-            let reduced = { ...payload };
+        if (!error) return { error: null, payload: payload };
+
+        // Progressively strip columns that may not exist in the schema
+        const stripLevels = [
+            ['email_html_content', 'email_subject', 'email_tracking_token', 'email_sent_event_id'],
+            ['brevo_message_id', 'email_delivery_status', 'email_sent_at']
+        ];
+        let reduced = { ...payload };
+        for (const cols of stripLevels) {
             let stripped = false;
-            for (const col of optionalCols) {
-                if (col in reduced) {
-                    delete reduced[col];
-                    stripped = true;
-                }
+            for (const col of cols) {
+                if (col in reduced) { delete reduced[col]; stripped = true; }
             }
             if (stripped && Object.keys(reduced).length > 0) {
                 const { error: retryErr } = await _supabase.from('vendors').update(reduced).eq('id', vendorId);
-                return { error: retryErr, payload: reduced };
+                if (!retryErr) return { error: null, payload: reduced };
             }
         }
         return { error: error, payload: payload };
