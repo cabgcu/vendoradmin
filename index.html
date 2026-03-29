@@ -2745,7 +2745,15 @@
         if (realtimeSubscription) _supabase.removeChannel(realtimeSubscription);
         realtimeSubscription = _supabase.channel('public:vendors')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'vendors' }, (payload) => {
-                console.log('Realtime event received:', payload);
+                const { eventType, new: newRecord, old: oldRecord } = payload;
+                console.log('Realtime event received:', {
+                    eventType,
+                    new_email_delivery_status: newRecord?.email_delivery_status,
+                    old_email_delivery_status: oldRecord?.email_delivery_status,
+                    new_record_id: newRecord?.id,
+                    event_id: newRecord?.event_id,
+                    preferred_email: newRecord?.preferred_email
+                });
                 if (_realtimePaused) {
                     console.log('Realtime paused, skipping refresh');
                     return;
@@ -3211,8 +3219,15 @@
 
         // Load Vendors for this event (Sorted ascending so #1 is at the top)
         const { data: vendorsData, error: vendorErr } = await _supabase.from('vendors').select('*').eq('event_id', activeId).order('created_at', { ascending: true });
-        
+
         if (vendorsData) {
+            const vendorsWithStatus = vendorsData.filter(v => v.email_delivery_status);
+            const vendorsWithBrevoId = vendorsData.filter(v => v.brevo_message_id);
+            console.log(`refreshData: Fetched ${vendorsData.length} vendors. ${vendorsWithStatus.length} have email_delivery_status, ${vendorsWithBrevoId.length} have brevo_message_id`);
+            if (vendorsWithStatus.length > 0) {
+                console.log(`refreshData: Vendors with delivery status:`, vendorsWithStatus.map(v => ({ id: v.id, status: v.email_delivery_status, email: v.preferred_email, sent_at: v.email_sent_at, brevo_id: v.brevo_message_id })));
+            }
+
             vendorsData.forEach((v, index) => {
                 v.appNumber = index + 1;
 
@@ -3315,12 +3330,18 @@
             setFilter(savedFilter, true);
             isInitialLoad = false;
         } else {
+            console.log('refreshData: Not initial load. activeFilter:', activeFilter, 'view-list display:', document.getElementById('view-list')?.style.display, 'view-scan display:', document.getElementById('view-scan')?.style.display);
             if(activeFilter === 'profiles') {
+                console.log('refreshData: Rendering profiles');
                 fetchAndRenderProfiles();
             } else if (document.getElementById('view-list').style.display !== 'none') {
+                console.log('refreshData: Rendering table');
                 renderTable();
+            } else {
+                console.log('refreshData: Table view is hidden, not calling renderTable');
             }
             if (document.getElementById('view-scan').style.display !== 'none') {
+                console.log('refreshData: Rendering scan view');
                 filterUnifiedCheckIn('');
             }
         }
@@ -4284,6 +4305,12 @@
 
     function renderTable() {
         const filtered = getFilteredVendorsForCurrentView();
+        const vendorsWithStatus = filtered.filter(v => v.email_delivery_status && v.email_delivery_status !== 'sent');
+        if (vendorsWithStatus.length > 0) {
+            console.log(`renderTable: Rendering ${filtered.length} vendors, ${vendorsWithStatus.length} with non-sent delivery status:`, vendorsWithStatus.map(v => ({ id: v.id, status: v.email_delivery_status, email: v.preferred_email })));
+        } else {
+            console.log(`renderTable: Rendering ${filtered.length} vendors, none with non-sent delivery status`);
+        }
 
         const sortVal = document.getElementById('sortFilter')?.value || 'default';
         if (sortVal === 'az') {
@@ -4390,6 +4417,7 @@
             if (isEmailSentForView) {
                 const deliveryStatus = v.email_delivery_status;
                 if (deliveryStatus && deliveryStatus !== 'sent') {
+                    console.log(`Rendering vendor ${v.id}: displaying delivery status "${deliveryStatus}"`);
                     const dDisplay = getEmailDeliveryDisplay(deliveryStatus);
                     emailSentBadge = `<span class="status-badge sent" style="background: ${dDisplay.bg}; color: ${dDisplay.color}; border: 1px solid ${dDisplay.color}40;">${dDisplay.icon} ${dDisplay.label.toUpperCase()}</span>`;
                 } else {
