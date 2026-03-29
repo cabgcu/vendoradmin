@@ -22,13 +22,21 @@ const eventMap = {
 }
 
 Deno.serve(async (req) => {
+  console.log('Webhook received request:', {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
+  })
+
   // Only accept POST requests
   if (req.method !== 'POST') {
+    console.log('Rejecting non-POST request')
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 })
   }
 
   try {
     const event = await req.json()
+    console.log('Parsed JSON event:', JSON.stringify(event, null, 2))
     console.log('Brevo webhook received:', {
       event: event.event,
       email: event.email,
@@ -99,7 +107,14 @@ Deno.serve(async (req) => {
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    console.error('Webhook error:', error)
+    console.error('Webhook error:', {
+      message: error.message,
+      stack: error.stack,
+      type: error.constructor.name
+    })
     return new Response(JSON.stringify({ error: 'Internal server error', details: error.message }), { status: 500 })
   }
+})
+
+console.log('Brevo webhook Edge Function loaded and ready')
 })
