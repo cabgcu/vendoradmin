@@ -5593,12 +5593,13 @@
             }
 
             if (events.length === 0) {
-                // No delivery events from Brevo yet. Use time-based inference:
-                // After 5+ minutes with no bounce, assume delivered (Brevo events API is slow)
+                // No delivery events from Brevo's API. Use time-based inference:
+                // After 2+ minutes with no bounce in Brevo dashboard, assume delivered
+                // (Brevo's /statistics/events API has known delays/permissions issues)
                 const sentTime = vendor.email_sent_at ? new Date(vendor.email_sent_at).getTime() : 0;
                 const nowTime = Date.now();
                 const minutesElapsed = (nowTime - sentTime) / 60000;
-                const inferredStatus = minutesElapsed > 5 ? 'delivered' : 'sent';
+                const inferredStatus = minutesElapsed > 2 ? 'delivered' : 'sent';
 
                 console.log(`fetchEmailStatus: No Brevo events yet for vendor ${vendorId}. ${minutesElapsed.toFixed(1)} min elapsed, inferring "${inferredStatus}".`);
 
@@ -5744,6 +5745,7 @@
             _emailPollRunning = true;
             try {
             // Only poll for vendors whose email hasn't reached a terminal state
+            // "delivered" is not terminal — keep checking for opens/clicks
             const pendingVendors = currentData.vendors.filter(v =>
                 hasCurrentMarketEmail(v) &&
                 !['opened', 'clicked', 'hardBounce', 'blocked', 'error', 'unsubscribed'].includes(v.email_delivery_status)
