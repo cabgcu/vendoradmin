@@ -5924,15 +5924,13 @@
     }
 
     function scheduleBrevoStatusChecks(vendorId) {
-        [30, 90, 180].forEach(seconds => {
-            setTimeout(() => fetchEmailStatus(vendorId).then(() => renderTable()), seconds * 1000);
-        });
+        // Disabled — webhook updates are real-time, no polling needed
+        console.log(`scheduleBrevoStatusChecks disabled for vendor ${vendorId} (using webhook)`);
     }
 
     function scheduleBrevoBulkStatusChecks() {
-        [30, 90, 180].forEach(seconds => {
-            setTimeout(() => refreshAllEmailStatuses(true), seconds * 1000);
-        });
+        // Disabled — webhook updates are real-time, no polling needed
+        console.log('scheduleBrevoBulkStatusChecks disabled (using webhook)');
     }
 
     function openBulkEmailModal() {
