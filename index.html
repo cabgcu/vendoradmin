@@ -5571,12 +5571,13 @@
 
                 const data = await response.json();
                 let candidateEvents = data.events || [];
-                console.log(`Brevo API response for vendor ${vendorId}:`, {
+                console.log(`Brevo API response for vendor ${vendorId}:`, JSON.stringify({
                     totalEvents: candidateEvents.length,
                     firstEvent: candidateEvents[0],
+                    allKeys: Object.keys(data),
                     fullResponse: data,
                     url: url.split('?')[1]
-                });
+                }, null, 2));
 
                 // If Brevo returns events from the same inbox, aggressively narrow to
                 // this vendor email send using messageId, tracking token/tag, or subject.
