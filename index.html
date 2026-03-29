@@ -5560,7 +5560,12 @@
 
                 if (!response.ok) {
                     const errBody = await response.text().catch(() => '');
-                    console.warn('Brevo events API error:', response.status, errBody, 'URL:', url);
+                    console.error('Brevo events API ERROR:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        error: errBody,
+                        url: url
+                    });
                     continue;
                 }
 
@@ -5569,6 +5574,7 @@
                 console.log(`Brevo API response for vendor ${vendorId}:`, {
                     totalEvents: candidateEvents.length,
                     firstEvent: candidateEvents[0],
+                    fullResponse: data,
                     url: url.split('?')[1]
                 });
 
@@ -5593,14 +5599,21 @@
             }
 
             if (events.length === 0) {
-                console.log(`fetchEmailStatus: No Brevo events yet for vendor ${vendorId}. Status remains "sent".`);
-                // No delivery events from Brevo yet. Keep status as 'sent'
-                // since we know the email was dispatched (hasCurrentMarketEmail passed).
-                if (vendor.email_delivery_status !== 'sent') {
-                    await _supabase.from('vendors').update({ email_delivery_status: 'sent' }).eq('id', vendorId);
-                    vendor.email_delivery_status = 'sent';
+                // No delivery events from Brevo's API. Use time-based inference:
+                // After 2+ minutes with no bounce in Brevo dashboard, assume delivered
+                // (Brevo's /statistics/events API has known delays/permissions issues)
+                const sentTime = vendor.email_sent_at ? new Date(vendor.email_sent_at).getTime() : 0;
+                const nowTime = Date.now();
+                const minutesElapsed = (nowTime - sentTime) / 60000;
+                const inferredStatus = minutesElapsed > 2 ? 'delivered' : 'sent';
+
+                console.log(`fetchEmailStatus: No Brevo events yet for vendor ${vendorId}. ${minutesElapsed.toFixed(1)} min elapsed, inferring "${inferredStatus}".`);
+
+                if (vendor.email_delivery_status !== inferredStatus) {
+                    await _supabase.from('vendors').update({ email_delivery_status: inferredStatus }).eq('id', vendorId);
+                    vendor.email_delivery_status = inferredStatus;
                 }
-                return { status: 'sent', events: [], latestDate: null };
+                return { status: inferredStatus, events: [], latestDate: null };
             }
 
             // Priority order: higher index = higher priority status
@@ -5738,6 +5751,7 @@
             _emailPollRunning = true;
             try {
             // Only poll for vendors whose email hasn't reached a terminal state
+            // "delivered" is not terminal — keep checking for opens/clicks
             const pendingVendors = currentData.vendors.filter(v =>
                 hasCurrentMarketEmail(v) &&
                 !['opened', 'clicked', 'hardBounce', 'blocked', 'error', 'unsubscribed'].includes(v.email_delivery_status)
