@@ -5544,6 +5544,12 @@
             }
             // Broadest fallback — recent events for this email address
             urlsToTry.push(`${baseUrl}&sort=desc`);
+            console.log(`fetchEmailStatus: Querying Brevo for vendor ${vendorId}:`, {
+                email: vendor.preferred_email,
+                messageId: vendor.brevo_message_id,
+                sentAt: vendor.email_sent_at,
+                urls: urlsToTry.length
+            });
             
             let events = [];
             for (const url of urlsToTry) {
@@ -5554,7 +5560,7 @@
 
                 if (!response.ok) {
                     const errBody = await response.text().catch(() => '');
-                    console.warn('Brevo events API error:', response.status, errBody);
+                    console.warn('Brevo events API error:', response.status, errBody, 'URL:', url);
                     continue;
                 }
 
