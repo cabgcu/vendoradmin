@@ -2232,23 +2232,13 @@
 
         for (const [cat, keywords] of Object.entries(CATEGORY_MAP)) {
             for (const kw of keywords) {
-                // Create a regex that matches the keyword with word boundaries or as part of a larger word
-                const regex = new RegExp(`(\\b|\\s)${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\b|\\s)`, 'i');
+                // Simple approach: check if keyword exists as a whole word
+                const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                // Match with word boundaries - works with punctuation, spaces, start/end
+                const regex = new RegExp(`\\b${escaped}\\b`, 'i');
                 if (regex.test(str)) {
                     found.add(cat);
                     break;
-                }
-            }
-        }
-
-        // If nothing matched, try a looser match by looking for partial keywords
-        if (found.size === 0) {
-            for (const [cat, keywords] of Object.entries(CATEGORY_MAP)) {
-                for (const kw of keywords) {
-                    if (str.includes(kw.toLowerCase())) {
-                        found.add(cat);
-                        break;
-                    }
                 }
             }
         }
