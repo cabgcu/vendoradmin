@@ -3211,8 +3211,13 @@
 
         // Load Vendors for this event (Sorted ascending so #1 is at the top)
         const { data: vendorsData, error: vendorErr } = await _supabase.from('vendors').select('*').eq('event_id', activeId).order('created_at', { ascending: true });
-        
+
         if (vendorsData) {
+            const vendorsWithStatus = vendorsData.filter(v => v.email_delivery_status);
+            if (vendorsWithStatus.length > 0) {
+                console.log(`refreshData: Found ${vendorsWithStatus.length} vendors with email_delivery_status:`, vendorsWithStatus.map(v => ({ id: v.id, status: v.email_delivery_status, email: v.preferred_email })));
+            }
+
             vendorsData.forEach((v, index) => {
                 v.appNumber = index + 1;
 
@@ -3315,12 +3320,18 @@
             setFilter(savedFilter, true);
             isInitialLoad = false;
         } else {
+            console.log('refreshData: Not initial load. activeFilter:', activeFilter, 'view-list display:', document.getElementById('view-list')?.style.display, 'view-scan display:', document.getElementById('view-scan')?.style.display);
             if(activeFilter === 'profiles') {
+                console.log('refreshData: Rendering profiles');
                 fetchAndRenderProfiles();
             } else if (document.getElementById('view-list').style.display !== 'none') {
+                console.log('refreshData: Rendering table');
                 renderTable();
+            } else {
+                console.log('refreshData: Table view is hidden, not calling renderTable');
             }
             if (document.getElementById('view-scan').style.display !== 'none') {
+                console.log('refreshData: Rendering scan view');
                 filterUnifiedCheckIn('');
             }
         }
@@ -4284,6 +4295,12 @@
 
     function renderTable() {
         const filtered = getFilteredVendorsForCurrentView();
+        const vendorsWithStatus = filtered.filter(v => v.email_delivery_status && v.email_delivery_status !== 'sent');
+        if (vendorsWithStatus.length > 0) {
+            console.log(`renderTable: Rendering ${filtered.length} vendors, ${vendorsWithStatus.length} with non-sent delivery status:`, vendorsWithStatus.map(v => ({ id: v.id, status: v.email_delivery_status, email: v.preferred_email })));
+        } else {
+            console.log(`renderTable: Rendering ${filtered.length} vendors, none with non-sent delivery status`);
+        }
 
         const sortVal = document.getElementById('sortFilter')?.value || 'default';
         if (sortVal === 'az') {
@@ -4390,6 +4407,7 @@
             if (isEmailSentForView) {
                 const deliveryStatus = v.email_delivery_status;
                 if (deliveryStatus && deliveryStatus !== 'sent') {
+                    console.log(`Rendering vendor ${v.id}: displaying delivery status "${deliveryStatus}"`);
                     const dDisplay = getEmailDeliveryDisplay(deliveryStatus);
                     emailSentBadge = `<span class="status-badge sent" style="background: ${dDisplay.bg}; color: ${dDisplay.color}; border: 1px solid ${dDisplay.color}40;">${dDisplay.icon} ${dDisplay.label.toUpperCase()}</span>`;
                 } else {
