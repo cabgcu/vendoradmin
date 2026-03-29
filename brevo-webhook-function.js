@@ -5,7 +5,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 
 const SUPABASE_URL = 'https://xdfbjusrwbxoxbcocxkp.supabase.co'
-const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_KEY') // Set this in Supabase settings
+// SERVICE_ROLE_KEY must be set in Supabase Edge Function environment variables
 
 // Map Brevo event types to our status
 const eventMap = {
@@ -64,9 +64,9 @@ Deno.serve(async (req) => {
     })
 
     // Initialize Supabase client with service key
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_KEY')
+    const serviceKey = Deno.env.get('SERVICE_ROLE_KEY')
     if (!serviceKey) {
-      console.error('ERROR: SUPABASE_SERVICE_KEY not set in environment')
+      console.error('ERROR: SERVICE_ROLE_KEY not set in environment')
       return new Response(JSON.stringify({ error: 'Service key missing' }), { status: 500 })
     }
 
