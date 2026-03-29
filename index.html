@@ -5543,10 +5543,8 @@
 
         try {
             // Query Brevo's transactional email events for this recipient
-            // Try both /statistics/events and /log endpoints
             const emailEncoded = encodeURIComponent(vendor.preferred_email);
             const baseUrl1 = `https://api.brevo.com/v3/smtp/statistics/events?limit=50&email=${emailEncoded}`;
-            const baseUrl2 = `https://api.brevo.com/v3/smtp/log?limit=50&email=${emailEncoded}`;
             const urlsToTry = [];
 
             // Try precise lookup first (messageId both formats), then fallback to date-scoped lookup.
@@ -5562,8 +5560,6 @@
             }
             // Broadest fallback — recent events for this email address
             urlsToTry.push(`${baseUrl1}&sort=desc`);
-            // Also try the /log endpoint as fallback
-            urlsToTry.push(`${baseUrl2}&sort=desc`);
             console.log(`fetchEmailStatus: Querying Brevo for vendor ${vendorId}:`, {
                 email: vendor.preferred_email,
                 messageId: vendor.brevo_message_id,
