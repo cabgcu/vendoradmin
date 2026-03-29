@@ -5742,11 +5742,12 @@
             }
             // Note: email_sent_event_id column is bigint, incompatible with UUID — omitting
 
-            let { error: updateErr, payload: attemptedPrimaryPayload } = await updateVendorWithSchemaFallback(vendor.id, updatePayload);
+            let { error: updateErr, payload: appliedPayload } = await updateVendorWithSchemaFallback(vendor.id, updatePayload);
             if (updateErr) {
                 console.error('Email tracking DB update error — checking which columns exist...', {
                     error: updateErr,
                     attemptedPayload: updatePayload,
+                    appliedPayload: appliedPayload,
                     vendorId: vendor.id
                 });
                 // Fallback for older schemas that may not have optional email content columns.
@@ -6710,9 +6711,9 @@
                 document.querySelector('#loader span').innerText = 'LOADING';
                 return;
             }
-            
-            const { data: publicUrlData } = _supabase.storage.from('banners').getPublicUrl(fileName);
-            finalBannerUrl = publicUrlData.publicUrl;
+
+            const { publicUrl } = _supabase.storage.from('banners').getPublicUrl(fileName);
+            finalBannerUrl = publicUrl;
             
             document.getElementById('loader').style.display = 'none';
             document.querySelector('#loader span').innerText = 'LOADING';
