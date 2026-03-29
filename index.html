@@ -3514,15 +3514,11 @@
             const powerBadge = v.needs_power === 'Yes' ? '<span style="color: #FFD60A; font-weight: bold; font-size: 0.75rem;">[POWER]</span> ' : '';
 
             let btnHtml = '';
-            // Only show check-in button if vendor is Approved AND has confirmed attendance (or already checked in)
-            const isConfirmed = v.attendance_confirmed === true;
-            const isCheckedIn = v.status === 'Checked In';
-
-            if ((v.status === 'Approved' && isConfirmed) || isCheckedIn) {
-                btnHtml = `<button class="btn-action" style="padding: 6px 16px; font-size: 0.8rem; ${isCheckedIn ? 'background:var(--gradient-success)' : ''}" onclick="checkIn('${v.id}', false, this)">${isCheckedIn ? '✓ IN' : 'MARK IN'}</button>`;
+            // Show check-in button for approved vendors (regardless of confirmation) or already checked in
+            if (v.status === 'Approved' || v.status === 'Checked In') {
+                btnHtml = `<button class="btn-action" style="padding: 6px 16px; font-size: 0.8rem; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}" onclick="checkIn('${v.id}', false, this)">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`;
             } else {
-                const statusMsg = !isConfirmed ? 'Not Confirmed' : v.status;
-                btnHtml = `<span style="color: #FF3B30; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; padding-right: 10px;">${statusMsg}</span>`;
+                btnHtml = `<span style="color: #FF3B30; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; padding-right: 10px;">${v.status}</span>`;
             }
 
             d.innerHTML = `<div><strong>${v.first_name} ${v.last_name}</strong><br><small style="color:var(--text-muted);">${foodBadge}${powerBadge} ID: ${v.student_id || 'N/A'}</small></div>${btnHtml}`;
