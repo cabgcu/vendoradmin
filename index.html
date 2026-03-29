@@ -5560,7 +5560,12 @@
 
                 if (!response.ok) {
                     const errBody = await response.text().catch(() => '');
-                    console.warn('Brevo events API error:', response.status, errBody, 'URL:', url);
+                    console.error('Brevo events API ERROR:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        error: errBody,
+                        url: url
+                    });
                     continue;
                 }
 
@@ -5569,6 +5574,7 @@
                 console.log(`Brevo API response for vendor ${vendorId}:`, {
                     totalEvents: candidateEvents.length,
                     firstEvent: candidateEvents[0],
+                    fullResponse: data,
                     url: url.split('?')[1]
                 });
 
