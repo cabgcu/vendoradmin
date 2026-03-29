@@ -3649,13 +3649,13 @@
 
         // Update Check-In Screen Stats
         const checkedInCount = currentData.vendors.filter(v => v.status === 'Checked In').length;
-        const waitingCount = currentData.vendors.filter(v => v.status === 'Approved').length; // Approved but not yet checked in
+        const confirmedCount = currentData.vendors.filter(v => v.attendance_confirmed === true).length;
 
         const scanStatIn = document.getElementById('scanStatIn');
         const scanStatWaiting = document.getElementById('scanStatWaiting');
-        
+
         if (scanStatIn) scanStatIn.innerText = checkedInCount;
-        if (scanStatWaiting) scanStatWaiting.innerText = waitingCount;
+        if (scanStatWaiting) scanStatWaiting.innerText = confirmedCount;
     }
 
     function setFilter(filter, preserveDropdowns = false) {
