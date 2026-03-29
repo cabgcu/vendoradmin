@@ -2223,6 +2223,20 @@
     }
 
     let OPENROUTER_DISABLED = false;
+    let OPENROUTER_RATE_LIMIT_UNTIL = 0;
+    let AI_CATEGORIZATION_RETRY_TIMER = null;
+
+    function maybeLogRateLimitCooldown() {
+        const remaining = OPENROUTER_RATE_LIMIT_UNTIL - Date.now();
+        if (remaining > 0) {
+            console.warn(`OpenRouter rate-limited. Cooling down for ${Math.ceil(remaining / 1000)}s.`);
+        }
+    }
+
+    function getOpenRouterRateLimitUntil() {
+        return OPENROUTER_RATE_LIMIT_UNTIL;
+    }
+
     function parseRetryAfterMs(retryAfterHeader) {
         if (!retryAfterHeader) return null;
         const seconds = Number(retryAfterHeader);
@@ -2279,7 +2293,8 @@
                 return await res.json();
             }
             if (lastStatus === 429) {
-                console.warn('OpenRouter rate limit persisted after retries. Using fallback behavior.');
+                OPENROUTER_RATE_LIMIT_UNTIL = Date.now() + 30000; // 30s cooldown after exhausting retries
+                console.warn('OpenRouter rate limit persisted after retries. Cooling down for 30s.');
                 return null;
             }
             throw new Error(`OpenRouter error ${lastStatus ?? 'unknown'}`);
@@ -3219,10 +3234,12 @@
             const needsAI = vendorsData.filter(v => v._needsAICategorization);
             if (needsAI.length > 0) {
                 (async () => {
+                    let retryNeeded = false;
                     for (let i = 0; i < needsAI.length; i++) {
                         const v = needsAI[i];
                         if (Date.now() < OPENROUTER_RATE_LIMIT_UNTIL) {
                             maybeLogRateLimitCooldown();
+                            retryNeeded = true;
                             for (let j = i; j < needsAI.length; j++) {
                                 needsAI[j].autoCategories = needsAI[j].autoCategories?.length ? needsAI[j].autoCategories : ['Unique Goods'];
                                 delete needsAI[j]._needsAICategorization;
@@ -3230,6 +3247,7 @@
                             break;
                         }
                         v.autoCategories = await aiCategorizeVendor(v.description);
+                        if (v.autoCategories === null) retryNeeded = true;
                         delete v._needsAICategorization;
                         await new Promise(r => setTimeout(r, 1200));
                     }
@@ -5277,6 +5295,11 @@
                   .replace(/\{\{DECLINE_LINK\}\}/g, finalDeclineLink)
                   .replace(/\{\{POWER_CONFIRM_LINK\}\}/g, finalPowerConfirmLink)
                   .replace(/\{\{POWER_DECLINE_LINK\}\}/g, finalPowerDeclineLink);
+    }
+
+    async function updateVendorWithSchemaFallback(vendorId, payload) {
+        const { error, data } = await _supabase.from('vendors').update(payload).eq('id', vendorId);
+        return { error: error, payload: payload };
     }
 
     async function sendSingleEmail(vendor, forceTemplateId = null) {
