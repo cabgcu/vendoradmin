@@ -3224,7 +3224,7 @@
                 
                 if (isBuiltinEnabled('auto_categorize')) {
                     v.autoCategories = extractVendorCategories(v.description || '');
-                    if (v.autoCategories.length === 0) v.autoCategories = [];
+                    if (v.autoCategories.length === 0) v.autoCategories = ['Unique Goods'];
                 } else {
                     v.autoCategories = v.autoCategories || ['Unique Goods'];
                 }
@@ -5460,6 +5460,11 @@
 
             let { error: updateErr, payload: attemptedPrimaryPayload } = await updateVendorWithSchemaFallback(vendor.id, updatePayload);
             if (updateErr) {
+                console.error('Email tracking DB update error — checking which columns exist...', {
+                    error: updateErr,
+                    attemptedPayload: updatePayload,
+                    vendorId: vendor.id
+                });
                 // Fallback for older schemas that may not have optional email content columns.
                 console.warn('Primary email tracking update failed, retrying minimal payload:', updateErr);
                 const fallbackPayload = {
@@ -5475,7 +5480,12 @@
                 }
                 const { error: fallbackErr } = await updateVendorWithSchemaFallback(vendor.id, fallbackPayload);
                 if (fallbackErr) {
-                    console.warn('Fallback email tracking update failed; email was still sent successfully:', fallbackErr);
+                    console.error('Fallback email tracking update ALSO failed:', {
+                        error: fallbackErr,
+                        fallbackPayload: fallbackPayload,
+                        vendorId: vendor.id
+                    });
+                    console.warn('Email was sent via Brevo but DB tracking failed. Will retry on next page refresh.');
                 }
             }
 
