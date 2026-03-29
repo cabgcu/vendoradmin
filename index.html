@@ -5553,12 +5553,12 @@
             if (vendor.brevo_message_id) {
                 const withoutBrackets = normalizeBrevoMessageId(vendor.brevo_message_id);
                 // Brevo API rejects angle-bracket messageIds with 400, so only use the clean ID
-                urlsToTry.push(`${baseUrl}&messageId=${encodeURIComponent(withoutBrackets)}`);
+                urlsToTry.push(`${baseUrl1}&messageId=${encodeURIComponent(withoutBrackets)}`);
             }
             if (vendor.email_sent_at) {
                 const startDate = vendor.email_sent_at.split('T')[0];
                 const endDate = new Date().toISOString().split('T')[0];
-                urlsToTry.push(`${baseUrl}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}&sort=desc`);
+                urlsToTry.push(`${baseUrl1}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}&sort=desc`);
             }
             // Broadest fallback — recent events for this email address
             urlsToTry.push(`${baseUrl1}&sort=desc`);
