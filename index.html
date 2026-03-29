@@ -3222,8 +3222,10 @@
 
         if (vendorsData) {
             const vendorsWithStatus = vendorsData.filter(v => v.email_delivery_status);
+            const vendorsWithBrevoId = vendorsData.filter(v => v.brevo_message_id);
+            console.log(`refreshData: Fetched ${vendorsData.length} vendors. ${vendorsWithStatus.length} have email_delivery_status, ${vendorsWithBrevoId.length} have brevo_message_id`);
             if (vendorsWithStatus.length > 0) {
-                console.log(`refreshData: Found ${vendorsWithStatus.length} vendors with email_delivery_status:`, vendorsWithStatus.map(v => ({ id: v.id, status: v.email_delivery_status, email: v.preferred_email })));
+                console.log(`refreshData: Vendors with delivery status:`, vendorsWithStatus.map(v => ({ id: v.id, status: v.email_delivery_status, email: v.preferred_email, sent_at: v.email_sent_at, brevo_id: v.brevo_message_id })));
             }
 
             vendorsData.forEach((v, index) => {
