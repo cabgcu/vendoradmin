@@ -5761,6 +5761,11 @@
     function startEmailStatusPolling() {
         if (emailStatusInterval) clearInterval(emailStatusInterval);
         if (!isBuiltinEnabled('email_status_polling')) return;
+        // Don't poll — webhook updates are real-time and more reliable
+        // Polling conflicts with webhook updates and causes race conditions
+        console.log('Email status polling disabled (using webhook instead)');
+        return;
+
         const pollMinutes = getBuiltinSetting('email_status_polling', 'interval') || 2;
         let _emailPollRunning = false;
         emailStatusInterval = setInterval(async () => {
@@ -5919,15 +5924,13 @@
     }
 
     function scheduleBrevoStatusChecks(vendorId) {
-        [30, 90, 180].forEach(seconds => {
-            setTimeout(() => fetchEmailStatus(vendorId).then(() => renderTable()), seconds * 1000);
-        });
+        // Disabled — webhook updates are real-time, no polling needed
+        console.log(`scheduleBrevoStatusChecks disabled for vendor ${vendorId} (using webhook)`);
     }
 
     function scheduleBrevoBulkStatusChecks() {
-        [30, 90, 180].forEach(seconds => {
-            setTimeout(() => refreshAllEmailStatuses(true), seconds * 1000);
-        });
+        // Disabled — webhook updates are real-time, no polling needed
+        console.log('scheduleBrevoBulkStatusChecks disabled (using webhook)');
     }
 
     function openBulkEmailModal() {
