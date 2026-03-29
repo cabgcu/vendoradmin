@@ -5510,10 +5510,20 @@
     // and determines the highest-priority delivery status.
     async function fetchEmailStatus(vendorId) {
         const vendor = currentData.vendors.find(v => v.id === vendorId);
-        if (!vendor || !vendor.preferred_email) return null;
+        if (!vendor || !vendor.preferred_email) {
+            console.warn(`fetchEmailStatus: vendor ${vendorId} not found or no email`);
+            return null;
+        }
 
         // If no email has been sent yet, nothing to check
-        if (!hasCurrentMarketEmail(vendor)) return null;
+        if (!hasCurrentMarketEmail(vendor)) {
+            console.warn(`fetchEmailStatus: vendor ${vendorId} has no email_sent or brevo_message_id. Data:`, {
+                email_sent: vendor.email_sent,
+                brevo_message_id: vendor.brevo_message_id,
+                email_sent_at: vendor.email_sent_at
+            });
+            return null;
+        }
 
         try {
             // Query Brevo's transactional email events for this recipient
@@ -5572,6 +5582,7 @@
             }
 
             if (events.length === 0) {
+                console.log(`fetchEmailStatus: No Brevo events yet for vendor ${vendorId}. Status remains "sent".`);
                 // No delivery events from Brevo yet. Keep status as 'sent'
                 // since we know the email was dispatched (hasCurrentMarketEmail passed).
                 if (vendor.email_delivery_status !== 'sent') {
@@ -5613,6 +5624,7 @@
             const updateData = { email_delivery_status: highestStatus };
             await _supabase.from('vendors').update(updateData).eq('id', vendorId);
             vendor.email_delivery_status = highestStatus;
+            console.log(`fetchEmailStatus: Updated vendor ${vendorId} to status "${highestStatus}"`, { events: events.length, latestDate });
 
             return { status: highestStatus, events: events, latestDate: latestDate };
         } catch (err) {
