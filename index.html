@@ -237,6 +237,14 @@
             background: var(--glass-active);
             border-color: rgba(255, 255, 255, 0.15);
         }
+        .vendor-card.dragging {
+            opacity: 0.5;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .vendor-card.drag-over {
+            border: 2px solid #0A84FF;
+            background: rgba(10, 132, 255, 0.15);
+        }
 
         .vendor-card-checkbox {
             position: absolute;
@@ -1701,6 +1709,17 @@
                     <div id="dynamicCategoryFilterList" style="margin-left: 8px;">
                         <!-- Populated by JS -->
                     </div>
+                </div>
+
+                <!-- EMAIL STATUS FILTER -->
+                <div class="filter-section">
+                    <div class="filter-section-title">📧 Email Status</div>
+                    <label class="filter-checkbox"><input type="radio" name="email-filter" value="email-all" checked onchange="renderTable()"> All</label>
+                    <label class="filter-checkbox"><input type="radio" name="email-filter" value="email-sent" onchange="renderTable()"> ✓ Sent</label>
+                    <label class="filter-checkbox"><input type="radio" name="email-filter" value="email-unsent" onchange="renderTable()"> ⏳ Unsent</label>
+                    <label class="filter-checkbox"><input type="radio" name="email-filter" value="email-delivered" onchange="renderTable()"> 📬 Delivered</label>
+                    <label class="filter-checkbox"><input type="radio" name="email-filter" value="email-opened" onchange="renderTable()"> 👁️ Opened</label>
+                    <label class="filter-checkbox"><input type="radio" name="email-filter" value="email-clicked" onchange="renderTable()"> 🔗 Clicked</label>
                 </div>
 
                 <!-- SORT OPTIONS -->
@@ -4501,6 +4520,7 @@
         const statusFilter = document.querySelector('input[name="status-filter"]:checked')?.value || 'status-all';
         const attendanceFilter = document.querySelector('input[name="attendance-filter"]:checked')?.value || 'att-all';
         const categoryFilter = document.querySelector('input[name="category-filter"]:checked')?.value || 'cat-all';
+        const emailFilter = document.querySelector('input[name="email-filter"]:checked')?.value || 'email-all';
         const filterPower = document.getElementById('filter-power')?.checked || false;
         const filterFood = document.getElementById('filter-food')?.checked || false;
 
@@ -4543,6 +4563,16 @@
             if (categoryFilter !== 'cat-all') {
                 const catTarget = categoryFilter.substring(4);
                 if (!v.autoCategories || !v.autoCategories.some(c => c.toLowerCase() === catTarget.toLowerCase())) return false;
+            }
+
+            // Email status filter
+            if (emailFilter !== 'email-all') {
+                const wasActuallySent = v.email_sent && (v.email_sent_at || v.brevo_message_id);
+                if (emailFilter === 'email-sent' && !wasActuallySent) return false;
+                if (emailFilter === 'email-unsent' && wasActuallySent) return false;
+                if (emailFilter === 'email-delivered' && v.email_delivery_status !== 'delivered') return false;
+                if (emailFilter === 'email-opened' && v.email_delivery_status !== 'opened') return false;
+                if (emailFilter === 'email-clicked' && v.email_delivery_status !== 'clicked') return false;
             }
 
             // Special needs filters
@@ -4682,8 +4712,8 @@
             const tagsHtml = [statusTag, attTag, specialTags, emailTag].filter(t => t).join('');
 
             return `
-            <div class="vendor-card" onclick="openReviewModal('${v.id}')">
-                <input type="checkbox" class="vendor-card-checkbox" value="${v.id}" onchange="updateEmailButton()">
+            <div class="vendor-card" draggable="true" ondragstart="handleCardDragStart(event, '${v.id}')" ondragover="handleCardDragOver(event)" ondragleave="handleCardDragLeave(event)" ondrop="handleCardDrop(event, '${v.id}')" data-vendor-id="${v.id}" onclick="openReviewModal('${v.id}')">
+                <input type="checkbox" class="vendor-card-checkbox" value="${v.id}" onchange="updateEmailButton()" onclick="event.stopPropagation()">
                 <div class="vendor-card-header">
                     <div>
                         <div class="vendor-card-name">${v.first_name} ${v.last_name}</div>
@@ -4807,6 +4837,72 @@
 
     let draggedVendorId = null;
 
+    // Card drag-and-drop handlers
+    function handleCardDragStart(e, id) {
+        draggedVendorId = id;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+        setTimeout(() => {
+            const card = document.querySelector(`[data-vendor-id="${id}"]`);
+            if (card) card.classList.add('dragging');
+        }, 0);
+    }
+
+    function handleCardDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const card = e.currentTarget.closest('.vendor-card');
+        if (card && !card.classList.contains('drag-over')) {
+            document.querySelectorAll('.vendor-card.drag-over').forEach(el => el.classList.remove('drag-over'));
+            card.classList.add('drag-over');
+        }
+    }
+
+    function handleCardDragLeave(e) {
+        const card = e.currentTarget.closest('.vendor-card');
+        if (card) card.classList.remove('drag-over');
+    }
+
+    function handleCardDrop(e, targetId) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.querySelectorAll('.vendor-card.drag-over').forEach(el => el.classList.remove('drag-over'));
+        document.querySelectorAll('.vendor-card.dragging').forEach(el => el.classList.remove('dragging'));
+
+        if (draggedVendorId && draggedVendorId !== targetId) {
+            let currentOrder = JSON.parse(localStorage.getItem('market_custom_order_' + currentData.activeId) || '[]');
+
+            // Sync with any new vendors
+            currentData.vendors.forEach(v => {
+                if (!currentOrder.includes(v.id)) currentOrder.push(v.id);
+            });
+
+            const fromIdx = currentOrder.indexOf(draggedVendorId);
+            let toIdx = currentOrder.indexOf(targetId);
+
+            if (fromIdx > -1 && toIdx > -1) {
+                currentOrder.splice(fromIdx, 1);
+                toIdx = currentOrder.indexOf(targetId);
+
+                if (fromIdx < toIdx) {
+                    currentOrder.splice(toIdx + 1, 0, draggedVendorId);
+                } else {
+                    currentOrder.splice(toIdx, 0, draggedVendorId);
+                }
+            }
+
+            localStorage.setItem('market_custom_order_' + currentData.activeId, JSON.stringify(currentOrder));
+
+            const sortSelect = document.getElementById('sortFilter');
+            if (sortSelect) sortSelect.value = 'custom';
+            localStorage.setItem('marketLastSort', 'custom');
+
+            renderTable();
+        }
+        draggedVendorId = null;
+    }
+
+    // Legacy table drag handlers (kept for compatibility)
     function handleDragStart(e, id) {
         draggedVendorId = id;
         e.dataTransfer.effectAllowed = 'move';
@@ -4833,35 +4929,30 @@
         e.stopPropagation();
         document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
         document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
-        
+
         if (draggedVendorId && draggedVendorId !== targetId) {
             let currentOrder = JSON.parse(localStorage.getItem('market_custom_order_' + currentData.activeId) || '[]');
-            
-            // Instantly sync the saved order with any brand new vendors so math doesn't break
+
             currentData.vendors.forEach(v => {
                 if (!currentOrder.includes(v.id)) currentOrder.push(v.id);
             });
-            
+
             const fromIdx = currentOrder.indexOf(draggedVendorId);
             let toIdx = currentOrder.indexOf(targetId);
-            
+
             if (fromIdx > -1 && toIdx > -1) {
-                // Remove from old position
                 currentOrder.splice(fromIdx, 1);
-                
-                // Recalculate target position since array shifted
                 toIdx = currentOrder.indexOf(targetId);
-                
-                // If dragged downwards, place after. If dragged upwards, place before.
+
                 if (fromIdx < toIdx) {
                     currentOrder.splice(toIdx + 1, 0, draggedVendorId);
                 } else {
                     currentOrder.splice(toIdx, 0, draggedVendorId);
                 }
             }
-            
+
             localStorage.setItem('market_custom_order_' + currentData.activeId, JSON.stringify(currentOrder));
-            
+
             const sortSelect = document.getElementById('sortFilter');
             if(sortSelect) sortSelect.value = 'custom';
             localStorage.setItem('marketLastSort', 'custom');
@@ -6227,56 +6318,33 @@
             return;
         }
 
-        if (activeFilter === 'inbox' || activeFilter === 'review') {
-            showToast("Cannot send emails from this tab.");
+        // Get currently selected vendors from checkboxes
+        const selectedCheckboxes = document.querySelectorAll('.vendor-card-checkbox:checked');
+        const selectedVendorIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+        if (selectedVendorIds.length === 0) {
+            showToast("Please select at least one vendor to email.");
             return;
         }
 
-        if (activeFilter === 'approved') {
-            const needsReviewCount = currentData.vendors.filter(v => v.status === 'Needs Review').length;
-            if (needsReviewCount > 0) {
-                const bypass = confirm(`WARNING: There are still ${needsReviewCount} vendor(s) in "Needs Review".\n\nAre you sure you want to proceed with sending Approved emails before reviewing everyone?`);
-                if (!bypass) return;
-            }
-        }
-
-        const filteredVendors = getFilteredVendorsForCurrentView();
-        const eligibleVendors = filteredVendors.filter(v => v.status !== 'Needs Review' && v.status !== 'Pending');
+        const selectedVendors = selectedVendorIds.map(id => currentData.vendors.find(v => v.id === id)).filter(Boolean);
+        const eligibleVendors = selectedVendors.filter(v => v.status !== 'Needs Review' && v.status !== 'Pending');
 
         if (eligibleVendors.length === 0) {
-            showToast("No eligible vendors found in this view.");
+            showToast("Selected vendors cannot receive emails (Needs Review or Pending status).");
             return;
         }
 
         const listEl = document.getElementById('bulkEmailList');
         listEl.innerHTML = eligibleVendors.map(v => {
             let isSent = false;
+            const wasActuallySent = v.email_sent && (v.email_sent_at || v.brevo_message_id);
+            isSent = wasActuallySent;
 
-            // Apply the exact same contextual logic to the bulk send modal
-            // Only consider email "sent" if we have proof (timestamp or message ID)
-            const bulkWasActuallySent = v.email_sent && (v.email_sent_at || v.brevo_message_id);
-            if (bulkWasActuallySent) {
-                if (activeFilter === 'power') {
-                    isSent = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-                } else if (activeFilter === 'denied') {
-                    isSent = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-                } else if (activeFilter === 'approved') {
-                    isSent = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
-                } else {
-                    if (v.status === 'Denied') {
-                        isSent = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-                    } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
-                        isSent = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-                    } else if (v.status === 'Approved' || v.status === 'Checked In') {
-                        isSent = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
-                    }
-                }
-            }
-            
             const sentBadge = isSent ? `<span style="color:#34C759; font-size:0.8rem; margin-left:8px;">[Already Sent]</span>` : `<span style="color:#FF9F0A; font-size:0.8rem; margin-left:8px;">[Unsent]</span>`;
             const powerBadge = v.needs_power === 'Yes' ? ' [Power Requested]' : '';
             const foodBadge = (v.food_license && v.food_license.toLowerCase() === 'yes') ? ' [FOOD]' : '';
-            
+
             return `
             <div class="vendor-checkbox-item">
                 <input type="checkbox" id="chk-${v.id}" class="bulk-vendor-checkbox" value="${v.id}" ${!isSent ? 'checked' : ''}>
@@ -6285,9 +6353,8 @@
             `;
         }).join('');
 
-        if (activeFilter === 'power') document.getElementById('bulkEmailTemplate').value = 'power';
-        else if (activeFilter === 'denied') document.getElementById('bulkEmailTemplate').value = 'denied';
-        else document.getElementById('bulkEmailTemplate').value = 'approved';
+        // Default to approved template
+        document.getElementById('bulkEmailTemplate').value = 'approved';
 
         document.getElementById('bulkEmailModal').style.display = 'flex';
     }
