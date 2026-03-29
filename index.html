@@ -5450,7 +5450,6 @@
                 brevo_message_id: brevoMessageId,
                 email_delivery_status: 'sent',
                 email_sent_at: new Date().toISOString(),
-                email_sent_event_id: currentData.activeId,
                 email_tracking_token: trackingToken,
                 email_html_content: htmlContent,
                 email_subject: parsedSubj
@@ -5458,6 +5457,7 @@
             if (templates.targetTemplate !== 'custom') {
                 updatePayload.email_sent = templates.targetTemplate;
             }
+            // Note: email_sent_event_id column is bigint, incompatible with UUID — omitting
 
             let { error: updateErr, payload: attemptedPrimaryPayload } = await updateVendorWithSchemaFallback(vendor.id, updatePayload);
             if (updateErr) {
@@ -5476,9 +5476,6 @@
                 if (templates.targetTemplate !== 'custom') {
                     fallbackPayload.email_sent = templates.targetTemplate;
                 }
-                if (Object.prototype.hasOwnProperty.call(attemptedPrimaryPayload, 'email_sent_event_id')) {
-                    fallbackPayload.email_sent_event_id = currentData.activeId;
-                }
                 const { error: fallbackErr } = await updateVendorWithSchemaFallback(vendor.id, fallbackPayload);
                 if (fallbackErr) {
                     console.error('Fallback email tracking update ALSO failed:', {
@@ -5494,7 +5491,6 @@
             vendor.brevo_message_id = brevoMessageId;
             vendor.email_delivery_status = 'sent';
             vendor.email_sent_at = updatePayload.email_sent_at;
-            vendor.email_sent_event_id = updatePayload.email_sent_event_id;
             vendor.email_tracking_token = trackingToken;
             vendor.email_html_content = htmlContent;
             vendor.email_subject = parsedSubj;
