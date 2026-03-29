@@ -183,6 +183,151 @@
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; }
         .table-container { margin-top: 20px; border-radius: var(--radius-card); overflow: hidden; overflow-x: auto; }
 
+        /* ── NEW SIDEBAR & CARD LAYOUT ── */
+        #filterSidebar { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+        #filterSidebar::-webkit-scrollbar { width: 6px; }
+        #filterSidebar::-webkit-scrollbar-track { background: transparent; }
+        #filterSidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        .filter-section { margin-bottom: 24px; }
+        .filter-section-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            transition: color 0.2s ease;
+        }
+        .filter-checkbox:hover { color: #0A84FF; }
+        .filter-checkbox input[type="checkbox"],
+        .filter-checkbox input[type="radio"] {
+            margin-right: 10px;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            accent-color: #0A84FF;
+        }
+
+        #vendorCardsContainer { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+        #vendorCardsContainer::-webkit-scrollbar { width: 6px; }
+        #vendorCardsContainer::-webkit-scrollbar-track { background: transparent; }
+        #vendorCardsContainer::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        .vendor-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-inner);
+            padding: 16px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .vendor-card:hover {
+            background: var(--glass-active);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .vendor-card-checkbox {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #0A84FF;
+        }
+
+        .vendor-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            padding-left: 32px;
+        }
+        .vendor-card-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+        .vendor-card-id {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .vendor-card-contact {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+
+        .vendor-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .vendor-tag {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+        .vendor-tag.status-approved { background: rgba(52, 199, 89, 0.15); color: #34C759; border: 1px solid rgba(52, 199, 89, 0.3); }
+        .vendor-tag.status-denied { background: rgba(255, 59, 48, 0.15); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); }
+        .vendor-tag.status-pending { background: rgba(255, 149, 0, 0.15); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); }
+        .vendor-tag.att-confirmed { background: rgba(52, 199, 89, 0.15); color: #34C759; }
+        .vendor-tag.att-awaiting { background: rgba(255, 159, 10, 0.15); color: #FF9F0A; }
+        .vendor-tag.att-declined { background: rgba(255, 59, 48, 0.15); color: #FF3B30; }
+        .vendor-tag.special { background: rgba(10, 132, 255, 0.15); color: #0A84FF; }
+
+        .vendor-card-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+        }
+        .vendor-card-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .vendor-card-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .vendor-card-btn.primary {
+            background: rgba(10, 132, 255, 0.2);
+            border-color: rgba(10, 132, 255, 0.4);
+            color: #0A84FF;
+        }
+        .vendor-card-btn.primary:hover {
+            background: rgba(10, 132, 255, 0.3);
+            border-color: rgba(10, 132, 255, 0.6);
+        }
+
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; min-width: 1100px; }
         th { padding: 16px; text-align: left; color: var(--text-muted); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; }
         th:last-child { text-align: right; }
@@ -1516,43 +1661,79 @@
             </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-            <div class="filter-row" style="margin-bottom: 0;">
-                <input type="text" id="search" class="modern-input" placeholder="Search name, email, or student ID..." onkeyup="renderTable()" style="flex: 2; min-width: 200px;">
-                
-                <select id="unifiedFilter" class="modern-input" style="flex: 1.5; min-width: 180px;" onchange="localStorage.setItem('marketLastUnifiedFilter', this.value); renderTable()">
-                    <option value="all">All Vendors</option>
-                    <optgroup label="Special Requests">
-                        <option value="req_power">Needs Power</option>
-                        <option value="req_food">Food License</option>
-                    </optgroup>
-                    <optgroup label="Attendance">
-                        <option value="att_confirmed">Confirmed</option>
-                        <option value="att_declined">Declined / Can't Make It</option>
-                        <option value="att_awaiting">Awaiting Reply</option>
-                    </optgroup>
-                    <optgroup label="Vendor Themes" id="dynamicCategoryGroup">
-                        <!-- Populated by JS -->
-                    </optgroup>
-                </select>
-                
-                <select id="sortFilter" class="modern-input" style="flex: 1; min-width: 200px;" onchange="localStorage.setItem('marketLastSort', this.value); renderTable()">
-                    <option value="default">Default Order</option>
-                    <option value="custom">Custom (Drag & Drop)</option>
-                    <option value="az">Name: A-Z</option>
-                    <option value="za">Name: Z-A</option>
-                    <option value="color">Sort by Color</option>
-                </select>
+        <div style="display: flex; gap: 0; height: calc(100vh - 200px); margin-bottom: 20px;">
+            <!-- LEFT SIDEBAR: FILTERS -->
+            <div id="filterSidebar" style="width: 280px; background: rgba(15, 15, 15, 0.6); border-right: 1px solid rgba(255, 255, 255, 0.08); padding: 20px; overflow-y: auto; flex-shrink: 0;">
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="search" class="modern-input" placeholder="Search vendors..." onkeyup="renderTable()" style="width: 100%; padding: 10px;">
+                </div>
 
-                <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; flex-shrink: 0; display: none; height: 50px;">Send Emails...</button>
+                <!-- STATUS FILTER -->
+                <div class="filter-section">
+                    <div class="filter-section-title">📊 Status</div>
+                    <label class="filter-checkbox"><input type="radio" name="status-filter" value="status-all" checked onchange="renderTable()"> All</label>
+                    <label class="filter-checkbox"><input type="radio" name="status-filter" value="status-needs-review" onchange="renderTable()"> Needs Review</label>
+                    <label class="filter-checkbox"><input type="radio" name="status-filter" value="status-approved" onchange="renderTable()"> Approved</label>
+                    <label class="filter-checkbox"><input type="radio" name="status-filter" value="status-denied" onchange="renderTable()"> Denied</label>
+                    <label class="filter-checkbox"><input type="radio" name="status-filter" value="status-pending" onchange="renderTable()"> Pending</label>
+                </div>
+
+                <!-- ATTENDANCE FILTER -->
+                <div class="filter-section">
+                    <div class="filter-section-title">🎯 Attendance</div>
+                    <label class="filter-checkbox"><input type="radio" name="attendance-filter" value="att-all" checked onchange="renderTable()"> All</label>
+                    <label class="filter-checkbox"><input type="radio" name="attendance-filter" value="att-confirmed" onchange="renderTable()"> ✓ Confirmed</label>
+                    <label class="filter-checkbox"><input type="radio" name="attendance-filter" value="att-awaiting" onchange="renderTable()"> ⏳ Awaiting</label>
+                    <label class="filter-checkbox"><input type="radio" name="attendance-filter" value="att-declined" onchange="renderTable()"> ✕ Declined</label>
+                </div>
+
+                <!-- SPECIAL NEEDS FILTER -->
+                <div class="filter-section">
+                    <div class="filter-section-title">🔧 Special Needs</div>
+                    <label class="filter-checkbox"><input type="checkbox" id="filter-power" onchange="renderTable()"> ⚡ Needs Power</label>
+                    <label class="filter-checkbox"><input type="checkbox" id="filter-food" onchange="renderTable()"> 🍽️ Food License</label>
+                </div>
+
+                <!-- CATEGORY FILTER -->
+                <div class="filter-section">
+                    <div class="filter-section-title">📂 Category</div>
+                    <label class="filter-checkbox"><input type="radio" name="category-filter" value="cat-all" checked onchange="renderTable()"> All</label>
+                    <div id="dynamicCategoryFilterList" style="margin-left: 8px;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- SORT OPTIONS -->
+                <div class="filter-section" style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 15px;">
+                    <div class="filter-section-title">⬇️ Sort By</div>
+                    <select id="sortFilter" class="modern-input" style="width: 100%; padding: 8px;" onchange="localStorage.setItem('marketLastSort', this.value); renderTable()">
+                        <option value="default">Default Order</option>
+                        <option value="az">Name: A-Z</option>
+                        <option value="za">Name: Z-A</option>
+                        <option value="custom">Custom (Drag & Drop)</option>
+                    </select>
+                </div>
             </div>
-        </div>
-        
-        <div class="table-container">
-            <table>
-                <thead><tr><th>App # / ID</th><th>Vendor Name</th><th>Contact</th><th>Status</th><th>Vendor Confirmed</th><th>Check In</th><th>Email</th><th>Actions</th></tr></thead>
-                <tbody id="vendorTableBody"></tbody>
-            </table>
+
+            <!-- RIGHT CONTENT: VENDORS -->
+            <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <!-- TOP ACTION BAR -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: rgba(15, 15, 15, 0.4); border-bottom: 1px solid rgba(255, 255, 255, 0.08); gap: 15px;">
+                    <div style="flex: 1; font-size: 0.85rem; color: var(--text-muted);">
+                        Showing <strong id="vendorCountDisplay">0</strong> applicants
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="toggleAllVendorCheckboxes(true)" id="selectAllBtn" class="btn-action" style="padding: 10px 16px; font-size: 0.85rem; display: none;">Select All</button>
+                        <button onclick="toggleAllVendorCheckboxes(false)" id="clearAllBtn" class="btn-action" style="padding: 10px 16px; font-size: 0.85rem; display: none;">Clear</button>
+                        <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; padding: 10px 16px; font-size: 0.85rem; display: none; background: var(--gradient-accent);">📧 Email Selected</button>
+                    </div>
+                </div>
+
+                <!-- VENDOR CARDS GRID -->
+                <div id="vendorCardsContainer" style="flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; align-content: start;">
+                    <!-- Populated by renderTable() -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -4315,7 +4496,62 @@
     }
 
     function renderTable() {
-        const filtered = getFilteredVendorsForCurrentView();
+        // Get filter values from new sidebar
+        const searchTerm = (document.getElementById('search')?.value || '').toLowerCase();
+        const statusFilter = document.querySelector('input[name="status-filter"]:checked')?.value || 'status-all';
+        const attendanceFilter = document.querySelector('input[name="attendance-filter"]:checked')?.value || 'att-all';
+        const categoryFilter = document.querySelector('input[name="category-filter"]:checked')?.value || 'cat-all';
+        const filterPower = document.getElementById('filter-power')?.checked || false;
+        const filterFood = document.getElementById('filter-food')?.checked || false;
+
+        // Apply filters
+        let filtered = currentData.vendors.filter(v => {
+            // Search filter
+            if (searchTerm) {
+                const searchStr = `${v.student_id} ${v.first_name} ${v.last_name} ${v.preferred_email} ${v.gcu_email} ${v.description}`.toLowerCase();
+                if (!searchStr.includes(searchTerm)) return false;
+            }
+
+            // Status filter
+            if (statusFilter !== 'status-all') {
+                const statusMap = {
+                    'status-needs-review': 'Needs Review',
+                    'status-approved': ['Approved', 'Checked In'],
+                    'status-denied': 'Denied',
+                    'status-pending': 'Pending'
+                };
+                const target = statusMap[statusFilter];
+                if (Array.isArray(target)) {
+                    if (!target.includes(v.status)) return false;
+                } else {
+                    if (v.status !== target) return false;
+                }
+            }
+
+            // Attendance filter
+            if (attendanceFilter !== 'att-all') {
+                const attState = getAttendanceState(v);
+                const attMap = {
+                    'att-confirmed': 'confirmed',
+                    'att-awaiting': 'awaiting',
+                    'att-declined': 'declined'
+                };
+                if (attState !== attMap[attendanceFilter]) return false;
+            }
+
+            // Category filter
+            if (categoryFilter !== 'cat-all') {
+                const catTarget = categoryFilter.substring(4);
+                if (!v.autoCategories || !v.autoCategories.some(c => c.toLowerCase() === catTarget.toLowerCase())) return false;
+            }
+
+            // Special needs filters
+            if (filterPower && v.needs_power !== 'Yes') return false;
+            if (filterFood && (!v.food_license || v.food_license.toLowerCase() !== 'yes')) return false;
+
+            return true;
+        });
+
         const vendorsWithStatus = filtered.filter(v => v.email_delivery_status && v.email_delivery_status !== 'sent');
 
         // Debug: Check if any vendors in all data have status but not in filtered view
@@ -4366,87 +4602,106 @@
             if (email) emailCounts[email] = (emailCounts[email] || 0) + 1;
         });
 
-        const blastBtn = document.getElementById('blastBtn');
-        if (currentUser.role === 'admin') {
-            if (activeFilter === 'approved') {
-                blastBtn.style.display = 'inline-block';
-                blastBtn.innerText = 'Send Approved Emails...';
-            } else if (activeFilter === 'denied') {
-                blastBtn.style.display = 'inline-block';
-                blastBtn.innerText = 'Send Denied Emails...';
-            } else if (activeFilter === 'power') {
-                blastBtn.style.display = 'inline-block';
-                blastBtn.innerText = 'Send Power Emails...';
-            } else {
-                blastBtn.style.display = 'none';
-            }
-        } else {
-            blastBtn.style.display = 'none';
+        // Update vendor count display
+        const countDisplay = document.getElementById('vendorCountDisplay');
+        if (countDisplay) countDisplay.textContent = filtered.length;
+
+        // Show/hide select all buttons
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        if (selectAllBtn && clearAllBtn) {
+            selectAllBtn.style.display = filtered.length > 0 ? 'block' : 'none';
+            clearAllBtn.style.display = filtered.length > 0 ? 'block' : 'none';
         }
 
-        const tbody = document.getElementById('vendorTableBody');
-        
+        // Show email button for admin
+        const blastBtn = document.getElementById('blastBtn');
+        if (blastBtn) {
+            blastBtn.style.display = (currentUser.role === 'admin' && filtered.length > 0) ? 'block' : 'none';
+            blastBtn.innerText = '📧 Email Selected';
+        }
+
+        const cardContainer = document.getElementById('vendorCardsContainer');
+
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 40px;">No applications found in this view.</td></tr>';
+            cardContainer.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted);"><div style="font-size: 3rem; margin-bottom: 10px;">📭</div><div style="font-size: 1.1rem;">No applicants found</div><div style="font-size: 0.9rem; margin-top: 10px;">Try adjusting your filters</div></div>';
             return;
         }
 
-        const generateRowHtml = (v) => {
-            const isAppr = v.status === 'Approved' || v.status === 'Checked In';
-            const statusToggle = `
-                <div class="status-toggle-group" onclick="event.stopPropagation()">
-                    <button onclick="quickStatus('${v.id}', 'Approved')" class="btn-quick-status ${isAppr ? 'active-approve' : ''}" title="Mark as Approved">✓</button>
-                    <button onclick="quickStatus('${v.id}', 'Needs Review')" class="btn-quick-status ${v.status === 'Needs Review' ? 'active-review' : ''}" title="Mark as Needs Review">...</button>
-                    <button onclick="quickStatus('${v.id}', 'Denied')" class="btn-quick-status ${v.status === 'Denied' ? 'active-deny' : ''}" title="Mark as Denied">✕</button>
-                </div>
-            `;
-            
-            // Contextual badge logic based on the active tab
-            // Only consider email "sent" if we have proof it was actually sent (email_sent_at timestamp)
-            let isEmailSentForView = false;
+        // Sort filtered vendors
+        const sortVal = document.getElementById('sortFilter')?.value || 'default';
+        if (sortVal === 'az') {
+            filtered.sort((a, b) => (a.first_name || '').localeCompare(b.first_name || ''));
+        } else if (sortVal === 'za') {
+            filtered.sort((a, b) => (b.first_name || '').localeCompare(a.first_name || ''));
+        } else if (sortVal === 'custom') {
+            let customOrder = JSON.parse(localStorage.getItem('market_custom_order_' + currentData.activeId) || '[]');
+            filtered.sort((a, b) => {
+                let idxA = customOrder.indexOf(a.id);
+                let idxB = customOrder.indexOf(b.id);
+                if (idxA === -1 && idxB === -1) return a.appNumber - b.appNumber;
+                if (idxA === -1) return 1;
+                if (idxB === -1) return -1;
+                return idxA - idxB;
+            });
+        } else {
+            filtered.sort((a, b) => a.appNumber - b.appNumber);
+        }
+
+        const generateCardHtml = (v) => {
+            // Status badge
+            let statusTag = '';
+            if (v.status === 'Needs Review') statusTag = `<span class="vendor-tag status-pending">⏳ Needs Review</span>`;
+            else if (v.status === 'Approved' || v.status === 'Checked In') statusTag = `<span class="vendor-tag status-approved">✓ Approved</span>`;
+            else if (v.status === 'Denied') statusTag = `<span class="vendor-tag status-denied">✕ Denied</span>`;
+
+            // Attendance badge
+            const attState = getAttendanceState(v);
+            let attTag = '';
+            if (attState === 'confirmed') attTag = `<span class="vendor-tag att-confirmed">✓ Confirmed</span>`;
+            else if (attState === 'awaiting') attTag = `<span class="vendor-tag att-awaiting">⏳ Awaiting</span>`;
+            else if (attState === 'declined') attTag = `<span class="vendor-tag att-declined">✕ Declined</span>`;
+
+            // Special needs
+            let specialTags = '';
+            if (v.needs_power === 'Yes') specialTags += `<span class="vendor-tag special">⚡ Power</span>`;
+            if (v.food_license && v.food_license.toLowerCase() === 'yes') specialTags += `<span class="vendor-tag special">🍽️ Food License</span>`;
+
+            // Email status
             const wasActuallySent = v.email_sent && (v.email_sent_at || v.brevo_message_id);
-
+            let emailTag = '';
             if (wasActuallySent) {
-                if (activeFilter === 'power') {
-                    isEmailSentForView = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-                } else if (activeFilter === 'denied') {
-                    isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-                } else if (activeFilter === 'approved') {
-                    isEmailSentForView = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
+                if (v.email_delivery_status && v.email_delivery_status !== 'sent') {
+                    const dDisplay = getEmailDeliveryDisplay(v.email_delivery_status);
+                    emailTag = `<span class="vendor-tag special" style="background: ${dDisplay.bg}20; color: ${dDisplay.color};">${dDisplay.icon} ${dDisplay.label}</span>`;
                 } else {
-                    if (v.status === 'Denied') {
-                        isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-                    } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
-                        isEmailSentForView = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-                    } else if (v.status === 'Approved' || v.status === 'Checked In') {
-                        isEmailSentForView = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
-                    } else {
-                        isEmailSentForView = false;
-                    }
+                    emailTag = `<span class="vendor-tag special">✓ Sent</span>`;
                 }
             }
-            
-            let emailSentBadge = '';
-            if (isEmailSentForView) {
-                const deliveryStatus = v.email_delivery_status;
-                if (deliveryStatus && deliveryStatus !== 'sent') {
-                    console.log(`Rendering vendor ${v.id}: displaying delivery status "${deliveryStatus}"`);
-                    const dDisplay = getEmailDeliveryDisplay(deliveryStatus);
-                    emailSentBadge = `<span class="status-badge sent" style="background: ${dDisplay.bg}; color: ${dDisplay.color}; border: 1px solid ${dDisplay.color}40;">${dDisplay.icon} ${dDisplay.label.toUpperCase()}</span>`;
-                } else {
-                    emailSentBadge = `<span class="status-badge sent">SENT</span>`;
-                }
-            } else {
-                emailSentBadge = `<span class="status-badge draft">UNSENT</span>`;
-            }
 
-            // Clean Badge Layout Generation
-            let tagsArray = [];
+            const tagsHtml = [statusTag, attTag, specialTags, emailTag].filter(t => t).join('');
 
-            const colorNote = getParsedNotes(v.internal_notes).find(n => n.type === 'color_code');
-            const rowColor = colorNote ? colorNote.color : '';
-            const rowBgStyle = rowColor ? `background: ${rowColor}20 !important;` : '';
-            const rowBorderStyle = rowColor ? `background: ${rowColor}20 !important; border-left: 6px solid ${rowColor} !important; border-radius: 16px 0 0 16px;` : 'border-radius: 16px 0 0 16px;';
+            return `
+            <div class="vendor-card" onclick="openReviewModal('${v.id}')">
+                <input type="checkbox" class="vendor-card-checkbox" value="${v.id}" onchange="updateEmailButton()">
+                <div class="vendor-card-header">
+                    <div>
+                        <div class="vendor-card-name">${v.first_name} ${v.last_name}</div>
+                        <div class="vendor-card-id">#${v.appNumber}</div>
+                    </div>
+                </div>
+                <div class="vendor-card-contact">${v.preferred_email || 'No email'}</div>
+                ${tagsHtml ? `<div class="vendor-card-tags">${tagsHtml}</div>` : ''}
+                <div class="vendor-card-actions">
+                    <button class="vendor-card-btn primary" onclick="event.stopPropagation(); openReviewModal('${v.id}')">Review</button>
+                    <button class="vendor-card-btn" onclick="event.stopPropagation(); resendEmail('${v.id}')" title="Send Status Email">Email</button>
+                    <button class="vendor-card-btn" onclick="event.stopPropagation(); openEditModal('${v.id}')">Edit</button>
+                </div>
+            </div>
+            `;
+        };
+
+        cardContainer.innerHTML = filtered.map(v => generateCardHtml(v)).join('');
 
             // Late Strikes Badge (configurable thresholds)
             const strikes = window.vendorStrikes[v.preferred_email]?.length || 0;
@@ -6039,6 +6294,20 @@
 
     function closeBulkEmailModal() {
         document.getElementById('bulkEmailModal').style.display = 'none';
+    }
+
+    function toggleAllVendorCheckboxes(state) {
+        document.querySelectorAll('.vendor-card-checkbox').forEach(cb => cb.checked = state);
+        updateEmailButton();
+    }
+
+    function updateEmailButton() {
+        const checked = document.querySelectorAll('.vendor-card-checkbox:checked').length;
+        const blastBtn = document.getElementById('blastBtn');
+        if (blastBtn) {
+            blastBtn.style.opacity = checked > 0 ? '1' : '0.5';
+            blastBtn.textContent = `📧 Email Selected (${checked})`;
+        }
     }
 
     function toggleAllCheckboxes(state) {
