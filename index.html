@@ -1545,7 +1545,6 @@
                 </select>
 
                 <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; flex-shrink: 0; display: none; height: 50px;">Send Emails...</button>
-                <button onclick="refreshAllEmailStatuses()" id="refreshStatusBtn" class="btn-action" style="white-space: nowrap; flex-shrink: 0; display: none; height: 50px; background: rgba(10, 132, 255, 0.1); border: 1px solid rgba(10, 132, 255, 0.3); color: #0A84FF;">Refresh Email Status</button>
             </div>
         </div>
         
@@ -2084,15 +2083,24 @@
                 // Handle Decline
                 const { data: vData } = await _supabase.from('vendors').select('internal_notes').eq('id', id).single();
                 let notes = getParsedNotes(vData?.internal_notes);
-                
-                notes.unshift({ 
-                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9), 
-                    date: new Date().toISOString(), 
-                    text: "❌ Vendor clicked the 'Can't Make It' link in their email.", 
-                    author: 'System', 
-                    type: 'status_change', 
-                    status: 'Declined' 
-                });
+
+                // Check if "Can't Make It" comment already exists to prevent duplicates
+                const declineCommentExists = notes.some(n =>
+                    n.type === 'status_change' &&
+                    n.status === 'Declined' &&
+                    n.text?.includes("Can't Make It")
+                );
+
+                if (!declineCommentExists) {
+                    notes.unshift({
+                        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
+                        date: new Date().toISOString(),
+                        text: "❌ Vendor clicked the 'Can't Make It' link in their email.",
+                        author: 'System',
+                        type: 'status_change',
+                        status: 'Declined'
+                    });
+                }
 
                 const { error } = await _supabase.from('vendors').update({ attendance_confirmed: false, internal_notes: JSON.stringify(notes) }).eq('id', id);
                 if (error) throw error;
@@ -4359,7 +4367,6 @@
         });
 
         const blastBtn = document.getElementById('blastBtn');
-        const refreshStatusBtn = document.getElementById('refreshStatusBtn');
         if (currentUser.role === 'admin') {
             if (activeFilter === 'approved') {
                 blastBtn.style.display = 'inline-block';
@@ -4373,12 +4380,8 @@
             } else {
                 blastBtn.style.display = 'none';
             }
-            // Show refresh status button on tabs where emails are sent
-            const hasEmailedVendors = filtered.some(v => hasCurrentMarketEmail(v));
-            refreshStatusBtn.style.display = (hasEmailedVendors && ['approved', 'denied', 'power', 'all'].includes(activeFilter)) ? 'inline-block' : 'none';
         } else {
             blastBtn.style.display = 'none';
-            refreshStatusBtn.style.display = 'none';
         }
 
         const tbody = document.getElementById('vendorTableBody');
@@ -5745,12 +5748,6 @@
     }
 
     // Bulk refresh email status for all vendors that have been emailed
-    async function refreshAllEmailStatuses(silent = false) {
-        // Disabled — webhook updates are real-time
-        if (!silent) showToast('Email statuses update in real-time via webhook.');
-        return;
-    }
-
     async function resetCurrentMarketEmailTracking() {
         if (!currentData.activeId) return;
         if (!confirm('Reset email delivery status for ALL applications in this market?')) return;
