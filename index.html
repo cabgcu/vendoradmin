@@ -6014,6 +6014,18 @@
             return;
         }
 
+        // Sync activeFilter with current UI state to fix display glitch
+        const activeBtn = document.querySelector('.control-item.active, .control-item[class*="active-"]');
+        if (activeBtn) {
+            const btnId = activeBtn.id;
+            if (btnId === 'nav-filter-all' || btnId === 'nav-inbox') activeFilter = 'inbox';
+            else if (btnId === 'nav-new') activeFilter = 'new';
+            else if (btnId === 'nav-approved') activeFilter = 'approved';
+            else if (btnId === 'nav-review') activeFilter = 'review';
+            else if (btnId === 'nav-power') activeFilter = 'power';
+            else if (btnId === 'nav-denied') activeFilter = 'denied';
+        }
+
         if (activeFilter === 'inbox' || activeFilter === 'review') {
             showToast("Cannot send emails from this tab.");
             return;
