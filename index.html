@@ -1575,9 +1575,9 @@
             <div style="margin-bottom: 30px; background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.2); padding: 20px; border-radius: 20px;">
                 <label class="stat-label" style="color: #0A84FF; font-size: 0.9rem; margin-bottom: 12px;">Quick Form Access</label>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button onclick="setFormOverride('auto')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1; min-width: 120px; padding: 10px;">Auto</button>
-                    <button onclick="setFormOverride('open')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1; min-width: 120px; padding: 10px;">Force OPEN</button>
-                    <button onclick="setFormOverride('closed')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1; min-width: 120px; padding: 10px;">Force CLOSED</button>
+                    <button id="form-status-auto-scan" onclick="setFormOverride('auto')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1; min-width: 120px; padding: 10px;">Auto</button>
+                    <button id="form-status-open-scan" onclick="setFormOverride('open')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1; min-width: 120px; padding: 10px;">Force OPEN</button>
+                    <button id="form-status-closed-scan" onclick="setFormOverride('closed')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1; min-width: 120px; padding: 10px;">Force CLOSED</button>
                 </div>
             </div>
 
@@ -3740,17 +3740,34 @@
     }
 
     function updateFormStatusUI(status) {
+        // Update settings buttons
         document.querySelectorAll('#form-status-auto, #form-status-open, #form-status-closed').forEach(btn => {
             btn.style.background = 'rgba(255,255,255,0.1)';
             btn.style.boxShadow = 'none';
         });
-        
+
+        // Update scan screen buttons
+        document.querySelectorAll('#form-status-auto-scan, #form-status-open-scan, #form-status-closed-scan').forEach(btn => {
+            btn.style.background = 'rgba(255,255,255,0.1)';
+            btn.style.boxShadow = 'none';
+        });
+
+        // Highlight active settings button
         const activeBtn = document.getElementById(`form-status-${status}`);
         if (activeBtn) {
             if (status === 'auto') activeBtn.style.background = 'var(--gradient-accent)';
             if (status === 'open') activeBtn.style.background = 'var(--gradient-success)';
             if (status === 'closed') activeBtn.style.background = 'var(--gradient-danger)';
             activeBtn.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
+        }
+
+        // Highlight active scan button
+        const activeScanBtn = document.getElementById(`form-status-${status}-scan`);
+        if (activeScanBtn) {
+            if (status === 'auto') activeScanBtn.style.background = 'var(--gradient-accent)';
+            if (status === 'open') activeScanBtn.style.background = 'var(--gradient-success)';
+            if (status === 'closed') activeScanBtn.style.background = 'var(--gradient-danger)';
+            activeScanBtn.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
         }
     }
 
