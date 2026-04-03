@@ -4468,169 +4468,13 @@
     }
 
     function renderTable() {
-        const filtered = getFilteredVendorsForCurrentView();
-        const vendorsWithStatus = filtered.filter(v => v.email_delivery_status && v.email_delivery_status !== 'sent');
+        try {
+            const filtered = getFilteredVendorsForCurrentView();
+            const cardContainer = document.getElementById('vendorCardsContainer');
 
-        // Debug: Check if any vendors in all data have status but not in filtered view
-        const allWithStatus = currentData.vendors.filter(v => v.email_delivery_status && v.email_delivery_status !== 'sent');
-        if (allWithStatus.length > 0 && vendorsWithStatus.length === 0) {
-            console.warn(`renderTable: MISMATCH! All data has ${allWithStatus.length} with non-sent status, but filtered view has 0. Excluded vendors:`, allWithStatus.map(v => ({ id: v.id, email: v.preferred_email, status: v.status, filter_applied: activeFilter })));
-        }
-
-        if (vendorsWithStatus.length > 0) {
-            console.log(`renderTable: Rendering ${filtered.length} vendors, ${vendorsWithStatus.length} with non-sent delivery status:`, vendorsWithStatus.map(v => ({ id: v.id, status: v.email_delivery_status, email: v.preferred_email })));
-        } else {
-            console.log(`renderTable: Rendering ${filtered.length} vendors, none with non-sent delivery status`);
-        }
-
-        const sortVal = document.getElementById('sortFilter')?.value || 'default';
-        if (sortVal === 'az') {
-            filtered.sort((a, b) => (a.first_name || '').localeCompare(b.first_name || ''));
-        } else if (sortVal === 'za') {
-            filtered.sort((a, b) => (b.first_name || '').localeCompare(a.first_name || ''));
-        } else if (sortVal === 'color') {
-            // Sort colored applications first, grouped by color, then uncolored at bottom
-            const colorOrder = ['#FF3B30', '#FF9500', '#FFCC00', '#34C759', '#0A84FF', '#BF5AF2'];
-            filtered.sort((a, b) => {
-                const colorA = getParsedNotes(a.internal_notes).find(n => n.type === 'color_code')?.color || '';
-                const colorB = getParsedNotes(b.internal_notes).find(n => n.type === 'color_code')?.color || '';
-                const idxA = colorA ? colorOrder.indexOf(colorA) : 999;
-                const idxB = colorB ? colorOrder.indexOf(colorB) : 999;
-                if (idxA !== idxB) return idxA - idxB;
-                return a.appNumber - b.appNumber;
-            });
-        } else if (sortVal === 'custom') {
-            let customOrder = JSON.parse(localStorage.getItem('market_custom_order_' + currentData.activeId) || '[]');
-            filtered.sort((a, b) => {
-                let idxA = customOrder.indexOf(a.id);
-                let idxB = customOrder.indexOf(b.id);
-                if (idxA === -1 && idxB === -1) return a.appNumber - b.appNumber;
-                if (idxA === -1) return 1;
-                if (idxB === -1) return -1;
-                return idxA - idxB;
-            });
-        } else {
-            filtered.sort((a, b) => a.appNumber - b.appNumber);
-        }
-        
-        const emailCounts = {};
-        currentData.vendors.forEach(v => {
-            const email = (v.preferred_email || '').toLowerCase();
-            if (email) emailCounts[email] = (emailCounts[email] || 0) + 1;
-        });
-
-
-        const cardContainer = document.getElementById('vendorCardsContainer');
-
-        if (filtered.length === 0) {
-            cardContainer.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted);"><div style="font-size: 3rem; margin-bottom: 10px;">📭</div><div style="font-size: 1.1rem;">No applications found in this view.</div><div style="font-size: 0.9rem; margin-top: 10px;">Try adjusting your filters</div></div>';
-            return;
-        }
-
-        const generateCardHtml = (v) => {
-            const isAppr = v.status === 'Approved' || v.status === 'Checked In';
-            const statusToggle = `
-                <div class="status-toggle-group" onclick="event.stopPropagation()">
-                    <button onclick="quickStatus('${v.id}', 'Approved')" class="btn-quick-status ${isAppr ? 'active-approve' : ''}" title="Mark as Approved">✓</button>
-                    <button onclick="quickStatus('${v.id}', 'Needs Review')" class="btn-quick-status ${v.status === 'Needs Review' ? 'active-review' : ''}" title="Mark as Needs Review">...</button>
-                    <button onclick="quickStatus('${v.id}', 'Denied')" class="btn-quick-status ${v.status === 'Denied' ? 'active-deny' : ''}" title="Mark as Denied">✕</button>
-                </div>
-            `;
-            
-            // Contextual badge logic based on the active tab
-            // Only consider email "sent" if we have proof it was actually sent (email_sent_at timestamp)
-            let isEmailSentForView = false;
-            const wasActuallySent = v.email_sent && (v.email_sent_at || v.brevo_message_id);
-
-            if (wasActuallySent) {
-                if (activeFilter === 'power') {
-                    isEmailSentForView = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-                } else if (activeFilter === 'denied') {
-                    isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-                } else if (activeFilter === 'approved') {
-                    isEmailSentForView = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
-                } else {
-                    if (v.status === 'Denied') {
-                        isEmailSentForView = (v.email_sent === 'denied' || v.email_sent === 'Yes');
-                    } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
-                        isEmailSentForView = (v.email_sent === 'power' || v.email_sent === 'power_denied');
-                    } else if (v.status === 'Approved' || v.status === 'Checked In') {
-                        isEmailSentForView = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
-                    } else {
-                        isEmailSentForView = false;
-                    }
-                }
-            }
-            
-            let emailSentBadge = '';
-            if (isEmailSentForView) {
-                const deliveryStatus = v.email_delivery_status;
-                if (deliveryStatus && deliveryStatus !== 'sent') {
-                    console.log(`Rendering vendor ${v.id}: displaying delivery status "${deliveryStatus}"`);
-                    const dDisplay = getEmailDeliveryDisplay(deliveryStatus);
-                    emailSentBadge = `<span class="status-badge sent" style="background: ${dDisplay.bg}; color: ${dDisplay.color}; border: 1px solid ${dDisplay.color}40;">${dDisplay.icon} ${dDisplay.label.toUpperCase()}</span>`;
-                } else {
-                    emailSentBadge = `<span class="status-badge sent">SENT</span>`;
-                }
-            } else {
-                emailSentBadge = `<span class="status-badge draft">UNSENT</span>`;
-            }
-
-            // Clean Badge Layout Generation
-            let tagsArray = [];
-
-            const colorNote = getParsedNotes(v.internal_notes).find(n => n.type === 'color_code');
-            const rowColor = colorNote ? colorNote.color : '';
-            const rowBgStyle = rowColor ? `background: ${rowColor}20 !important;` : '';
-            const rowBorderStyle = rowColor ? `background: ${rowColor}20 !important; border-left: 6px solid ${rowColor} !important; border-radius: 16px 0 0 16px;` : 'border-radius: 16px 0 0 16px;';
-
-            // Late Strikes Badge (configurable thresholds)
-            const strikes = window.vendorStrikes[v.preferred_email]?.length || 0;
-            const severeAt = getBuiltinSetting('late_strike_tracking', 'severeThreshold') || 3;
-            const warnAt = getBuiltinSetting('late_strike_tracking', 'threshold') || 1;
-            if (strikes >= severeAt) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">🚨 ${strikes} LATE STRIKES</span>`);
-            } else if (strikes >= warnAt) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">⚠️ ${strikes} LATE</span>`);
-            }
-
-            const emailKey = (v.preferred_email || '').toLowerCase();
-            if (emailKey && emailCounts[emailKey] > 1) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">🚨 DUPLICATE APP</span>`);
-            }
-
-            const hasFoodLicense = v.food_license && v.food_license.toLowerCase() === 'yes';
-            
-            // Use the local matched tags
-            let displayTags = v.autoCategories;
-            
-            if (displayTags && displayTags.length > 0) {
-                displayTags.forEach(cat => {
-                    // Prevent redundant 'food' tags if they already have the hardcoded license badge
-                    if (!(cat.toLowerCase().includes('food') && hasFoodLicense)) {
-                        tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(10, 132, 255, 0.1); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">${cat}</span>`);
-                    }
-                });
-            }
-
-            if (hasFoodLicense) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap;">FOOD LICENSE</span>`);
-            }
-
-            if (v.needs_power === 'Yes') {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 214, 10, 0.15); color: #FFD60A; border: 1px solid rgba(255, 214, 10, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap;">POWER</span>`);
-            }
-
-            const tagsContainer = tagsArray.length > 0 ? `<div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">${tagsArray.join('')}</div>` : '';
-
-            const attState = getAttendanceState(v);
-            let confirmedCell = '';
-            if (attState === 'confirmed') {
-                confirmedCell = '<span style="color: #34C759; font-weight: 800; background: rgba(52, 199, 89, 0.1); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(52, 199, 89, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✓ Confirmed</span>';
-            } else if (attState === 'declined') {
-                confirmedCell = '<span style="color: #FF3B30; font-weight: 800; background: rgba(255, 59, 48, 0.1); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(255, 59, 48, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✕ Declined</span>';
-            } else {
-                confirmedCell = '<span style="color: var(--text-muted); font-weight: 700; font-size: 0.7rem; background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(255, 255, 255, 0.1); text-transform: uppercase; white-space: nowrap;">Awaiting Reply</span>';
+            if (filtered.length === 0) {
+                cardContainer.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted);"><div style="font-size: 3rem; margin-bottom: 10px;">📭</div><div style="font-size: 1.1rem;">No applications found in this view.</div><div style="font-size: 0.9rem; margin-top: 10px;">Try adjusting your filters</div></div>';
+                return;
             }
 
             const checkInCell = isAppr
@@ -4681,30 +4525,22 @@
                         <button onclick="deleteVendor('${v.id}')" class="btn-icon-text danger" title="Delete">Del</button>
                     </div>
                 </div>
-                <div class="vendor-card-contact">${v.preferred_email || 'No email'}</div>
-                ${tagsHtml ? `<div class="vendor-card-tags">${tagsHtml}</div>` : ''}
-                <div class="vendor-card-actions">
-                    <button class="vendor-card-btn primary" onclick="event.stopPropagation(); openReviewModal('${v.id}')">Review</button>
-                    <button class="vendor-card-btn" onclick="event.stopPropagation(); resendEmail('${v.id}')" title="Send Status Email" style="${canEmail ? '' : 'display:none;'}">Email</button>
-                    <button class="vendor-card-btn" onclick="event.stopPropagation(); openEditModal('${v.id}')">Edit</button>
-                </div>
-            </div>
-            `;
-        };
+                `;
+            }).join('');
 
         tbody.innerHTML = filtered.map(v => generateRowHtml(v)).join('');
 
-        // Update vendor count display
-        const vendorCountDisplay = document.getElementById('vendorCountDisplay');
-        if (vendorCountDisplay) {
-            vendorCountDisplay.textContent = filtered.length;
-        }
+            const vendorCountDisplay = document.getElementById('vendorCountDisplay');
+            if (vendorCountDisplay) {
+                vendorCountDisplay.textContent = filtered.length;
+            }
 
-        // Show/hide mass email button based on filter
-        const massEmailBtn = document.getElementById('massEmailBtn');
-        const shouldShowEmailButton = ['approved', 'denied', 'power', 'new'].includes(activeFilter) && filtered.length > 0;
-        if (massEmailBtn) {
-            massEmailBtn.style.display = shouldShowEmailButton ? '' : 'none';
+            const massEmailBtn = document.getElementById('massEmailBtn');
+            if (massEmailBtn) {
+                massEmailBtn.style.display = ['approved', 'denied', 'power', 'new'].includes(activeFilter) && filtered.length > 0 ? '' : 'none';
+            }
+        } catch (err) {
+            console.error('renderTable error:', err);
         }
     }
 
