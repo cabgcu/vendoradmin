@@ -1544,6 +1544,7 @@
                     <option value="color">Sort by Color</option>
                 </select>
 
+                <button id="bulkEmailButton" onclick="openBulkEmailModal()" class="btn-action" style="flex: 0.8; min-width: 120px; display: none; background: var(--gradient-accent);">📧 BULK EMAIL</button>
             </div>
         </div>
         
@@ -3700,6 +3701,15 @@
         } else {
             filterTabs.forEach(t => t.style.display = '');
             document.getElementById('view-list').style.display = 'block';
+            // Show/hide bulk email button based on active filter
+            const bulkEmailBtn = document.getElementById('bulkEmailButton');
+            if (bulkEmailBtn) {
+                if (['approved', 'power', 'denied'].includes(filter)) {
+                    bulkEmailBtn.style.display = '';
+                } else {
+                    bulkEmailBtn.style.display = 'none';
+                }
+            }
             renderTable();
             syncMobileNav('vendors');
         }
