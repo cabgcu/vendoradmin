@@ -196,6 +196,112 @@
         .clickable-row.dragging td { opacity: 0.4 !important; background: rgba(255, 255, 255, 0.1) !important; }
         .clickable-row.drag-over td { border-top: 2px solid #0A84FF !important; border-bottom: 2px solid #0A84FF !important; background: rgba(10, 132, 255, 0.15) !important; }
 
+        /* Vendor Card Styles */
+        #vendorCardsContainer { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+        #vendorCardsContainer::-webkit-scrollbar { width: 6px; }
+        #vendorCardsContainer::-webkit-scrollbar-track { background: transparent; }
+        #vendorCardsContainer::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        .vendor-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-inner);
+            padding: 16px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .vendor-card:hover {
+            background: var(--glass-active);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .vendor-card.dragging {
+            opacity: 0.5;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .vendor-card.drag-over {
+            border: 2px solid #0A84FF;
+            background: rgba(10, 132, 255, 0.15);
+        }
+
+        .vendor-card-checkbox {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #0A84FF;
+        }
+
+        .vendor-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            padding-left: 32px;
+        }
+
+        .vendor-card-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .vendor-card-id {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .vendor-card-contact {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            padding-left: 32px;
+            word-break: break-word;
+        }
+
+        .vendor-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+            padding-left: 32px;
+        }
+
+        .vendor-card-actions {
+            display: flex;
+            gap: 6px;
+            padding-left: 32px;
+        }
+
+        .vendor-card-btn {
+            flex: 1;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .vendor-card-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .vendor-card-btn.primary {
+            background: var(--gradient-accent);
+            border: none;
+            color: #fff;
+        }
+
         .group-tag { font-size: 0.75rem; font-weight: 700; color: #BF5AF2; display: inline-block; text-transform: uppercase; background: rgba(191, 90, 242, 0.1); padding: 4px 10px; border-radius: var(--radius-button); border: 1px solid rgba(191, 90, 242, 0.3); }
         .power-tag { font-size: 0.75rem; font-weight: 700; color: #FFD60A; display: inline-block; text-transform: uppercase; background: rgba(255, 214, 10, 0.15); padding: 4px 10px; border-radius: var(--radius-button); margin-top: 4px; border: 1px solid rgba(255, 214, 10, 0.3); }
         
@@ -4426,14 +4532,14 @@
         });
 
 
-        const tbody = document.getElementById('vendorTableBody');
-        
+        const cardContainer = document.getElementById('vendorCardsContainer');
+
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 40px;">No applications found in this view.</td></tr>';
+            cardContainer.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted);"><div style="font-size: 3rem; margin-bottom: 10px;">📭</div><div style="font-size: 1.1rem;">No applications found in this view.</div><div style="font-size: 0.9rem; margin-top: 10px;">Try adjusting your filters</div></div>';
             return;
         }
 
-        const generateRowHtml = (v) => {
+        const generateCardHtml = (v) => {
             const isAppr = v.status === 'Approved' || v.status === 'Checked In';
             const statusToggle = `
                 <div class="status-toggle-group" onclick="event.stopPropagation()">
@@ -4546,7 +4652,8 @@
             // Only allow resend email if they aren't pending, user is admin, and viewing a specific filter (not all applicants)
             const canEmail = currentUser.role === 'admin' && v.status !== 'Needs Review' && v.status !== 'Pending' && ['approved', 'denied', 'power'].includes(activeFilter);
 
-            const submitDate = v.created_at ? new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown Date';
+            // Create tag HTML for the card
+            let tagsHtml = tagsArray.map(tag => tag).join('');
 
             return `
             <tr class="clickable-row" style="${rowBgStyle}" draggable="true" ondragstart="handleDragStart(event, '${v.id}')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${v.id}')">
@@ -4585,8 +4692,15 @@
                         <button onclick="resendEmail('${v.id}')" class="btn-icon-text" title="Send Status Email" style="${canEmail ? '' : 'display:none;'}">Email</button>
                         <button onclick="deleteVendor('${v.id}')" class="btn-icon-text danger" title="Delete">Del</button>
                     </div>
-                </td>
-            </tr>
+                </div>
+                <div class="vendor-card-contact">${v.preferred_email || 'No email'}</div>
+                ${tagsHtml ? `<div class="vendor-card-tags">${tagsHtml}</div>` : ''}
+                <div class="vendor-card-actions">
+                    <button class="vendor-card-btn primary" onclick="event.stopPropagation(); openReviewModal('${v.id}')">Review</button>
+                    <button class="vendor-card-btn" onclick="event.stopPropagation(); resendEmail('${v.id}')" title="Send Status Email" style="${canEmail ? '' : 'display:none;'}">Email</button>
+                    <button class="vendor-card-btn" onclick="event.stopPropagation(); openEditModal('${v.id}')">Edit</button>
+                </div>
+            </div>
             `;
         };
 
@@ -4614,32 +4728,32 @@
 
     let draggedVendorId = null;
 
-    function handleDragStart(e, id) {
+    function handleCardDragStart(e, id) {
         draggedVendorId = id;
         e.dataTransfer.effectAllowed = 'move';
-        setTimeout(() => e.target.classList.add('dragging'), 0);
+        setTimeout(() => e.target.closest('.vendor-card').classList.add('dragging'), 0);
     }
 
-    function handleDragOver(e) {
+    function handleCardDragOver(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        const tr = e.target.closest('tr');
-        if (tr && !tr.classList.contains('drag-over')) {
-            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-            tr.classList.add('drag-over');
+        const card = e.target.closest('.vendor-card');
+        if (card && !card.classList.contains('drag-over')) {
+            document.querySelectorAll('.vendor-card.drag-over').forEach(el => el.classList.remove('drag-over'));
+            card.classList.add('drag-over');
         }
     }
 
-    function handleDragLeave(e) {
-        const tr = e.target.closest('tr');
-        if (tr) tr.classList.remove('drag-over');
+    function handleCardDragLeave(e) {
+        const card = e.target.closest('.vendor-card');
+        if (card) card.classList.remove('drag-over');
     }
 
-    function handleDrop(e, targetId) {
+    function handleCardDrop(e, targetId) {
         e.preventDefault();
         e.stopPropagation();
-        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-        document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+        document.querySelectorAll('.vendor-card.drag-over').forEach(el => el.classList.remove('drag-over'));
+        document.querySelectorAll('.vendor-card.dragging').forEach(el => el.classList.remove('dragging'));
         
         if (draggedVendorId && draggedVendorId !== targetId) {
             let currentOrder = JSON.parse(localStorage.getItem('market_custom_order_' + currentData.activeId) || '[]');
