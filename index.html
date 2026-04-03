@@ -1665,9 +1665,11 @@
             </div>
         </div>
 
-        <!-- VENDOR CARDS GRID -->
-        <div id="vendorCardsContainer" style="flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; align-content: start;">
-            <!-- Populated by renderTable() -->
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width: 40px;"><input type="checkbox" id="headerCheckbox" onchange="toggleAllVendorCheckboxes(this.checked)" style="cursor: pointer;"></th><th>App # / ID</th><th>Vendor Name</th><th>Contact</th><th>Status</th><th>Vendor Confirmed</th><th>Check In</th><th>Email</th><th>Actions</th></tr></thead>
+                <tbody id="vendorTableBody"></tbody>
+            </table>
         </div>
     </div>
 
@@ -4654,12 +4656,41 @@
             let tagsHtml = tagsArray.map(tag => tag).join('');
 
             return `
-            <div class="vendor-card" draggable="true" ondragstart="handleCardDragStart(event, '${v.id}')" ondragover="handleCardDragOver(event)" ondragleave="handleCardDragLeave(event)" ondrop="handleCardDrop(event, '${v.id}')" data-vendor-id="${v.id}" onclick="openReviewModal('${v.id}')">
-                <input type="checkbox" class="vendor-card-checkbox" value="${v.id}" onchange="updateEmailButton()" onclick="event.stopPropagation()">
-                <div class="vendor-card-header">
-                    <div>
-                        <div class="vendor-card-name">${v.first_name} ${v.last_name}</div>
-                        <div class="vendor-card-id">#${v.appNumber}</div>
+            <tr class="clickable-row" style="${rowBgStyle}" draggable="true" ondragstart="handleDragStart(event, '${v.id}')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${v.id}')">
+                <td style="${rowBorderStyle}; text-align: center;"><input type="checkbox" class="vendor-card-checkbox" value="${v.id}" onchange="updateEmailButton()" onclick="event.stopPropagation();" style="cursor: pointer;"></td>
+                <td style="${rowBorderStyle}" onclick="openReviewModal('${v.id}')"><span style="color: #BF5AF2; font-weight: 800; margin-right: 8px; font-size: 1.1rem;">#${v.appNumber}</span><br><span style="font-family: monospace; letter-spacing: 1px; font-size: 0.85rem; color: var(--text-muted);">${v.student_id || 'N/A'}</span><br><span style="font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; font-weight: 600;">${submitDate}</span></td>
+                <td style="${rowBgStyle}" onclick="openReviewModal('${v.id}')">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                        <div style="flex: 1;">
+                            <strong style="font-size: 1.05rem;">${v.first_name} ${v.last_name}</strong>
+                            <span class="mobile-status-pill mobile-status-${(v.status || '').toLowerCase().replace(/\s+/g, '-')}">${v.status || 'Pending'}</span>
+                        </div>
+                        ${canEmail ? `<button onclick="resendEmail('${v.id}'); event.stopPropagation();" class="mobile-action-btn" title="Resend email" style="flex-shrink: 0; white-space: nowrap;">📧</button>` : ''}
+                    </div>
+                    ${tagsContainer}
+                </td>
+                <td style="${rowBgStyle}" onclick="openReviewModal('${v.id}')"><a href="mailto:${v.preferred_email}" onclick="event.stopPropagation()" style="color:var(--text-muted);">${v.preferred_email}</a><br><small style="color:var(--text-muted); opacity: 0.5;">${v.gcu_email || ''}</small></td>
+                <td style="${rowBgStyle}" onclick="openReviewModal('${v.id}')">${statusToggle}</td>
+                <td style="${rowBgStyle}" onclick="openReviewModal('${v.id}')">${confirmedCell}</td>
+                <td style="${rowBgStyle}" onclick="openReviewModal('${v.id}')">${checkInCell}</td>
+                <td style="${rowBgStyle}" onclick="openReviewModal('${v.id}')">${emailSentBadge}</td>
+                <td style="${rowBgStyle}">
+                    <div class="action-wrapper" onclick="event.stopPropagation()">
+                        <div class="color-trigger-wrapper">
+                            <button class="btn-icon-text" title="Color Code" style="margin: 0; background: ${rowColor || 'rgba(255,255,255,0.05)'}; color: ${rowColor ? '#000' : 'white'}; cursor: default;">🎨</button>
+                            <div class="color-palette-inline">
+                                <div class="color-dot" style="background: #FF3B30;" onclick="saveVendorColor('${v.id}', '#FF3B30'); event.stopPropagation();" title="Red"></div>
+                                <div class="color-dot" style="background: #FF9500;" onclick="saveVendorColor('${v.id}', '#FF9500'); event.stopPropagation();" title="Orange"></div>
+                                <div class="color-dot" style="background: #FFCC00;" onclick="saveVendorColor('${v.id}', '#FFCC00'); event.stopPropagation();" title="Yellow"></div>
+                                <div class="color-dot" style="background: #34C759;" onclick="saveVendorColor('${v.id}', '#34C759'); event.stopPropagation();" title="Green"></div>
+                                <div class="color-dot" style="background: #0A84FF;" onclick="saveVendorColor('${v.id}', '#0A84FF'); event.stopPropagation();" title="Blue"></div>
+                                <div class="color-dot" style="background: #BF5AF2;" onclick="saveVendorColor('${v.id}', '#BF5AF2'); event.stopPropagation();" title="Purple"></div>
+                                <div class="color-dot clear" onclick="saveVendorColor('${v.id}', '#ffffff'); event.stopPropagation();" title="Clear Color">✕</div>
+                            </div>
+                        </div>
+                        <button onclick="openEditModal('${v.id}')" class="btn-icon-text" title="Edit Application">Edit</button>
+                        <button onclick="resendEmail('${v.id}')" class="btn-icon-text" title="Send Status Email" style="${canEmail ? '' : 'display:none;'}">Email</button>
+                        <button onclick="deleteVendor('${v.id}')" class="btn-icon-text danger" title="Delete">Del</button>
                     </div>
                 </div>
                 <div class="vendor-card-contact">${v.preferred_email || 'No email'}</div>
@@ -4673,7 +4704,7 @@
             `;
         };
 
-        cardContainer.innerHTML = filtered.map(v => generateCardHtml(v)).join('');
+        tbody.innerHTML = filtered.map(v => generateRowHtml(v)).join('');
 
         // Update vendor count display
         const vendorCountDisplay = document.getElementById('vendorCountDisplay');
