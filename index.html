@@ -224,16 +224,6 @@
             background: rgba(10, 132, 255, 0.15);
         }
 
-        .vendor-card-checkbox {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: #0A84FF;
-        }
-
         .vendor-card-header {
             display: flex;
             justify-content: space-between;
@@ -1659,9 +1649,7 @@
                 Showing <strong id="vendorCountDisplay">0</strong> applicants
             </div>
             <div style="display: flex; gap: 10px;">
-                <button onclick="toggleAllVendorCheckboxes(true)" id="selectAllBtn" class="btn-action" style="padding: 10px 16px; font-size: 0.85rem; display: none;">Select All</button>
-                <button onclick="toggleAllVendorCheckboxes(false)" id="clearAllBtn" class="btn-action" style="padding: 10px 16px; font-size: 0.85rem; display: none;">Clear</button>
-                <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; padding: 10px 16px; font-size: 0.85rem; display: none; background: var(--gradient-accent);">📧 Email Selected</button>
+                <button onclick="sendEmailToAllInCurrentView()" id="massEmailBtn" class="btn-action" style="white-space: nowrap; padding: 10px 16px; font-size: 0.85rem; display: none; background: var(--gradient-accent);">📧 Send All</button>
             </div>
         </div>
 
@@ -3317,7 +3305,7 @@
             currentData.activeId = null;
             currentData.activeEvent = null;
             document.getElementById('eventDropdown').innerHTML = '<option>No Active Markets</option>';
-            document.getElementById('vendorTableBody').innerHTML = '<tr><td colspan="8" style="text-align:center;">No events. Create one in Settings.</td></tr>';
+            document.getElementById('vendorCardsContainer').innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted);">No events. Create one in Settings.</div>';
             
             // Check for null before setting innerText
             if (document.getElementById('countInbox')) document.getElementById('countInbox').innerText = 0;
@@ -4712,18 +4700,12 @@
             vendorCountDisplay.textContent = filtered.length;
         }
 
-        // Show/hide bulk email action buttons based on filter
-        const selectAllBtn = document.getElementById('selectAllBtn');
-        const clearAllBtn = document.getElementById('clearAllBtn');
-        const blastBtn = document.getElementById('blastBtn');
-
-        const shouldShowEmailButtons = ['approved', 'denied', 'power', 'new'].includes(activeFilter);
-        if (selectAllBtn) selectAllBtn.style.display = shouldShowEmailButtons ? '' : 'none';
-        if (clearAllBtn) clearAllBtn.style.display = shouldShowEmailButtons ? '' : 'none';
-        if (blastBtn) blastBtn.style.display = shouldShowEmailButtons ? '' : 'none';
-
-        // Reset email button state
-        updateEmailButton();
+        // Show/hide mass email button based on filter
+        const massEmailBtn = document.getElementById('massEmailBtn');
+        const shouldShowEmailButton = ['approved', 'denied', 'power', 'new'].includes(activeFilter) && filtered.length > 0;
+        if (massEmailBtn) {
+            massEmailBtn.style.display = shouldShowEmailButton ? '' : 'none';
+        }
     }
 
     let draggedVendorId = null;
@@ -6241,29 +6223,68 @@
         document.getElementById('bulkEmailModal').style.display = 'none';
     }
 
-    function toggleAllVendorCheckboxes(state) {
-        document.querySelectorAll('.vendor-card-checkbox').forEach(cb => cb.checked = state);
-        updateEmailButton();
-    }
-
-    function updateEmailButton() {
-        const checked = document.querySelectorAll('.vendor-card-checkbox:checked').length;
-        const blastBtn = document.getElementById('blastBtn');
-        const selectAllBtn = document.getElementById('selectAllBtn');
-        const clearAllBtn = document.getElementById('clearAllBtn');
-        const headerCheckbox = document.getElementById('headerCheckbox');
-
-        if (blastBtn) {
-            blastBtn.style.opacity = checked > 0 ? '1' : '0.5';
-            blastBtn.textContent = `📧 Email Selected (${checked})`;
+    function sendEmailToAllInCurrentView() {
+        const filtered = getFilteredVendorsForCurrentView();
+        if (filtered.length === 0) {
+            showToast("No vendors to email in this view.");
+            return;
         }
 
-        // Sync header checkbox state
-        const allCheckboxes = document.querySelectorAll('.vendor-card-checkbox');
-        if (headerCheckbox && allCheckboxes.length > 0) {
-            headerCheckbox.checked = checked === allCheckboxes.length && checked > 0;
-            headerCheckbox.indeterminate = checked > 0 && checked < allCheckboxes.length;
+        if (activeFilter === 'approved') {
+            const needsReviewCount = currentData.vendors.filter(v => v.status === 'Needs Review').length;
+            if (needsReviewCount > 0) {
+                const bypass = confirm(`WARNING: There are still ${needsReviewCount} vendor(s) in "Needs Review".\n\nAre you sure you want to send Approved emails to all ${filtered.length} vendors before reviewing everyone?`);
+                if (!bypass) return;
+            }
         }
+
+        // Open bulk email modal with auto-selected all vendors from current view
+        const listEl = document.getElementById('bulkEmailList');
+        const eligibleVendors = filtered.filter(v => v.status !== 'Needs Review' && v.status !== 'Pending');
+
+        if (eligibleVendors.length === 0) {
+            showToast("No eligible vendors found in this view.");
+            return;
+        }
+
+        listEl.innerHTML = eligibleVendors.map(v => {
+            let isSent = false;
+            const bulkWasActuallySent = v.email_sent && (v.email_sent_at || v.brevo_message_id);
+            if (bulkWasActuallySent) {
+                if (activeFilter === 'power') {
+                    isSent = (v.email_sent === 'power' || v.email_sent === 'power_denied');
+                } else if (activeFilter === 'denied') {
+                    isSent = (v.email_sent === 'denied' || v.email_sent === 'Yes');
+                } else if (activeFilter === 'approved') {
+                    isSent = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
+                } else {
+                    if (v.status === 'Denied') {
+                        isSent = (v.email_sent === 'denied' || v.email_sent === 'Yes');
+                    } else if (v.needs_power === 'Yes' && (v.status === 'Approved' || v.status === 'Checked In')) {
+                        isSent = (v.email_sent === 'power' || v.email_sent === 'power_denied');
+                    } else if (v.status === 'Approved' || v.status === 'Checked In') {
+                        isSent = ['approved', 'power', 'power_denied', 'Yes'].includes(v.email_sent);
+                    }
+                }
+            }
+
+            const sentBadge = isSent ? `<span style="color:#34C759; font-size:0.8rem; margin-left:8px;">[Already Sent]</span>` : `<span style="color:#FF9F0A; font-size:0.8rem; margin-left:8px;">[Unsent]</span>`;
+            const powerBadge = v.needs_power === 'Yes' ? ' [Power Requested]' : '';
+            const foodBadge = (v.food_license && v.food_license.toLowerCase() === 'yes') ? ' [FOOD]' : '';
+
+            return `
+            <div class="vendor-checkbox-item">
+                <input type="checkbox" id="chk-${v.id}" class="bulk-vendor-checkbox" value="${v.id}" ${!isSent ? 'checked' : ''}>
+                <label for="chk-${v.id}"><strong>${v.first_name} ${v.last_name}</strong>${powerBadge}${foodBadge} ${sentBadge}</label>
+            </div>
+            `;
+        }).join('');
+
+        if (activeFilter === 'power') document.getElementById('bulkEmailTemplate').value = 'power';
+        else if (activeFilter === 'denied') document.getElementById('bulkEmailTemplate').value = 'denied';
+        else document.getElementById('bulkEmailTemplate').value = 'approved';
+
+        document.getElementById('bulkEmailModal').style.display = 'flex';
     }
 
     function toggleAllCheckboxes(state) {
