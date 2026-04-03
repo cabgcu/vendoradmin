@@ -1546,10 +1546,22 @@
 
             </div>
         </div>
-        
+
+        <!-- TOP ACTION BAR -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: rgba(15, 15, 15, 0.4); border-bottom: 1px solid rgba(255, 255, 255, 0.08); gap: 15px;">
+            <div style="flex: 1; font-size: 0.85rem; color: var(--text-muted);">
+                Showing <strong id="vendorCountDisplay">0</strong> applicants
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="toggleAllVendorCheckboxes(true)" id="selectAllBtn" class="btn-action" style="padding: 10px 16px; font-size: 0.85rem; display: none;">Select All</button>
+                <button onclick="toggleAllVendorCheckboxes(false)" id="clearAllBtn" class="btn-action" style="padding: 10px 16px; font-size: 0.85rem; display: none;">Clear</button>
+                <button onclick="openBulkEmailModal()" id="blastBtn" class="btn-action" style="white-space: nowrap; padding: 10px 16px; font-size: 0.85rem; display: none; background: var(--gradient-accent);">📧 Email Selected</button>
+            </div>
+        </div>
+
         <div class="table-container">
             <table>
-                <thead><tr><th>App # / ID</th><th>Vendor Name</th><th>Contact</th><th>Status</th><th>Vendor Confirmed</th><th>Check In</th><th>Email</th><th>Actions</th></tr></thead>
+                <thead><tr><th style="width: 40px;"><input type="checkbox" id="headerCheckbox" onchange="toggleAllVendorCheckboxes(this.checked)" style="cursor: pointer;"></th><th>App # / ID</th><th>Vendor Name</th><th>Contact</th><th>Status</th><th>Vendor Confirmed</th><th>Check In</th><th>Email</th><th>Actions</th></tr></thead>
                 <tbody id="vendorTableBody"></tbody>
             </table>
         </div>
@@ -4537,9 +4549,10 @@
             const submitDate = v.created_at ? new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown Date';
 
             return `
-            <tr class="clickable-row" style="${rowBgStyle}" draggable="true" ondragstart="handleDragStart(event, '${v.id}')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${v.id}')" onclick="openReviewModal('${v.id}')">
-                <td style="${rowBorderStyle}"><span style="color: #BF5AF2; font-weight: 800; margin-right: 8px; font-size: 1.1rem;">#${v.appNumber}</span><br><span style="font-family: monospace; letter-spacing: 1px; font-size: 0.85rem; color: var(--text-muted);">${v.student_id || 'N/A'}</span><br><span style="font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; font-weight: 600;">${submitDate}</span></td>
-                <td style="${rowBgStyle}">
+            <tr class="clickable-row" style="${rowBgStyle}" draggable="true" ondragstart="handleDragStart(event, '${v.id}')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${v.id}')">
+                <td style="${rowBorderStyle}; text-align: center;"><input type="checkbox" class="vendor-card-checkbox" value="${v.id}" onchange="updateEmailButton()" onclick="event.stopPropagation();" style="cursor: pointer;"></td>
+                <td style="${rowBorderStyle}" onclick="openReviewModal('${v.id}')"><span style="color: #BF5AF2; font-weight: 800; margin-right: 8px; font-size: 1.1rem;">#${v.appNumber}</span><br><span style="font-family: monospace; letter-spacing: 1px; font-size: 0.85rem; color: var(--text-muted);">${v.student_id || 'N/A'}</span><br><span style="font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; font-weight: 600;">${submitDate}</span></td>
+                <td style="${rowBgStyle}" onclick="openReviewModal('${v.id}')">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
                         <div style="flex: 1;">
                             <strong style="font-size: 1.05rem;">${v.first_name} ${v.last_name}</strong>
@@ -4549,11 +4562,11 @@
                     </div>
                     ${tagsContainer}
                 </td>
-                <td style="${rowBgStyle}"><a href="mailto:${v.preferred_email}" onclick="event.stopPropagation()" style="color:var(--text-muted);">${v.preferred_email}</a><br><small style="color:var(--text-muted); opacity: 0.5;">${v.gcu_email || ''}</small></td>
-                <td style="${rowBgStyle}">${statusToggle}</td>
-                <td style="${rowBgStyle}">${confirmedCell}</td>
-                <td style="${rowBgStyle}">${checkInCell}</td>
-                <td style="${rowBgStyle}">${emailSentBadge}</td>
+                <td style="${rowBgStyle}" onclick="openReviewModal('${v.id}')"><a href="mailto:${v.preferred_email}" onclick="event.stopPropagation()" style="color:var(--text-muted);">${v.preferred_email}</a><br><small style="color:var(--text-muted); opacity: 0.5;">${v.gcu_email || ''}</small></td>
+                <td style="${rowBgStyle}" onclick="openReviewModal('${v.id}')">${statusToggle}</td>
+                <td style="${rowBgStyle}" onclick="openReviewModal('${v.id}')">${confirmedCell}</td>
+                <td style="${rowBgStyle}" onclick="openReviewModal('${v.id}')">${checkInCell}</td>
+                <td style="${rowBgStyle}" onclick="openReviewModal('${v.id}')">${emailSentBadge}</td>
                 <td style="${rowBgStyle}">
                     <div class="action-wrapper" onclick="event.stopPropagation()">
                         <div class="color-trigger-wrapper">
@@ -4578,6 +4591,25 @@
         };
 
         tbody.innerHTML = filtered.map(v => generateRowHtml(v)).join('');
+
+        // Update vendor count display
+        const vendorCountDisplay = document.getElementById('vendorCountDisplay');
+        if (vendorCountDisplay) {
+            vendorCountDisplay.textContent = filtered.length;
+        }
+
+        // Show/hide bulk email action buttons based on filter
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const blastBtn = document.getElementById('blastBtn');
+
+        const shouldShowEmailButtons = ['approved', 'denied', 'power', 'new'].includes(activeFilter);
+        if (selectAllBtn) selectAllBtn.style.display = shouldShowEmailButtons ? '' : 'none';
+        if (clearAllBtn) clearAllBtn.style.display = shouldShowEmailButtons ? '' : 'none';
+        if (blastBtn) blastBtn.style.display = shouldShowEmailButtons ? '' : 'none';
+
+        // Reset email button state
+        updateEmailButton();
     }
 
     let draggedVendorId = null;
@@ -6093,6 +6125,31 @@
 
     function closeBulkEmailModal() {
         document.getElementById('bulkEmailModal').style.display = 'none';
+    }
+
+    function toggleAllVendorCheckboxes(state) {
+        document.querySelectorAll('.vendor-card-checkbox').forEach(cb => cb.checked = state);
+        updateEmailButton();
+    }
+
+    function updateEmailButton() {
+        const checked = document.querySelectorAll('.vendor-card-checkbox:checked').length;
+        const blastBtn = document.getElementById('blastBtn');
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const headerCheckbox = document.getElementById('headerCheckbox');
+
+        if (blastBtn) {
+            blastBtn.style.opacity = checked > 0 ? '1' : '0.5';
+            blastBtn.textContent = `📧 Email Selected (${checked})`;
+        }
+
+        // Sync header checkbox state
+        const allCheckboxes = document.querySelectorAll('.vendor-card-checkbox');
+        if (headerCheckbox && allCheckboxes.length > 0) {
+            headerCheckbox.checked = checked === allCheckboxes.length && checked > 0;
+            headerCheckbox.indeterminate = checked > 0 && checked < allCheckboxes.length;
+        }
     }
 
     function toggleAllCheckboxes(state) {
