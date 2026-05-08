@@ -11,6 +11,9 @@
     
     <!-- Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -45,7 +48,7 @@
             --radius-button: 100px;
             --radius-sm: 12px;
             --blur: 40px;
-            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
 
@@ -60,6 +63,8 @@
             min-height: 100vh;
             padding-bottom: 40px;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-feature-settings: 'cv11', 'ss01';
             overflow-x: hidden;
         }
 
@@ -127,12 +132,21 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 32px;
+            padding: 16px 28px;
             border-radius: var(--radius-card);
-            margin-bottom: 40px;
+            margin-bottom: 12px;
             margin-top: 20px;
             transition: all 0.3s ease;
             background: var(--glass-surface);
+        }
+
+        /* Filter tabs row — sits below the topbar, above content */
+        #vendorFilterTabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
         }
 
         .brand { display: flex; align-items: center; gap: 16px; }
@@ -242,6 +256,22 @@
         .btn-icon-text { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-size: 0.75rem; font-weight: 700; padding: 6px 12px; color: white; border-radius: var(--radius-sm); transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-icon-text:hover { background: rgba(255,255,255,0.1); }
         .btn-icon-text.danger:hover { background: rgba(255,59,48,0.2); color: #FF3B30; border-color: rgba(255,59,48,0.4); }
+
+        /* Icon-only action buttons for table rows */
+        .btn-icon-sq {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.4);
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0; padding: 0;
+        }
+        .btn-icon-sq:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.2); }
+        .btn-icon-sq.danger:hover { background: rgba(255,59,48,0.15); color: #FF3B30; border-color: rgba(255,59,48,0.3); }
+        .action-wrapper { gap: 4px; flex-wrap: nowrap; }
         
         .btn-action { 
             background: var(--gradient-accent); 
@@ -461,7 +491,7 @@
         }
         .mob-nav-btn {
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-            background: none; border: none; color: rgba(255,255,255,0.3); font-size: 0.5rem;
+            background: none; border: none; color: rgba(255,255,255,0.3); font-size: 0.65rem;
             font-weight: 500; cursor: pointer; padding: 8px 0 4px; font-family: inherit;
             transition: color 0.15s ease; letter-spacing: 0.1px;
             -webkit-tap-highlight-color: transparent; position: relative;
@@ -475,10 +505,11 @@
         /* --- TABLET (900px) --- */
         @media (max-width: 900px) {
             .app-container { padding: 0 16px; }
-            .topbar { flex-direction: column; gap: 16px; text-align: center; padding: 16px; margin-top: 10px; margin-bottom: 20px; }
+            .topbar { flex-direction: column; gap: 12px; text-align: center; padding: 14px 16px; margin-top: 10px; margin-bottom: 10px; }
             .brand { flex-direction: column; gap: 8px; }
             .brand-logo { height: 40px; } .brand-text h1 { font-size: 1.2rem; }
             .controls { flex-wrap: wrap; justify-content: center; width: 100%; gap: 6px; }
+            #vendorFilterTabs { flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
             .control-item { font-size: 0.75rem; padding: 0 10px; height: 36px; flex: 1 1 auto; justify-content: center; }
             .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 24px; }
             .stat-card { padding: 16px; } .stat-val { font-size: 1.8rem; }
@@ -536,17 +567,18 @@
             }
             .event-label { display: none; }
 
+            /* ── VIEW NAV — hidden on mobile (bottom nav handles it) ── */
+            #viewNavTabs { display: none !important; }
+
             /* ── FILTER PILLS ── */
             #vendorFilterTabs {
                 width: 100%; flex-wrap: nowrap;
                 overflow-x: auto; -webkit-overflow-scrolling: touch;
                 scrollbar-width: none; justify-content: flex-start;
-                gap: 8px; padding: 4px 16px 12px; margin: 0;
+                gap: 8px; padding: 4px 16px 10px; margin: 0;
             }
             #vendorFilterTabs::-webkit-scrollbar { display: none; }
-            #vendorFilterTabs > .control-item { display: none !important; }
-            #vendorFilterTabs > .control-item-filter:not([style*="width: 1px"]) { display: flex !important; flex-shrink: 0; }
-            #vendorFilterTabs > .control-item-filter[style*="width: 1px"] { display: none !important; }
+            #vendorFilterTabs > .control-item-filter { display: flex !important; flex-shrink: 0; }
             .control-item {
                 font-size: 0.72rem; padding: 0 14px; height: 32px;
                 border-radius: 16px; font-weight: 600;
@@ -577,12 +609,12 @@
             }
             .stat-val { font-size: 1.5rem; font-weight: 800; line-height: 1; }
             .stat-label {
-                font-size: 0.58rem; margin-bottom: 4px;
-                letter-spacing: 0.8px; text-transform: uppercase;
+                font-size: 0.65rem; margin-bottom: 4px;
+                letter-spacing: 0.6px; text-transform: uppercase;
                 color: var(--text-muted); font-weight: 600;
             }
             .stat-sub { gap: 8px; margin-top: 6px; flex-wrap: wrap; }
-            .stat-sub span { font-size: 0.52rem; font-weight: 700; }
+            .stat-sub span { font-size: 0.65rem; font-weight: 600; }
 
             /* ── SEARCH & FILTERS ── */
             .filter-row { flex-direction: column; gap: 8px; align-items: stretch; }
@@ -886,7 +918,7 @@
             .brand { padding: 10px 14px 6px; }
             .brand-logo { height: 20px; }
             .brand-text h1 { font-size: 0.78rem; }
-            #vendorFilterTabs { padding: 4px 14px 10px; gap: 6px; }
+            #vendorFilterTabs { padding: 4px 14px 8px; gap: 6px; }
             .control-item { font-size: 0.66rem; padding: 0 12px; height: 30px; }
             .stat-card { padding: 12px 8px; }
             .stat-val { font-size: 1.3rem; }
@@ -1479,20 +1511,23 @@
                 <div class="event-subtext"><span class="event-label">Active: </span><select id="eventDropdown" class="modern-input" style="width:auto; height:36px; padding:0 36px 0 12px; display:inline-block; font-size:0.85rem;" onchange="switchEvent(this.value)"></select></div>
             </div>
         </div>
-        <div class="controls" id="vendorFilterTabs">
-            <button onclick="setFilter('inbox')" id="nav-filter-all" class="control-item control-item-filter">ALL</button>
-            <button onclick="setFilter('new')" id="nav-new" class="control-item control-item-filter">NEW</button>
-            <button onclick="setFilter('approved')" id="nav-approved" class="control-item control-item-filter">APPROVED</button>
-            <button onclick="setFilter('review')" id="nav-review" class="control-item control-item-filter">REVIEW</button>
-            <button onclick="setFilter('power')" id="nav-power" class="control-item control-item-filter">POWER</button>
-            <button onclick="setFilter('denied')" id="nav-denied" class="control-item control-item-filter">DENIED</button>
-            <div class="control-item-filter" style="width: 1px; height: 24px; background: rgba(255,255,255,0.15); margin: 0 4px;"></div>
+        <div class="controls" id="viewNavTabs">
             <button onclick="setFilter('inbox')" id="nav-inbox" class="control-item">VENDORS</button>
             <button onclick="setFilter('profiles')" id="nav-profiles" class="control-item">PROFILES</button>
             <button onclick="toggleView('scan')" id="nav-scan" class="control-item" style="background: rgba(52, 199, 89, 0.2); border-color: rgba(52, 199, 89, 0.4); color: #34C759;">CHECK IN</button>
             <button onclick="toggleView('settings')" id="nav-settings" class="control-item">SETTINGS</button>
             <button onclick="handleLogout()" class="control-item" style="background: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.3); color: #FF3B30;">LOGOUT</button>
         </div>
+    </div>
+
+    <!-- STATUS FILTER TABS -->
+    <div id="vendorFilterTabs">
+        <button onclick="setFilter('inbox')" id="nav-filter-all" class="control-item control-item-filter">ALL</button>
+        <button onclick="setFilter('new')" id="nav-new" class="control-item control-item-filter">NEW</button>
+        <button onclick="setFilter('approved')" id="nav-approved" class="control-item control-item-filter">APPROVED</button>
+        <button onclick="setFilter('review')" id="nav-review" class="control-item control-item-filter">REVIEW</button>
+        <button onclick="setFilter('power')" id="nav-power" class="control-item control-item-filter">POWER</button>
+        <button onclick="setFilter('denied')" id="nav-denied" class="control-item control-item-filter">DENIED</button>
     </div>
 
     <!-- VIEW: MAIN LIST -->
@@ -3691,15 +3726,18 @@
 
         // Show/hide filter tabs based on context
         const filterTabs = document.querySelectorAll('#vendorFilterTabs .control-item-filter');
+        const filterTabsRow = document.getElementById('vendorFilterTabs');
         if (filter === 'profiles') {
             document.getElementById('nav-profiles').classList.add('active-profiles');
             filterTabs.forEach(t => t.style.display = 'none');
+            if (filterTabsRow) filterTabsRow.style.display = 'none';
             document.getElementById('view-profiles').style.display = 'block';
             if (document.getElementById('profileSearch')) document.getElementById('profileSearch').value = '';
             fetchAndRenderProfiles();
             syncMobileNav('profiles');
         } else {
             filterTabs.forEach(t => t.style.display = '');
+            if (filterTabsRow) filterTabsRow.style.display = '';
             document.getElementById('view-list').style.display = 'block';
             // Show/hide bulk email button based on active filter
             const bulkEmailBtn = document.getElementById('bulkEmailButton');
@@ -3726,6 +3764,8 @@
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
         // Hide filter tabs when on settings/scan
         document.querySelectorAll('#vendorFilterTabs .control-item-filter').forEach(t => t.style.display = 'none');
+        const filterTabsRow = document.getElementById('vendorFilterTabs');
+        if (filterTabsRow) filterTabsRow.style.display = 'none';
 
         if (v === 'settings') {
             document.getElementById('nav-settings').classList.add('active-settings');
@@ -4548,18 +4588,18 @@
 
             return `
             <tr class="clickable-row" style="${rowBgStyle}" draggable="true" ondragstart="handleDragStart(event, '${v.id}')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${v.id}')" onclick="openReviewModal('${v.id}')">
-                <td style="${rowBorderStyle}"><span style="color: #BF5AF2; font-weight: 800; margin-right: 8px; font-size: 1.1rem;">#${v.appNumber}</span><br><span style="font-family: monospace; letter-spacing: 1px; font-size: 0.85rem; color: var(--text-muted);">${v.student_id || 'N/A'}</span><br><span style="font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; font-weight: 600;">${submitDate}</span></td>
+                <td style="${rowBorderStyle}"><span style="color: #BF5AF2; font-weight: 700; font-size: 0.95rem;">#${v.appNumber}</span><br><span style="font-size: 0.7rem; color: var(--text-muted); opacity: 0.7; font-weight: 500; margin-top: 2px; display: inline-block;">${submitDate}</span></td>
                 <td style="${rowBgStyle}">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
                         <div style="flex: 1;">
-                            <strong style="font-size: 1.05rem;">${v.first_name} ${v.last_name}</strong>
+                            <strong style="font-size: 1rem; font-weight: 600;">${v.first_name} ${v.last_name}</strong>
                             <span class="mobile-status-pill mobile-status-${(v.status || '').toLowerCase().replace(/\s+/g, '-')}">${v.status || 'Pending'}</span>
                         </div>
                         ${canEmail ? `<button onclick="resendEmail('${v.id}'); event.stopPropagation();" class="mobile-action-btn" title="Resend email" style="flex-shrink: 0; white-space: nowrap;">📧</button>` : ''}
                     </div>
                     ${tagsContainer}
                 </td>
-                <td style="${rowBgStyle}"><a href="mailto:${v.preferred_email}" onclick="event.stopPropagation()" style="color:var(--text-muted);">${v.preferred_email}</a><br><small style="color:var(--text-muted); opacity: 0.5;">${v.gcu_email || ''}</small></td>
+                <td style="${rowBgStyle}"><a href="mailto:${v.preferred_email}" onclick="event.stopPropagation()" style="color:var(--text-muted); font-size: 0.85rem;">${v.preferred_email}</a></td>
                 <td style="${rowBgStyle}">${statusToggle}</td>
                 <td style="${rowBgStyle}">${confirmedCell}</td>
                 <td style="${rowBgStyle}">${checkInCell}</td>
@@ -4567,7 +4607,9 @@
                 <td style="${rowBgStyle}">
                     <div class="action-wrapper" onclick="event.stopPropagation()">
                         <div class="color-trigger-wrapper">
-                            <button class="btn-icon-text" title="Color Code" style="margin: 0; background: ${rowColor || 'rgba(255,255,255,0.05)'}; color: ${rowColor ? '#000' : 'white'}; cursor: default;">🎨</button>
+                            <button class="btn-icon-sq" title="Color code" style="${rowColor ? 'border-color:' + rowColor + '; box-shadow: inset 0 0 0 2px ' + rowColor + '40;' : ''}">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="1" fill="currentColor" stroke="none"/><circle cx="17.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="8.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="6.5" cy="12.5" r="1" fill="currentColor" stroke="none"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+                            </button>
                             <div class="color-palette-inline">
                                 <div class="color-dot" style="background: #FF3B30;" onclick="saveVendorColor('${v.id}', '#FF3B30'); event.stopPropagation();" title="Red"></div>
                                 <div class="color-dot" style="background: #FF9500;" onclick="saveVendorColor('${v.id}', '#FF9500'); event.stopPropagation();" title="Orange"></div>
@@ -4575,12 +4617,18 @@
                                 <div class="color-dot" style="background: #34C759;" onclick="saveVendorColor('${v.id}', '#34C759'); event.stopPropagation();" title="Green"></div>
                                 <div class="color-dot" style="background: #0A84FF;" onclick="saveVendorColor('${v.id}', '#0A84FF'); event.stopPropagation();" title="Blue"></div>
                                 <div class="color-dot" style="background: #BF5AF2;" onclick="saveVendorColor('${v.id}', '#BF5AF2'); event.stopPropagation();" title="Purple"></div>
-                                <div class="color-dot clear" onclick="saveVendorColor('${v.id}', '#ffffff'); event.stopPropagation();" title="Clear Color">✕</div>
+                                <div class="color-dot clear" onclick="saveVendorColor('${v.id}', '#ffffff'); event.stopPropagation();" title="Clear">✕</div>
                             </div>
                         </div>
-                        <button onclick="openEditModal('${v.id}')" class="btn-icon-text" title="Edit Application">Edit</button>
-                        <button onclick="resendEmail('${v.id}')" class="btn-icon-text" title="Send Status Email" style="${canEmail ? '' : 'display:none;'}">Email</button>
-                        <button onclick="deleteVendor('${v.id}')" class="btn-icon-text danger" title="Delete">Del</button>
+                        <button onclick="openEditModal('${v.id}')" class="btn-icon-sq" title="Edit application">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button onclick="resendEmail('${v.id}')" class="btn-icon-sq" title="Send status email" style="${canEmail ? '' : 'display:none;'}">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        </button>
+                        <button onclick="deleteVendor('${v.id}')" class="btn-icon-sq danger" title="Delete vendor">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>
                     </div>
                 </td>
             </tr>
