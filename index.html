@@ -11,6 +11,9 @@
     
     <!-- Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -45,7 +48,7 @@
             --radius-button: 100px;
             --radius-sm: 12px;
             --blur: 40px;
-            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
 
@@ -60,6 +63,8 @@
             min-height: 100vh;
             padding-bottom: 40px;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-feature-settings: 'cv11', 'ss01';
             overflow-x: hidden;
         }
 
@@ -127,12 +132,21 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 32px;
+            padding: 16px 28px;
             border-radius: var(--radius-card);
-            margin-bottom: 40px;
+            margin-bottom: 12px;
             margin-top: 20px;
             transition: all 0.3s ease;
             background: var(--glass-surface);
+        }
+
+        /* Filter tabs row — sits below the topbar, above content */
+        #vendorFilterTabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
         }
 
         .brand { display: flex; align-items: center; gap: 16px; }
@@ -461,7 +475,7 @@
         }
         .mob-nav-btn {
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-            background: none; border: none; color: rgba(255,255,255,0.3); font-size: 0.5rem;
+            background: none; border: none; color: rgba(255,255,255,0.3); font-size: 0.65rem;
             font-weight: 500; cursor: pointer; padding: 8px 0 4px; font-family: inherit;
             transition: color 0.15s ease; letter-spacing: 0.1px;
             -webkit-tap-highlight-color: transparent; position: relative;
@@ -475,10 +489,11 @@
         /* --- TABLET (900px) --- */
         @media (max-width: 900px) {
             .app-container { padding: 0 16px; }
-            .topbar { flex-direction: column; gap: 16px; text-align: center; padding: 16px; margin-top: 10px; margin-bottom: 20px; }
+            .topbar { flex-direction: column; gap: 12px; text-align: center; padding: 14px 16px; margin-top: 10px; margin-bottom: 10px; }
             .brand { flex-direction: column; gap: 8px; }
             .brand-logo { height: 40px; } .brand-text h1 { font-size: 1.2rem; }
             .controls { flex-wrap: wrap; justify-content: center; width: 100%; gap: 6px; }
+            #vendorFilterTabs { flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
             .control-item { font-size: 0.75rem; padding: 0 10px; height: 36px; flex: 1 1 auto; justify-content: center; }
             .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 24px; }
             .stat-card { padding: 16px; } .stat-val { font-size: 1.8rem; }
@@ -536,17 +551,18 @@
             }
             .event-label { display: none; }
 
+            /* ── VIEW NAV — hidden on mobile (bottom nav handles it) ── */
+            #viewNavTabs { display: none !important; }
+
             /* ── FILTER PILLS ── */
             #vendorFilterTabs {
                 width: 100%; flex-wrap: nowrap;
                 overflow-x: auto; -webkit-overflow-scrolling: touch;
                 scrollbar-width: none; justify-content: flex-start;
-                gap: 8px; padding: 4px 16px 12px; margin: 0;
+                gap: 8px; padding: 4px 16px 10px; margin: 0;
             }
             #vendorFilterTabs::-webkit-scrollbar { display: none; }
-            #vendorFilterTabs > .control-item { display: none !important; }
-            #vendorFilterTabs > .control-item-filter:not([style*="width: 1px"]) { display: flex !important; flex-shrink: 0; }
-            #vendorFilterTabs > .control-item-filter[style*="width: 1px"] { display: none !important; }
+            #vendorFilterTabs > .control-item-filter { display: flex !important; flex-shrink: 0; }
             .control-item {
                 font-size: 0.72rem; padding: 0 14px; height: 32px;
                 border-radius: 16px; font-weight: 600;
@@ -577,12 +593,12 @@
             }
             .stat-val { font-size: 1.5rem; font-weight: 800; line-height: 1; }
             .stat-label {
-                font-size: 0.58rem; margin-bottom: 4px;
-                letter-spacing: 0.8px; text-transform: uppercase;
+                font-size: 0.65rem; margin-bottom: 4px;
+                letter-spacing: 0.6px; text-transform: uppercase;
                 color: var(--text-muted); font-weight: 600;
             }
             .stat-sub { gap: 8px; margin-top: 6px; flex-wrap: wrap; }
-            .stat-sub span { font-size: 0.52rem; font-weight: 700; }
+            .stat-sub span { font-size: 0.65rem; font-weight: 600; }
 
             /* ── SEARCH & FILTERS ── */
             .filter-row { flex-direction: column; gap: 8px; align-items: stretch; }
@@ -886,7 +902,7 @@
             .brand { padding: 10px 14px 6px; }
             .brand-logo { height: 20px; }
             .brand-text h1 { font-size: 0.78rem; }
-            #vendorFilterTabs { padding: 4px 14px 10px; gap: 6px; }
+            #vendorFilterTabs { padding: 4px 14px 8px; gap: 6px; }
             .control-item { font-size: 0.66rem; padding: 0 12px; height: 30px; }
             .stat-card { padding: 12px 8px; }
             .stat-val { font-size: 1.3rem; }
@@ -1479,20 +1495,23 @@
                 <div class="event-subtext"><span class="event-label">Active: </span><select id="eventDropdown" class="modern-input" style="width:auto; height:36px; padding:0 36px 0 12px; display:inline-block; font-size:0.85rem;" onchange="switchEvent(this.value)"></select></div>
             </div>
         </div>
-        <div class="controls" id="vendorFilterTabs">
-            <button onclick="setFilter('inbox')" id="nav-filter-all" class="control-item control-item-filter">ALL</button>
-            <button onclick="setFilter('new')" id="nav-new" class="control-item control-item-filter">NEW</button>
-            <button onclick="setFilter('approved')" id="nav-approved" class="control-item control-item-filter">APPROVED</button>
-            <button onclick="setFilter('review')" id="nav-review" class="control-item control-item-filter">REVIEW</button>
-            <button onclick="setFilter('power')" id="nav-power" class="control-item control-item-filter">POWER</button>
-            <button onclick="setFilter('denied')" id="nav-denied" class="control-item control-item-filter">DENIED</button>
-            <div class="control-item-filter" style="width: 1px; height: 24px; background: rgba(255,255,255,0.15); margin: 0 4px;"></div>
+        <div class="controls" id="viewNavTabs">
             <button onclick="setFilter('inbox')" id="nav-inbox" class="control-item">VENDORS</button>
             <button onclick="setFilter('profiles')" id="nav-profiles" class="control-item">PROFILES</button>
             <button onclick="toggleView('scan')" id="nav-scan" class="control-item" style="background: rgba(52, 199, 89, 0.2); border-color: rgba(52, 199, 89, 0.4); color: #34C759;">CHECK IN</button>
             <button onclick="toggleView('settings')" id="nav-settings" class="control-item">SETTINGS</button>
             <button onclick="handleLogout()" class="control-item" style="background: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.3); color: #FF3B30;">LOGOUT</button>
         </div>
+    </div>
+
+    <!-- STATUS FILTER TABS -->
+    <div id="vendorFilterTabs">
+        <button onclick="setFilter('inbox')" id="nav-filter-all" class="control-item control-item-filter">ALL</button>
+        <button onclick="setFilter('new')" id="nav-new" class="control-item control-item-filter">NEW</button>
+        <button onclick="setFilter('approved')" id="nav-approved" class="control-item control-item-filter">APPROVED</button>
+        <button onclick="setFilter('review')" id="nav-review" class="control-item control-item-filter">REVIEW</button>
+        <button onclick="setFilter('power')" id="nav-power" class="control-item control-item-filter">POWER</button>
+        <button onclick="setFilter('denied')" id="nav-denied" class="control-item control-item-filter">DENIED</button>
     </div>
 
     <!-- VIEW: MAIN LIST -->
@@ -3691,15 +3710,18 @@
 
         // Show/hide filter tabs based on context
         const filterTabs = document.querySelectorAll('#vendorFilterTabs .control-item-filter');
+        const filterTabsRow = document.getElementById('vendorFilterTabs');
         if (filter === 'profiles') {
             document.getElementById('nav-profiles').classList.add('active-profiles');
             filterTabs.forEach(t => t.style.display = 'none');
+            if (filterTabsRow) filterTabsRow.style.display = 'none';
             document.getElementById('view-profiles').style.display = 'block';
             if (document.getElementById('profileSearch')) document.getElementById('profileSearch').value = '';
             fetchAndRenderProfiles();
             syncMobileNav('profiles');
         } else {
             filterTabs.forEach(t => t.style.display = '');
+            if (filterTabsRow) filterTabsRow.style.display = '';
             document.getElementById('view-list').style.display = 'block';
             // Show/hide bulk email button based on active filter
             const bulkEmailBtn = document.getElementById('bulkEmailButton');
@@ -3726,6 +3748,8 @@
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
         // Hide filter tabs when on settings/scan
         document.querySelectorAll('#vendorFilterTabs .control-item-filter').forEach(t => t.style.display = 'none');
+        const filterTabsRow = document.getElementById('vendorFilterTabs');
+        if (filterTabsRow) filterTabsRow.style.display = 'none';
 
         if (v === 'settings') {
             document.getElementById('nav-settings').classList.add('active-settings');
