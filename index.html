@@ -178,20 +178,56 @@
         .control-item.active-profiles { background: #BF5AF2; border: none; box-shadow: 0 8px 20px rgba(191, 90, 242, 0.2); }
         .control-item.active-scan { background: rgba(52, 199, 89, 0.2); border-color: rgba(52, 199, 89, 0.4); color: #34C759; }
 
-        .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 20px; }
+        /* Legacy stat-card used in profile modal only */
         .stat-card { padding: 20px; border-radius: var(--radius-card); text-align: center; transition: transform 0.3s ease; }
         .stat-val { font-size: 2.4rem; font-weight: 800; display: block; letter-spacing: -0.02em; }
         .stat-sub { display: flex; justify-content: center; gap: 14px; margin-top: 8px; }
         .stat-sub span { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; }
-        
-        .stat-label { 
-            font-size: 0.8rem; 
-            text-transform: uppercase; 
-            color: var(--text-muted); 
-            letter-spacing: 0.1em; 
-            font-weight: 700; 
+        .stat-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            font-weight: 700;
             display: block;
             margin-bottom: 10px;
+        }
+
+        /* Compact stats strip */
+        .stats-strip {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: var(--glass-surface);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-inner);
+            padding: 10px 20px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 4px 0;
+        }
+        .stats-strip-item {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+            padding: 4px 16px;
+            border-right: 1px solid var(--glass-border);
+            white-space: nowrap;
+        }
+        .stats-strip-item:last-child { border-right: none; }
+        .stats-strip-item:first-child { padding-left: 0; }
+        .strip-num {
+            font-size: 1.3rem;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
+        .strip-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; }
@@ -511,8 +547,8 @@
             .controls { flex-wrap: wrap; justify-content: center; width: 100%; gap: 6px; }
             #vendorFilterTabs { flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
             .control-item { font-size: 0.75rem; padding: 0 10px; height: 36px; flex: 1 1 auto; justify-content: center; }
-            .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 24px; }
-            .stat-card { padding: 16px; } .stat-val { font-size: 1.8rem; }
+            .stats-strip { padding: 8px 16px; }
+            .strip-num { font-size: 1.1rem; }
             table { min-width: 0; }
             .editor-grid { grid-template-columns: 1fr; gap: 20px; }
             .filter-row { flex-direction: column; align-items: stretch; }
@@ -596,25 +632,17 @@
             #view-scan, #view-profiles { padding: 14px 16px 0; }
             #view-settings { padding: 8px 0 0; }
 
-            /* ── STATS CARDS ── */
-            .stats-container {
-                display: flex !important; gap: 8px; margin-bottom: 14px;
-                overflow-x: auto; -webkit-overflow-scrolling: touch;
-                scrollbar-width: none; padding-bottom: 2px;
+            /* ── STATS STRIP (mobile) ── */
+            .stats-strip {
+                padding: 8px 16px; margin-bottom: 0; border-radius: 0;
+                border-left: none; border-right: none; border-top: none;
+                background: rgba(0,0,0,0.6); gap: 0; overflow-x: auto;
+                scrollbar-width: none; flex-wrap: nowrap;
             }
-            .stats-container::-webkit-scrollbar { display: none; }
-            .stat-card {
-                flex: 1; min-width: 0; padding: 14px 10px; border-radius: 14px;
-                border: none !important; background: rgba(255,255,255,0.035) !important;
-            }
-            .stat-val { font-size: 1.5rem; font-weight: 800; line-height: 1; }
-            .stat-label {
-                font-size: 0.65rem; margin-bottom: 4px;
-                letter-spacing: 0.6px; text-transform: uppercase;
-                color: var(--text-muted); font-weight: 600;
-            }
-            .stat-sub { gap: 8px; margin-top: 6px; flex-wrap: wrap; }
-            .stat-sub span { font-size: 0.65rem; font-weight: 600; }
+            .stats-strip::-webkit-scrollbar { display: none; }
+            .stats-strip-item { padding: 3px 12px; }
+            .strip-num { font-size: 1rem; }
+            .strip-label { font-size: 0.6rem; }
 
             /* ── SEARCH & FILTERS ── */
             .filter-row { flex-direction: column; gap: 8px; align-items: stretch; }
@@ -1532,23 +1560,35 @@
 
     <!-- VIEW: MAIN LIST -->
     <div id="view-list" class="view">
-        <div class="stats-container" id="statsBar">
-            <div class="frosted stat-card"><span class="stat-label">New Apps</span><span class="stat-val" id="countInbox">0</span></div>
-            <div class="frosted stat-card">
-                <span class="stat-label">Status</span><span class="stat-val" style="color:#34C759" id="countApproved">0</span>
-                <div class="stat-sub">
-                    <span style="color:#34C759;"><span id="countApprovedSub">0</span> approved</span>
-                    <span style="color:#FF9500;"><span id="countReview">0</span> review</span>
-                    <span style="color:#FF3B30;"><span id="countDeniedSub">0</span> denied</span>
-                </div>
+        <div class="stats-strip" id="statsBar">
+            <div class="stats-strip-item">
+                <span class="strip-num" id="countInbox">0</span>
+                <span class="strip-label">New</span>
             </div>
-            <div class="frosted stat-card">
-                <span class="stat-label">Attendance</span><span class="stat-val" style="color:#30D158" id="countConfirmed">0</span>
-                <div class="stat-sub">
-                    <span style="color:#30D158;"><span id="countConfirmedSub">0</span> confirmed</span>
-                    <span style="color:#FF3B30;"><span id="countDeclined">0</span> can't attend</span>
-                </div>
+            <div class="stats-strip-item">
+                <span class="strip-num" style="color:#34C759" id="countApprovedSub">0</span>
+                <span class="strip-label">Approved</span>
             </div>
+            <div class="stats-strip-item">
+                <span class="strip-num" style="color:#FF9500" id="countReview">0</span>
+                <span class="strip-label">Review</span>
+            </div>
+            <div class="stats-strip-item">
+                <span class="strip-num" style="color:#FF3B30" id="countDeniedSub">0</span>
+                <span class="strip-label">Denied</span>
+            </div>
+            <div class="stats-strip-item">
+                <span class="strip-num" style="color:#30D158" id="countConfirmedSub">0</span>
+                <span class="strip-label">Confirmed</span>
+            </div>
+            <div class="stats-strip-item">
+                <span class="strip-num" style="color:#FF3B30" id="countDeclined">0</span>
+                <span class="strip-label">Can't Attend</span>
+            </div>
+            <!-- Hidden elements kept for JS compat -->
+            <span id="countApproved" style="display:none">0</span>
+            <span id="countDenied" style="display:none">0</span>
+            <span id="countConfirmed" style="display:none">0</span>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
@@ -1585,7 +1625,7 @@
         
         <div class="table-container">
             <table>
-                <thead><tr><th>App # / ID</th><th>Vendor Name</th><th>Contact</th><th>Status</th><th>Vendor Confirmed</th><th>Check In</th><th>Email</th><th>Actions</th></tr></thead>
+                <thead><tr><th>App #</th><th>Vendor</th><th>Status</th><th>Check In</th><th style="text-align:right;">Actions</th></tr></thead>
                 <tbody id="vendorTableBody"></tbody>
             </table>
         </div>
@@ -3235,7 +3275,7 @@
             currentData.activeId = null;
             currentData.activeEvent = null;
             document.getElementById('eventDropdown').innerHTML = '<option>No Active Markets</option>';
-            document.getElementById('vendorTableBody').innerHTML = '<tr><td colspan="8" style="text-align:center;">No events. Create one in Settings.</td></tr>';
+            document.getElementById('vendorTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;">No events. Create one in Settings.</td></tr>';
             
             // Check for null before setting innerText
             if (document.getElementById('countInbox')) document.getElementById('countInbox').innerText = 0;
@@ -4467,7 +4507,7 @@
         const tbody = document.getElementById('vendorTableBody');
         
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 40px;">No applications found in this view.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px;">No applications found in this view.</td></tr>';
             return;
         }
 
@@ -4565,24 +4605,39 @@
                 tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 214, 10, 0.15); color: #FFD60A; border: 1px solid rgba(255, 214, 10, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap;">POWER</span>`);
             }
 
-            const tagsContainer = tagsArray.length > 0 ? `<div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">${tagsArray.join('')}</div>` : '';
+            // Cap tags at 2 visible, show +N for overflow
+            const visibleTags = tagsArray.slice(0, 2);
+            const extraCount = tagsArray.length - visibleTags.length;
+            const overflowBadge = extraCount > 0
+                ? `<span style="font-size: 0.65rem; background: rgba(255,255,255,0.08); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.12); padding: 3px 6px; border-radius: 4px; font-weight: 600; white-space: nowrap;">+${extraCount}</span>`
+                : '';
+            const tagsContainer = visibleTags.length > 0
+                ? `<div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px;">${visibleTags.join('')}${overflowBadge}</div>`
+                : '';
 
+            // Merged attendance + check-in cell
             const attState = getAttendanceState(v);
-            let confirmedCell = '';
-            if (attState === 'confirmed') {
-                confirmedCell = '<span style="color: #34C759; font-weight: 800; background: rgba(52, 199, 89, 0.1); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(52, 199, 89, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✓ Confirmed</span>';
-            } else if (attState === 'declined') {
-                confirmedCell = '<span style="color: #FF3B30; font-weight: 800; background: rgba(255, 59, 48, 0.1); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(255, 59, 48, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✕ Declined</span>';
+            let checkInCell = '';
+            if (v.status === 'Checked In') {
+                checkInCell = `<button onclick="checkIn('${v.id}', false, this); event.stopPropagation();" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; background:var(--gradient-success);">✓ IN</button>`;
+            } else if (isAppr) {
+                const attBadge = attState === 'confirmed'
+                    ? `<span style="font-size:0.65rem; color:#34C759; font-weight:600;">✓ confirmed</span>`
+                    : attState === 'declined'
+                    ? `<span style="font-size:0.65rem; color:#FF3B30; font-weight:600;">✕ declined</span>`
+                    : `<span style="font-size:0.65rem; color:var(--text-muted); font-weight:500;">awaiting reply</span>`;
+                checkInCell = `<div style="display:flex; flex-direction:column; gap:5px; align-items:flex-start;">${attBadge}<button onclick="checkIn('${v.id}', false, this); event.stopPropagation();" class="btn-action" style="padding: 5px 10px; font-size: 0.75rem;">MARK IN</button></div>`;
             } else {
-                confirmedCell = '<span style="color: var(--text-muted); font-weight: 700; font-size: 0.7rem; background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(255, 255, 255, 0.1); text-transform: uppercase; white-space: nowrap;">Awaiting Reply</span>';
+                checkInCell = `<span style="color:var(--text-muted); font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">${v.status}</span>`;
             }
 
-            const checkInCell = isAppr
-                ? `<button onclick="checkIn('${v.id}', false, this); event.stopPropagation();" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`
-                : `<span style="color:var(--text-muted); font-size:0.75rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">${v.status}</span>`;
-
-            // Only allow resend email if they aren't pending, user is admin, and viewing a specific filter (not all applicants)
+            // Only allow resend email if they aren't pending, user is admin, and viewing a specific filter
             const canEmail = currentUser.role === 'admin' && v.status !== 'Needs Review' && v.status !== 'Pending' && ['approved', 'denied', 'power'].includes(activeFilter);
+
+            // Inline email sent indicator — shown only when sent, nothing when unsent
+            const emailSentIndicator = isEmailSentForView
+                ? `<span style="font-size:0.65rem; color:#34C759; font-weight:600; white-space:nowrap;">✓ emailed</span>`
+                : '';
 
             const submitDate = v.created_at ? new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown Date';
 
@@ -4599,11 +4654,8 @@
                     </div>
                     ${tagsContainer}
                 </td>
-                <td style="${rowBgStyle}"><a href="mailto:${v.preferred_email}" onclick="event.stopPropagation()" style="color:var(--text-muted); font-size: 0.85rem;">${v.preferred_email}</a></td>
                 <td style="${rowBgStyle}">${statusToggle}</td>
-                <td style="${rowBgStyle}">${confirmedCell}</td>
                 <td style="${rowBgStyle}">${checkInCell}</td>
-                <td style="${rowBgStyle}">${emailSentBadge}</td>
                 <td style="${rowBgStyle}">
                     <div class="action-wrapper" onclick="event.stopPropagation()">
                         <div class="color-trigger-wrapper">
@@ -4629,6 +4681,7 @@
                         <button onclick="deleteVendor('${v.id}')" class="btn-icon-sq danger" title="Delete vendor">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         </button>
+                        ${emailSentIndicator}
                     </div>
                 </td>
             </tr>
