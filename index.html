@@ -3720,7 +3720,7 @@
             let btnHtml = '';
             // Show check-in button for approved vendors (regardless of confirmation) or already checked in
             if (v.status === 'Approved' || v.status === 'Checked In') {
-                btnHtml = `<button class="btn-action" style="padding: 6px 16px; font-size: 0.8rem; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}" onclick="checkIn('${v.id}', false, this)">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`;
+                btnHtml = `<button class="btn-action" style="padding: 6px 16px; font-size: 0.8rem; white-space: nowrap; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}" onclick="checkIn('${v.id}', false, this)">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`;
             } else {
                 btnHtml = `<span style="color: #FF3B30; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; padding-right: 10px;">${v.status}</span>`;
             }
