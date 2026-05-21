@@ -295,6 +295,7 @@
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 24px;
+            margin-bottom: 24px;
         }
 
         /* ── STATS ── */
@@ -316,6 +317,7 @@
         .stat-val { font-size: 36px; font-weight: 800; line-height: 1; color: var(--text-main); }
         .stat-sub { display: flex; gap: 12px; font-size: 13px; font-weight: 500; flex-wrap: wrap; }
         .stat-sub span { font-size: 13px; font-weight: 500; }
+        .stat-label svg { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
         .stat-label {
             display: flex;
             align-items: center;
@@ -681,7 +683,8 @@
             .brand { flex-direction: column; gap: 8px; }
             .brand-logo { height: 40px; } .brand-text h1 { font-size: 1.2rem; }
             .controls { flex-wrap: wrap; justify-content: center; width: 100%; gap: 6px; }
-            #vendorFilterTabs { flex-wrap: wrap; gap: 6px; }
+            #vendorFilterTabs { flex-direction: column; }
+            .pill-group { flex-wrap: wrap; gap: 6px; }
             .control-item { font-size: 12px; padding: 8px 12px; flex: 1 1 auto; justify-content: center; }
             .stats-container { grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
             .stat-card { padding: 16px; } .stat-val { font-size: 1.8rem; }
@@ -741,23 +744,23 @@
             /* Nav tabs are in bottom nav on mobile — hide from header */
             #viewNavTabs { display: none !important; }
 
-            /* ── HEADER RIGHT — market filter tabs card (2/3 width) ── */
+            /* ── FILTER PANEL — inside layout-grid on mobile ── */
             #vendorFilterTabs {
-                flex: 0 0 calc(66.67% - 6px);
-                position: sticky; top: 0; z-index: 100;
-                align-self: flex-start;
+                flex: none;
+                position: static;
                 background: var(--bg-surface);
                 border: 1px solid var(--border-light);
-                border-radius: var(--radius-xl);
+                border-radius: var(--radius-lg);
                 box-shadow: var(--shadow-sm);
-                display: flex !important; flex-wrap: nowrap; overflow-x: auto;
-                -webkit-overflow-scrolling: touch; scrollbar-width: none;
-                align-items: center; gap: 4px;
-                padding: calc(env(safe-area-inset-top) + 10px) 10px 10px;
-                margin: 0; min-height: calc(env(safe-area-inset-top) + 56px);
+                display: flex !important; flex-direction: row !important; flex-wrap: wrap;
+                overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+                align-items: center; gap: 6px;
+                padding: 12px; margin: 0;
+                min-height: auto;
             }
             #vendorFilterTabs::-webkit-scrollbar { display: none; }
             .filter-panel-title { display: none; }
+            .pill-group { display: flex; flex-wrap: wrap; gap: 6px; }
             #vendorFilterTabs > .control-item-filter { display: flex !important; flex-shrink: 0; }
             #vendorFilterTabs .control-item-filter {
                 font-size: 0.65rem; padding: 6px 10px;
@@ -1073,7 +1076,7 @@
         /* ── SMALL PHONES (390px) ── */
         @media (max-width: 390px) {
             .brand-logo { height: 20px; }
-            #vendorFilterTabs { gap: 4px; }
+            .pill-group { gap: 4px; }
             .control-item-filter { font-size: 0.6rem; padding: 5px 8px; }
             .stat-card { padding: 12px 8px; }
             .stat-val { font-size: 1.3rem; }
