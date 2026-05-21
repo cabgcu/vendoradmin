@@ -662,17 +662,19 @@
 
             /* ── VENDOR CARDS ── */
             .table-container { overflow-x: visible; }
-            table { min-width: 0; border-spacing: 0 0; }
+            table { min-width: 0; border-spacing: 0 8px; }
             thead { display: none; }
             tbody, tr, td { display: block; }
             tr.clickable-row {
-                margin-bottom: 1px; padding: 16px; border-radius: 0;
-                background: transparent !important;
-                border: none !important; border-bottom: 0.5px solid rgba(255,255,255,0.06) !important;
+                margin-bottom: 0; padding: 14px 16px; border-radius: var(--radius-card);
+                background: var(--glass-surface) !important;
+                backdrop-filter: blur(var(--blur)) saturate(180%);
+                -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+                border: 0.5px solid var(--glass-border) !important;
+                box-shadow: var(--glass-highlight), 0 4px 16px rgba(0,0,0,0.3);
                 position: relative;
             }
-            tr.clickable-row:first-child { border-top: 0.5px solid rgba(255,255,255,0.06) !important; }
-            tr.clickable-row:active { background: var(--glass-hover) !important; }
+            tr.clickable-row:active { background: var(--glass-active) !important; }
             td { border: none !important; padding: 0 !important; background: transparent !important; border-radius: 0 !important; }
 
             /* Cell layout — clean list: # + name + status only */
@@ -693,7 +695,7 @@
             td:nth-child(6), td:nth-child(7), td:nth-child(8) { display: none !important; }
 
             /* Vendor row — clean list item */
-            tr.clickable-row { position: relative; padding: 14px 16px; padding-right: 16px; }
+            tr.clickable-row { position: relative; }
 
             /* Mobile status pill — inline after name */
             .mobile-status-pill {
