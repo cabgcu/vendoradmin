@@ -18,11 +18,11 @@
     <style>
         :root {
             /* Design System */
-            --bg-page: #09090b;
-            --bg-surface: #18181b;
-            --bg-hover: #27272a;
-            --border-light: #27272a;
-            --border-medium: #3f3f46;
+            --bg-page: rgba(0, 0, 0, 0.7);
+            --bg-surface: rgba(10, 10, 12, 0.85);
+            --bg-hover: rgba(255, 255, 255, 0.05);
+            --border-light: rgba(255, 255, 255, 0.06);
+            --border-medium: rgba(255, 255, 255, 0.12);
             --text-main: #f4f4f5;
             --text-muted: #a1a1aa;
 
@@ -59,31 +59,31 @@
             --radius-xl: 16px;
 
             /* Legacy aliases */
-            --bg-dark: #09090b;
-            --glass-surface: #18181b;
-            --glass-surface-light: #27272a;
-            --glass-border: #27272a;
-            --glass-border-strong: #3f3f46;
-            --glass-hover: #27272a;
-            --glass-active: #3f3f46;
-            --glass-highlight: none;
-            --input-bg: #09090b;
-            --card-bg: #18181b;
-            --card-border: #27272a;
-            --row-hover: #27272a;
-            --table-border: #27272a;
-            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --bg-dark: rgba(0, 0, 0, 0.7);
+            --glass-surface: rgba(10, 10, 12, 0.85);
+            --glass-surface-light: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --glass-border-strong: rgba(255, 255, 255, 0.12);
+            --glass-hover: rgba(255, 255, 255, 0.05);
+            --glass-active: rgba(255, 255, 255, 0.10);
+            --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            --input-bg: rgba(0, 0, 0, 0.7);
+            --card-bg: rgba(10, 10, 12, 0.85);
+            --card-border: rgba(255, 255, 255, 0.06);
+            --row-hover: rgba(255, 255, 255, 0.03);
+            --table-border: rgba(255, 255, 255, 0.05);
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
             --shadow-color: rgba(0, 0, 0, 0.5);
-            --toast-bg: #18181b;
-            --modal-bg: #18181b;
-            --loader-bg: #09090b;
+            --toast-bg: rgba(15, 15, 18, 0.88);
+            --modal-bg: rgba(15, 15, 18, 0.88);
+            --loader-bg: rgba(0, 0, 0, 0.6);
             --text-inverse: #000000;
             --radius-card: var(--radius-xl);
             --radius-inner: var(--radius-lg);
             --radius-input: var(--radius-lg);
             --radius-button: var(--radius-md);
             --radius-sm: var(--radius-md);
-            --blur: 0px;
+            --blur: 16px;
             --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
@@ -136,7 +136,9 @@
             border: 1px solid var(--border-medium);
             animation: fadeIn 0.5s ease-out;
             background: var(--bg-surface);
-            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            box-shadow: var(--shadow-card);
         }
 
         @keyframes fadeIn {
@@ -148,11 +150,13 @@
         .mb-4 { margin-bottom: 1.5rem; }
         .mt-2 { margin-top: 0.5rem; }
 
-        /* .frosted is kept for legacy use in modals/stat cards */
+        /* .frosted — glass surface used by stat cards in modals */
         .frosted {
             background: var(--bg-surface);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
             border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-sm);
+            box-shadow: var(--shadow-card);
         }
 
         /* ── MAIN APP CONTAINER ── */
@@ -175,16 +179,20 @@
             border-radius: var(--radius-xl);
             border: 1px solid var(--border-light);
             background: var(--bg-surface);
-            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            box-shadow: var(--shadow-card);
         }
 
         /* Filter panel — right column of layout-grid */
         #vendorFilterTabs {
             background-color: var(--bg-surface);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
             border-radius: var(--radius-lg);
             padding: 20px;
             border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-sm);
+            box-shadow: var(--shadow-card);
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -307,10 +315,12 @@
         }
         .stat-card {
             background-color: var(--bg-surface);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
             border-radius: var(--radius-lg);
             padding: 24px;
             border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-sm);
+            box-shadow: var(--shadow-card);
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -334,21 +344,23 @@
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; }
         .table-container {
             background-color: var(--bg-surface);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
             border-radius: var(--radius-xl);
             border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-card);
             overflow: hidden;
             overflow-x: auto;
         }
 
-        /* Toolbar inside table container */
+        /* Toolbar inside table container — no extra blur, just dark tint */
         .filter-row {
             display: flex;
             gap: 12px;
             align-items: center;
             padding: 16px 24px;
             border-bottom: 1px solid var(--border-light);
-            background-color: var(--bg-hover);
+            background-color: rgba(0, 0, 0, 0.4);
             flex-wrap: nowrap;
         }
 
@@ -408,7 +420,7 @@
 
         /* ── TABLE ── */
         table { width: 100%; border-collapse: collapse; min-width: 1100px; }
-        thead { background-color: var(--bg-hover); border-bottom: 1px solid var(--border-light); }
+        thead { background-color: rgba(0, 0, 0, 0.4); border-bottom: 1px solid var(--border-light); }
         th { padding: 16px; text-align: left; color: var(--text-muted); font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600; }
         th:last-child { text-align: right; }
         td { padding: 16px; vertical-align: middle; border-bottom: 1px solid var(--border-light); }
@@ -511,12 +523,14 @@
             padding: 20px; overflow-y: auto;
             transition: opacity 0.3s ease;
         }
-        .modal-content { background: var(--bg-surface); border: 1px solid var(--border-medium); box-shadow: var(--shadow-md); padding: 40px; border-radius: var(--radius-xl); width: 100%; max-width: 900px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: var(--bg-surface); backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur)); border: 1px solid var(--border-medium); box-shadow: var(--shadow-card); padding: 40px; border-radius: var(--radius-xl); width: 100%; max-width: 900px; position: relative; max-height: 90vh; overflow-y: auto; }
         .close-modal { position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: var(--text-muted); font-size: 2rem; cursor: pointer; line-height: 1; }
 
         /* Review Modal - Split Layout */
         .review-modal-container {
             background: var(--bg-surface);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
             border: 1px solid var(--border-medium);
             border-radius: var(--radius-xl);
             width: 100%;
