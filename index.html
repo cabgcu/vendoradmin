@@ -18,36 +18,38 @@
     <style>
         :root {
             --bg-dark: #000000;
-            --bg-surface: #0a0a0a;
-            --bg-radial-1: rgba(10, 132, 255, 0.08);
-            --bg-radial-2: rgba(191, 90, 242, 0.08);
-            --glass-surface: #161616;
-            --glass-border: #2a2a2a;
-            --glass-hover: #1e1e1e;
-            --glass-active: #252525;
+            --bg-surface: #000000;
+            --glass-surface: rgba(22, 22, 24, 0.75);
+            --glass-surface-light: rgba(44, 44, 46, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-border-strong: rgba(255, 255, 255, 0.16);
+            --glass-hover: rgba(255, 255, 255, 0.07);
+            --glass-active: rgba(255, 255, 255, 0.13);
+            --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.1);
             --text-main: #ffffff;
-            --text-muted: #888890;
+            --text-muted: rgba(235, 235, 245, 0.55);
             --text-inverse: #000000;
             --gradient-accent: linear-gradient(135deg, #0A84FF, #BF5AF2);
             --gradient-success: linear-gradient(135deg, #34C759, #30B0C7);
             --gradient-danger: linear-gradient(135deg, #FF3B30, #FF9500);
             --gradient-warning: linear-gradient(135deg, #FF9500, #FFCC00);
-            --input-bg: #0f0f0f;
-            --card-bg: #1a1a1a;
-            --card-border: #2a2a2a;
-            --row-hover: #1c1c1c;
-            --table-border: #222222;
-            --shadow-color: rgba(0, 0, 0, 0.6);
-            --toast-bg: #161616;
-            --modal-bg: #111111;
-            --loader-bg: #0d0d0d;
+            --input-bg: rgba(28, 28, 30, 0.6);
+            --card-bg: rgba(28, 28, 30, 0.55);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --row-hover: rgba(255, 255, 255, 0.05);
+            --table-border: rgba(255, 255, 255, 0.06);
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --toast-bg: rgba(22, 22, 24, 0.88);
+            --modal-bg: rgba(18, 18, 20, 0.92);
+            --loader-bg: rgba(0, 0, 0, 0.95);
 
-            --radius-card: 16px;
-            --radius-inner: 10px;
-            --radius-input: 10px;
-            --radius-button: 10px;
-            --radius-sm: 8px;
-            --blur: 0px;
+            --radius-card: 20px;
+            --radius-inner: 14px;
+            --radius-input: 12px;
+            --radius-button: 12px;
+            --radius-sm: 10px;
+            --blur: 48px;
             --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
@@ -98,9 +100,12 @@
             padding: 40px;
             border-radius: var(--radius-card);
             text-align: center;
-            border: 1px solid var(--glass-border);
+            border: 0.5px solid var(--glass-border-strong);
             animation: fadeIn 0.5s ease-out;
             background: var(--glass-surface);
+            backdrop-filter: blur(var(--blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+            box-shadow: var(--glass-highlight), var(--shadow-card);
         }
 
         @keyframes fadeIn {
@@ -114,7 +119,10 @@
 
         .frosted {
             background: var(--glass-surface);
-            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(var(--blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+            border: 0.5px solid var(--glass-border);
+            box-shadow: var(--glass-highlight), var(--shadow-card);
         }
 
         .app-container {
@@ -137,7 +145,10 @@
             margin-top: 20px;
             transition: all 0.3s ease;
             background: var(--glass-surface);
-            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(var(--blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+            border: 0.5px solid var(--glass-border);
+            box-shadow: var(--glass-highlight), var(--shadow-card);
         }
 
         /* Filter tabs row — sits below the topbar, above content */
@@ -162,21 +173,24 @@
         .controls { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
 
         .control-item {
-            background: var(--glass-surface); border: 1px solid var(--glass-border); color: var(--text-main);
+            background: var(--glass-surface); border: 0.5px solid var(--glass-border); color: var(--text-main);
             padding: 0 14px; border-radius: var(--radius-button); font-weight: 600; height: 32px;
             display: flex; align-items: center; cursor: pointer; transition: 0.2s; font-size: 0.7rem;
             letter-spacing: 0.5px;
+            backdrop-filter: blur(var(--blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+            box-shadow: var(--glass-highlight);
         }
-        .control-item:hover { background: var(--glass-active); border-color: rgba(255,255,255,0.18); }
+        .control-item:hover { background: var(--glass-active); border-color: var(--glass-border-strong); }
         .control-item.active { background: var(--gradient-accent); border: none; box-shadow: 0 8px 20px rgba(10, 132, 255, 0.2); }
         
         .control-item.active-new { background: linear-gradient(135deg, #5E5CE6, #BF5AF2); border: none; box-shadow: 0 8px 20px rgba(94, 92, 230, 0.2); }
         .control-item.active-review { background: var(--gradient-warning); border: none; color: #000; box-shadow: 0 8px 20px rgba(255, 149, 0, 0.2); }
         .control-item.active-approved { background: var(--gradient-success); border: none; box-shadow: 0 8px 20px rgba(52, 199, 89, 0.2); }
         .control-item.active-denied { background: var(--gradient-danger); border: none; box-shadow: 0 8px 20px rgba(255, 59, 48, 0.2); }
-        .control-item.active-settings { background: #333333; border: 1px solid #555555; }
-        .control-item.active-profiles { background: #BF5AF2; border: none; box-shadow: 0 8px 20px rgba(191, 90, 242, 0.2); }
-        .control-item.active-scan { background: rgba(52, 199, 89, 0.2); border-color: rgba(52, 199, 89, 0.4); color: #34C759; }
+        .control-item.active-settings { background: rgba(255,255,255,0.18); border: 0.5px solid rgba(255,255,255,0.3); }
+        .control-item.active-profiles { background: #BF5AF2; border: none; box-shadow: 0 8px 20px rgba(191, 90, 242, 0.3); }
+        .control-item.active-scan { background: rgba(52, 199, 89, 0.2); border: 0.5px solid rgba(52, 199, 89, 0.4); color: #34C759; }
 
         .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 20px; }
         .stat-card { padding: 20px; border-radius: var(--radius-card); text-align: center; transition: transform 0.3s ease; }
@@ -222,9 +236,12 @@
         /* Interactive Status Toggle Styles */
         .status-toggle-group {
             display: inline-flex;
-            background: #0f0f0f;
+            background: rgba(22, 22, 24, 0.6);
+            backdrop-filter: blur(var(--blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
             border-radius: var(--radius-button);
-            border: 1px solid var(--glass-border);
+            border: 0.5px solid var(--glass-border);
+            box-shadow: var(--glass-highlight);
             overflow: hidden;
             white-space: nowrap;
         }
@@ -242,7 +259,7 @@
             border-right: 1px solid rgba(255,255,255,0.05);
         }
         .btn-quick-status:last-child { border-right: none; }
-        .btn-quick-status:hover { opacity: 0.8; background: #1e1e1e; }
+        .btn-quick-status:hover { opacity: 0.8; background: var(--glass-hover); }
 
         .btn-quick-status.active-approve { opacity: 1; background: rgba(52, 199, 89, 0.2); color: #34C759; }
         .btn-quick-status.active-review { opacity: 1; background: rgba(255, 149, 0, 0.2); color: #FF9500; }
@@ -253,7 +270,7 @@
         .status-pill.approved { background: var(--gradient-success); color: #fff; }
         .status-pill.denied { background: var(--gradient-danger); color: #fff; }
 
-        .btn-icon-text { background: #1e1e1e; border: 1px solid var(--glass-border); cursor: pointer; font-size: 0.75rem; font-weight: 700; padding: 6px 12px; color: white; border-radius: var(--radius-sm); transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-icon-text { background: var(--glass-surface); border: 0.5px solid var(--glass-border); cursor: pointer; font-size: 0.75rem; font-weight: 700; padding: 6px 12px; color: white; border-radius: var(--radius-sm); transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-icon-text:hover { background: rgba(255,255,255,0.1); }
         .btn-icon-text.danger:hover { background: rgba(255,59,48,0.2); color: #FF3B30; border-color: rgba(255,59,48,0.4); }
 
@@ -289,7 +306,9 @@
         .modern-input {
             width: 100%;
             background: var(--input-bg);
-            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(var(--blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+            border: 0.5px solid var(--glass-border);
             padding: 0 18px;
             height: 48px;
             border-radius: var(--radius-input);
@@ -298,6 +317,7 @@
             font-size: 1rem;
             transition: all 0.2s;
             font-family: inherit;
+            box-shadow: var(--glass-highlight);
         }
 
         select.modern-input {
@@ -311,9 +331,9 @@
             cursor: pointer;
         }
         
-        select.modern-input option { background-color: #1a1a1a; color: white; }
-        select.modern-input optgroup { background-color: #111; color: var(--text-muted); font-weight: bold; }
-        .modern-input:focus { border-color: #0A84FF; background: #1a1a1a; }
+        select.modern-input option { background-color: #1c1c1e; color: white; }
+        select.modern-input optgroup { background-color: #1c1c1e; color: var(--text-muted); font-weight: bold; }
+        .modern-input:focus { border-color: rgba(10, 132, 255, 0.6); background: rgba(28, 28, 30, 0.8); box-shadow: var(--glass-highlight), 0 0 0 3px rgba(10, 132, 255, 0.2); }
         
         .form-card { padding: 40px; border-radius: var(--radius-card); max-width: 1000px; margin: 0 auto; }
         .editor-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
@@ -329,7 +349,7 @@
             padding: 20px; overflow-y: auto; 
             transition: opacity 0.3s ease;
         }
-        .modal-content { background: var(--modal-bg); border: 1px solid var(--glass-border); padding: 40px; border-radius: var(--radius-card); width: 100%; max-width: 900px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: var(--modal-bg); backdrop-filter: blur(var(--blur)) saturate(180%); -webkit-backdrop-filter: blur(var(--blur)) saturate(180%); border: 0.5px solid var(--glass-border); box-shadow: var(--glass-highlight), var(--shadow-card); padding: 40px; border-radius: var(--radius-card); width: 100%; max-width: 900px; position: relative; max-height: 90vh; overflow-y: auto; }
         .close-modal { position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: #fff; font-size: 2rem; cursor: pointer; line-height: 1; }
 
         /* Review Modal - Split Layout */
@@ -354,7 +374,7 @@
             width: 260px;
             flex-shrink: 0;
             padding: 20px 18px;
-            background: #0d0d0d;
+            background: var(--glass-surface);
             border-left: 1px solid var(--glass-border);
             overflow-y: auto;
         }
@@ -380,7 +400,7 @@
         }
         .sidebar-btn-approve:hover { background: rgba(52, 199, 89, 0.2); }
         .sidebar-btn-neutral {
-            background: #1a1a1a;
+            background: var(--glass-surface);
             color: var(--text-muted);
             border-color: var(--glass-border);
         }
@@ -399,22 +419,22 @@
             text-transform: none;
         }
 
-        #loader { position: fixed; bottom: 24px; right: 24px; background: var(--toast-bg); border: 1px solid var(--glass-border); border-radius: 50px; padding: 12px 20px; display: none; align-items: center; gap: 12px; z-index: 10000; font-weight: bold; color: var(--text-main); }
+        #loader { position: fixed; bottom: 24px; right: 24px; background: var(--toast-bg); backdrop-filter: blur(var(--blur)) saturate(180%); -webkit-backdrop-filter: blur(var(--blur)) saturate(180%); border: 0.5px solid var(--glass-border); border-radius: 50px; padding: 12px 20px; display: none; align-items: center; gap: 12px; z-index: 10000; font-weight: bold; color: var(--text-main); box-shadow: var(--shadow-card); }
         .spinner { width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #0A84FF; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        #toast { visibility: hidden; min-width: 300px; max-width: 90vw; background-color: var(--toast-bg); color: var(--text-main); text-align: center; border-radius: var(--radius-card); padding: 25px; position: fixed; z-index: 20001; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); font-size: 1.2rem; font-weight: 800; border: 2px solid #34C759; box-shadow: 0 0 100px var(--shadow-color); opacity: 0; transition: all 0.2s; pointer-events: none; }
+        #toast { visibility: hidden; min-width: 300px; max-width: 90vw; background-color: var(--toast-bg); backdrop-filter: blur(var(--blur)) saturate(180%); -webkit-backdrop-filter: blur(var(--blur)) saturate(180%); color: var(--text-main); text-align: center; border-radius: var(--radius-card); padding: 25px; position: fixed; z-index: 20001; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); font-size: 1.2rem; font-weight: 800; border: 1px solid rgba(52, 199, 89, 0.5); box-shadow: var(--shadow-card); opacity: 0; transition: all 0.2s; pointer-events: none; }
         #toast.show { visibility: visible; opacity: 1; transform: translate(-50%, -50%) scale(1); }
         
         .section-header { font-size: 0.9rem; font-weight: 800; color: #BF5AF2; text-transform: uppercase; margin-bottom: 15px; margin-top: 30px; letter-spacing: 0.05em; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
         
         .review-field-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 700; }
-        .review-field-value { font-size: 1.1rem; color: var(--text-main); margin-bottom: 20px; word-break: break-word; background: var(--card-bg); padding: 12px 16px; border-radius: var(--radius-inner); border: 1px solid var(--table-border); }
+        .review-field-value { font-size: 1.1rem; color: var(--text-main); margin-bottom: 20px; word-break: break-word; background: var(--card-bg); padding: 12px 16px; border-radius: var(--radius-inner); border: 0.5px solid var(--glass-border); }
 
         /* Trello-like Comment Feed Styles */
         .comment-card {
-            background: #1a1a1a;
-            border: 1px solid var(--glass-border);
+            background: var(--card-bg);
+            border: 0.5px solid var(--glass-border);
             border-radius: var(--radius-inner);
             padding: 12px 14px;
             display: flex;
@@ -482,7 +502,9 @@
         /* --- MOBILE BOTTOM NAV --- */
         .mobile-bottom-nav {
             display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
-            background: #111111;
+            background: var(--glass-surface);
+            backdrop-filter: blur(var(--blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
             border-top: 0.5px solid rgba(255,255,255,0.08);
             padding: 4px 0 calc(4px + env(safe-area-inset-bottom));
             justify-content: space-around; align-items: stretch;
@@ -538,7 +560,9 @@
             /* ── HEADER ── */
             .topbar {
                 padding: 0; margin: 0; border-radius: 0; border: none;
-                background: #161616;
+                background: var(--glass-surface);
+                backdrop-filter: blur(var(--blur)) saturate(180%);
+                -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
                 position: sticky; top: 0; z-index: 100;
                 flex-direction: column; gap: 0;
                 padding-top: env(safe-area-inset-top);
@@ -617,14 +641,14 @@
             .filter-row > * { width: 100% !important; min-width: 0 !important; }
             .modern-input {
                 height: 48px; padding: 0 16px; font-size: 0.92rem; border-radius: var(--radius-input);
-                background: #1a1a1a; border: 1px solid var(--glass-border);
+                background: var(--input-bg); border: 0.5px solid var(--glass-border);
                 color: var(--text-main);
             }
             .modern-input::placeholder { color: rgba(255,255,255,0.3); }
             .modern-input:focus {
-                background: #1e1e1e;
+                background: rgba(28, 28, 30, 0.8);
                 outline: none;
-                box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3);
+                box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
             }
             select.modern-input { height: 48px; }
             .btn-action { padding: 12px 18px; font-size: 0.82rem; border-radius: var(--radius-button); font-weight: 600; }
@@ -641,7 +665,7 @@
                 position: relative;
             }
             tr.clickable-row:first-child { border-top: 0.5px solid rgba(255,255,255,0.06) !important; }
-            tr.clickable-row:active { background: #1c1c1c !important; }
+            tr.clickable-row:active { background: var(--glass-hover) !important; }
             td { border: none !important; padding: 0 !important; background: transparent !important; border-radius: 0 !important; }
 
             /* Cell layout — clean list: # + name + status only */
@@ -694,7 +718,7 @@
                 max-width: 100vw; width: 100vw; max-height: 96vh;
                 border-radius: var(--radius-card) var(--radius-card) 0 0; padding: 20px 16px;
                 border: none; border-top: none;
-                background: #161616;
+                background: var(--modal-bg);
             }
             /* Pull indicator */
             .modal-content::before {
@@ -705,7 +729,7 @@
             .review-modal-container {
                 flex-direction: column; max-width: 100vw; width: 100vw; max-height: 96vh;
                 border-radius: var(--radius-card) var(--radius-card) 0 0; overflow-y: auto;
-                border: none; background: #161616;
+                border: none; background: var(--modal-bg);
             }
             .review-modal-container::before { display: none; }
             .mobile-modal-close-bar {
@@ -816,7 +840,7 @@
             .settings-section > div[style*="padding: 25px"],
             .settings-section > div[style*="padding: 20px"] {
                 padding: 14px !important; border-radius: var(--radius-card) !important; margin-bottom: 12px !important;
-                background: #1a1a1a !important; border: none !important;
+                background: var(--glass-surface) !important; border: 0.5px solid var(--glass-border) !important;
             }
             .settings-section .stat-label[style*="font-size: 1rem"] { font-size: 0.82rem !important; margin-bottom: 8px !important; }
             .settings-section p[style*="font-size:0.85rem"] { font-size: 0.78rem !important; margin-bottom: 12px !important; }
@@ -864,7 +888,7 @@
             #addAutomationModal { align-items: flex-end !important; }
             #addAutomationModal > div {
                 padding: 20px 16px; border-radius: var(--radius-card) var(--radius-card) 0 0; max-width: 100vw;
-                margin: 0; background: #161616;
+                margin: 0; background: var(--modal-bg);
             }
             #addAutomationModal > div::before {
                 content: ''; display: block; width: 36px; height: 5px;
@@ -880,7 +904,7 @@
             /* ── CHECK-IN ── */
             #view-scan .form-card {
                 padding: 20px 16px !important; border-radius: var(--radius-card) !important;
-                background: #161616 !important; border: none !important;
+                background: var(--glass-surface) !important; border: 0.5px solid var(--glass-border) !important;
             }
             #view-scan h2 { font-size: 1.15rem !important; margin-bottom: 16px !important; font-weight: 700 !important; }
             #view-scan input[type="text"] {
@@ -931,12 +955,12 @@
             border-bottom: 1px solid rgba(255,255,255,0.05);
             transition: background 0.2s;
         }
-        .vendor-checkbox-item:hover { background: #1e1e1e; }
+        .vendor-checkbox-item:hover { background: var(--glass-hover); }
         .vendor-checkbox-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #0A84FF; cursor: pointer; }
         .vendor-checkbox-item label { cursor: pointer; flex: 1; font-size: 0.95rem; }
 
         /* Settings Sub-Tabs */
-        .settings-tabs { display: flex; gap: 8px; background: var(--card-bg); padding: 6px; border-radius: var(--radius-inner); border: 1px solid var(--glass-border); overflow-x: auto; margin-bottom: 24px; }
+        .settings-tabs { display: flex; gap: 8px; background: var(--card-bg); backdrop-filter: blur(var(--blur)) saturate(180%); -webkit-backdrop-filter: blur(var(--blur)) saturate(180%); padding: 6px; border-radius: var(--radius-inner); border: 0.5px solid var(--glass-border); box-shadow: var(--glass-highlight); overflow-x: auto; margin-bottom: 24px; }
         .settings-tab { background: transparent; border: none; color: var(--text-muted); font-size: 0.9rem; font-weight: 700; padding: 10px 20px; border-radius: var(--radius-sm); cursor: pointer; transition: 0.2s; white-space: nowrap; }
         .tab-short { display: none; }
         .tab-full { display: inline; }
@@ -945,7 +969,7 @@
 
         /* Inline Form Builder */
         .fb-field { transition: all 0.15s ease; cursor: pointer; position: relative; }
-        .fb-field:hover:not(.fb-field-active) { background: #1a1a1a; }
+        .fb-field:hover:not(.fb-field-active) { background: var(--glass-hover); }
         .fb-field:hover:not(.fb-field-active)::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border: 1px solid rgba(10,132,255,0.15); border-radius: inherit; pointer-events: none; }
         .fb-field[draggable="true"] { cursor: grab; }
         .fb-field[draggable="true"]:active { cursor: grabbing; }
@@ -955,7 +979,7 @@
         .fb-field-active { cursor: default; }
         .fb-toolbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 8px 0 0; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 10px; }
         .fb-pill {
-            background: #141414; border: 1px solid var(--glass-border); color: var(--text-muted);
+            background: var(--glass-surface); border: 0.5px solid var(--glass-border); color: var(--text-muted);
             padding: 5px 12px; border-radius: 100px; cursor: pointer; font-size: 0.72rem; font-weight: 600;
             transition: 0.15s; display: inline-flex; align-items: center; gap: 4px;
         }
@@ -965,7 +989,7 @@
         .fb-pill.fb-pill-danger:hover { background: rgba(255,69,58,0.12); }
         .fb-pill.fb-pill-active { background: rgba(10,132,255,0.15); color: #0A84FF; border-color: rgba(10,132,255,0.25); }
         .fb-select {
-            background: #141414; border: 1px solid var(--glass-border); color: #ccc;
+            background: var(--glass-surface); border: 0.5px solid var(--glass-border); color: #ccc;
             padding: 5px 26px 5px 10px; border-radius: 100px; font-size: 0.72rem; font-weight: 600;
             outline: none; cursor: pointer; appearance: none; -webkit-appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
@@ -975,9 +999,9 @@
         .fb-input::placeholder { color: rgba(255,255,255,0.2); }
         .fb-input-label { font-size: 1rem; font-weight: 600; padding: 4px 0; border-bottom: 2px solid #0A84FF; }
         .fb-input-hint { font-size: 0.82rem; color: var(--text-muted); padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.08); margin-top: 4px; }
-        .fb-input-opts { font-size: 0.82rem; color: #ccc; padding: 6px 12px; border: 1px dashed var(--glass-border); border-radius: 10px; margin-top: 6px; background: #141414; }
+        .fb-input-opts { font-size: 0.82rem; color: #ccc; padding: 6px 12px; border: 1px dashed var(--glass-border); border-radius: 10px; margin-top: 6px; background: var(--glass-surface); }
         .fb-add-row { display: flex; gap: 8px; justify-content: center; padding: 20px 0 8px; }
-        .fb-add-btn { background: #181818; border: 1.5px dashed #333333; color: var(--text-muted); padding: 10px 22px; border-radius: 14px; cursor: pointer; font-size: 0.82rem; font-weight: 600; transition: 0.2s; font-family: inherit; }
+        .fb-add-btn { background: var(--glass-surface); border: 1.5px dashed var(--glass-border-strong); color: var(--text-muted); padding: 10px 22px; border-radius: 14px; cursor: pointer; font-size: 0.82rem; font-weight: 600; transition: 0.2s; font-family: inherit; }
         .fb-add-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.2); }
         .fb-save-row { display: flex; justify-content: flex-end; padding: 16px 0 4px; }
 
@@ -998,7 +1022,7 @@
 
         /* Color Picker Palette */
         .color-trigger-wrapper { position: relative; display: flex; align-items: center; }
-        .color-palette-inline { position: absolute; right: 100%; margin-right: 8px; display: none; gap: 8px; background: #161616; padding: 8px 12px; border-radius: var(--radius-inner); border: 1px solid var(--glass-border); z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .color-palette-inline { position: absolute; right: 100%; margin-right: 8px; display: none; gap: 8px; background: var(--glass-surface); backdrop-filter: blur(var(--blur)) saturate(180%); -webkit-backdrop-filter: blur(var(--blur)) saturate(180%); padding: 8px 12px; border-radius: var(--radius-inner); border: 0.5px solid var(--glass-border); z-index: 100; box-shadow: var(--shadow-card); }
         .color-palette-inline::after { content: ''; position: absolute; right: -15px; top: -10px; bottom: -10px; width: 15px; } /* Invisible bridge to prevent hover dropping */
         .color-trigger-wrapper:hover .color-palette-inline { display: flex; }
         .color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2); }
@@ -1163,7 +1187,7 @@
 <!-- EMAIL PREVIEW MODAL -->
 <div id="emailPreviewModal" class="modal-overlay" style="z-index:20003;" onclick="closeEmailPreviewModal()">
     <div class="modal-content" style="max-width: 900px; width: 95%; padding: 0; overflow: hidden; max-height: 92vh;" onclick="event.stopPropagation()">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--glass-border); background: #111111;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--glass-border); background: var(--glass-surface);">
             <div>
                 <div style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #BF5AF2;">Sent Email Preview</div>
                 <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px;" id="emailPreviewSubject"></div>
@@ -1224,12 +1248,12 @@
 
         <!-- NEW: STRIKES SECTION IN PROFILE -->
         <div class="review-field-label">Late Applications</div>
-        <div style="background: #161616; border: 1px solid var(--glass-border); border-radius: 16px; padding: 15px; margin-bottom: 25px;" id="profileModalStrikes">
+        <div style="background: var(--card-bg); border: 0.5px solid var(--glass-border); border-radius: var(--radius-inner); padding: 15px; margin-bottom: 25px;" id="profileModalStrikes">
             <!-- Strikes dynamically populated -->
         </div>
 
         <div class="review-field-label">Market History</div>
-        <div style="background: #161616; border: 1px solid var(--glass-border); border-radius: 16px; padding: 15px; max-height: 200px; overflow-y: auto;" id="profileModalHistory">
+        <div style="background: var(--card-bg); border: 0.5px solid var(--glass-border); border-radius: var(--radius-inner); padding: 15px; max-height: 200px; overflow-y: auto;" id="profileModalHistory">
             <!-- History dynamically populated -->
         </div>
     </div>
@@ -1322,9 +1346,9 @@
 
             <!-- Activity & Internal Notes -->
             <div class="review-field-label">Activity & Internal Notes</div>
-            <div style="margin-bottom: 20px; background: #111111; border: 1px solid var(--glass-border); border-radius: var(--radius-input); overflow: hidden;">
-                <div style="padding: 15px; background: #111111; border-bottom: 1px solid var(--glass-border);">
-                    <textarea id="newCommentText" class="modern-input" style="height: 60px; resize: vertical; margin-bottom: 10px; font-size: 0.95rem; background: #0f0f0f;" placeholder="Write a comment..."></textarea>
+            <div style="margin-bottom: 20px; background: var(--card-bg); border: 0.5px solid var(--glass-border); border-radius: var(--radius-input); overflow: hidden;">
+                <div style="padding: 15px; background: var(--glass-surface); border-bottom: 1px solid var(--glass-border);">
+                    <textarea id="newCommentText" class="modern-input" style="height: 60px; resize: vertical; margin-bottom: 10px; font-size: 0.95rem; background: var(--input-bg);" placeholder="Write a comment..."></textarea>
                     <div style="display:flex; justify-content: flex-end;">
                         <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 0.85rem; background: #2a2a2a;" onclick="saveInternalNotes()">Add Comment</button>
                     </div>
@@ -1475,7 +1499,7 @@
         <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 20px;">Select the exact template to use, then check mark the specific vendors who should receive it. Approved vendors will automatically receive their unique QR Ticket Code in the email.</p>
         
         <label class="stat-label">1. Select Template to Send</label>
-        <select id="bulkEmailTemplate" class="modern-input" style="margin-bottom: 20px; font-weight: bold; background: #0f0f0f;">
+        <select id="bulkEmailTemplate" class="modern-input" style="margin-bottom: 20px; font-weight: bold; background: var(--input-bg);">
             <option value="approved">Approved Template (Standard)</option>
             <option value="power">Approved (Power Granted) Template</option>
             <option value="power_denied">Approved (Power Denied) Template</option>
@@ -1489,7 +1513,7 @@
             <button onclick="toggleAllCheckboxes(false)" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;">Deselect All</button>
         </div>
         
-        <div id="bulkEmailList" style="max-height: 350px; overflow-y: auto; background: #111111; border: 1px solid var(--glass-border); border-radius: 16px; margin-bottom: 20px;">
+        <div id="bulkEmailList" style="max-height: 350px; overflow-y: auto; background: var(--card-bg); border: 0.5px solid var(--glass-border); border-radius: var(--radius-inner); margin-bottom: 20px;">
             <!-- Vendor Checkboxes Injected Here -->
         </div>
 
@@ -1674,7 +1698,7 @@
                     </div>
                 </div>
                 
-                <div style="margin-bottom:30px; background: #161616; border: 1px solid var(--glass-border); padding: 25px; border-radius: 20px;">
+                <div style="margin-bottom:30px; background: var(--card-bg); border: 0.5px solid var(--glass-border); padding: 25px; border-radius: var(--radius-card);">
                     <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 20px;">Edit Active Event / Create New</label>
                     
                     <div class="form-grid" style="gap: 20px; margin-bottom: 20px;">
@@ -1777,11 +1801,11 @@
                 </div>
 
                 <!-- Banner + Heading settings -->
-                <div style="background: #161616; border: 1px solid var(--glass-border); border-radius: var(--radius-card); padding: 20px 22px; margin-bottom: 16px;">
+                <div style="background: var(--card-bg); border: 0.5px solid var(--glass-border); border-radius: var(--radius-card); padding: 20px 22px; margin-bottom: 16px;">
                     <div class="form-grid" style="margin-bottom: 0; gap: 14px;">
                         <div>
                             <label class="stat-label" style="font-size:0.7rem;">Banner Image (This market)</label>
-                            <div style="display: flex; gap: 10px; align-items: center; background: #111111; padding: 10px 14px; border-radius: var(--radius-inner); border: 1px solid var(--glass-border);">
+                            <div style="display: flex; gap: 10px; align-items: center; background: var(--glass-surface); padding: 10px 14px; border-radius: var(--radius-inner); border: 0.5px solid var(--glass-border);">
                                 <input type="file" id="bannerFileInput" accept="image/*" style="display: none;" onchange="handleBannerSelection(event)">
                                 <button type="button" onclick="document.getElementById('bannerFileInput').click()" class="btn-action" style="padding: 6px 14px; font-size: 0.78rem; flex-shrink: 0; margin: 0;">Upload</button>
                                 <span id="bannerFileName" style="font-size: 0.8rem; color: var(--text-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">No file chosen</span>
@@ -1865,7 +1889,7 @@
                 </div>
 
                 <!-- Admin Password Management -->
-                <div style="margin-bottom:30px; background: #161616; border: 1px solid var(--glass-border); padding: 25px; border-radius: 20px;">
+                <div style="margin-bottom:30px; background: var(--card-bg); border: 0.5px solid var(--glass-border); padding: 25px; border-radius: var(--radius-card);">
                     <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">Change Admin Password</label>
                     <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Update the master password required to access this admin portal.</p>
                     
@@ -1895,7 +1919,7 @@
                 </div>
 
                 <!-- System Settings & API Keys -->
-                <div style="display: none; background: #161616; border: 1px solid var(--glass-border); padding: 25px; border-radius: 20px;">
+                <div style="display: none; background: var(--card-bg); border: 0.5px solid var(--glass-border); padding: 25px; border-radius: var(--radius-card);">
                     <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">System Configuration & API Keys</label>
                     <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Set your live website URL (to ensure email confirmation links work) and your AI/Email API keys here. Delivery tracking now scopes Brevo logs to each market using message IDs, tracking tags, and subject matching. These values are stored securely in Supabase (not GitHub).</p>
                     
@@ -1919,19 +1943,19 @@
             
             <!-- TAB 4: USERS -->
             <div id="settings-tab-users" class="settings-section" style="display:none;">
-                <div style="margin-bottom:30px; background: #161616; border: 1px solid var(--glass-border); padding: 25px; border-radius: 20px;">
+                <div style="margin-bottom:30px; background: var(--card-bg); border: 0.5px solid var(--glass-border); padding: 25px; border-radius: var(--radius-card);">
                     <label class="stat-label" style="color: #0A84FF; font-size: 1rem; margin-bottom: 10px;">Authorized Emails (Whitelist)</label>
                     <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 15px;">Add emails here to allow staff members to create their own accounts.</p>
                     <div style="display:flex; gap:10px; margin-bottom: 20px;">
                         <input type="email" id="newAuthEmail" class="modern-input" placeholder="staff@gcu.edu">
                         <button onclick="addAuthorizedEmail()" class="btn-action" style="white-space: nowrap;">Add Email</button>
                     </div>
-                    <div id="authEmailList" style="max-height: 200px; overflow-y: auto; margin-bottom: 30px; background: #111111; border-radius: 16px; padding: 10px; border: 1px solid var(--glass-border);"></div>
+                    <div id="authEmailList" style="max-height: 200px; overflow-y: auto; margin-bottom: 30px; background: var(--card-bg); border-radius: var(--radius-inner); padding: 10px; border: 0.5px solid var(--glass-border);"></div>
 
                     <hr style="border:0; border-top:1px solid var(--glass-border); margin:30px 0;">
 
                     <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">Active Staff Accounts</label>
-                    <div id="activeStaffList" style="max-height: 300px; overflow-y: auto; background: #111111; border-radius: 16px; padding: 10px; border: 1px solid var(--glass-border);"></div>
+                    <div id="activeStaffList" style="max-height: 300px; overflow-y: auto; background: var(--card-bg); border-radius: var(--radius-inner); padding: 10px; border: 0.5px solid var(--glass-border);"></div>
                 </div>
             </div>
             
@@ -1966,7 +1990,7 @@
                 <div style="margin-top:30px; margin-bottom:16px;">
                     <label class="stat-label" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; letter-spacing: 1px;">RECENT ACTIVITY</label>
                 </div>
-                <div id="automationLogList" style="max-height: 250px; overflow-y: auto; background: #111111; border: 1px solid var(--glass-border); border-radius: 16px; padding: 12px;">
+                <div id="automationLogList" style="max-height: 250px; overflow-y: auto; background: var(--card-bg); border: 0.5px solid var(--glass-border); border-radius: var(--radius-inner); padding: 12px;">
                     <p style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 20px 0;">No automation activity yet.</p>
                 </div>
             </div>
