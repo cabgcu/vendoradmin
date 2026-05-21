@@ -19,12 +19,12 @@
         :root {
             --bg-dark: #000000;
             --bg-surface: #050505;
-            --bg-radial-1: rgba(10, 132, 255, 0.12);
-            --bg-radial-2: rgba(191, 90, 242, 0.12);
-            --glass-surface: rgba(15, 15, 15, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-hover: rgba(255, 255, 255, 0.05);
-            --glass-active: rgba(255, 255, 255, 0.15);
+            --bg-radial-1: rgba(10, 132, 255, 0.08);
+            --bg-radial-2: rgba(191, 90, 242, 0.08);
+            --glass-surface: rgba(0, 0, 0, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.09);
+            --glass-hover: rgba(255, 255, 255, 0.06);
+            --glass-active: rgba(255, 255, 255, 0.13);
             --text-main: #ffffff;
             --text-muted: #a1a1aa;
             --text-inverse: #000000;
@@ -32,22 +32,22 @@
             --gradient-success: linear-gradient(135deg, #34C759, #30B0C7);
             --gradient-danger: linear-gradient(135deg, #FF3B30, #FF9500);
             --gradient-warning: linear-gradient(135deg, #FF9500, #FFCC00);
-            --input-bg: rgba(0, 0, 0, 0.4);
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --card-border: rgba(255, 255, 255, 0.1);
-            --row-hover: rgba(255, 255, 255, 0.03);
-            --table-border: rgba(255, 255, 255, 0.05);
-            --shadow-color: rgba(0, 0, 0, 0.3);
-            --toast-bg: rgba(15, 15, 15, 0.98);
-            --modal-bg: rgba(20, 20, 20, 0.98);
+            --input-bg: rgba(0, 0, 0, 0.45);
+            --card-bg: rgba(0, 0, 0, 0.35);
+            --card-border: rgba(255, 255, 255, 0.09);
+            --row-hover: rgba(255, 255, 255, 0.04);
+            --table-border: rgba(255, 255, 255, 0.06);
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --toast-bg: rgba(0, 0, 0, 0.75);
+            --modal-bg: rgba(0, 0, 0, 0.80);
             --loader-bg: rgba(0, 0, 0, 0.95);
 
-            --radius-card: 28px;
-            --radius-inner: 16px;
-            --radius-input: 20px;
-            --radius-button: 100px;
-            --radius-sm: 12px;
-            --blur: 40px;
+            --radius-card: 16px;
+            --radius-inner: 10px;
+            --radius-input: 10px;
+            --radius-button: 10px;
+            --radius-sm: 8px;
+            --blur: 0px;
             --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
@@ -71,9 +71,10 @@
         #bg-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
             background-color: var(--bg-surface);
-            background-image:
-                radial-gradient(circle at 5% 5%, var(--bg-radial-1) 0%, transparent 45%),
-                radial-gradient(circle at 95% 95%, var(--bg-radial-2) 0%, transparent 45%);
+            background-image: url('https://i.imgur.com/4DfFmUh.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         /* LOGIN SCREEN STYLES */
@@ -85,9 +86,10 @@
             align-items: center;
             justify-content: center;
             background-color: var(--bg-surface);
-            background-image:
-                radial-gradient(circle at 5% 5%, var(--bg-radial-1) 0%, transparent 45%),
-                radial-gradient(circle at 95% 95%, var(--bg-radial-2) 0%, transparent 45%);
+            background-image: url('https://i.imgur.com/4DfFmUh.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         .login-card {
@@ -99,7 +101,6 @@
             border: 1px solid var(--glass-border);
             animation: fadeIn 0.5s ease-out;
             background: var(--glass-surface);
-            backdrop-filter: blur(var(--blur));
         }
 
         @keyframes fadeIn {
@@ -113,8 +114,6 @@
 
         .frosted {
             background: var(--glass-surface);
-            backdrop-filter: blur(var(--blur)) saturate(150%);
-            -webkit-backdrop-filter: blur(var(--blur)) saturate(150%);
             border: 1px solid var(--glass-border);
         }
 
@@ -138,6 +137,7 @@
             margin-top: 20px;
             transition: all 0.3s ease;
             background: var(--glass-surface);
+            border: 1px solid var(--glass-border);
         }
 
         /* Filter tabs row — sits below the topbar, above content */
@@ -162,12 +162,12 @@
         .controls { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
 
         .control-item {
-            background: var(--glass-hover); border: 1px solid var(--glass-border); color: var(--text-main);
-            padding: 0 10px; border-radius: var(--radius-button); font-weight: 600; height: 32px;
+            background: var(--glass-surface); border: 1px solid var(--glass-border); color: var(--text-main);
+            padding: 0 14px; border-radius: var(--radius-button); font-weight: 600; height: 32px;
             display: flex; align-items: center; cursor: pointer; transition: 0.2s; font-size: 0.7rem;
             letter-spacing: 0.5px;
         }
-        .control-item:hover { background: var(--glass-active); }
+        .control-item:hover { background: var(--glass-active); border-color: rgba(255,255,255,0.18); }
         .control-item.active { background: var(--gradient-accent); border: none; box-shadow: 0 8px 20px rgba(10, 132, 255, 0.2); }
         
         .control-item.active-new { background: linear-gradient(135deg, #5E5CE6, #BF5AF2); border: none; box-shadow: 0 8px 20px rgba(94, 92, 230, 0.2); }
@@ -223,7 +223,7 @@
         .status-toggle-group {
             display: inline-flex;
             background: rgba(0,0,0,0.4);
-            border-radius: var(--radius-sm);
+            border-radius: var(--radius-button);
             border: 1px solid var(--glass-border);
             overflow: hidden;
             white-space: nowrap;
@@ -248,7 +248,7 @@
         .btn-quick-status.active-review { opacity: 1; background: rgba(255, 149, 0, 0.2); color: #FF9500; }
         .btn-quick-status.active-deny { opacity: 1; background: rgba(255, 59, 48, 0.2); color: #FF3B30; }
 
-        .status-pill { font-size: 0.75rem; font-weight: 800; padding: 6px 12px; border-radius: 20px; text-transform: uppercase; display: inline-block; }
+        .status-pill { font-size: 0.75rem; font-weight: 800; padding: 6px 12px; border-radius: var(--radius-button); text-transform: uppercase; display: inline-block; }
         .status-pill.review { background: var(--gradient-warning); color: #000; }
         .status-pill.approved { background: var(--gradient-success); color: #fff; }
         .status-pill.denied { background: var(--gradient-danger); color: #fff; }
@@ -324,7 +324,7 @@
 
         .modal-overlay { 
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); 
+            background: rgba(0,0,0,0.75);
             z-index: 10000; display: none; align-items: center; justify-content: center; 
             padding: 20px; overflow-y: auto; 
             transition: opacity 0.3s ease;
@@ -399,11 +399,11 @@
             text-transform: none;
         }
 
-        #loader { position: fixed; bottom: 24px; right: 24px; background: var(--toast-bg); border: 1px solid var(--glass-border); border-radius: 50px; padding: 12px 20px; display: none; align-items: center; gap: 12px; z-index: 10000; backdrop-filter: blur(10px); font-weight: bold; color: var(--text-main); }
+        #loader { position: fixed; bottom: 24px; right: 24px; background: var(--toast-bg); border: 1px solid var(--glass-border); border-radius: 50px; padding: 12px 20px; display: none; align-items: center; gap: 12px; z-index: 10000; font-weight: bold; color: var(--text-main); }
         .spinner { width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #0A84FF; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        #toast { visibility: hidden; min-width: 300px; max-width: 90vw; background-color: var(--toast-bg); color: var(--text-main); text-align: center; border-radius: 20px; padding: 25px; position: fixed; z-index: 20001; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); font-size: 1.2rem; font-weight: 800; border: 2px solid #34C759; box-shadow: 0 0 100px var(--shadow-color); backdrop-filter: blur(12px); opacity: 0; transition: all 0.2s; pointer-events: none; }
+        #toast { visibility: hidden; min-width: 300px; max-width: 90vw; background-color: var(--toast-bg); color: var(--text-main); text-align: center; border-radius: var(--radius-card); padding: 25px; position: fixed; z-index: 20001; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); font-size: 1.2rem; font-weight: 800; border: 2px solid #34C759; box-shadow: 0 0 100px var(--shadow-color); opacity: 0; transition: all 0.2s; pointer-events: none; }
         #toast.show { visibility: visible; opacity: 1; transform: translate(-50%, -50%) scale(1); }
         
         .section-header { font-size: 0.9rem; font-weight: 800; color: #BF5AF2; text-transform: uppercase; margin-bottom: 15px; margin-top: 30px; letter-spacing: 0.05em; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
@@ -413,8 +413,8 @@
 
         /* Trello-like Comment Feed Styles */
         .comment-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--glass-border);
             border-radius: var(--radius-inner);
             padding: 12px 14px;
             display: flex;
@@ -463,10 +463,10 @@
         }
 
         /* Manual Scan Search Result Styles */
-        .manual-result-item { 
-            background: rgba(255, 255, 255, 0.05); 
-            padding: 12px 16px; 
-            border-radius: 20px; 
+        .manual-result-item {
+            background: var(--card-bg);
+            padding: 12px 16px;
+            border-radius: var(--radius-input);
             margin-bottom: 8px; 
             display: flex; 
             justify-content: space-between; 
@@ -482,9 +482,7 @@
         /* --- MOBILE BOTTOM NAV --- */
         .mobile-bottom-nav {
             display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
-            background: rgba(18,18,20,0.92);
-            backdrop-filter: blur(40px) saturate(200%);
-            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            background: rgba(0, 0, 0, 0.6);
             border-top: 0.5px solid rgba(255,255,255,0.08);
             padding: 4px 0 calc(4px + env(safe-area-inset-bottom));
             justify-content: space-around; align-items: stretch;
@@ -540,9 +538,7 @@
             /* ── HEADER ── */
             .topbar {
                 padding: 0; margin: 0; border-radius: 0; border: none;
-                background: rgba(0,0,0,0.85);
-                backdrop-filter: blur(40px) saturate(200%);
-                -webkit-backdrop-filter: blur(40px) saturate(200%);
+                background: rgba(0, 0, 0, 0.55);
                 position: sticky; top: 0; z-index: 100;
                 flex-direction: column; gap: 0;
                 padding-top: env(safe-area-inset-top);
@@ -620,7 +616,7 @@
             .filter-row { flex-direction: column; gap: 8px; align-items: stretch; }
             .filter-row > * { width: 100% !important; min-width: 0 !important; }
             .modern-input {
-                padding: 13px 16px; font-size: 0.92rem; border-radius: 12px;
+                padding: 13px 16px; font-size: 0.92rem; border-radius: var(--radius-input);
                 background: rgba(120,120,128,0.12); border: none;
                 color: var(--text-main);
             }
@@ -631,7 +627,7 @@
                 box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3);
             }
             select.modern-input { height: 46px; border: none; }
-            .btn-action { padding: 12px 18px; font-size: 0.82rem; border-radius: 12px; font-weight: 600; }
+            .btn-action { padding: 12px 18px; font-size: 0.82rem; border-radius: var(--radius-button); font-weight: 600; }
 
             /* ── VENDOR CARDS ── */
             .table-container { overflow-x: visible; }
@@ -696,7 +692,7 @@
             .modal-overlay { padding: 0; align-items: flex-end; }
             .modal-content {
                 max-width: 100vw; width: 100vw; max-height: 96vh;
-                border-radius: 12px 12px 0 0; padding: 20px 16px;
+                border-radius: var(--radius-card) var(--radius-card) 0 0; padding: 20px 16px;
                 border: none; border-top: none;
                 background: rgb(28,28,30);
             }
@@ -708,7 +704,7 @@
             }
             .review-modal-container {
                 flex-direction: column; max-width: 100vw; width: 100vw; max-height: 96vh;
-                border-radius: 12px 12px 0 0; overflow-y: auto;
+                border-radius: var(--radius-card) var(--radius-card) 0 0; overflow-y: auto;
                 border: none; background: rgb(28,28,30);
             }
             .review-modal-container::before { display: none; }
@@ -730,7 +726,7 @@
                 border-top: 0.5px solid rgba(255,255,255,0.08);
                 padding: 16px; overflow-y: visible;
             }
-            .sidebar-btn { padding: 14px 0; font-size: 0.88rem; border-radius: 12px; font-weight: 600; }
+            .sidebar-btn { padding: 14px 0; font-size: 0.88rem; border-radius: var(--radius-button); font-weight: 600; }
             .review-field-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
             .review-field-label { font-size: 0.65rem !important; letter-spacing: 0.5px !important; }
             .review-field-value { font-size: 0.9rem !important; }
@@ -819,14 +815,14 @@
             }
             .settings-section > div[style*="padding: 25px"],
             .settings-section > div[style*="padding: 20px"] {
-                padding: 14px !important; border-radius: 12px !important; margin-bottom: 12px !important;
+                padding: 14px !important; border-radius: var(--radius-card) !important; margin-bottom: 12px !important;
                 background: rgba(255,255,255,0.04) !important; border: none !important;
             }
             .settings-section .stat-label[style*="font-size: 1rem"] { font-size: 0.82rem !important; margin-bottom: 8px !important; }
             .settings-section p[style*="font-size:0.85rem"] { font-size: 0.78rem !important; margin-bottom: 12px !important; }
 
             /* Settings buttons — stack vertically */
-            .settings-section .btn-action { padding: 12px 16px; font-size: 0.82rem; border-radius: 12px; width: 100%; }
+            .settings-section .btn-action { padding: 12px 16px; font-size: 0.82rem; border-radius: var(--radius-button); width: 100%; }
             .settings-section div[style*="display: flex"][style*="gap: 15px"],
             .settings-section div[style*="display:flex"][style*="gap: 15px"] {
                 flex-direction: column !important; gap: 8px !important;
@@ -867,7 +863,7 @@
             #settings-tab-automations .btn-action { font-size: 0.78rem; padding: 10px 16px; }
             #addAutomationModal { align-items: flex-end !important; }
             #addAutomationModal > div {
-                padding: 20px 16px; border-radius: 12px 12px 0 0; max-width: 100vw;
+                padding: 20px 16px; border-radius: var(--radius-card) var(--radius-card) 0 0; max-width: 100vw;
                 margin: 0; background: rgb(28,28,30);
             }
             #addAutomationModal > div::before {
@@ -878,22 +874,22 @@
 
             /* Bulk/Profile modals */
             #bulkEmailModal .modal-content, #profileModal .modal-content {
-                max-width: 100vw; padding: 20px 16px; border-radius: 12px 12px 0 0;
+                max-width: 100vw; padding: 20px 16px; border-radius: var(--radius-card) var(--radius-card) 0 0;
             }
 
             /* ── CHECK-IN ── */
             #view-scan .form-card {
-                padding: 20px 16px !important; border-radius: 16px !important;
+                padding: 20px 16px !important; border-radius: var(--radius-card) !important;
                 background: rgba(255,255,255,0.03) !important; border: none !important;
             }
             #view-scan h2 { font-size: 1.15rem !important; margin-bottom: 16px !important; font-weight: 700 !important; }
             #view-scan input[type="text"] {
-                font-size: 1.1rem !important; padding: 16px !important; border-radius: 12px !important;
+                font-size: 1.1rem !important; padding: 16px !important; border-radius: var(--radius-input) !important;
                 background: rgba(120,120,128,0.12) !important; border: none !important;
                 text-align: center;
             }
             #view-scan div[style*="padding: 15px 25px"] {
-                padding: 14px 12px !important; border-radius: 12px !important; min-width: 0 !important;
+                padding: 14px 12px !important; border-radius: var(--radius-card) !important; min-width: 0 !important;
             }
             #view-scan div[style*="padding: 15px 25px"] span:first-child { font-size: 1.8rem !important; }
             #view-scan div[style*="padding: 15px 25px"] span:last-child {
@@ -901,7 +897,7 @@
             }
 
             /* Check-in alert */
-            #checkInAlert .modal-content, #alertContentBox { border-radius: 16px; }
+            #checkInAlert .modal-content, #alertContentBox { border-radius: var(--radius-card); }
 
             /* Close buttons */
             .close-modal { font-size: 1.5rem; padding: 8px; }
@@ -910,7 +906,7 @@
             #toast { bottom: 76px !important; font-size: 0.82rem; padding: 12px 20px; border-radius: 100px; }
 
             /* Login */
-            .login-card { padding: 32px 24px; border-radius: 20px; }
+            .login-card { padding: 32px 24px; border-radius: var(--radius-card); }
         }
 
         /* ── SMALL PHONES (390px) ── */
@@ -959,7 +955,7 @@
         .fb-field-active { cursor: default; }
         .fb-toolbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 8px 0 0; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 10px; }
         .fb-pill {
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted);
+            background: rgba(0, 0, 0, 0.35); border: 1px solid var(--glass-border); color: var(--text-muted);
             padding: 5px 12px; border-radius: 100px; cursor: pointer; font-size: 0.72rem; font-weight: 600;
             transition: 0.15s; display: inline-flex; align-items: center; gap: 4px;
         }
@@ -1002,7 +998,7 @@
 
         /* Color Picker Palette */
         .color-trigger-wrapper { position: relative; display: flex; align-items: center; }
-        .color-palette-inline { position: absolute; right: 100%; margin-right: 8px; display: none; gap: 8px; background: rgba(20,20,20,0.95); padding: 8px 12px; border-radius: 20px; border: 1px solid var(--glass-border); z-index: 100; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .color-palette-inline { position: absolute; right: 100%; margin-right: 8px; display: none; gap: 8px; background: rgba(0,0,0,0.7); padding: 8px 12px; border-radius: var(--radius-inner); border: 1px solid var(--glass-border); z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .color-palette-inline::after { content: ''; position: absolute; right: -15px; top: -10px; bottom: -10px; width: 15px; } /* Invisible bridge to prevent hover dropping */
         .color-trigger-wrapper:hover .color-palette-inline { display: flex; }
         .color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2); }
@@ -1024,7 +1020,6 @@
             border-radius: var(--radius-input);
             margin-bottom: 12px;
             flex-wrap: wrap;
-            backdrop-filter: blur(var(--blur));
         }
         .rich-toolbar-btn {
             background: rgba(255,255,255,0.06);
@@ -1537,16 +1532,16 @@
             <div class="frosted stat-card">
                 <span class="stat-label">Status</span><span class="stat-val" style="color:#34C759" id="countApproved">0</span>
                 <div class="stat-sub">
-                    <span style="color:#34C759;"><span id="countApprovedSub">0</span> approved</span>
-                    <span style="color:#FF9500;"><span id="countReview">0</span> review</span>
-                    <span style="color:#FF3B30;"><span id="countDeniedSub">0</span> denied</span>
+                    <span style="color:#34C759;"><span id="countApprovedSub">0</span> Approved</span>
+                    <span style="color:#FF9500;"><span id="countReview">0</span> Review</span>
+                    <span style="color:#FF3B30;"><span id="countDeniedSub">0</span> Denied</span>
                 </div>
             </div>
             <div class="frosted stat-card">
                 <span class="stat-label">Attendance</span><span class="stat-val" style="color:#30D158" id="countConfirmed">0</span>
                 <div class="stat-sub">
-                    <span style="color:#30D158;"><span id="countConfirmedSub">0</span> confirmed</span>
-                    <span style="color:#FF3B30;"><span id="countDeclined">0</span> can't attend</span>
+                    <span style="color:#30D158;"><span id="countConfirmedSub">0</span> Confirmed</span>
+                    <span style="color:#FF3B30;"><span id="countDeclined">0</span> Can't Attend</span>
                 </div>
             </div>
         </div>
@@ -1977,7 +1972,7 @@
             </div>
 
             <!-- ADD AUTOMATION MODAL (inline) -->
-            <div id="addAutomationModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:10010; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); padding:20px; overflow-y:auto; align-items:center; justify-content:center;">
+            <div id="addAutomationModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:10010; background:rgba(0,0,0,0.75); padding:20px; overflow-y:auto; align-items:center; justify-content:center;">
                 <div style="background: var(--modal-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 32px; max-width: 600px; width: 100%; margin: auto; position: relative;">
                     <button onclick="closeAddAutomationModal()" style="position:absolute; top:16px; right:20px; background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;">&times;</button>
                     <h3 style="margin: 0 0 6px; font-weight: 800; font-size: 1.1rem;">New Automation</h3>
@@ -4570,11 +4565,11 @@
             const attState = getAttendanceState(v);
             let confirmedCell = '';
             if (attState === 'confirmed') {
-                confirmedCell = '<span style="color: #34C759; font-weight: 800; background: rgba(52, 199, 89, 0.1); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(52, 199, 89, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✓ Confirmed</span>';
+                confirmedCell = '<span style="color: #34C759; font-weight: 800; background: rgba(52, 199, 89, 0.1); padding: 4px 10px; border-radius: var(--radius-button); border: 1px solid rgba(52, 199, 89, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✓ Confirmed</span>';
             } else if (attState === 'declined') {
-                confirmedCell = '<span style="color: #FF3B30; font-weight: 800; background: rgba(255, 59, 48, 0.1); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(255, 59, 48, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✕ Declined</span>';
+                confirmedCell = '<span style="color: #FF3B30; font-weight: 800; background: rgba(255, 59, 48, 0.1); padding: 4px 10px; border-radius: var(--radius-button); border: 1px solid rgba(255, 59, 48, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✕ Declined</span>';
             } else {
-                confirmedCell = '<span style="color: var(--text-muted); font-weight: 700; font-size: 0.7rem; background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(255, 255, 255, 0.1); text-transform: uppercase; white-space: nowrap;">Awaiting Reply</span>';
+                confirmedCell = '<span style="color: var(--text-muted); font-weight: 700; font-size: 0.7rem; background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: var(--radius-button); border: 1px solid rgba(255, 255, 255, 0.1); text-transform: uppercase; white-space: nowrap;">Awaiting Reply</span>';
             }
 
             const checkInCell = isAppr
