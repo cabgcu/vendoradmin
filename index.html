@@ -14,40 +14,50 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            --bg-dark: #000000;
-            --bg-surface: #050505;
-            --bg-radial-1: rgba(10, 132, 255, 0.12);
-            --bg-radial-2: rgba(191, 90, 242, 0.12);
-            --glass-surface: rgba(15, 15, 15, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-hover: rgba(255, 255, 255, 0.05);
-            --glass-active: rgba(255, 255, 255, 0.15);
-            --text-main: #ffffff;
+            /* New design theme */
+            --bg-app: #0f0f11;
+            --element-bg: rgba(39, 39, 42, 0.95);
+            --element-hover: #3f3f46;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --accent-color: #007bff;
+
+            /* Legacy vars (kept for compatibility) */
+            --bg-dark: #0f0f11;
+            --bg-surface: #0f0f11;
+            --bg-radial-1: rgba(10, 132, 255, 0.06);
+            --bg-radial-2: rgba(191, 90, 242, 0.06);
+            --glass-surface: rgba(24, 24, 27, 0.92);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-hover: rgba(255, 255, 255, 0.04);
+            --glass-active: rgba(255, 255, 255, 0.1);
+            --text-main: #f4f4f5;
             --text-muted: #a1a1aa;
             --text-inverse: #000000;
             --gradient-accent: linear-gradient(135deg, #0A84FF, #BF5AF2);
             --gradient-success: linear-gradient(135deg, #34C759, #30B0C7);
             --gradient-danger: linear-gradient(135deg, #FF3B30, #FF9500);
             --gradient-warning: linear-gradient(135deg, #FF9500, #FFCC00);
-            --input-bg: rgba(0, 0, 0, 0.4);
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --card-border: rgba(255, 255, 255, 0.1);
-            --row-hover: rgba(255, 255, 255, 0.03);
-            --table-border: rgba(255, 255, 255, 0.05);
-            --shadow-color: rgba(0, 0, 0, 0.3);
-            --toast-bg: rgba(15, 15, 15, 0.98);
-            --modal-bg: rgba(20, 20, 20, 0.98);
+            --input-bg: rgba(39, 39, 42, 0.95);
+            --card-bg: rgba(39, 39, 42, 0.6);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --row-hover: rgba(63, 63, 70, 0.8);
+            --table-border: rgba(255, 255, 255, 0.06);
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --toast-bg: rgba(24, 24, 27, 0.98);
+            --modal-bg: rgba(18, 18, 20, 0.98);
             --loader-bg: rgba(0, 0, 0, 0.95);
 
-            --radius-card: 28px;
-            --radius-inner: 16px;
-            --radius-input: 20px;
-            --radius-button: 100px;
-            --radius-sm: 12px;
-            --blur: 40px;
+            --radius-card: 16px;
+            --radius-inner: 10px;
+            --radius-input: 10px;
+            --radius-button: 20px;
+            --radius-sm: 8px;
+            --blur: 20px;
             --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
@@ -59,21 +69,23 @@
             font-family: var(--font-stack);
             font-size: 14px;
             color: var(--text-main);
-            background-color: #000000;
             min-height: 100vh;
-            padding-bottom: 40px;
+            padding: 2rem;
+            padding-bottom: 60px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             font-feature-settings: 'cv11', 'ss01';
             overflow-x: hidden;
+            background: url('https://i.imgur.com/4DfFmUh.png') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
 
         #bg-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
-            background-color: var(--bg-surface);
-            background-image:
-                radial-gradient(circle at 5% 5%, var(--bg-radial-1) 0%, transparent 45%),
-                radial-gradient(circle at 95% 95%, var(--bg-radial-2) 0%, transparent 45%);
+            background-color: rgba(0, 0, 0, 0.45);
         }
 
         /* LOGIN SCREEN STYLES */
@@ -84,11 +96,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: var(--bg-surface);
-            background-image:
-                radial-gradient(circle at 5% 5%, var(--bg-radial-1) 0%, transparent 45%),
-                radial-gradient(circle at 95% 95%, var(--bg-radial-2) 0%, transparent 45%);
+            background: url('https://i.imgur.com/4DfFmUh.png') no-repeat center center;
+            background-size: cover;
         }
+        #login-screen::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 0;
+        }
+        #login-screen > * { position: relative; z-index: 1; }
 
         .login-card {
             width: 90%;
@@ -119,25 +137,24 @@
         }
 
         .app-container {
+            width: 100%;
             max-width: 1440px;
-            margin: 0 auto;
-            padding: 0 40px;
+            margin: 0;
+            padding: 2rem 2.5rem;
             display: none;
             flex-direction: column;
+            background: rgba(24, 24, 27, 0.9);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
 
         .topbar {
             position: relative;
             z-index: 50;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 28px;
-            border-radius: var(--radius-card);
-            margin-bottom: 12px;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-            background: var(--glass-surface);
+            display: none !important;
         }
 
         /* Filter tabs row — sits below the topbar, above content */
@@ -1107,6 +1124,325 @@
             color: #cc2d24;
             background: #fde8e7;
         }
+        /* ══════════════════════════════════════════════════════
+           NEW HEADER DESIGN
+           ══════════════════════════════════════════════════════ */
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            width: 64px;
+            height: 64px;
+            background-color: var(--element-bg);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            text-align: center;
+            font-size: 0.7rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            color: var(--text-primary);
+            line-height: 1.3;
+            flex-shrink: 0;
+            letter-spacing: 0.3px;
+        }
+
+        .main-title {
+            background-color: var(--element-bg);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+            border: 1px solid rgba(255,255,255,0.06);
+            white-space: nowrap;
+        }
+
+        .main-title i { color: var(--text-secondary); font-size: 1rem; }
+
+        .header-top-nav {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .header-top-nav button {
+            background-color: var(--element-bg);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: var(--text-primary);
+            padding: 1rem 1rem;
+            border-radius: 10px;
+            font-weight: 600;
+            flex: 1;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            font-family: var(--font-stack);
+        }
+
+        .header-top-nav button:hover { background-color: var(--element-hover); }
+        .header-top-nav button.active {
+            background: var(--gradient-accent);
+            border-color: transparent;
+        }
+
+        /* Sub-header */
+        .sub-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .active-market {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .market-select-btn {
+            background-color: var(--accent-color);
+            color: white !important;
+            padding: 0.5rem 1.2rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-stack);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .market-select-btn:hover { background-color: #0056b3 !important; }
+        .market-select-btn select {
+            background: transparent;
+            border: none;
+            color: white;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+            font-family: var(--font-stack);
+            appearance: none;
+            -webkit-appearance: none;
+            padding-right: 4px;
+        }
+        .market-select-btn select option { background-color: #1a1a2e; color: white; }
+
+        .sub-nav {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .sub-nav-btn {
+            background-color: var(--element-bg);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: var(--text-primary);
+            padding: 0.5rem 1.2rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.2s ease;
+            font-family: var(--font-stack);
+            letter-spacing: 0.3px;
+        }
+        .sub-nav-btn:hover { background-color: var(--element-hover); }
+        .sub-nav-btn.active { background: var(--gradient-accent); border-color: transparent; }
+        .sub-nav-btn.active-scan { background: rgba(52, 199, 89, 0.2); border-color: rgba(52, 199, 89, 0.4); color: #34C759; }
+        .sub-nav-btn.active-settings { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); }
+        .sub-nav-btn.active-profiles { background: rgba(191, 90, 242, 0.2); border-color: rgba(191, 90, 242, 0.4); color: #BF5AF2; }
+        .sub-nav-btn.logout { background: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.25); color: #FF3B30; }
+        .sub-nav-btn.logout:hover { background: rgba(255, 59, 48, 0.2); }
+
+        /* Vendor filter pills — restyle */
+        #vendorFilterTabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        #vendorFilterTabs .control-item {
+            background-color: var(--element-bg);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: var(--text-secondary);
+            padding: 0.45rem 1.1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.78rem;
+            height: auto;
+            letter-spacing: 0.5px;
+        }
+        #vendorFilterTabs .control-item:hover { background-color: var(--element-hover); color: var(--text-primary); }
+        #vendorFilterTabs .control-item.active { background: var(--gradient-accent); border-color: transparent; color: #fff; }
+        #vendorFilterTabs .control-item.active-new { background: linear-gradient(135deg, #5E5CE6, #BF5AF2); border-color: transparent; color: #fff; }
+        #vendorFilterTabs .control-item.active-review { background: var(--gradient-warning); border-color: transparent; color: #000; }
+        #vendorFilterTabs .control-item.active-approved { background: var(--gradient-success); border-color: transparent; color: #fff; }
+        #vendorFilterTabs .control-item.active-denied { background: var(--gradient-danger); border-color: transparent; color: #fff; }
+
+        /* Search + filter row */
+        .filter-row { gap: 10px; margin-bottom: 0; }
+        .filter-row .modern-input {
+            background-color: var(--element-bg);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            font-size: 0.9rem;
+            height: auto;
+        }
+        .filter-row .modern-input:focus {
+            border-color: var(--accent-color);
+            background-color: rgba(50, 50, 54, 0.98);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+        }
+        .filter-row .btn-action {
+            border-radius: 10px;
+            padding: 0.85rem 1.2rem;
+        }
+
+        /* Table rows — card style */
+        .table-container { border-radius: 10px; margin-top: 16px; }
+        table { border-spacing: 0 6px; }
+        th {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 14px 10px;
+            font-weight: 600;
+        }
+        td {
+            background: var(--element-bg) !important;
+            border-top: 1px solid rgba(255,255,255,0.05) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+            padding: 14px 14px !important;
+        }
+        td:first-child {
+            border-left: 1px solid rgba(255,255,255,0.05) !important;
+            border-top-left-radius: 10px !important;
+            border-bottom-left-radius: 10px !important;
+        }
+        td:last-child {
+            border-right: 1px solid rgba(255,255,255,0.05) !important;
+            border-top-right-radius: 10px !important;
+            border-bottom-right-radius: 10px !important;
+        }
+        .clickable-row:hover td { background: rgba(63, 63, 70, 0.9) !important; }
+
+        /* Action buttons — icon style */
+        .btn-icon-sq {
+            background: transparent;
+            border: none !important;
+            color: var(--text-secondary);
+            width: 30px; height: 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0; padding: 0;
+            font-size: 1rem;
+        }
+        .btn-icon-sq:hover { color: #fff; transform: scale(1.1); }
+        .btn-icon-sq.danger:hover { color: #FF3B30; }
+        .btn-icon-sq.email-btn:hover { color: var(--accent-color); }
+        .btn-icon-sq.edit-btn:hover { color: #10b981; }
+
+        /* Stat cards */
+        .stat-card {
+            background: var(--element-bg) !important;
+            border: 1px solid rgba(255,255,255,0.06) !important;
+            border-radius: 12px !important;
+        }
+
+        /* Login card */
+        .login-card {
+            background: rgba(24, 24, 27, 0.95);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        /* Modal */
+        .modal-content { background: rgba(24, 24, 27, 0.98); border-color: rgba(255,255,255,0.08); }
+        .review-modal-container { background: rgba(24, 24, 27, 0.98); border-color: rgba(255,255,255,0.08); }
+
+        /* Settings tabs */
+        .settings-tabs {
+            background: rgba(39, 39, 42, 0.8) !important;
+            border: 1px solid rgba(255,255,255,0.06) !important;
+            border-radius: 10px !important;
+            padding: 4px !important;
+            display: flex !important;
+            gap: 4px !important;
+        }
+        .settings-tab {
+            border-radius: 8px !important;
+            padding: 7px 14px !important;
+            font-size: 0.78rem !important;
+            color: var(--text-secondary) !important;
+            font-weight: 600 !important;
+        }
+        .settings-tab.active {
+            background: rgba(255,255,255,0.12) !important;
+            color: var(--text-primary) !important;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            body { padding: 0; }
+            .app-container {
+                border-radius: 0;
+                padding: 0 0 16px;
+                border: none;
+                box-shadow: none;
+                min-height: 100vh;
+            }
+            .header { padding: 16px 16px 0; margin-bottom: 12px; gap: 10px; }
+            .sub-header { padding: 0 16px 16px; margin-bottom: 12px; }
+            .logo { width: 48px; height: 48px; font-size: 0.6rem; }
+            .main-title { font-size: 0.85rem; padding: 0.8rem 1rem; }
+            .header-top-nav button { font-size: 0.72rem; padding: 0.8rem 0.6rem; }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 0; }
+            .header { display: none; }
+            .sub-header { display: none; }
+            #vendorFilterTabs { padding: 4px 16px 8px; }
+        }
     </style>
 </head>
 <body>
@@ -1503,22 +1839,54 @@
 </div>
 
 <div class="app-container" id="main-app">
-    <div class="frosted topbar">
-        <div class="brand">
-            <img src="https://i.imgur.com/p2qZOL5.png" alt="CAB Student Market" class="brand-logo">
-            <div class="brand-text">
-                <h1>CAB Student Market</h1>
-                <div class="event-subtext"><span class="event-label">Active: </span><select id="eventDropdown" class="modern-input" style="width:auto; height:36px; padding:0 36px 0 12px; display:inline-block; font-size:0.85rem;" onchange="switchEvent(this.value)"></select></div>
+
+    <!-- ── NEW HEADER ── -->
+    <header class="header">
+        <div class="logo">Canyon<br>CAB</div>
+        <div class="main-title">
+            <i class="fas fa-store-alt"></i>
+            STUDENT MARKET MANAGER
+        </div>
+        <div class="header-top-nav" id="viewNavTabs">
+            <button onclick="setFilter('new')" class="control-item">
+                <i class="fas fa-file-signature"></i> NEW APPS
+            </button>
+            <button onclick="setFilter('approved')" class="control-item">
+                <i class="fas fa-chart-pie"></i> STATUS
+            </button>
+            <button onclick="toggleView('scan')" class="control-item">
+                <i class="fas fa-clipboard-list"></i> ATTENDANCE
+            </button>
+        </div>
+    </header>
+
+    <!-- ── SUB-HEADER ── -->
+    <section class="sub-header">
+        <div class="active-market">
+            <span>Active Market:</span>
+            <div class="market-select-btn">
+                <i class="fas fa-map-marker-alt"></i>
+                <select id="eventDropdown" onchange="switchEvent(this.value)"></select>
             </div>
         </div>
-        <div class="controls" id="viewNavTabs">
-            <button onclick="setFilter('inbox')" id="nav-inbox" class="control-item">VENDORS</button>
-            <button onclick="setFilter('profiles')" id="nav-profiles" class="control-item">PROFILES</button>
-            <button onclick="toggleView('scan')" id="nav-scan" class="control-item" style="background: rgba(52, 199, 89, 0.2); border-color: rgba(52, 199, 89, 0.4); color: #34C759;">CHECK IN</button>
-            <button onclick="toggleView('settings')" id="nav-settings" class="control-item">SETTINGS</button>
-            <button onclick="handleLogout()" class="control-item" style="background: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.3); color: #FF3B30;">LOGOUT</button>
+        <div class="sub-nav" id="subNavTabs">
+            <button onclick="setFilter('inbox')" id="nav-inbox" class="sub-nav-btn control-item">
+                <i class="fas fa-store"></i> VENDORS
+            </button>
+            <button onclick="toggleView('scan')" id="nav-scan" class="sub-nav-btn control-item">
+                <i class="fas fa-check-circle"></i> CHECK IN
+            </button>
+            <button onclick="setFilter('profiles')" id="nav-profiles" class="sub-nav-btn control-item">
+                <i class="fas fa-id-card"></i> PROFILES
+            </button>
+            <button onclick="toggleView('settings')" id="nav-settings" class="sub-nav-btn control-item">
+                <i class="fas fa-cog"></i> SETTINGS
+            </button>
+            <button onclick="handleLogout()" class="sub-nav-btn logout control-item">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
         </div>
-    </div>
+    </section>
 
     <!-- STATUS FILTER TABS -->
     <div id="vendorFilterTabs">
@@ -4607,27 +4975,26 @@
                 <td style="${rowBgStyle}">
                     <div class="action-wrapper" onclick="event.stopPropagation()">
                         <div class="color-trigger-wrapper">
-                            <button class="btn-icon-sq" title="Color code" style="${rowColor ? 'border-color:' + rowColor + '; box-shadow: inset 0 0 0 2px ' + rowColor + '40;' : ''}">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="1" fill="currentColor" stroke="none"/><circle cx="17.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="8.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="6.5" cy="12.5" r="1" fill="currentColor" stroke="none"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+                            <button class="btn-icon-sq" title="Color code" style="${rowColor ? 'color:' + rowColor + ';' : ''}">
+                                <i class="fas fa-palette" style="font-size:0.95rem;"></i>
                             </button>
                             <div class="color-palette-inline">
-                                <div class="color-dot" style="background: #FF3B30;" onclick="saveVendorColor('${v.id}', '#FF3B30'); event.stopPropagation();" title="Red"></div>
-                                <div class="color-dot" style="background: #FF9500;" onclick="saveVendorColor('${v.id}', '#FF9500'); event.stopPropagation();" title="Orange"></div>
-                                <div class="color-dot" style="background: #FFCC00;" onclick="saveVendorColor('${v.id}', '#FFCC00'); event.stopPropagation();" title="Yellow"></div>
-                                <div class="color-dot" style="background: #34C759;" onclick="saveVendorColor('${v.id}', '#34C759'); event.stopPropagation();" title="Green"></div>
-                                <div class="color-dot" style="background: #0A84FF;" onclick="saveVendorColor('${v.id}', '#0A84FF'); event.stopPropagation();" title="Blue"></div>
-                                <div class="color-dot" style="background: #BF5AF2;" onclick="saveVendorColor('${v.id}', '#BF5AF2'); event.stopPropagation();" title="Purple"></div>
+                                <div class="color-dot" style="background: #ef4444;" onclick="saveVendorColor('${v.id}', '#ef4444'); event.stopPropagation();" title="Red"></div>
+                                <div class="color-dot" style="background: #f59e0b;" onclick="saveVendorColor('${v.id}', '#f59e0b'); event.stopPropagation();" title="Yellow"></div>
+                                <div class="color-dot" style="background: #10b981;" onclick="saveVendorColor('${v.id}', '#10b981'); event.stopPropagation();" title="Green"></div>
+                                <div class="color-dot" style="background: #3b82f6;" onclick="saveVendorColor('${v.id}', '#3b82f6'); event.stopPropagation();" title="Blue"></div>
+                                <div class="color-dot" style="background: #8b5cf6;" onclick="saveVendorColor('${v.id}', '#8b5cf6'); event.stopPropagation();" title="Purple"></div>
                                 <div class="color-dot clear" onclick="saveVendorColor('${v.id}', '#ffffff'); event.stopPropagation();" title="Clear">✕</div>
                             </div>
                         </div>
-                        <button onclick="openEditModal('${v.id}')" class="btn-icon-sq" title="Edit application">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <button onclick="resendEmail('${v.id}')" class="btn-icon-sq email-btn" title="Send status email" style="${canEmail ? '' : 'display:none;'}">
+                            <i class="fas fa-envelope" style="font-size:0.9rem;"></i>
                         </button>
-                        <button onclick="resendEmail('${v.id}')" class="btn-icon-sq" title="Send status email" style="${canEmail ? '' : 'display:none;'}">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        <button onclick="openEditModal('${v.id}')" class="btn-icon-sq edit-btn" title="Edit application">
+                            <i class="fas fa-edit" style="font-size:0.9rem;"></i>
                         </button>
                         <button onclick="deleteVendor('${v.id}')" class="btn-icon-sq danger" title="Delete vendor">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <i class="fas fa-trash-alt" style="font-size:0.85rem;"></i>
                         </button>
                     </div>
                 </td>
