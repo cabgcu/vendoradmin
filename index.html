@@ -162,12 +162,12 @@
         .controls { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
 
         .control-item {
-            background: var(--glass-hover); border: 1px solid var(--glass-border); color: var(--text-main);
-            padding: 0 10px; border-radius: var(--radius-button); font-weight: 600; height: 32px;
+            background: var(--glass-surface); border: 1px solid var(--glass-border); color: var(--text-main);
+            padding: 0 14px; border-radius: var(--radius-button); font-weight: 600; height: 32px;
             display: flex; align-items: center; cursor: pointer; transition: 0.2s; font-size: 0.7rem;
             letter-spacing: 0.5px;
         }
-        .control-item:hover { background: var(--glass-active); }
+        .control-item:hover { background: var(--glass-active); border-color: rgba(255,255,255,0.18); }
         .control-item.active { background: var(--gradient-accent); border: none; box-shadow: 0 8px 20px rgba(10, 132, 255, 0.2); }
         
         .control-item.active-new { background: linear-gradient(135deg, #5E5CE6, #BF5AF2); border: none; box-shadow: 0 8px 20px rgba(94, 92, 230, 0.2); }
