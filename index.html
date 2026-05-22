@@ -726,63 +726,68 @@
             body { padding: 12px; padding-bottom: 66px; -webkit-user-select: none; user-select: text; display: block; }
             .mobile-bottom-nav { display: flex; }
 
-            /* ── MAIN APP — flex container for header + content rows ── */
-            #main-app {
-                display: flex; flex-wrap: wrap; column-gap: 12px;
-                align-items: flex-start; gap: 12px;
-            }
+            /* ── MAIN APP ── */
+            #main-app { display: block; }
 
-            /* ── HEADER LEFT — brand logo card (1/3 width) ── */
+            /* ── TOP ROW — logo card left, market dropdown card right ── */
             .topbar {
-                flex: 0 0 calc(33.33% - 6px);
+                display: grid; grid-template-columns: 1fr 2fr; gap: 12px;
                 position: sticky; top: 0; z-index: 100;
-                align-self: flex-start;
-                display: flex; align-items: stretch;
-                padding: 0; margin: 0;
-                background: transparent;
-                box-shadow: none; border: none; border-radius: 0;
+                background: transparent; border: none; box-shadow: none;
+                backdrop-filter: none; -webkit-backdrop-filter: none;
+                padding: 0; margin-bottom: 12px;
             }
             .brand {
-                width: 100%;
                 background: var(--bg-surface);
                 border: 1px solid var(--border-light);
                 border-radius: var(--radius-xl);
-                box-shadow: var(--shadow-sm);
+                box-shadow: var(--shadow-card);
+                backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
                 display: flex; align-items: center; justify-content: center;
-                padding: calc(env(safe-area-inset-top) + 12px) 12px 12px;
-                flex-direction: row;
+                padding: 16px 12px; width: auto;
             }
-            .brand-logo { height: 32px; width: auto; }
-            .brand-text { display: none; }
-            .event-label { display: none; }
-            .event-subtext { display: none; }
-            /* Nav tabs are in bottom nav on mobile — hide from header */
+            .brand-logo { height: 36px; width: auto; }
+            .brand-text {
+                display: flex !important;
+                flex-direction: column; align-items: center; justify-content: center;
+                background: var(--bg-surface);
+                border: 1px solid var(--border-light);
+                border-radius: var(--radius-xl);
+                box-shadow: var(--shadow-card);
+                backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
+                padding: 16px 12px;
+            }
+            .brand-text h1 { display: none; }
+            .event-subtext {
+                display: flex !important; align-items: center; justify-content: center;
+                width: 100%; font-size: 0;
+            }
+            #eventDropdown {
+                font-size: 1.05rem !important; font-weight: 700 !important;
+                width: 100%; text-align: center;
+                background: transparent !important; border: none !important;
+                color: var(--text-main) !important; cursor: pointer;
+            }
             #viewNavTabs { display: none !important; }
 
-            /* ── FILTER PANEL — inside layout-grid on mobile ── */
+            /* ── FILTER PANEL — horizontal pill bar ── */
             #vendorFilterTabs {
-                flex: none;
                 position: static;
                 background: var(--bg-surface);
                 border: 1px solid var(--border-light);
                 border-radius: var(--radius-lg);
-                box-shadow: var(--shadow-sm);
-                display: flex !important; flex-direction: row !important; flex-wrap: wrap;
+                box-shadow: var(--shadow-card);
+                display: flex !important; flex-direction: row !important; flex-wrap: nowrap;
                 overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-                align-items: center; gap: 6px;
-                padding: 12px; margin: 0;
-                min-height: auto;
+                align-items: center; justify-content: center; gap: 6px;
+                padding: 14px 12px; margin: 0;
             }
             #vendorFilterTabs::-webkit-scrollbar { display: none; }
             .filter-panel-title { display: none; }
-            .pill-group { display: flex; flex-wrap: wrap; gap: 6px; }
-            #vendorFilterTabs > .control-item-filter { display: flex !important; flex-shrink: 0; }
-            #vendorFilterTabs .control-item-filter {
-                font-size: 0.65rem; padding: 6px 10px;
-            }
+            .pill-group { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; }
+            #vendorFilterTabs .control-item-filter { font-size: 0.78rem; padding: 10px 16px; white-space: nowrap; }
 
-            /* ── CONTENT VIEWS — full-width rows ── */
-            #view-list, #view-scan, #view-profiles, #view-settings { flex: 0 0 100%; }
+            /* ── CONTENT VIEWS ── */
             .view { padding: 0; }
 
             /* ── STATS CARDS ── */
@@ -791,14 +796,16 @@
                 gap: 10px;
             }
             .stat-card {
-                min-width: 0; padding: 14px 10px;
+                min-width: 0; padding: 16px 8px;
                 border: 1px solid var(--border-light) !important;
                 background: var(--bg-surface) !important;
+                text-align: center;
             }
-            .stat-val { font-size: 1.6rem; font-weight: 800; line-height: 1; }
-            .stat-label { font-size: 0.6rem; letter-spacing: 0.6px; }
-            .stat-sub { gap: 3px; flex-direction: column; align-items: center; flex-wrap: nowrap; }
-            .stat-sub span { font-size: 0.6rem; font-weight: 600; }
+            .stat-val { font-size: 2rem; font-weight: 800; line-height: 1; }
+            .stat-label { font-size: 0.55rem; letter-spacing: 0.8px; text-transform: uppercase; display: block; }
+            .stat-label svg { display: none; }
+            .stat-sub { gap: 2px; flex-direction: column; align-items: center; flex-wrap: nowrap; }
+            .stat-sub span { font-size: 0.55rem; font-weight: 600; }
             .layout-grid { grid-template-columns: 1fr; gap: 12px; }
 
             /* ── SEARCH & FILTERS ── */
@@ -806,13 +813,13 @@
             .filter-row > * { width: 100% !important; min-width: 0 !important; }
             .search-wrapper { width: 100% !important; }
             .modern-input {
-                height: 48px; padding: 0 16px; font-size: 0.95rem;
+                height: 56px; padding: 0 20px; font-size: 1.05rem; font-weight: 600;
                 background: var(--bg-surface); border: 1px solid var(--border-medium);
-                color: var(--text-main);
+                color: var(--text-main); border-radius: var(--radius-lg);
             }
             .modern-input::placeholder { color: var(--text-muted); }
             .modern-input:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-primary-light); }
-            select.modern-input { height: 48px; }
+            select.modern-input { height: 56px; }
             .btn-action { padding: 12px 18px; font-size: 0.82rem; border-radius: var(--radius-md); font-weight: 600; }
 
             /* ── VENDOR CARDS ── */
@@ -1090,11 +1097,14 @@
 
         /* ── SMALL PHONES (390px) ── */
         @media (max-width: 390px) {
-            .brand-logo { height: 20px; }
+            .brand-logo { height: 28px; }
             .pill-group { gap: 4px; }
-            .control-item-filter { font-size: 0.6rem; padding: 5px 8px; }
-            .stat-card { padding: 12px 8px; }
-            .stat-val { font-size: 1.3rem; }
+            #vendorFilterTabs .control-item-filter { font-size: 0.68rem; padding: 8px 12px; }
+            .stat-card { padding: 12px 6px; }
+            .stat-val { font-size: 1.6rem; }
+            .stat-label { font-size: 0.5rem; }
+            .stat-sub span { font-size: 0.5rem; }
+            #eventDropdown { font-size: 0.9rem !important; }
             tr.clickable-row { padding: 12px; }
         }
 
