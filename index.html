@@ -723,8 +723,9 @@
            MOBILE — Native App Experience (768px)
            ══════════════════════════════════════════════════════════ */
         @media (max-width: 768px) {
-            body { padding: 12px; padding-bottom: 66px; -webkit-user-select: none; user-select: text; display: block; background: transparent; }
-            body::before { content: ''; position: fixed; inset: 0; z-index: -1; background: var(--bg-page) url('https://i.imgur.com/4DfFmUh.png') center / cover no-repeat; }
+            html { background: #000; }
+            body { padding: 12px; padding-top: calc(12px + env(safe-area-inset-top)); padding-bottom: 66px; -webkit-user-select: none; user-select: text; display: block; background: transparent; }
+            body::before { content: ''; position: fixed; inset: 0; z-index: -1; background: #000 url('https://i.imgur.com/4DfFmUh.png') center / cover no-repeat; }
             .mobile-bottom-nav { display: flex; }
 
             /* ── MAIN APP ── */
