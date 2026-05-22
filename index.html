@@ -3870,7 +3870,7 @@
         }
     }
 
-    function populateSettingsForm() {
+    async function populateSettingsForm() {
         const ev = currentData.activeEvent;
         if (!ev) return;
         document.getElementById('evName').value = ev.name || '';
