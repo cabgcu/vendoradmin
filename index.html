@@ -1081,22 +1081,41 @@
             .mobile-camera-btn { display: block; }
 
             /* ── SETTINGS DARK THEME ── */
+            /* All direct-child section cards get full glass treatment */
+            #view-settings .settings-section > div {
+                background: var(--bg-surface) !important;
+                backdrop-filter: blur(var(--blur)) !important;
+                -webkit-backdrop-filter: blur(var(--blur)) !important;
+                border-color: var(--border-light) !important;
+                border-radius: var(--radius-xl) !important;
+                color: var(--text-main) !important;
+            }
+            /* Nested sub-cards inside section cards */
+            #view-settings .settings-section > div > div[style*="background"],
+            #view-settings .settings-section > div > div[style*="padding"] {
+                background: rgba(255,255,255,0.04) !important;
+                border-color: var(--border-light) !important;
+                border-radius: var(--radius-lg) !important;
+                color: var(--text-main) !important;
+            }
+            /* All inputs, selects, textareas in settings */
             #view-settings input:not([type="checkbox"]):not([type="radio"]),
             #view-settings textarea,
-            #view-settings select {
-                background: var(--bg-page) !important;
+            #view-settings select,
+            #view-settings .modern-input {
+                background: rgba(0,0,0,0.5) !important;
                 color: var(--text-main) !important;
                 border-color: var(--border-medium) !important;
             }
-            /* Section cards inside settings — consistent glass */
-            #view-settings .settings-section > div[style*="background"],
-            #view-settings .settings-section > div > div[style*="background: var(--card-bg)"],
-            #view-settings .settings-section > div > div[style*="background:var(--card-bg)"] {
-                background: var(--bg-surface) !important;
-                border-color: var(--border-light) !important;
+            /* Labels and text */
+            #view-settings .settings-section label,
+            #view-settings .settings-section p,
+            #view-settings .settings-section h3 {
+                color: var(--text-main) !important;
             }
-            /* Email preview container intentionally stays light (it's an email preview) */
-            #liveEmailContainer { opacity: 0.95; }
+            /* Email preview stays light (it previews the actual email) */
+            #liveEmailContainer, #liveEmailContainer * { all: revert; }
+            #liveEmailContainer { background: #f3f4f6 !important; border-radius: 12px !important; padding: 16px !important; opacity: 1; }
 
             #view-scan .form-card {
                 padding: 20px 16px !important; border-radius: var(--radius-xl) !important;
@@ -1122,8 +1141,8 @@
             .login-card { padding: 32px 24px; border-radius: var(--radius-xl); }
         }
 
-        /* Camera scan button hidden on desktop */
-        .mobile-camera-btn { display: none; }
+        /* Camera scan button hidden on desktop (min-width so mobile cascade isn't clobbered) */
+        @media (min-width: 769px) { .mobile-camera-btn { display: none !important; } }
 
         /* ── SMALL PHONES (390px) ── */
         @media (max-width: 390px) {
