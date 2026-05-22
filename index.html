@@ -1984,17 +1984,6 @@
                         </div>
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 20px;">
-                        <label class="stat-label">School Year</label>
-                        <input type="text" id="evSchoolYear" class="modern-input" placeholder="e.g., 2025-2026" style="width:100%">
-                        <small style="color:#aaa">Shown on the public form badge and footer (e.g., "Student Market 2025-2026")</small>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 25px;">
-                        <label class="stat-label">Welcome / Intro Text</label>
-                        <textarea id="evWelcomeIntro" rows="4" class="modern-input" placeholder="Hello! Thank you for your interest in applying..." style="width:100%;resize:vertical"></textarea>
-                        <small style="color:#aaa">Displayed at the top of the public application form before the fields begin.</small>
-                    </div>
-
                 <div style="display:flex; gap: 15px; flex-wrap: wrap;">
                     <button onclick="updateActiveEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: var(--gradient-success);">Update ACTIVE Event</button>
                     <button onclick="createNewEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: #2a2a2a;">Create as NEW Event</button>
@@ -3895,13 +3884,6 @@
         
         document.getElementById('evContact').value = ev.contact_date || '';
         document.getElementById('evConfirm').value = ev.confirm_date || '';
-
-        // Load per-event V3 config for school_year and welcome_intro
-        const { data: v3PopData } = await _supabase.from('secrets').select('value').eq('name', 'MARKET_FORM_CONFIG_V3').maybeSingle();
-        let v3PopConfig = {};
-        if (v3PopData?.value) { try { v3PopConfig = JSON.parse(v3PopData.value); } catch(e){} }
-        document.getElementById('evSchoolYear').value = v3PopConfig[currentData.activeId]?.school_year || '';
-        document.getElementById('evWelcomeIntro').value = v3PopConfig[currentData.activeId]?.welcome_intro || '';
     }
 
     async function updateActiveEvent() {
@@ -3913,8 +3895,6 @@
         const close = document.getElementById('evClose').value;
         const contact = document.getElementById('evContact').value;
         const confirm = document.getElementById('evConfirm').value;
-        const school_year = document.getElementById('evSchoolYear').value.trim();
-        const welcome_intro = document.getElementById('evWelcomeIntro').value.trim();
 
         if(!name || !date || !time || !location || !open || !close || !contact || !confirm) {
             return alert("Please fill in all event details.");
@@ -3936,20 +3916,6 @@
             console.error(error);
             alert("Database Error updating event.");
         } else {
-            // Also save school_year and welcome_intro to V3 config
-            const { data: v3SaveData } = await _supabase.from('secrets').select('value').eq('name', 'MARKET_FORM_CONFIG_V3').maybeSingle();
-            let v3Config = {};
-            if (v3SaveData?.value) { try { v3Config = JSON.parse(v3SaveData.value); } catch(e){} }
-            v3Config[currentData.activeId] = {
-                ...v3Config[currentData.activeId],
-                school_year,
-                welcome_intro
-            };
-            const v3Str = JSON.stringify(v3Config);
-            let { data: v3UpdData, error: v3UpdErr } = await _supabase.from('secrets').update({ value: v3Str }).eq('name', 'MARKET_FORM_CONFIG_V3').select();
-            if (!v3UpdErr && (!v3UpdData || v3UpdData.length === 0)) {
-                await _supabase.from('secrets').insert([{ name: 'MARKET_FORM_CONFIG_V3', value: v3Str }]);
-            }
             showToast("Active Market Updated!");
             refreshData(null, true);
         }
@@ -8703,9 +8669,6 @@
                             cfg.eventTitle = marketCfgV3.title || null;
                             cfg.eventDesc  = marketCfgV3.description || null;
                         }
-                        const cfgEventId = payload?.eventId;
-                        cfg.school_year = marketCfgV3[cfgEventId]?.school_year || '';
-                        cfg.welcome_intro = marketCfgV3[cfgEventId]?.welcome_intro || '';
                     }
                     respond(cfg);
                     break;
@@ -8715,16 +8678,7 @@
                 case 'SM_LOAD_EVENTS': {
                     const { data, error } = await _supabase.from('events').select('*').order('created_at', { ascending: false });
                     if (error) throw error;
-                    let eventsResult = data || [];
-                    const { data: v3EvData } = await _supabase.from('secrets').select('value').eq('name', 'MARKET_FORM_CONFIG_V3').maybeSingle();
-                    let v3EvConfig = {};
-                    if (v3EvData?.value) { try { v3EvConfig = JSON.parse(v3EvData.value); } catch(e){} }
-                    eventsResult = eventsResult.map(e => ({
-                        ...e,
-                        school_year: v3EvConfig[e.id]?.school_year || '',
-                        welcome_intro: v3EvConfig[e.id]?.welcome_intro || ''
-                    }));
-                    respond(eventsResult);
+                    respond(data || []);
                     break;
                 }
 
