@@ -6331,7 +6331,7 @@
         }
 
         // Sync activeFilter with current UI state to fix display glitch
-        const activeBtn = document.querySelector('.control-item.active, .control-item[class*="active-"]');
+        const activeBtn = document.querySelector('.control-item-filter.active, .control-item-filter[class*="active-"]');
         if (activeBtn) {
             const btnId = activeBtn.id;
             if (btnId === 'nav-filter-all' || btnId === 'nav-inbox') activeFilter = 'inbox';
