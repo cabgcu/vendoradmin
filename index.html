@@ -1186,28 +1186,6 @@
         .fb-field[draggable="true"]:active { cursor: grabbing; }
         .fb-field.fb-drag-over { border-top: 2px solid var(--brand-primary) !important; margin-top: -2px; }
         .fb-field.fb-dragging { opacity: 0.3; }
-        .fb-subtab { background:none; border:none; color:var(--text-muted); padding:7px 18px; border-radius:8px; font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.15s ease; letter-spacing:0.02em; }
-        .fb-subtab-active { background:rgba(255,255,255,0.1); color:#fff; }
-        .fb-subtab:hover:not(.fb-subtab-active) { color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.05); }
-        
-        /* ── Student Markets Form Preview (WYSIWYG editor) ── */
-        .sm-preview { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #0b0b0e; border-radius: 20px; padding: 32px; color: #fff; min-height: 400px; }
-        .sm-preview .sm-section-header { font-size: 1.1rem; font-weight: 800; color: #ffffff; margin: 28px 0 16px; letter-spacing: 0.05em; display: flex; align-items: center; gap: 10px; }
-        .sm-preview .sm-section-header::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
-        .sm-preview .sm-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
-        @media (min-width: 600px) { .sm-preview .sm-grid { grid-template-columns: 1fr 1fr; gap: 32px 20px; } .sm-preview .sm-full { grid-column: 1 / -1; } .sm-preview .sm-half { grid-column: span 1; } }
-        .sm-preview .sm-label { display: block; margin-bottom: 10px; color: #d1d1d6; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.4; }
-        .sm-preview .sm-hint { display: block; margin-top: 2px; margin-bottom: 8px; color: #a1a1aa; font-size: 0.78rem; line-height: 1.4; text-transform: none; font-weight: 500; letter-spacing: 0; }
-        .sm-preview .sm-req { color: #FF3B30; margin-left: 3px; }
-        .sm-preview .sm-input-mock { width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13); color: rgba(255,255,255,0.25); padding: 15px 18px; border-radius: 14px; font-size: 0.95rem; box-sizing: border-box; min-height: 52px; }
-        .sm-preview .sm-textarea-mock { min-height: 90px; }
-        .sm-preview .sm-select-mock { display: flex; align-items: center; justify-content: space-between; }
-        .sm-preview .sm-checkbox-mock { display: flex; align-items: flex-start; gap: 10px; background: rgba(255,255,255,0.04); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); color: rgba(255,255,255,0.5); font-size: 0.9rem; line-height: 1.5; }
-        .sm-field-wrap { border-radius: 14px; cursor: pointer; transition: all 0.15s ease; border: 2px solid transparent; padding: 8px; margin: -8px; position: relative; }
-        .sm-field-wrap:hover { border-color: rgba(10,132,255,0.35); background: rgba(10,132,255,0.03); }
-        .sm-field-wrap.sm-active { border-color: #0A84FF; background: rgba(10,132,255,0.05); }
-        .sm-edit-panel { margin-top: 12px; padding: 14px; background: rgba(0,0,0,0.4); border-radius: 12px; border: 1px solid rgba(10,132,255,0.2); }
-        
         .fb-autosave-status { font-size: 0.68rem; color: var(--text-muted); opacity: 0.6; text-align: center; padding: 8px 0 4px; }
         .fb-field-active { cursor: default; }
         .fb-toolbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 8px 0 0; border-top: 1px solid var(--border-light); margin-top: 10px; }
@@ -2222,29 +2200,8 @@
             
             <!-- TAB 5: FORM BUILDER -->
             <div id="settings-tab-form" class="settings-section" style="display:none;">
-                <!-- Form Builder inner tab bar -->
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
-                    <div style="display:flex; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:4px;">
-                        <button id="fbtab-edit" class="fb-subtab fb-subtab-active" onclick="switchFBTab('edit')">&#9998;&nbsp;Edit</button>
-                        <button id="fbtab-preview" class="fb-subtab" onclick="switchFBTab('preview')">&#128065;&nbsp;Preview</button>
-                    </div>
-                    <span style="flex:1;"></span>
-                    <button id="fbPreviewOpenBtn" onclick="openFBPreviewInNewTab()" class="fb-pill" style="display:none; font-size:0.75rem; padding:6px 14px;">&#8599; Open in new tab</button>
-                </div>
-                <!-- Edit tab -->
-                <div id="fbTabEdit">
-                    <div id="formPreviewContainer" style="background:#0a0a0a; border:1px solid var(--glass-border); border-radius:var(--radius-card); padding:28px 24px; min-height:400px; overflow-y:auto;">
-                        <!-- Injected by renderFormPreview -->
-                    </div>
-                </div>
-                <!-- Preview tab -->
-                <div id="fbTabPreview" style="display:none;">
-                    <div id="fbPreviewEmpty" style="display:none; text-align:center; padding:60px 20px; color:var(--text-muted);">
-                        <div style="font-size:2.5rem; margin-bottom:14px;">&#128274;</div>
-                        <p style="font-size:0.95rem; font-weight:600; margin-bottom:8px; color:rgba(255,255,255,0.6);">No public form URL configured</p>
-                        <p style="font-size:0.82rem; opacity:0.5; max-width:340px; margin:0 auto; line-height:1.5;">Set the <strong>Public Form URL</strong> in Settings &rarr; System &amp; Data to enable the live form preview.</p>
-                    </div>
-                    <iframe id="fbPreviewFrame" src="about:blank" style="width:100%; height:800px; border:1px solid var(--glass-border); border-radius:var(--radius-card); background:#000; display:none;"></iframe>
+                <div id="formPreviewContainer" style="background:#0a0a0a; border:1px solid var(--glass-border); border-radius:var(--radius-card); padding:28px 24px; min-height:400px; overflow-y:auto;">
+                    <!-- Injected by renderFormPreview -->
                 </div>
             </div>
 
@@ -8147,47 +8104,7 @@
 
     function loadFormBuilderTab() {
         activeFormField = -1;
-        switchFBTab('edit');
         renderFormPreview();
-    }
-
-    let _fbCurrentTab = 'edit';
-
-    function switchFBTab(tab) {
-        _fbCurrentTab = tab;
-        const editBtn = document.getElementById('fbtab-edit');
-        const prevBtn = document.getElementById('fbtab-preview');
-        const editPane = document.getElementById('fbTabEdit');
-        const prevPane = document.getElementById('fbTabPreview');
-        const openBtn = document.getElementById('fbPreviewOpenBtn');
-        if (!editBtn || !prevBtn) return;
-        editBtn.classList.toggle('fb-subtab-active', tab === 'edit');
-        prevBtn.classList.toggle('fb-subtab-active', tab === 'preview');
-        if (editPane) editPane.style.display = tab === 'edit' ? '' : 'none';
-        if (prevPane) prevPane.style.display = tab === 'preview' ? '' : 'none';
-        if (openBtn) openBtn.style.display = tab === 'preview' ? '' : 'none';
-        if (tab === 'preview') loadFBPreviewFrame();
-    }
-
-    function loadFBPreviewFrame() {
-        const url = (currentData && currentData.publicUrl) ? currentData.publicUrl.trim() : '';
-        const frame = document.getElementById('fbPreviewFrame');
-        const empty = document.getElementById('fbPreviewEmpty');
-        if (!url) {
-            if (frame) frame.style.display = 'none';
-            if (empty) empty.style.display = '';
-        } else {
-            if (empty) empty.style.display = 'none';
-            if (frame) {
-                frame.style.display = '';
-                if (frame.src !== url) frame.src = url;
-            }
-        }
-    }
-
-    function openFBPreviewInNewTab() {
-        const url = (currentData && currentData.publicUrl) ? currentData.publicUrl.trim() : '';
-        if (url) window.open(url, '_blank');
     }
 
     let activeFormField = -1;
@@ -8347,139 +8264,163 @@
         if (!container) return;
 
         const title = formConfig.eventTitle || "Vendor Application";
-        const desc  = formConfig.eventDesc  || "Please fill out the form below.";
+        const desc = formConfig.eventDesc || "Please fill out the form below.";
         const headerUrl = formConfig.headerUrl || '';
 
-        let html = `<div style="background:#151518; border:1px solid rgba(255,255,255,0.06); border-radius:20px; box-shadow:0 20px 40px rgba(0,0,0,0.5); padding:32px; font-family:'Inter',-apple-system,sans-serif; color:#fff;">`;
+        let html = '';
 
-        // ── Editable header ──
-        html += `<div style="text-align:center; margin-bottom:28px;">`;
-        if (headerUrl) html += `<img src="${escapeHtml(headerUrl)}" style="width:100%;max-height:200px;object-fit:cover;border-radius:16px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.1);" onerror="this.style.display='none'">`;
-        html += `<input type="text" id="adminEventTitle" value="${escapeHtml(title)}" placeholder="Form Title" oninput="formConfig.eventTitle=this.value;scheduleFormAutoSave()" onclick="event.stopPropagation()" style="width:100%;background:transparent;border:none;color:#fff;font-size:1.6rem;font-weight:800;text-align:center;outline:none;padding:6px 0;border-bottom:2px solid transparent;font-family:inherit;transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.2)'" onblur="this.style.borderBottomColor='transparent'">`;
-        html += `<textarea id="adminEventDesc" placeholder="Form description..." oninput="formConfig.eventDesc=this.value;scheduleFormAutoSave()" onclick="event.stopPropagation()" style="width:100%;background:transparent;border:none;color:#a1a1aa;font-size:0.92rem;text-align:center;outline:none;padding:4px 0;resize:none;height:36px;font-family:inherit;line-height:1.5;border-bottom:1px solid transparent;transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.1)'" onblur="this.style.borderBottomColor='transparent'">${escapeHtml(desc)}</textarea>`;
-        html += `<div style="display:flex;align-items:center;gap:6px;margin-top:8px;justify-content:center;">`;
-        html += `<input type="text" id="adminHeaderUrl" value="${escapeHtml(headerUrl)}" placeholder="Header image URL (optional)" oninput="formConfig.headerUrl=this.value;scheduleFormAutoSave()" onchange="renderFormPreview()" onclick="event.stopPropagation()" style="flex:1;max-width:280px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);color:#a1a1aa;font-size:0.72rem;text-align:center;outline:none;padding:5px 14px;border-radius:100px;font-family:inherit;">`;
-        html += `<label class="fb-pill" style="padding:5px 12px;font-size:0.7rem;cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:4px;"><span>&#x1F4CE;</span> Upload<input type="file" accept="image/*" onchange="uploadFormHeaderImage(this)" onclick="event.stopPropagation()" style="display:none;"></label>`;
-        if (headerUrl) html += `<button class="fb-pill fb-pill-danger" onclick="event.stopPropagation();formConfig.headerUrl='';renderFormPreview();scheduleFormAutoSave();" style="padding:5px 10px;font-size:0.7rem;">Remove</button>`;
-        html += `</div></div>`;
-        html += `<div style="border-top:1px solid rgba(255,255,255,0.07);margin-bottom:24px;"></div>`;
-
-        // ── Fields ──
-        let i = 0;
-        while (i < formConfig.questions.length) {
-            const q = formConfig.questions[i];
-
-            // Migrate old condition format
-            if (q.condition && !q.conditions) { q.conditions = [q.condition]; delete q.condition; }
-
-            if (q.type === 'section_header') {
-                const isActive = activeFormField === i;
-                const drag = !isActive ? `draggable="true" ondragstart="fbDragStart(event,${i})" ondragover="fbDragOver(event,${i})" ondragleave="fbDragLeave(event)" ondrop="fbDrop(event,${i})" ondragend="fbDragEnd()"` : '';
-                html += `<div class="sm-field-wrap${isActive?' sm-active':''}" ${drag} onclick="selectFormField(${i})" style="margin:24px 0 0;">`;
-                html += `<div style="font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:12px;letter-spacing:0.05em;display:flex;align-items:center;gap:10px;">${escapeHtml(q.label)}<span style="flex:1;height:1px;background:rgba(255,255,255,0.1);display:block;"></span></div>`;
-                if (isActive) html += _smEditPanel(i, q, true);
-                html += `</div>`;
-                i++;
-
-                // Collect questions in this section → render in a grid
-                let gridHtml = '';
-                while (i < formConfig.questions.length && formConfig.questions[i].type !== 'section_header') {
-                    const fq = formConfig.questions[i];
-                    if (fq.condition && !fq.conditions) { fq.conditions = [fq.condition]; delete fq.condition; }
-                    const isActiveF = activeFormField === i;
-                    const hasConditions = fq.conditions && fq.conditions.length > 0;
-                    const condIndent = hasConditions ? 'margin-left:20px;border-left:2px solid rgba(10,132,255,0.25);padding-left:12px;' : '';
-                    const dragF = !isActiveF ? `draggable="true" ondragstart="fbDragStart(event,${i})" ondragover="fbDragOver(event,${i})" ondragleave="fbDragLeave(event)" ondrop="fbDrop(event,${i})" ondragend="fbDragEnd()"` : '';
-                    gridHtml += `<div class="sm-field-wrap${isActiveF?' sm-active':''} ${fq.width==='half'?'sm-half':'sm-full'}" ${dragF} onclick="selectFormField(${i})" style="${condIndent}">`;
-                    if (hasConditions && !isActiveF) {
-                        const condLabel = fq.conditions.map(c => { const p=formConfig.questions[c.parentIndex]; return p?`"${escapeHtml(p.label)}"=${escapeHtml(c.value)}`:''; }).filter(Boolean).join(' AND ');
-                        if (condLabel) gridHtml += `<div style="font-size:0.65rem;color:#FFA800;margin-bottom:6px;opacity:0.75;">&#9889; Shows when ${condLabel}</div>`;
-                    }
-                    gridHtml += _smFieldPreview(fq);
-                    if (isActiveF) gridHtml += _smEditPanel(i, fq, false);
-                    gridHtml += `</div>`;
-                    i++;
-                }
-                if (gridHtml) html += `<div class="sm-grid" style="margin-bottom:8px;">${gridHtml}</div>`;
-            } else {
-                // Field outside a section
-                const isActive = activeFormField === i;
-                const drag = !isActive ? `draggable="true" ondragstart="fbDragStart(event,${i})" ondragover="fbDragOver(event,${i})" ondragleave="fbDragLeave(event)" ondrop="fbDrop(event,${i})" ondragend="fbDragEnd()"` : '';
-                html += `<div class="sm-field-wrap sm-full${isActive?' sm-active':''}" ${drag} onclick="selectFormField(${i})">`;
-                html += _smFieldPreview(q);
-                if (isActive) html += _smEditPanel(i, q, false);
-                html += `</div>`;
-                i++;
-            }
+        // --- Editable header ---
+        html += `<div style="margin-bottom:28px; text-align:center;">`;
+        if (headerUrl) {
+            html += `<img src="${escapeHtml(headerUrl)}" style="width:100%; height:auto; border-radius:16px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.1);" onerror="this.style.display='none'">`;
         }
+        html += `<input type="text" id="adminEventTitle" value="${escapeHtml(title)}" placeholder="Form Title" oninput="formConfig.eventTitle=this.value;scheduleFormAutoSave()" onclick="event.stopPropagation()" style="width:100%; background:transparent; border:none; color:#fff; font-size:1.5rem; font-weight:800; text-align:center; outline:none; padding:6px 0; border-bottom:2px solid transparent; transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.15)'" onblur="this.style.borderBottomColor='transparent'">`;
+        html += `<textarea id="adminEventDesc" placeholder="Form description..." oninput="formConfig.eventDesc=this.value;scheduleFormAutoSave()" onclick="event.stopPropagation()" style="width:100%; background:transparent; border:none; color:var(--text-muted); font-size:0.9rem; text-align:center; outline:none; padding:4px 0; resize:none; height:40px; line-height:1.5; font-family:inherit; border-bottom:1px solid transparent; transition:border 0.2s;" onfocus="this.style.borderBottomColor='rgba(255,255,255,0.1)'" onblur="this.style.borderBottomColor='transparent'">${escapeHtml(desc)}</textarea>`;
+        html += `<div style="display:flex; align-items:center; gap:6px; margin-top:6px; justify-content:center;">`;
+        html += `<input type="text" id="adminHeaderUrl" value="${escapeHtml(headerUrl)}" placeholder="Header image URL (optional)" oninput="formConfig.headerUrl=this.value;scheduleFormAutoSave()" onchange="renderFormPreview()" onclick="event.stopPropagation()" style="flex:1; max-width:300px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); color:var(--text-muted); font-size:0.72rem; text-align:center; outline:none; padding:5px 14px; border-radius:100px; font-family:inherit;">`;
+        html += `<label class="fb-pill" style="padding:5px 12px; font-size:0.7rem; cursor:pointer; margin:0; display:inline-flex; align-items:center; gap:4px;"><span style="font-size:0.85rem;">&#x1F4CE;</span> Upload<input type="file" accept="image/*" onchange="uploadFormHeaderImage(this)" onclick="event.stopPropagation()" style="display:none;"></label>`;
+        if (headerUrl) {
+            html += `<button class="fb-pill fb-pill-danger" onclick="event.stopPropagation(); formConfig.headerUrl=''; renderFormPreview(); scheduleFormAutoSave();" style="padding:5px 10px; font-size:0.7rem;">Remove</button>`;
+        }
+        html += `</div>`;
+        html += `</div>`;
+        html += `<div style="border-top:1px solid rgba(255,255,255,0.06); margin-bottom:20px;"></div>`;
 
-        // ── Add buttons & auto-save ──
-        html += `<div class="fb-add-row" style="margin-top:24px;">`;
-        html += `<button class="fb-add-btn" onclick="addCustomQuestion('text')">+ Question</button>`;
-        html += `<button class="fb-add-btn" onclick="addCustomQuestion('section_header')" style="border-color:rgba(191,90,242,0.2);color:#BF5AF2;">+ Section</button>`;
-        html += `</div>`;
+        // --- Fields ---
+        formConfig.questions.forEach((q, i) => {
+            // Migrate old condition format to new conditions array
+            if (q.condition && !q.conditions) {
+                q.conditions = [q.condition];
+                delete q.condition;
+            }
+
+            const isActive = activeFormField === i;
+            const isProtected = q.id === 'student_id' || q.id === 'full_name_combined';
+            const isSection = q.type === 'section_header';
+            const reqMark = q.required ? `<span style="color:#FF453A; margin-left:3px;">*</span>` : '';
+            const icon = typeIcons[q.type] || '';
+            const hasConditions = q.conditions && q.conditions.length > 0;
+            const firstCondition = hasConditions ? q.conditions[0] : null;
+            const condParent = firstCondition ? formConfig.questions[firstCondition.parentIndex] : null;
+            const condIndent = hasConditions ? 'margin-left:24px; border-left:2px solid rgba(255,170,0,0.2); padding-left:12px;' : '';
+
+            // --- Section headers ---
+            if (isSection) {
+                const secDrag = !isActive ? `draggable="true" ondragstart="fbDragStart(event,${i})" ondragover="fbDragOver(event,${i})" ondragleave="fbDragLeave(event)" ondrop="fbDrop(event,${i})" ondragend="fbDragEnd()"` : '';
+                html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" ${secDrag} onclick="selectFormField(${i})" style="margin:24px 0 6px; padding:10px 14px; border-radius:12px; border-left:3px solid #BF5AF2; ${isActive ? 'background:rgba(191,90,242,0.06);' : ''}">`;
+                if (isActive) {
+                    html += `<input type="text" class="fb-input fb-input-label" value="${escapeHtml(q.label)}" oninput="updateQ(${i},'label',this.value)" onclick="event.stopPropagation()" style="font-size:1.15rem; font-weight:700; border-bottom-color:#BF5AF2;">`;
+                    html += `<div class="fb-toolbar" onclick="event.stopPropagation()">
+                        <button class="fb-pill" onclick="moveQ(${i},-1)" ${i===0?'disabled':''}>&#9650; Up</button>
+                        <button class="fb-pill" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''}>&#9660; Down</button>
+                        <span style="flex:1;"></span>
+                        ${!isProtected ? `<button class="fb-pill fb-pill-danger" onclick="deleteQ(${i})">Delete</button>` : ''}
+                    </div>`;
+                } else {
+                    html += `<div style="font-size:1.15rem; font-weight:700; color:#fff;">${escapeHtml(q.label)}</div>`;
+                }
+                html += `</div>`;
+                return;
+            }
+
+            // --- Regular fields ---
+            const dragAttrs = !isActive ? `draggable="true" ondragstart="fbDragStart(event,${i})" ondragover="fbDragOver(event,${i})" ondragleave="fbDragLeave(event)" ondrop="fbDrop(event,${i})" ondragend="fbDragEnd()"` : '';
+            html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" ${dragAttrs} onclick="selectFormField(${i})" style="margin-bottom:4px; padding:12px 14px; border-radius:14px; border:1px solid ${isActive ? 'rgba(10,132,255,0.25)' : 'transparent'}; ${isActive ? 'background:rgba(10,132,255,0.03);' : ''} ${q.width === 'half' ? 'width:48%; display:inline-block; margin-right:2%; vertical-align:top;' : ''} ${condIndent}">`;
+            if (hasConditions && !isActive) {
+                const condLabels = q.conditions.map(cond => {
+                    const cp = formConfig.questions[cond.parentIndex];
+                    return cp ? `"${escapeHtml(cp.label)}" = ${escapeHtml(cond.value)}` : '';
+                }).filter(Boolean).join(' AND ');
+                if (condLabels) {
+                    html += `<div style="font-size:0.65rem; color:#FFA800; margin-bottom:6px; opacity:0.7;">&#9889; Shows when ${condLabels}</div>`;
+                }
+            }
+
+            if (isActive) {
+                // ---- ACTIVE: editable ----
+                html += `<input type="text" class="fb-input fb-input-label" value="${escapeHtml(q.label)}" oninput="updateQ(${i},'label',this.value)" onclick="event.stopPropagation()" placeholder="Question title">`;
+                html += `<input type="text" class="fb-input fb-input-hint" value="${escapeHtml(q.hint||'')}" placeholder="${q.type==='checkbox_single'?'Agreement text shown to applicant...':'Helper text (optional)'}" oninput="updateQ(${i},'hint',this.value)" onclick="event.stopPropagation()">`;
+                if (q.type === 'dropdown') {
+                    html += `<input type="text" class="fb-input fb-input-opts" value="${escapeHtml(q.options||'')}" placeholder="Option 1, Option 2, Option 3" oninput="updateQ(${i},'options',this.value)" onclick="event.stopPropagation()">`;
+                }
+                html += `<div class="fb-toolbar" onclick="event.stopPropagation()">
+                    <select class="fb-select" onchange="updateQ(${i},'type',this.value)" ${isProtected?'disabled':''}>
+                        <option value="text" ${q.type==='text'?'selected':''}>Short answer</option>
+                        <option value="textarea" ${q.type==='textarea'?'selected':''}>Paragraph</option>
+                        <option value="email" ${q.type==='email'?'selected':''}>Email</option>
+                        <option value="tel" ${q.type==='tel'?'selected':''}>Phone</option>
+                        <option value="number" ${q.type==='number'?'selected':''}>Number</option>
+                        <option value="dropdown" ${q.type==='dropdown'?'selected':''}>Dropdown</option>
+                        <option value="checkbox_single" ${q.type==='checkbox_single'?'selected':''}>Checkbox</option>
+                    </select>
+                    <select class="fb-select" onchange="updateQ(${i},'width',this.value)">
+                        <option value="full" ${q.width==='full'?'selected':''}>Full width</option>
+                        <option value="half" ${q.width==='half'?'selected':''}>Half width</option>
+                    </select>
+                    <button class="fb-pill ${q.required?'fb-pill-active':''}" onclick="updateQ(${i},'required',${!q.required})">Required</button>
+                    <button class="fb-pill ${q.autofill !== false ? 'fb-pill-active' : ''}" style="font-size:0.7rem; padding:4px 10px; border-color:rgba(52,199,89,0.3); ${q.autofill !== false ? 'background:rgba(52,199,89,0.15); color:#34C759;' : ''}" onclick="updateQ(${i},'autofill',${q.autofill === false ? 'true' : 'false'})">Autofill</button>
+                    <span style="flex:1;"></span>
+                    <button class="fb-pill" onclick="moveQ(${i},-1)" ${i===0?'disabled':''}>&#9650;</button>
+                    <button class="fb-pill" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''}>&#9660;</button>
+                    ${!isProtected ? `<button class="fb-pill fb-pill-danger" onclick="deleteQ(${i})">Delete</button>` : `<span class="fb-pill" style="opacity:0.4; cursor:default;">Protected</span>`}
+                </div>`;
+                // --- Conditional logic row ---
+                html += buildConditionEditor(i, q);
+            } else {
+                // ---- INACTIVE: looks like the real form ----
+                const labelLine = `<div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                    <span style="font-size:0.65rem; color:rgba(255,255,255,0.2); font-weight:700; font-family:monospace;">${icon}</span>
+                    <span class="preview-form-label" style="margin:0; pointer-events:none;">${escapeHtml(q.label)}${reqMark}</span>
+                </div>`;
+                html += labelLine;
+
+                if (q.type === 'checkbox_single') {
+                    html += `<div style="display:flex; gap:10px; align-items:flex-start; color:var(--text-muted); font-size:0.85rem; padding:8px 12px; background:rgba(255,255,255,0.025); border-radius:10px; pointer-events:none; border:1px solid rgba(255,255,255,0.05);">
+                        <input type="checkbox" disabled style="width:16px; height:16px; margin-top:1px; accent-color:#0A84FF; flex-shrink:0;">
+                        <span style="line-height:1.4;">${escapeHtml(q.hint || q.label)}</span>
+                    </div>`;
+                } else if (q.type === 'textarea') {
+                    html += `<div style="height:52px; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.06); border-radius:12px;"></div>`;
+                } else if (q.type === 'dropdown') {
+                    const firstOpt = (q.options||'').split(',')[0]?.trim() || 'Select...';
+                    html += `<div style="height:38px; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:8px 14px; font-size:0.85rem; color:rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:space-between;">
+                        <span>${escapeHtml(firstOpt)}</span><span style="font-size:0.7rem;">&#9662;</span>
+                    </div>`;
+                } else {
+                    html += `<div style="height:38px; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.06); border-radius:12px;"></div>`;
+                }
+                if (q.hint && q.type !== 'checkbox_single') {
+                    html += `<span class="preview-form-hint">${escapeHtml(q.hint)}</span>`;
+                }
+            }
+            html += `</div>`;
+        });
+
+        // --- Add buttons & save inside the form ---
+        html += `<div class="fb-add-row">
+            <button class="fb-add-btn" onclick="addCustomQuestion('text')">+ Question</button>
+            <button class="fb-add-btn" onclick="addCustomQuestion('section_header')" style="border-color:rgba(191,90,242,0.2); color:#BF5AF2;">+ Section</button>
+        </div>`;
         html += `<div class="fb-autosave-status" id="fbAutoSaveStatus">All changes auto-saved</div>`;
-        html += `</div>`;
 
         container.innerHTML = html;
     }
 
-    function _smFieldPreview(q) {
-        const reqMark = q.required ? '<span style="color:#FF3B30;margin-left:3px;font-weight:bold;">*</span>' : '';
-        const hintHtml = (q.hint && q.type !== 'checkbox_single') ? `<span class="sm-hint">${escapeHtml(q.hint)}</span>` : '';
-        let html = `<label class="sm-label">${escapeHtml(q.label)}${reqMark}${hintHtml}</label>`;
-
-        if (q.type === 'checkbox_single') {
-            html += `<div class="sm-checkbox-mock"><input type="checkbox" disabled style="width:20px;height:20px;accent-color:#0A84FF;margin-top:2px;flex-shrink:0;"><span style="color:rgba(255,255,255,0.6);">${escapeHtml(q.hint || q.label)}</span></div>`;
-        } else if (q.type === 'textarea') {
-            html += `<div class="sm-input-mock sm-textarea-mock"></div>`;
-        } else if (q.type === 'dropdown') {
-            const firstOpt = (q.options||'').split(',')[0]?.trim() || 'Select...';
-            html += `<div class="sm-input-mock sm-select-mock">${escapeHtml(firstOpt)}<span style="opacity:0.4;font-size:0.75rem;">&#9662;</span></div>`;
-        } else {
-            html += `<div class="sm-input-mock"></div>`;
+    // Persistent click-outside handler for form builder
+    document.addEventListener('click', (e) => {
+        if (_fbJustClicked) { _fbJustClicked = false; return; }
+        if (activeFormField < 0) return;
+        const container = document.getElementById('formPreviewContainer');
+        if (!container || !container.contains(e.target)) { activeFormField = -1; renderFormPreview(); return; }
+        if (!e.target.closest('.fb-field') && !e.target.closest('.fb-add-row') && !e.target.closest('.fb-save-row') && !e.target.closest('input') && !e.target.closest('textarea') && !e.target.closest('select') && !e.target.closest('button')) {
+            activeFormField = -1; renderFormPreview();
         }
-        return html;
-    }
+    });
 
-    function _smEditPanel(i, q, isSection) {
-        const isProtected = q.id === 'student_id' || q.id === 'full_name_combined';
-        let html = `<div class="sm-edit-panel" onclick="event.stopPropagation()">`;
-        html += `<input type="text" class="fb-input fb-input-label" value="${escapeHtml(q.label)}" placeholder="Label" oninput="updateQ(${i},'label',this.value)">`;
-        if (!isSection) {
-            html += `<input type="text" class="fb-input fb-input-hint" value="${escapeHtml(q.hint||'')}" placeholder="${q.type==='checkbox_single'?'Agreement text shown to applicant...':'Helper text (optional)'}" oninput="updateQ(${i},'hint',this.value)">`;
-            if (q.type === 'dropdown') html += `<input type="text" class="fb-input fb-input-opts" value="${escapeHtml(q.options||'')}" placeholder="Option 1, Option 2, Option 3" oninput="updateQ(${i},'options',this.value)">`;
-        }
-        html += `<div class="fb-toolbar">`;
-        if (!isSection) {
-            html += `<select class="fb-select" onchange="updateQ(${i},'type',this.value)" ${isProtected?'disabled':''}>
-                <option value="text" ${q.type==='text'?'selected':''}>Short answer</option>
-                <option value="textarea" ${q.type==='textarea'?'selected':''}>Paragraph</option>
-                <option value="email" ${q.type==='email'?'selected':''}>Email</option>
-                <option value="tel" ${q.type==='tel'?'selected':''}>Phone</option>
-                <option value="number" ${q.type==='number'?'selected':''}>Number</option>
-                <option value="dropdown" ${q.type==='dropdown'?'selected':''}>Dropdown</option>
-                <option value="checkbox_single" ${q.type==='checkbox_single'?'selected':''}>Checkbox</option>
-            </select>`;
-            html += `<select class="fb-select" onchange="updateQ(${i},'width',this.value)">
-                <option value="full" ${q.width==='full'?'selected':''}>Full width</option>
-                <option value="half" ${q.width==='half'?'selected':''}>Half width</option>
-            </select>`;
-            html += `<button class="fb-pill ${q.required?'fb-pill-active':''}" onclick="updateQ(${i},'required',${!q.required})">Required</button>`;
-            html += `<button class="fb-pill ${q.autofill!==false?'fb-pill-active':''}" style="font-size:0.7rem;padding:4px 10px;border-color:rgba(52,199,89,0.3);${q.autofill!==false?'background:rgba(52,199,89,0.15);color:#34C759;':''}" onclick="updateQ(${i},'autofill',${q.autofill===false})">Autofill</button>`;
-        }
-        html += `<span style="flex:1;"></span>`;
-        html += `<button class="fb-pill" onclick="moveQ(${i},-1)" ${i===0?'disabled':''}>&#9650;</button>`;
-        html += `<button class="fb-pill" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''}>&#9660;</button>`;
-        if (!isProtected) html += `<button class="fb-pill fb-pill-danger" onclick="deleteQ(${i})">Delete</button>`;
-        else html += `<span class="fb-pill" style="opacity:0.4;cursor:default;">Protected</span>`;
-        html += `</div>`;
-        if (!isSection) html += buildConditionEditor(i, q);
-        html += `</div>`;
-        return html;
-    }
+    // --- Auto-save with debounce ---
+    let _formAutoSaveTimer = null;
+    let _formSaveInFlight = false;
 
-    
     function scheduleFormAutoSave() {
         clearTimeout(_formAutoSaveTimer);
         const el = document.getElementById('fbAutoSaveStatus');
