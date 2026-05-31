@@ -8127,13 +8127,14 @@
     }
 
     function getStudentMarketsUrl() {
-        if (currentData.publicUrl) return currentData.publicUrl;
         const origin = window.location.origin;
         const pathname = window.location.pathname;
         if (origin.includes('github.io')) return origin + '/studentmarkets/';
         if (pathname.includes('/vendoradmin')) return origin + pathname.replace(/\/vendoradmin.*/, '/studentmarkets/');
         if (origin.includes('vendoradmin')) return origin.replace('vendoradmin', 'studentmarkets') + '/';
-        return origin + '/';
+        // Fallback: use configured public URL if derivation is ambiguous
+        if (currentData.publicUrl && !currentData.publicUrl.includes('vendoradmin')) return currentData.publicUrl;
+        return origin + '/studentmarkets/';
     }
 
     function initPreviewIframe() {
