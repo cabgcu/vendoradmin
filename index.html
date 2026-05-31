@@ -2214,20 +2214,8 @@
             </div>
             
             <!-- TAB 5: FORM BUILDER -->
-            <div id="settings-tab-form" class="settings-section" style="display:none; padding:0 !important;">
-                <div style="display:flex; align-items:center; gap:12px; padding:8px 16px; background:#0a0a0a; border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0;">
-                    <span style="display:flex; align-items:center; gap:5px; font-size:0.7rem; color:#34C759; font-weight:600; flex-shrink:0;">
-                        <span style="width:6px;height:6px;border-radius:50%;background:#34C759;display:inline-block;animation:pulse 2s infinite;"></span>
-                        Edit Mode
-                    </span>
-                    <span style="color:rgba(255,255,255,0.1); flex-shrink:0;">|</span>
-                    <span style="font-size:0.68rem; color:var(--text-muted);">Click any text on the page to edit it live</span>
-                    <span style="flex:1;"></span>
-                    <span id="fbAutoSaveStatus" style="font-size:0.68rem; color:var(--text-muted);">All changes saved</span>
-                </div>
-                <div id="fbPreviewViewport" style="height:calc(100vh - 158px);">
-                    <iframe id="fbPreviewIframe" sandbox="allow-scripts allow-same-origin" style="width:100%;height:100%;border:none;display:block;"></iframe>
-                </div>
+            <div id="settings-tab-form" class="settings-section" style="display:none;">
+                <div id="formPreviewContainer"></div>
             </div>
 
             <!-- TAB 6: AUTOMATIONS -->
@@ -6582,11 +6570,7 @@
         document.getElementById('stab-' + tabId).classList.add('active');
 
         const viewSettings = document.getElementById('view-settings');
-        if (tabId === 'form') {
-            viewSettings.classList.add('fb-editor-active');
-        } else {
-            viewSettings.classList.remove('fb-editor-active');
-        }
+        viewSettings.classList.remove('fb-editor-active');
 
         if (tabId === 'emails') {
             updatePreview();
@@ -8138,7 +8122,7 @@
 
     function loadFormBuilderTab() {
         activeFormField = -1;
-        initPreviewIframe();
+        renderFormPreview();
     }
 
     function getStudentMarketsUrl() {
@@ -8333,8 +8317,12 @@
 
         let html = '';
 
-        // --- Auto-save status (top of sidebar) ---
-        html += `<div class="fb-autosave-status" id="fbAutoSaveStatus" style="margin-bottom:14px; text-align:left; padding:0;">All changes saved</div>`;
+        // --- Toolbar: autosave status + preview link ---
+        const previewUrl = getStudentMarketsUrl();
+        html += `<div style="display:flex; align-items:center; gap:12px; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.06);">
+            <div class="fb-autosave-status" id="fbAutoSaveStatus" style="padding:0; flex:1;">All changes saved</div>
+            <a href="${previewUrl}" target="_blank" style="font-size:0.72rem; color:#0A84FF; text-decoration:none; padding:5px 12px; border:1px solid rgba(10,132,255,0.25); border-radius:8px; white-space:nowrap; flex-shrink:0;">&#8599; Preview site</a>
+        </div>`;
 
         // --- HERO / BACKGROUND section ---
         const bgImageUrl = formConfig.bgImageUrl || '';
@@ -8513,7 +8501,6 @@
             <button class="fb-add-btn" onclick="addCustomQuestion('section_header')" style="border-color:rgba(191,90,242,0.2); color:#BF5AF2;">+ Section</button>
         </div>`;
         container.innerHTML = html;
-        sendPreviewConfig();
     }
 
     // Persistent click-outside handler for form builder
