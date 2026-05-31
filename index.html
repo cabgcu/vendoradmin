@@ -2215,17 +2215,18 @@
             
             <!-- TAB 5: FORM BUILDER -->
             <div id="settings-tab-form" class="settings-section" style="display:none; padding:0 !important;">
-                <div style="display:flex; gap:0; height:calc(100vh - 140px); min-height:500px;">
-                    <!-- Left: editing sidebar -->
-                    <div id="formPreviewContainer" style="flex:0 0 340px; width:340px; background:#0c0c0c; border-right:1px solid rgba(255,255,255,0.07); padding:20px 16px; overflow-y:auto; height:100%; box-sizing:border-box;">
-                        <!-- Injected by renderFormPreview -->
-                    </div>
-                    <!-- Right: live student market page -->
-                    <div style="flex:1; min-width:0; display:flex; flex-direction:column; height:100%; background:#000;">
-                        <div id="fbPreviewViewport" style="flex:1; overflow:auto; position:relative;">
-                            <iframe id="fbPreviewIframe" sandbox="allow-scripts allow-same-origin" style="width:100%; height:100%; min-height:900px; border:none; display:block;"></iframe>
-                        </div>
-                    </div>
+                <div style="display:flex; align-items:center; gap:12px; padding:8px 16px; background:#0a0a0a; border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0;">
+                    <span style="display:flex; align-items:center; gap:5px; font-size:0.7rem; color:#34C759; font-weight:600; flex-shrink:0;">
+                        <span style="width:6px;height:6px;border-radius:50%;background:#34C759;display:inline-block;animation:pulse 2s infinite;"></span>
+                        Edit Mode
+                    </span>
+                    <span style="color:rgba(255,255,255,0.1); flex-shrink:0;">|</span>
+                    <span style="font-size:0.68rem; color:var(--text-muted);">Click any text on the page to edit it live</span>
+                    <span style="flex:1;"></span>
+                    <span id="fbAutoSaveStatus" style="font-size:0.68rem; color:var(--text-muted);">All changes saved</span>
+                </div>
+                <div id="fbPreviewViewport" style="height:calc(100vh - 158px);">
+                    <iframe id="fbPreviewIframe" sandbox="allow-scripts allow-same-origin" style="width:100%;height:100%;border:none;display:block;"></iframe>
                 </div>
             </div>
 
@@ -8137,7 +8138,6 @@
 
     function loadFormBuilderTab() {
         activeFormField = -1;
-        renderFormPreview();
         initPreviewIframe();
     }
 
@@ -8168,7 +8168,7 @@
     function sendPreviewConfig() {
         const iframe = document.getElementById('fbPreviewIframe');
         if (!iframe || !iframe.contentWindow) return;
-        try { iframe.contentWindow.postMessage({ type: 'SM_PREVIEW_CONFIG', config: formConfig }, '*'); } catch(e) {}
+        try { iframe.contentWindow.postMessage({ type: 'SM_PREVIEW_CONFIG', config: formConfig, editMode: true }, '*'); } catch(e) {}
     }
 
     let activeFormField = -1;
@@ -8534,8 +8534,7 @@
     function scheduleFormAutoSave() {
         clearTimeout(_formAutoSaveTimer);
         const el = document.getElementById('fbAutoSaveStatus');
-        if (el) { el.textContent = 'Unsaved changes...'; el.style.color = '#FFA800'; }
-        sendPreviewConfig();
+        if (el) { el.textContent = 'Saving...'; el.style.color = '#FFA800'; }
         _formAutoSaveTimer = setTimeout(() => saveAdminConfig(true), 1500);
     }
 
@@ -8790,6 +8789,23 @@
                         }
                     }
                     respond(cfg);
+                    break;
+                }
+
+                // --- Inline editor updates from student market iframe ---
+                case 'SM_EDIT_UPDATE': {
+                    const { updates } = payload || {};
+                    if (updates) {
+                        if (updates.heroTitle !== undefined) formConfig.heroTitle = updates.heroTitle;
+                        if (updates.bgImageUrl !== undefined) formConfig.bgImageUrl = updates.bgImageUrl;
+                        if (updates.eventTitle !== undefined) formConfig.eventTitle = updates.eventTitle;
+                        if (updates.eventDesc !== undefined) formConfig.eventDesc = updates.eventDesc;
+                        if (updates.question) {
+                            const { index, key, value } = updates.question;
+                            if (formConfig.questions[index]) formConfig.questions[index][key] = value;
+                        }
+                        scheduleFormAutoSave();
+                    }
                     break;
                 }
 
