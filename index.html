@@ -2200,8 +2200,24 @@
             
             <!-- TAB 5: FORM BUILDER -->
             <div id="settings-tab-form" class="settings-section" style="display:none;">
-                <div id="formPreviewContainer" style="background:#0a0a0a; border:1px solid var(--glass-border); border-radius:var(--radius-card); padding:28px 24px; min-height:400px; overflow-y:auto;">
-                    <!-- Injected by renderFormPreview -->
+                <div style="display:flex; gap:16px; align-items:flex-start;">
+                    <div id="formPreviewContainer" style="flex:0 0 54%; background:#0a0a0a; border:1px solid var(--glass-border); border-radius:var(--radius-card); padding:28px 24px; min-height:400px; overflow-y:auto; max-height:calc(100vh - 200px);">
+                        <!-- Injected by renderFormPreview -->
+                    </div>
+                    <div style="flex:1; min-width:0; display:flex; flex-direction:column; border:1px solid var(--glass-border); border-radius:var(--radius-card); overflow:hidden; position:sticky; top:16px; max-height:calc(100vh - 200px);">
+                        <div style="padding:10px 14px; background:#0a0a0a; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; gap:5px; flex-shrink:0;">
+                            <div style="width:9px;height:9px;border-radius:50%;background:#FF5F57;flex-shrink:0;"></div>
+                            <div style="width:9px;height:9px;border-radius:50%;background:#FFBD2E;flex-shrink:0;"></div>
+                            <div style="width:9px;height:9px;border-radius:50%;background:#28CA41;flex-shrink:0;"></div>
+                            <span style="font-size:0.65rem;color:var(--text-muted);margin-left:6px;">Live Preview</span>
+                        </div>
+                        <div id="fbPreviewViewport" style="overflow:hidden;background:#000;flex:1;position:relative;min-height:400px;">
+                            <iframe id="fbPreviewIframe" sandbox="allow-scripts allow-same-origin" style="position:absolute;top:0;left:0;border:none;pointer-events:none;"></iframe>
+                        </div>
+                        <div style="padding:5px 10px;background:#0a0a0a;border-top:1px solid rgba(255,255,255,0.06);text-align:center;flex-shrink:0;">
+                            <span style="font-size:0.6rem;color:var(--text-muted);opacity:0.45;">Changes update live</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2741,7 +2757,7 @@
     window.vendorStrikes = {}; 
 
     // Form Builder State
-    let formConfig = { headerUrl: "", eventTitle: "", eventDesc: "", questions: [] };
+    let formConfig = { headerUrl: "", bgImageUrl: "", heroTitle: "", eventTitle: "", eventDesc: "", questions: [] };
     const defaultQuestions = [
         { id: 'section_personal', type: 'section_header', label: 'Personal Information', width: 'full', isCore: true, autofill: false },
         { id: 'student_id', type: 'number', label: 'Student ID Number', hint: 'Type your ID and tap Next to auto-fill your info!', required: true, width: 'full', isCore: true, autofill: false },
@@ -8090,6 +8106,8 @@
             if (data?.value) {
                 let p = JSON.parse(data.value);
                 formConfig.headerUrl = p.headerUrl || "";
+                formConfig.bgImageUrl = p.bgImageUrl || "";
+                formConfig.heroTitle = p.heroTitle || "";
                 formConfig.questions = p.questions || JSON.parse(JSON.stringify(defaultQuestions));
                 formConfig.eventTitle = p.eventTitle || "";
                 formConfig.eventDesc = p.eventDesc || "";
@@ -8105,6 +8123,48 @@
     function loadFormBuilderTab() {
         activeFormField = -1;
         renderFormPreview();
+        initPreviewIframe();
+    }
+
+    function getStudentMarketsUrl() {
+        if (currentData.publicUrl) return currentData.publicUrl;
+        const origin = window.location.origin;
+        const pathname = window.location.pathname;
+        if (origin.includes('github.io')) return origin + '/studentmarkets/';
+        if (pathname.includes('/vendoradmin')) return origin + pathname.replace(/\/vendoradmin.*/, '/studentmarkets/');
+        if (origin.includes('vendoradmin')) return origin.replace('vendoradmin', 'studentmarkets') + '/';
+        return origin + '/';
+    }
+
+    function initPreviewIframe() {
+        const iframe = document.getElementById('fbPreviewIframe');
+        const viewport = document.getElementById('fbPreviewViewport');
+        if (!iframe || !viewport) return;
+
+        const containerWidth = viewport.offsetWidth || 420;
+        const virtualWidth = 1024;
+        const scale = containerWidth / virtualWidth;
+        const virtualHeight = Math.round(540 / scale);
+
+        iframe.style.width = virtualWidth + 'px';
+        iframe.style.height = virtualHeight + 'px';
+        iframe.style.transform = `scale(${scale})`;
+        iframe.style.transformOrigin = 'top left';
+
+        const url = getStudentMarketsUrl();
+        if (iframe.getAttribute('data-loaded-url') !== url) {
+            iframe.setAttribute('data-loaded-url', url);
+            iframe.onload = () => sendPreviewConfig();
+            iframe.src = url;
+        } else {
+            sendPreviewConfig();
+        }
+    }
+
+    function sendPreviewConfig() {
+        const iframe = document.getElementById('fbPreviewIframe');
+        if (!iframe || !iframe.contentWindow) return;
+        try { iframe.contentWindow.postMessage({ type: 'SM_PREVIEW_CONFIG', config: formConfig }, '*'); } catch(e) {}
     }
 
     let activeFormField = -1;
@@ -8269,6 +8329,31 @@
 
         let html = '';
 
+        // --- Hero / Background controls ---
+        const bgImageUrl = formConfig.bgImageUrl || '';
+        const heroTitle = formConfig.heroTitle || '';
+        html += `<div style="margin-bottom:20px; padding:14px 16px; background:rgba(191,90,242,0.04); border:1px solid rgba(191,90,242,0.15); border-radius:14px;">`;
+        html += `<div style="font-size:0.62rem; color:#BF5AF2; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;">Hero / Background</div>`;
+        html += `<div style="display:flex; flex-direction:column; gap:8px;">`;
+        html += `<div>
+            <label style="font-size:0.68rem;color:var(--text-muted);display:block;margin-bottom:3px;">Hero Title <span style="opacity:0.5;">(last word appears in gradient)</span></label>
+            <input id="adminHeroTitle" type="text" value="${escapeHtml(heroTitle)}" placeholder="Vendor Application"
+                oninput="formConfig.heroTitle=this.value;scheduleFormAutoSave()"
+                onclick="event.stopPropagation()"
+                style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:0.85rem;outline:none;padding:7px 12px;border-radius:10px;font-family:inherit;box-sizing:border-box;">
+        </div>`;
+        html += `<div>
+            <label style="font-size:0.68rem;color:var(--text-muted);display:block;margin-bottom:3px;">Background Image URL</label>
+            <input id="adminBgImageUrl" type="text" value="${escapeHtml(bgImageUrl)}" placeholder="https://i.imgur.com/65f9UL5.jpeg (default)"
+                oninput="formConfig.bgImageUrl=this.value;scheduleFormAutoSave()"
+                onclick="event.stopPropagation()"
+                style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:var(--text-muted);font-size:0.75rem;outline:none;padding:7px 12px;border-radius:10px;font-family:inherit;box-sizing:border-box;">
+        </div>`;
+        if (bgImageUrl) {
+            html += `<img src="${escapeHtml(bgImageUrl)}" style="width:100%;height:60px;object-fit:cover;border-radius:8px;opacity:0.7;border:1px solid rgba(255,255,255,0.08);" onerror="this.style.display='none'">`;
+        }
+        html += `</div></div>`;
+
         // --- Editable header ---
         html += `<div style="margin-bottom:28px; text-align:center;">`;
         if (headerUrl) {
@@ -8404,6 +8489,7 @@
         html += `<div class="fb-autosave-status" id="fbAutoSaveStatus">All changes auto-saved</div>`;
 
         container.innerHTML = html;
+        sendPreviewConfig();
     }
 
     // Persistent click-outside handler for form builder
@@ -8425,6 +8511,7 @@
         clearTimeout(_formAutoSaveTimer);
         const el = document.getElementById('fbAutoSaveStatus');
         if (el) { el.textContent = 'Unsaved changes...'; el.style.color = '#FFA800'; }
+        sendPreviewConfig();
         _formAutoSaveTimer = setTimeout(() => saveAdminConfig(true), 1500);
     }
 
@@ -8562,9 +8649,13 @@
         const titleEl = document.getElementById('adminEventTitle');
         const descEl = document.getElementById('adminEventDesc');
         const headerEl = document.getElementById('adminHeaderUrl');
+        const bgImgEl = document.getElementById('adminBgImageUrl');
+        const heroTitleEl = document.getElementById('adminHeroTitle');
         if (titleEl) formConfig.eventTitle = titleEl.value;
         if (descEl) formConfig.eventDesc = descEl.value;
         if (headerEl) formConfig.headerUrl = headerEl.value;
+        if (bgImgEl) formConfig.bgImageUrl = bgImgEl.value;
+        if (heroTitleEl) formConfig.heroTitle = heroTitleEl.value;
 
         _formSaveInFlight = true;
         const statusEl = document.getElementById('fbAutoSaveStatus');
@@ -8640,6 +8731,8 @@
                 case 'SM_LOAD_CONFIG': {
                     let cfg = {
                         headerUrl: "https://lh3.googleusercontent.com/d/177iu9igWGiUkD8vdJhZn80PXgLa6hM3c",
+                        bgImageUrl: null,
+                        heroTitle: null,
                         questions: JSON.parse(JSON.stringify(defaultQuestions)),
                         forceStatus: 'auto',
                         eventTitle: null,
@@ -8655,6 +8748,8 @@
                         if (cfg.headerUrl.includes("imgur.com") || cfg.headerUrl.includes("export=view")) {
                             cfg.headerUrl = "https://lh3.googleusercontent.com/d/177iu9igWGiUkD8vdJhZn80PXgLa6hM3c";
                         }
+                        if (p.bgImageUrl) cfg.bgImageUrl = p.bgImageUrl;
+                        if (p.heroTitle) cfg.heroTitle = p.heroTitle;
                         cfg.questions = p.questions || cfg.questions;
                         if (p.hasOwnProperty('eventTitle')) { cfg.eventTitle = p.eventTitle; v8HasText = true; }
                         if (p.hasOwnProperty('eventDesc'))  { cfg.eventDesc  = p.eventDesc;  v8HasText = true; }
