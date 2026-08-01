@@ -1217,6 +1217,96 @@
         .settings-tab:hover { color: var(--text-main); background: var(--bg-hover); }
         .settings-tab.active { background: var(--border-medium); color: var(--text-main); box-shadow: var(--shadow-sm); border: 1px solid var(--border-medium); }
 
+        /* ── EVENT SETUP CARDS ── */
+        .setup-card {
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-surface);
+            backdrop-filter: blur(var(--blur)) saturate(110%);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(110%);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-card);
+            padding: 28px;
+        }
+        .setup-card-glow {
+            position: absolute;
+            width: 240px; height: 240px;
+            border-radius: 50%;
+            filter: blur(60px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .setup-card-body { position: relative; z-index: 1; }
+
+        .access-control-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        @media (max-width: 700px) { .access-control-grid { grid-template-columns: 1fr; } }
+
+        .access-btn {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 13px 16px; border-radius: var(--radius-lg);
+            font-size: 0.9rem; font-weight: 700;
+            border: 1px solid var(--border-medium);
+            cursor: pointer; transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .access-btn:hover { transform: translateY(-2px); }
+        .access-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+
+        .field-label {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 8px;
+        }
+        .field-label .req { color: #e879f9; }
+
+        .input-icon-wrap { position: relative; }
+        .input-icon-wrap .input-icon-left,
+        .input-icon-wrap .input-icon-right {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2;
+            pointer-events: none;
+        }
+        .input-icon-wrap .input-icon-left { left: 14px; }
+        .input-icon-wrap .input-icon-right { right: 14px; }
+        .input-icon-wrap input.modern-input.icon-left { padding-left: 40px; }
+        .input-icon-wrap input.modern-input.icon-right { padding-right: 40px; }
+
+        .field-accent:focus {
+            border-color: #e879f9 !important;
+            background: rgba(232, 121, 249, 0.05) !important;
+            box-shadow: 0 0 20px rgba(232, 121, 249, .3) !important;
+        }
+
+        .btn-update-event {
+            background: linear-gradient(135deg, #2dd4bf, #14b8a6);
+            color: #04211c;
+            box-shadow: 0 8px 20px rgba(20, 184, 166, 0.25);
+        }
+        .btn-update-event:hover { box-shadow: 0 12px 28px rgba(20, 184, 166, 0.35); }
+
+        .btn-create-event {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-medium);
+            color: var(--text-main);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: none;
+        }
+        .btn-create-event:hover { background: rgba(255,255,255,0.09); box-shadow: none; }
+        .btn-create-event svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+
+        .setup-footer {
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+        }
+        .btn-amber-outline {
+            white-space: nowrap; padding: 10px 20px;
+            background: rgba(255, 149, 0, 0.15); color: var(--warning-text);
+            border: 1px solid var(--warning-border); border-radius: var(--radius-button);
+            font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s;
+            font-family: inherit;
+        }
+        .btn-amber-outline:hover { background: rgba(255,149,0,0.25); }
+
         /* Inline Form Builder */
         .fb-field { transition: all 0.15s ease; cursor: pointer; position: relative; }
         .fb-field:hover:not(.fb-field-active) { background: var(--bg-hover); }
@@ -1965,78 +2055,102 @@
             <!-- TAB 1: EVENT SETUP -->
             <div id="settings-tab-event" class="settings-section">
                 <!-- Form Access Controls -->
-                <div style="margin-bottom:30px; background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.2); padding: 25px; border-radius: 20px;">
-                    <label class="stat-label" style="color: #0A84FF; font-size: 1rem; margin-bottom: 10px;">Public Form Access Control (This Market Only)</label>
-                    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Override the automatic schedule to manually force the public application form open or closed for this specific market.</p>
-                    
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                        <button id="form-status-auto" onclick="setFormOverride('auto')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1;">Auto (Use Dates)</button>
-                        <button id="form-status-open" onclick="setFormOverride('open')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1;">Force OPEN</button>
-                        <button id="form-status-closed" onclick="setFormOverride('closed')" class="btn-action" style="background: rgba(255,255,255,0.1); color: #fff; flex: 1;">Force CLOSED</button>
+                <div class="setup-card" style="margin-bottom:24px;">
+                    <div class="setup-card-glow" style="top:-70px; right:-70px; background: rgba(124,58,237,0.22);"></div>
+                    <div class="setup-card-body">
+                        <label class="stat-label" style="color:#a78bfa; font-size:0.8rem; margin-bottom:8px; display:block;">Public Form Access Control <span style="color:var(--text-muted); font-weight:500; text-transform:none; letter-spacing:0;">(This Market Only)</span></label>
+                        <p style="color:var(--text-muted); font-size:0.85rem; margin: 0 0 20px; max-width: 640px;">Override the automatic schedule to manually force the public application form open or closed for this specific market.</p>
+
+                        <div class="access-control-grid">
+                            <button id="form-status-auto" onclick="setFormOverride('auto')" class="access-btn" style="background: rgba(255,255,255,0.1); color: #fff;">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                Auto (Use Dates)
+                            </button>
+                            <button id="form-status-open" onclick="setFormOverride('open')" class="access-btn" style="background: rgba(255,255,255,0.1); color: #fff;">
+                                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                Force OPEN
+                            </button>
+                            <button id="form-status-closed" onclick="setFormOverride('closed')" class="access-btn" style="background: rgba(255,255,255,0.1); color: #fff;">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                Force CLOSED
+                            </button>
+                        </div>
                     </div>
                 </div>
-                
-                <div style="margin-bottom:30px; background: var(--card-bg); border: 0.5px solid var(--glass-border); padding: 25px; border-radius: var(--radius-card);">
-                    <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 20px;">Edit Active Event / Create New</label>
-                    
-                    <div class="form-grid" style="gap: 20px; margin-bottom: 20px;">
-                        <div>
-                            <label class="stat-label">Student Market Name *</label>
-                            <input type="text" id="evName" class="modern-input" placeholder="e.g. Spring 2026 Market">
+
+                <div class="setup-card" style="margin-bottom:24px;">
+                    <div class="setup-card-glow" style="bottom:-80px; left:-80px; width:280px; height:280px; background: rgba(217,70,239,0.1);"></div>
+                    <div class="setup-card-body">
+                        <label class="stat-label" style="color:#e879f9; font-size:0.8rem; margin-bottom:24px; display:block;">Edit Active Event / Create New</label>
+
+                        <div class="form-grid" style="gap: 20px; margin-bottom: 20px;">
+                            <div>
+                                <label class="field-label">Student Market Name <span class="req">*</span></label>
+                                <input type="text" id="evName" class="modern-input field-accent" placeholder="e.g. Spring 2026 Market">
+                            </div>
+                            <div>
+                                <label class="field-label">Location <span class="req">*</span></label>
+                                <div class="input-icon-wrap">
+                                    <svg class="input-icon-left" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    <input type="text" id="evLocation" class="modern-input field-accent icon-left" placeholder="e.g. Prescott Field">
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="stat-label">Location *</label>
-                            <input type="text" id="evLocation" class="modern-input" placeholder="e.g. Prescott Field">
+
+                        <div class="form-grid" style="gap: 20px; margin-bottom: 20px;">
+                            <div>
+                                <label class="field-label">Date of Market <span class="req">*</span></label>
+                                <input type="date" id="evDate" class="modern-input field-accent">
+                            </div>
+                            <div>
+                                <label class="field-label">Time <span class="req">*</span></label>
+                                <div class="input-icon-wrap">
+                                    <svg class="input-icon-left" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    <input type="text" id="evTime" class="modern-input field-accent icon-left" placeholder="e.g. 6:30-9:00pm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid" style="gap: 20px; margin-bottom: 20px;">
+                            <div>
+                                <label class="field-label">App Opens (Date/Time) <span class="req">*</span></label>
+                                <input type="datetime-local" id="evOpen" class="modern-input field-accent">
+                            </div>
+                            <div>
+                                <label class="field-label">App Closes Deadline (Date/Time) <span class="req">*</span></label>
+                                <input type="datetime-local" id="evClose" class="modern-input field-accent">
+                            </div>
+                        </div>
+
+                        <div class="form-grid" style="gap: 20px; margin-bottom: 25px;">
+                            <div>
+                                <label class="field-label">Vendor Contact Date <span class="req">*</span></label>
+                                <input type="date" id="evContact" class="modern-input field-accent">
+                            </div>
+                            <div>
+                                <label class="field-label">Vendor Confirm Deadline <span class="req">*</span></label>
+                                <input type="date" id="evConfirm" class="modern-input field-accent">
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap: 15px; flex-wrap: wrap;">
+                            <button onclick="updateActiveEvent()" class="btn-action btn-update-event" style="flex: 1; padding: 15px; font-size: 1.05rem;">Update ACTIVE Event</button>
+                            <button onclick="createNewEvent()" class="btn-action btn-create-event" style="flex: 1; padding: 15px; font-size: 1.05rem;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                Create as NEW Event
+                            </button>
                         </div>
                     </div>
-
-                    <div class="form-grid" style="gap: 20px; margin-bottom: 20px;">
-                        <div>
-                            <label class="stat-label">Date of Market *</label>
-                            <input type="date" id="evDate" class="modern-input">
-                        </div>
-                        <div>
-                            <label class="stat-label">Time *</label>
-                            <input type="text" id="evTime" class="modern-input" placeholder="e.g. 6:30-9:00pm">
-                        </div>
-                    </div>
-
-                    <div class="form-grid" style="gap: 20px; margin-bottom: 20px;">
-                        <div>
-                            <label class="stat-label">App Opens (Date/Time) *</label>
-                            <input type="datetime-local" id="evOpen" class="modern-input">
-                        </div>
-                        <div>
-                            <label class="stat-label">App Closes Deadline (Date/Time) *</label>
-                            <input type="datetime-local" id="evClose" class="modern-input">
-                        </div>
-                    </div>
-
-                    <div class="form-grid" style="gap: 20px; margin-bottom: 25px;">
-                        <div>
-                            <label class="stat-label">Vendor Contact Date *</label>
-                            <input type="date" id="evContact" class="modern-input">
-                        </div>
-                        <div>
-                            <label class="stat-label">Vendor Confirm Deadline *</label>
-                            <input type="date" id="evConfirm" class="modern-input">
-                        </div>
-                    </div>
-
-                <div style="display:flex; gap: 15px; flex-wrap: wrap;">
-                    <button onclick="updateActiveEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: var(--gradient-success);">Update ACTIVE Event</button>
-                    <button onclick="createNewEvent()" class="btn-action" style="flex: 1; padding: 15px; font-size: 1.1rem; background: #2a2a2a;">Create as NEW Event</button>
                 </div>
-            </div>
 
-            <div style="margin-bottom:30px; background: rgba(255, 149, 0, 0.06); border: 1px solid rgba(255, 149, 0, 0.25); padding: 20px; border-radius: 16px;">
-                <label class="stat-label" style="color: #FF9500;">Email Delivery Status (Current Market)</label>
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
-                    <span style="font-size:0.82rem; color:var(--text-muted);">If the new market has stale Brevo status checkmarks, reset everything back to unsent/unchecked.</span>
-                    <button onclick="resetCurrentMarketEmailTracking()" class="btn-action" style="background: rgba(255, 149, 0, 0.2); border: 1px solid rgba(255, 149, 0, 0.4); color: #FF9500;">Reset Current Market Delivery Status</button>
+                <div class="setup-card setup-footer" style="margin-bottom:24px;">
+                    <div>
+                        <label class="stat-label" style="color: var(--warning-text);">Email Delivery Status (Current Market)</label>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin: 4px 0 0;">If the new market has stale Brevo status checkmarks, reset everything back to unsent/unchecked.</p>
+                    </div>
+                    <button onclick="resetCurrentMarketEmailTracking()" class="btn-amber-outline">Reset Current Market Delivery Status</button>
                 </div>
-            </div>
-                
+
                 <div style="padding: 20px; border: 1px solid rgba(255, 59, 48, 0.3); border-radius: 16px; background: rgba(255, 59, 48, 0.05);">
                     <label class="stat-label" style="color: #FF3B30;">Danger Zone</label>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
