@@ -453,31 +453,34 @@
         /* ── STATUS TOGGLE (SEGMENTED CONTROL) ── */
         .status-toggle-group {
             display: inline-flex;
+            flex-wrap: wrap;
             background-color: var(--bg-hover);
             border-radius: var(--radius-lg);
             padding: 4px;
             border: 1px solid var(--border-light);
-            gap: 2px;
+            gap: 4px;
         }
 
         .btn-quick-status {
             background: transparent;
-            border: none;
-            padding: 6px 14px;
+            border: 1px solid transparent;
+            padding: 7px 12px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 700;
             color: var(--text-muted);
             transition: all 0.2s ease;
-            border-radius: var(--radius-md);
+            border-radius: var(--radius-button);
             display: flex;
             align-items: center;
             justify-content: center;
+            white-space: nowrap;
+            font-family: inherit;
         }
         .btn-quick-status:hover { background-color: var(--border-medium); color: var(--text-main); }
-        .btn-quick-status.active-approve { background-color: var(--border-medium); color: var(--success-text); box-shadow: var(--shadow-sm); }
-        .btn-quick-status.active-review { background-color: var(--border-medium); color: var(--warning-text); box-shadow: var(--shadow-sm); }
-        .btn-quick-status.active-deny { background-color: var(--border-medium); color: var(--danger-text); box-shadow: var(--shadow-sm); }
+        .btn-quick-status.active-approve { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); box-shadow: var(--shadow-sm); }
+        .btn-quick-status.active-review { background: var(--warning-bg); color: var(--warning-text); border-color: var(--warning-border); box-shadow: var(--shadow-sm); }
+        .btn-quick-status.active-deny { background: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-border); box-shadow: var(--shadow-sm); }
 
         .status-pill { font-size: 0.75rem; font-weight: 800; padding: 6px 12px; border-radius: var(--radius-button); text-transform: uppercase; display: inline-block; }
         .status-pill.review { background: var(--warning-bg); color: var(--warning-text); border: 1px solid var(--warning-border); }
@@ -893,18 +896,18 @@
             td:nth-child(2) [style*="flex-wrap"] { display: none !important; }
             td:nth-child(2) .mobile-action-btn { display: none !important; }
 
-            /* td(6) — check-in status — right column spanning both rows */
-            td:nth-child(6) {
+            /* td(5) — check-in status — right column spanning both rows */
+            td:nth-child(5) {
                 grid-area: status; display: flex !important;
                 align-items: center; justify-content: flex-end;
                 align-self: stretch;
             }
-            td:nth-child(6) span { font-size: 0.68rem !important; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; text-align: right; }
-            td:nth-child(6) .btn-action { padding: 8px 12px; font-size: 0.75rem; white-space: nowrap; }
+            td:nth-child(5) span { font-size: 0.68rem !important; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; text-align: right; }
+            td:nth-child(5) .btn-action { padding: 8px 12px; font-size: 0.75rem; white-space: nowrap; }
 
             /* Hide all other cells */
-            td:nth-child(3), td:nth-child(4), td:nth-child(5),
-            td:nth-child(7), td:nth-child(8) { display: none !important; }
+            td:nth-child(3), td:nth-child(4),
+            td:nth-child(6), td:nth-child(7) { display: none !important; }
 
             .mobile-action-btn { display: none !important; }
 
@@ -1950,7 +1953,7 @@
             </div>
 
             <table>
-                <thead><tr><th>App #</th><th>Vendor Name</th><th>Contact</th><th>Status</th><th>Confirmed</th><th>Check In</th><th>Email</th><th style="text-align:right;">Actions</th></tr></thead>
+                <thead><tr><th>App #</th><th>Vendor Name</th><th>Status</th><th>Vendor Response</th><th>Check In</th><th>Email</th><th style="text-align:right;">Actions</th></tr></thead>
                 <tbody id="vendorTableBody"></tbody>
             </table>
         </div>
@@ -3638,7 +3641,7 @@
             currentData.activeId = null;
             currentData.activeEvent = null;
             document.getElementById('eventDropdown').innerHTML = '<option>No Active Markets</option>';
-            document.getElementById('vendorTableBody').innerHTML = '<tr><td colspan="8" style="text-align:center;">No events. Create one in Settings.</td></tr>';
+            document.getElementById('vendorTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;">No events. Create one in Settings.</td></tr>';
             
             // Check for null before setting innerText
             if (document.getElementById('countInbox')) document.getElementById('countInbox').innerText = 0;
@@ -4870,7 +4873,7 @@
         const tbody = document.getElementById('vendorTableBody');
         
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 40px;">No applications found in this view.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px;">No applications found in this view.</td></tr>';
             return;
         }
 
@@ -4878,9 +4881,9 @@
             const isAppr = v.status === 'Approved' || v.status === 'Checked In';
             const statusToggle = `
                 <div class="status-toggle-group" onclick="event.stopPropagation()">
-                    <button onclick="quickStatus('${v.id}', 'Approved')" class="btn-quick-status ${isAppr ? 'active-approve' : ''}" title="Mark as Approved">✓</button>
-                    <button onclick="quickStatus('${v.id}', 'Needs Review')" class="btn-quick-status ${v.status === 'Needs Review' ? 'active-review' : ''}" title="Mark as Needs Review">...</button>
-                    <button onclick="quickStatus('${v.id}', 'Denied')" class="btn-quick-status ${v.status === 'Denied' ? 'active-deny' : ''}" title="Mark as Denied">✕</button>
+                    <button onclick="quickStatus('${v.id}', 'Approved')" class="btn-quick-status ${isAppr ? 'active-approve' : ''}" title="Mark as Approved">Approve</button>
+                    <button onclick="quickStatus('${v.id}', 'Needs Review')" class="btn-quick-status ${v.status === 'Needs Review' ? 'active-review' : ''}" title="Mark as Needs Review">Needs Review</button>
+                    <button onclick="quickStatus('${v.id}', 'Denied')" class="btn-quick-status ${v.status === 'Denied' ? 'active-deny' : ''}" title="Mark as Denied">Deny</button>
                 </div>
             `;
             
@@ -4947,27 +4950,29 @@
             }
 
             const hasFoodLicense = v.food_license && v.food_license.toLowerCase() === 'yes';
-            
-            // Use the local matched tags
+
+            // Use the local matched tags — these render next to the vendor's name
             let displayTags = v.autoCategories;
-            
+            const categoryBadgesArray = [];
+
             if (displayTags && displayTags.length > 0) {
                 displayTags.forEach(cat => {
                     // Prevent redundant 'food' tags if they already have the hardcoded license badge
                     if (!(cat.toLowerCase().includes('food') && hasFoodLicense)) {
-                        tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(10, 132, 255, 0.1); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">${cat}</span>`);
+                        categoryBadgesArray.push(`<span style="font-size: 0.65rem; background: rgba(10, 132, 255, 0.1); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">${cat}</span>`);
                     }
                 });
             }
 
             if (hasFoodLicense) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap;">FOOD LICENSE</span>`);
+                categoryBadgesArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap;">FOOD LICENSE</span>`);
             }
 
             if (v.needs_power === 'Yes') {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 214, 10, 0.15); color: #FFD60A; border: 1px solid rgba(255, 214, 10, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap;">POWER</span>`);
+                categoryBadgesArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 214, 10, 0.15); color: #FFD60A; border: 1px solid rgba(255, 214, 10, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap;">POWER</span>`);
             }
 
+            const categoryBadgesHtml = categoryBadgesArray.join('');
             const tagsContainer = tagsArray.length > 0 ? `<div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">${tagsArray.join('')}</div>` : '';
 
             const attState = getAttendanceState(v);
@@ -4994,15 +4999,15 @@
                 <td style="${rowBorderStyle}"><span style="color: #BF5AF2; font-weight: 700; font-size: 0.95rem;">#${v.appNumber}</span><br><span style="font-size: 0.7rem; color: var(--text-muted); opacity: 0.7; font-weight: 500; margin-top: 2px; display: inline-block;">${submitDate}</span></td>
                 <td style="${rowBgStyle}">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-                        <div style="flex: 1;">
+                        <div style="flex: 1; display: flex; align-items: center; gap: 8px; flex-flow: row wrap;">
                             <strong style="font-size: 1rem; font-weight: 600;">${v.first_name} ${v.last_name}</strong>
+                            ${categoryBadgesHtml}
                             <span class="mobile-status-pill mobile-status-${(v.status || '').toLowerCase().replace(/\s+/g, '-')}">${v.status || 'Pending'}</span>
                         </div>
                         ${canEmail ? `<button onclick="resendEmail('${v.id}'); event.stopPropagation();" class="mobile-action-btn" title="Resend email" style="flex-shrink: 0; white-space: nowrap;">📧</button>` : ''}
                     </div>
                     ${tagsContainer}
                 </td>
-                <td style="${rowBgStyle}"><a href="mailto:${v.preferred_email}" onclick="event.stopPropagation()" style="color:var(--text-muted); font-size: 0.85rem;">${v.preferred_email}</a></td>
                 <td style="${rowBgStyle}">${statusToggle}</td>
                 <td style="${rowBgStyle}">${confirmedCell}</td>
                 <td style="${rowBgStyle}">${checkInCell}</td>
