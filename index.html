@@ -404,6 +404,11 @@
         /* Search gets left padding for icon */
         .search-wrapper .modern-input { padding-left: 40px; }
 
+        /* .modern-input's padding: 0 18px relies on the fixed 40px height to center
+           single-line <input> text; textareas don't get that vertical centering for free,
+           so text sits flush against the top edge. Give multi-line fields real top/bottom padding. */
+        textarea.modern-input { padding: 12px 18px; }
+
         select.modern-input {
             appearance: none;
             -webkit-appearance: none;
