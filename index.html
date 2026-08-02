@@ -581,15 +581,14 @@
         /* Sidebar Buttons */
         .sidebar-btn {
             width: 100%;
-            padding: 9px 0;
-            font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 0.3px;
+            padding: 12px 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.2px;
             border-radius: var(--radius-md);
             cursor: pointer;
             transition: all 0.15s ease;
             border: 1px solid transparent;
-            text-transform: uppercase;
             font-family: inherit;
         }
         .sidebar-btn:active { transform: scale(0.97); }
@@ -1604,7 +1603,9 @@
         <div class="mobile-modal-close-bar" onclick="closeReviewModal(); event.stopPropagation();"></div>
         <!-- LEFT: APPLICATION CONTENT -->
         <div class="review-modal-main">
-            <h2 style="margin-top:0; margin-bottom:5px; font-weight: 800; font-size: 1.8rem;" id="reviewName">Vendor Name</h2>
+            <h2 style="margin-top:0; margin-bottom:4px; font-weight: 800; font-size: 1.8rem;" id="reviewName">Vendor Name</h2>
+            <p id="reviewAppliedDate" style="margin: 0 0 12px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600;"></p>
+            <div id="reviewCategoryBadge" style="display:flex; gap:8px; flex-wrap: wrap; margin-bottom: 12px;"></div>
             <div style="display:flex; gap:8px; margin-bottom: 20px; flex-wrap: wrap;" id="reviewTags"></div>
 
             <!-- ✨ DUPLICATES DASHBOARD ✨ -->
@@ -5147,7 +5148,8 @@
         currentReviewingId = id;
         
         const submitDate = vendor.created_at ? new Date(vendor.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown Date';
-        document.getElementById('reviewName').innerHTML = `#${vendor.appNumber} - ${vendor.first_name} ${vendor.last_name} <br><span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: block; margin-top: 4px;">Applied: ${submitDate}</span>`;
+        document.getElementById('reviewName').innerText = `#${vendor.appNumber} - ${vendor.first_name} ${vendor.last_name}`;
+        document.getElementById('reviewAppliedDate').innerText = `Applied: ${submitDate}`;
         
         // --- FIX 3: Instantly clear out the old vendor's data so it doesn't flash on screen ---
         const aiBox = document.getElementById('aiInsightsBox');
@@ -5230,21 +5232,24 @@
 
         if (vendor.needs_power === 'Yes') tagsArray.push(`<span class="power-tag" style="margin-top:0; font-size: 0.85rem; padding: 6px 12px; border-radius: 20px;">Power Requested</span>`);
 
+        // Category badge(s) — rendered as their own prominent line directly under the applied date
         const hasFoodLicense = vendor.food_license && vendor.food_license.toLowerCase() === 'yes';
+        const categoryBadgesArray = [];
 
         let displayTags = vendor.autoCategories;
         if (displayTags && displayTags.length > 0) {
             displayTags.forEach(cat => {
                 if (!(cat.toLowerCase().includes('food') && hasFoodLicense)) {
-                    tagsArray.push(`<span class="group-tag" style="background: rgba(10, 132, 255, 0.1); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3); margin-top:0; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; padding: 6px 12px; border-radius: 20px;">${cat}</span>`);
+                    categoryBadgesArray.push(`<span class="group-tag" style="background: rgba(10, 132, 255, 0.1); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3); margin-top:0; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; padding: 6px 12px; border-radius: 20px;">${cat}</span>`);
                 }
             });
         }
-        
+
         if (hasFoodLicense) {
-            tagsArray.push(`<span class="group-tag" style="background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); margin-top:0; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; padding: 6px 12px; border-radius: 20px;">FOOD LICENSE</span>`);
+            categoryBadgesArray.push(`<span class="group-tag" style="background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); margin-top:0; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; padding: 6px 12px; border-radius: 20px;">FOOD LICENSE</span>`);
         }
 
+        document.getElementById('reviewCategoryBadge').innerHTML = categoryBadgesArray.join('');
         document.getElementById('reviewTags').innerHTML = tagsArray.join('');
 
         document.getElementById('reviewStudentId').innerText = vendor.student_id || 'N/A';
