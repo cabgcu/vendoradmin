@@ -9,6 +9,8 @@ const eventMap = {
   'delivered': 'delivered',
   'opened': 'opened',
   'unique_opened': 'opened',
+  'proxy_open': 'opened',
+  'unique_proxy_open': 'opened',
   'click': 'clicked',
   'clicks': 'clicked',
   'hardBounce': 'hardBounce',

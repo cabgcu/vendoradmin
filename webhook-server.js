@@ -12,8 +12,12 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 // Map Brevo event types to our status
 const eventMap = {
   'sent': 'sent',
+  'request': 'sent',
   'delivered': 'delivered',
   'opened': 'opened',
+  'unique_opened': 'opened',
+  'proxy_open': 'opened',
+  'unique_proxy_open': 'opened',
   'click': 'clicked',
   'clicks': 'clicked',
   'hardBounce': 'hardBounce',

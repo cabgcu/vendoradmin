@@ -453,7 +453,7 @@
         /* ── STATUS TOGGLE (SEGMENTED CONTROL) ── */
         .status-toggle-group {
             display: inline-flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             background-color: var(--bg-hover);
             border-radius: var(--radius-lg);
             padding: 4px;
@@ -2563,13 +2563,13 @@
         const declinePowerId = urlParams.get('decline_power');
 
         if (confirmId) {
-            handleVendorConfirmation(confirmId, 'confirm');
+            showLinkConfirmationGate(confirmId, 'confirm', 'attendance');
         } else if (declineId) {
-            handleVendorConfirmation(declineId, 'decline');
+            showLinkConfirmationGate(declineId, 'decline', 'attendance');
         } else if (confirmPowerId) {
-            handlePowerConfirmation(confirmPowerId, 'confirm');
+            showLinkConfirmationGate(confirmPowerId, 'confirm', 'power');
         } else if (declinePowerId) {
-            handlePowerConfirmation(declinePowerId, 'decline');
+            showLinkConfirmationGate(declinePowerId, 'decline', 'power');
         } else {
             const savedAuth = localStorage.getItem('cab_market_auth');
             if (savedAuth) {
@@ -2590,6 +2590,43 @@
 
         setupUnifiedScanner();
     });
+
+    // Email clients and security scanners (Apple Mail Privacy Protection, corporate link
+    // scanners, Brevo's own link-checking, etc.) automatically fetch every URL in an email
+    // the moment it's delivered/opened — with no real user behind it. Since confirm/decline
+    // links are plain GET links, that silent prefetch used to apply the vendor's status
+    // change on its own, which is why vendors kept getting marked "Declined" out of nowhere
+    // before they ever opened the email. Requiring an explicit click here means a bare page
+    // fetch no longer does anything — only a real click reaches handleVendorConfirmation /
+    // handlePowerConfirmation.
+    function showLinkConfirmationGate(id, action, kind) {
+        const loginScreen = document.getElementById('login-screen');
+        if (loginScreen) loginScreen.style.display = 'none';
+
+        const isConfirming = action === 'confirm';
+        const accent = isConfirming ? '#34C759' : '#FF3B30';
+        const title = kind === 'power'
+            ? (isConfirming ? 'Confirm you still need power?' : 'Confirm you no longer need power?')
+            : (isConfirming ? 'Confirm your attendance?' : "Confirm you can't make it?");
+        const body = kind === 'power'
+            ? (isConfirming ? "Click below to confirm you'll still need power access at the market." : 'Click below to confirm you no longer need power access.')
+            : (isConfirming ? "Click below to confirm you'll be at the market." : "Click below to let us know you can't make it — your spot will be released.");
+
+        const gate = document.createElement('div');
+        gate.id = 'link-confirm-gate';
+        gate.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#050505; color:white; font-family:var(--font-stack); z-index:999999; padding:20px; text-align:center;";
+        gate.innerHTML = `
+            <h2 style="font-weight:800; margin-bottom:15px; font-size:1.8rem;">${title}</h2>
+            <p style="color:var(--text-muted); font-size:1.05rem; max-width:420px; margin-bottom:30px;">${body}</p>
+            <button id="link-confirm-gate-btn" style="padding:16px 36px; border-radius:12px; border:none; background:${accent}; color:#fff; font-weight:800; font-size:1.1rem; cursor:pointer;">Yes, I'm sure</button>
+        `;
+        document.body.appendChild(gate);
+        document.getElementById('link-confirm-gate-btn').addEventListener('click', () => {
+            gate.remove();
+            if (kind === 'power') handlePowerConfirmation(id, action);
+            else handleVendorConfirmation(id, action);
+        }, { once: true });
+    }
 
     async function handleVendorConfirmation(id, action) {
         try {
@@ -6376,7 +6413,7 @@
             'sent':         { label: 'Sent',        color: '#0A84FF', icon: '📤', bg: 'rgba(10, 132, 255, 0.1)' },
             'deferred':     { label: 'Deferred',    color: '#FF9500', icon: '⏳', bg: 'rgba(255, 149, 0, 0.1)' },
             'delivered':    { label: 'Delivered',    color: '#34C759', icon: '✓',  bg: 'rgba(52, 199, 89, 0.1)' },
-            'opened':       { label: 'Opened',      color: '#34C759', icon: '👁', bg: 'rgba(52, 199, 89, 0.15)' },
+            'opened':       { label: 'Open',        color: '#34C759', icon: '👁', bg: 'rgba(52, 199, 89, 0.15)' },
             'clicked':      { label: 'Clicked',     color: '#30D158', icon: '🔗', bg: 'rgba(48, 209, 88, 0.15)' },
             'softBounce':   { label: 'Soft Bounce', color: '#FF9500', icon: '⚠',  bg: 'rgba(255, 149, 0, 0.1)' },
             'hardBounce':   { label: 'Bounced',     color: '#FF3B30', icon: '✕',  bg: 'rgba(255, 59, 48, 0.1)' },
@@ -6384,7 +6421,13 @@
             'error':        { label: 'Error',       color: '#FF3B30', icon: '⚠',  bg: 'rgba(255, 59, 48, 0.1)' },
             'unsubscribed': { label: 'Unsubscribed',color: '#8E8E93', icon: '🚫', bg: 'rgba(142, 142, 147, 0.1)' }
         };
-        return map[status] || { label: status || 'Unknown', color: '#8E8E93', icon: '?', bg: 'rgba(142, 142, 147, 0.1)' };
+        if (map[status]) return map[status];
+        // Brevo/Apple Mail Privacy Protection fire proxy-prefetch open events under a few
+        // different raw names (proxy_open, unique_proxy_open, uniqueProxyOpen, etc.) —
+        // treat all of them as a plain "Open" rather than showing the raw event name.
+        const normalized = String(status || '').toLowerCase().replace(/[^a-z]/g, '');
+        if (normalized.includes('open')) return map.opened;
+        return { label: status || 'Unknown', color: '#8E8E93', icon: '?', bg: 'rgba(142, 142, 147, 0.1)' };
     }
 
     // Bulk refresh email status for all vendors that have been emailed
