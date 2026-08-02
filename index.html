@@ -4006,6 +4006,12 @@
 
     // --- 3 STRIKES LATE POLICY ---
     let previousStrikes = {}; // Track previous state to detect new strikes
+    // Vendor emails come back from the DB (and get typed into applications) in all sorts of
+    // casing — profiles.js keys its map by lowercased+trimmed email, so vendorStrikes/
+    // strikeOverrides must use the same normalized key or lookups silently miss.
+    function normalizeStrikeEmail(email) {
+        return (email || '').toLowerCase().trim();
+    }
     async function calculateStrikes() {
         if (!isBuiltinEnabled('late_strike_tracking')) { window.vendorStrikes = {}; return; }
         if (!currentData.vendors.length) return;
@@ -4020,7 +4026,7 @@
 
         const { data: pastApps } = await _supabase.from('vendors').select('preferred_email, created_at, event_id, id, first_name, last_name').in('preferred_email', emails).gte('created_at', oneYearAgoISO);
 
-        window.vendorStrikes = {}; // Tracks specific market names they were late to: { 'email': ['Spring Fest', 'Winter Market'] }
+        window.vendorStrikes = {}; // Tracks specific market names they were late to: { 'normalized email': ['Spring Fest', 'Winter Market'] }
         let totalStrikesInView = 0;
 
         if (pastApps) {
@@ -4029,21 +4035,22 @@
                 if (ev && ev.app_close) {
                     const appDate = new Date(app.created_at);
                     const closeDate = new Date(ev.app_close);
+                    const emailKey = normalizeStrikeEmail(app.preferred_email);
 
                     // If they applied AFTER the close deadline for that specific event, mark it as a
                     // strike — unless an admin has manually forgiven this vendor+event pair.
-                    const forgiven = (strikeOverrides[app.preferred_email] || []).includes(ev.name);
+                    const forgiven = (strikeOverrides[emailKey] || []).includes(ev.name);
                     if (appDate > closeDate && !forgiven) {
-                        if (!window.vendorStrikes[app.preferred_email]) {
-                            window.vendorStrikes[app.preferred_email] = [];
+                        if (!window.vendorStrikes[emailKey]) {
+                            window.vendorStrikes[emailKey] = [];
                         }
-                        if (!window.vendorStrikes[app.preferred_email].includes(ev.name)) {
-                            window.vendorStrikes[app.preferred_email].push(ev.name);
+                        if (!window.vendorStrikes[emailKey].includes(ev.name)) {
+                            window.vendorStrikes[emailKey].push(ev.name);
                         }
 
                         // Check if this is a NEW strike (didn't exist before) → fire custom automations
-                        const prevCount = previousStrikes[app.preferred_email]?.length || 0;
-                        const newCount = window.vendorStrikes[app.preferred_email].length;
+                        const prevCount = previousStrikes[emailKey]?.length || 0;
+                        const newCount = window.vendorStrikes[emailKey].length;
                         if (newCount > prevCount) {
                             const vendor = currentData.vendors.find(v => v.preferred_email === app.preferred_email && v.id === app.id);
                             if (vendor) {
@@ -4064,8 +4071,9 @@
 
         // Sum up strikes just for analytics dashboard display
         currentData.vendors.forEach(v => {
-            if(window.vendorStrikes[v.preferred_email]) {
-                totalStrikesInView += window.vendorStrikes[v.preferred_email].length;
+            const emailKey = normalizeStrikeEmail(v.preferred_email);
+            if(window.vendorStrikes[emailKey]) {
+                totalStrikesInView += window.vendorStrikes[emailKey].length;
             }
         });
 
@@ -4573,7 +4581,7 @@
         }
 
         const strikesContainer = document.getElementById('profileModalStrikes');
-        const strikesArr = window.vendorStrikes[email] || [];
+        const strikesArr = window.vendorStrikes[normalizeStrikeEmail(email)] || [];
         
         if (strikesArr.length === 0) {
             strikesContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">0 Late Applications. Vendor is in good standing.</span>';
@@ -5108,7 +5116,7 @@
             const rowBorderStyle = rowColor ? `background: ${rowColor}20 !important; border-left: 6px solid ${rowColor} !important; border-radius: 16px 0 0 16px;` : 'border-radius: 16px 0 0 16px;';
 
             // Late Strikes Badge (configurable thresholds)
-            const strikes = window.vendorStrikes[v.preferred_email]?.length || 0;
+            const strikes = window.vendorStrikes[normalizeStrikeEmail(v.preferred_email)]?.length || 0;
             const severeAt = getBuiltinSetting('late_strike_tracking', 'severeThreshold') || 3;
             const warnAt = getBuiltinSetting('late_strike_tracking', 'threshold') || 1;
             if (strikes >= severeAt) {
@@ -5385,7 +5393,7 @@
         if (attState === 'confirmed') tagsArray.push(`<span class="status-pill approved" style="font-size: 0.85rem; background: rgba(52, 199, 89, 0.15); color: #34C759; border: 1px solid rgba(52, 199, 89, 0.4);">✓ Attendance Confirmed</span>`);
         if (attState === 'declined') tagsArray.push(`<span class="status-pill denied" style="font-size: 0.85rem; background: rgba(255, 59, 48, 0.15); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.4);">✕ Attendance Declined</span>`);
         
-        const strikesArr = window.vendorStrikes[vendor.preferred_email] || [];
+        const strikesArr = window.vendorStrikes[normalizeStrikeEmail(vendor.preferred_email)] || [];
         const strikes = strikesArr.length;
         
         if (strikes >= 3) {
@@ -7785,9 +7793,10 @@
     // Late strikes are recalculated from application history on every refresh, so
     // "removing" one just tells calculateStrikes() to keep ignoring that vendor+event
     // pair going forward rather than mutating any stored strike count directly.
-    async function removeStrike(email, eventName) {
+    async function removeStrike(rawEmail, eventName) {
         if (currentUser.role !== 'admin') { showToast('Only admins can remove strikes.'); return; }
         if (!confirm(`Remove the late strike for "${eventName}"? This vendor will no longer be flagged for it.`)) return;
+        const email = normalizeStrikeEmail(rawEmail);
         if (!strikeOverrides[email]) strikeOverrides[email] = [];
         if (!strikeOverrides[email].includes(eventName)) strikeOverrides[email].push(eventName);
         await saveStrikeOverrides();
