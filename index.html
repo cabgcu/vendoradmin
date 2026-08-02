@@ -9497,7 +9497,8 @@
             if (note) note.style.display = OPENROUTER_API_KEY ? 'none' : 'block';
             const messages = document.getElementById('cabbieMessages');
             if (messages && messages.children.length === 0) {
-                const name = currentUser && currentUser.name ? ' ' + currentUser.name.split(' ')[0] : '';
+                const firstName = currentUser && currentUser.name === 'Master Admin' ? 'Admin' : (currentUser && currentUser.name ? currentUser.name.split(' ')[0] : '');
+                const name = firstName ? ' ' + firstName : '';
                 appendCabbieMessage('bot', `Hey${name}! I'm Cabbie AI 🚕. Ask me about vendors, attendance, power requests, or applications on this event — or tell me to make a change, like "confirm attendance for Sunset Tacos" or "add a note to Java Jane saying they need a new food license".`);
             }
             const input = document.getElementById('cabbieInput');
