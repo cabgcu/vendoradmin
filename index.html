@@ -3324,6 +3324,7 @@
         }
 
         await loadAutomationsConfig();
+        await loadStrikeOverrides();
         updateCabbieVisibility();
         if (BREVO_API_KEY) testBrevoApiAccess();
         refreshData();
@@ -4029,8 +4030,10 @@
                     const appDate = new Date(app.created_at);
                     const closeDate = new Date(ev.app_close);
 
-                    // If they applied AFTER the close deadline for that specific event, mark it as a strike
-                    if (appDate > closeDate) {
+                    // If they applied AFTER the close deadline for that specific event, mark it as a
+                    // strike — unless an admin has manually forgiven this vendor+event pair.
+                    const forgiven = (strikeOverrides[app.preferred_email] || []).includes(ev.name);
+                    if (appDate > closeDate && !forgiven) {
                         if (!window.vendorStrikes[app.preferred_email]) {
                             window.vendorStrikes[app.preferred_email] = [];
                         }
@@ -4579,7 +4582,7 @@
         } else {
             strikesContainer.style.borderColor = 'rgba(255,59,48,0.3)';
             strikesContainer.style.background = 'rgba(255,59,48,0.05)';
-            const listHtml = strikesArr.map(eventName => `<div style="color: #FF3B30; font-size: 0.9rem; font-weight: bold; margin-bottom: 6px;">🚨 Late to: ${eventName}</div>`).join('');
+            const listHtml = strikesArr.map(eventName => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 6px;"><span style="color: #FF3B30; font-size: 0.9rem; font-weight: bold;">🚨 Late to: ${eventName}</span><button onclick="removeStrike('${email}', '${eventName.replace(/'/g, "\\'")}')" style="background:none; border:1px solid rgba(255,59,48,0.4); color:#FF3B30; font-size:0.7rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
             strikesContainer.innerHTML = `<div style="margin-bottom: 12px; font-weight: 800; color: #FF3B30;">Total Strikes: ${strikesArr.length}</div>${listHtml}`;
         }
 
@@ -5522,7 +5525,7 @@
         if (strikes > 0) {
             reviewStrikesLabel.style.display = 'block';
             reviewStrikes.style.display = 'block';
-            reviewStrikes.innerHTML = strikesArr.map(eventName => `🚨 Applied late to: <strong>${eventName}</strong>`).join('<br>');
+            reviewStrikes.innerHTML = strikesArr.map(eventName => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">🚨 Applied late to: <strong>${eventName}</strong><button onclick="removeStrike('${vendor.preferred_email}', '${eventName.replace(/'/g, "\\'")}')" style="background:none; border:1px solid rgba(255,59,48,0.4); color:#FF3B30; font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
         } else {
             reviewStrikesLabel.style.display = 'none';
             reviewStrikes.style.display = 'none';
@@ -7632,6 +7635,7 @@
 
     // --- AUTOMATIONS ENGINE ---
     let automationsConfig = { builtin: {}, custom: [], log: [] };
+    let strikeOverrides = {}; // Admin-forgiven late strikes: { 'email': ['Event Name', ...] }
 
     const BUILTIN_AUTOMATIONS = [
         {
@@ -7759,6 +7763,42 @@
         } else {
             await _supabase.from('secrets').insert({ name: 'MARKET_AUTOMATIONS_CONFIG', value: json });
         }
+    }
+
+    async function loadStrikeOverrides() {
+        const { data } = await _supabase.from('secrets').select('value').eq('name', 'MARKET_STRIKE_OVERRIDES').single();
+        if (data && data.value) {
+            try { strikeOverrides = JSON.parse(data.value); } catch (e) { console.error('Bad strike overrides', e); strikeOverrides = {}; }
+        }
+    }
+
+    async function saveStrikeOverrides() {
+        const json = JSON.stringify(strikeOverrides);
+        const { data: existing } = await _supabase.from('secrets').select('name').eq('name', 'MARKET_STRIKE_OVERRIDES').single();
+        if (existing) {
+            await _supabase.from('secrets').update({ value: json }).eq('name', 'MARKET_STRIKE_OVERRIDES');
+        } else {
+            await _supabase.from('secrets').insert({ name: 'MARKET_STRIKE_OVERRIDES', value: json });
+        }
+    }
+
+    // Late strikes are recalculated from application history on every refresh, so
+    // "removing" one just tells calculateStrikes() to keep ignoring that vendor+event
+    // pair going forward rather than mutating any stored strike count directly.
+    async function removeStrike(email, eventName) {
+        if (currentUser.role !== 'admin') { showToast('Only admins can remove strikes.'); return; }
+        if (!confirm(`Remove the late strike for "${eventName}"? This vendor will no longer be flagged for it.`)) return;
+        if (!strikeOverrides[email]) strikeOverrides[email] = [];
+        if (!strikeOverrides[email].includes(eventName)) strikeOverrides[email].push(eventName);
+        await saveStrikeOverrides();
+        await calculateStrikes();
+        renderTable();
+        if (currentReviewingId) {
+            const vendor = currentData.vendors.find(v => v.id === currentReviewingId);
+            if (vendor) openReviewModal(vendor.id);
+        }
+        if (window.currentProfiles && window.currentProfiles[email]) openProfileModal(email);
+        showToast('Strike removed.');
     }
 
     function isBuiltinEnabled(id) {
