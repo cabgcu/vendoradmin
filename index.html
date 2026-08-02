@@ -4471,11 +4471,12 @@
         const isoDate = lookbackDate.toISOString();
 
         let eventMap = {};
+        let eventCloseMap = {};
         if (currentData.allEvents && currentData.allEvents.length > 0) {
-            currentData.allEvents.forEach(e => eventMap[e.id] = e.name);
+            currentData.allEvents.forEach(e => { eventMap[e.id] = e.name; eventCloseMap[e.id] = e.app_close; });
         } else {
-            const { data: allEvs } = await _supabase.from('events').select('id, name');
-            if(allEvs) allEvs.forEach(e => eventMap[e.id] = e.name);
+            const { data: allEvs } = await _supabase.from('events').select('id, name, app_close');
+            if(allEvs) allEvs.forEach(e => { eventMap[e.id] = e.name; eventCloseMap[e.id] = e.app_close; });
         }
 
         const { data, error } = await _supabase.from('vendors')
@@ -4523,6 +4524,33 @@
                 }
             }
         });
+
+        // calculateStrikes() only looks at emails belonging to the CURRENTLY ACTIVE market's
+        // vendor roster (currentData.vendors), so a vendor who isn't in that roster — because
+        // they applied to a different market than whichever one happens to be active — loses
+        // their window.vendorStrikes entry the moment you switch markets, even though this
+        // Profiles view (which spans every market in the lookback window) still lists them.
+        // Recompute strikes here from the same cross-market `data` this function already
+        // fetched, so Profiles always shows accurate strikes no matter which market is active.
+        if (isBuiltinEnabled('late_strike_tracking')) {
+            const freshStrikes = {};
+            data.forEach(app => {
+                const closeDate = eventCloseMap[app.event_id];
+                if (!closeDate) return;
+                const emailKey = normalizeStrikeEmail(app.preferred_email);
+                if (!emailKey) return;
+                const evName = eventMap[app.event_id] || 'Unknown Event';
+                const forgiven = (strikeOverrides[emailKey] || []).includes(evName);
+                if (new Date(app.created_at) > new Date(closeDate) && !forgiven) {
+                    if (!freshStrikes[emailKey]) freshStrikes[emailKey] = [];
+                    if (!freshStrikes[emailKey].includes(evName)) freshStrikes[emailKey].push(evName);
+                }
+            });
+            if (!window.vendorStrikes) window.vendorStrikes = {};
+            Object.keys(profilesMap).forEach(emailKey => {
+                window.vendorStrikes[emailKey] = freshStrikes[emailKey] || [];
+            });
+        }
 
         window.currentProfiles = profilesMap;
         renderProfilesTable();
