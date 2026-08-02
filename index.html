@@ -2978,6 +2978,7 @@
     // AI & Strike State
     const _aiCategoryCache = {}; // vendorId -> { categories, description }
     let isAIQueueRunning = false;
+    let aiSummaryRunning = false;
     const aiAnalyzingSet = new Set();
     const failedAIVendors = new Set(); 
     window.currentProfiles = {}; 
@@ -3828,25 +3829,49 @@
                 // Read historical AI tags if they exist
                 const notes = getParsedNotes(v.internal_notes);
                 const aiNote = notes.find(n => n.type === 'ai_analysis');
-                
+
                 if (aiNote && aiNote.ai_data) {
                     v.aiData = aiNote.ai_data;
                 }
-                
+
+                // Restore any previously-computed summary so it isn't re-requested from
+                // OpenRouter on every refresh (vendorsData is a fresh fetch each time, so
+                // an in-memory-only flag would never survive to the next refreshData call).
+                const summaryNote = notes.find(n => n.type === 'ai_summary');
+                if (summaryNote) v._aiSummary = summaryNote.text;
+
                 // Always recalculate categories from description (not using stored value)
                 v.autoCategories = extractVendorCategories(v.description || '');
                 if (v.autoCategories.length === 0) v.autoCategories = ['Crafts'];
             });
 
-            // AI Vendor Summary (non-blocking background task)
-            if (isBuiltinEnabled('ai_vendor_summary') && OPENROUTER_API_KEY) {
-                (async () => {
-                    const unsummarized = vendorsData.filter(v => !v._aiSummary && v.description);
-                    for (const v of unsummarized.slice(0, 20)) {
-                        v._aiSummary = await aiSummarizeVendor(v);
-                        await new Promise(r => setTimeout(r, 1500));
-                    }
-                })();
+            // AI Vendor Summary (non-blocking background task). Guarded against overlapping
+            // runs since realtime updates can call refreshData again before a prior pass finishes.
+            if (isBuiltinEnabled('ai_vendor_summary') && OPENROUTER_API_KEY && !aiSummaryRunning) {
+                const unsummarized = vendorsData.filter(v => !v._aiSummary && v.description);
+                if (unsummarized.length > 0) {
+                    aiSummaryRunning = true;
+                    (async () => {
+                        try {
+                            for (const v of unsummarized.slice(0, 20)) {
+                                const summary = await aiSummarizeVendor(v);
+                                if (!summary) continue;
+                                v._aiSummary = summary;
+                                const { data: freshV } = await _supabase.from('vendors').select('internal_notes').eq('id', v.id).single();
+                                const freshNotes = getParsedNotes(freshV?.internal_notes ?? v.internal_notes);
+                                if (freshNotes.some(n => n.type === 'ai_summary')) continue;
+                                freshNotes.unshift({
+                                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
+                                    date: new Date().toISOString(), text: summary, author: 'System', type: 'ai_summary'
+                                });
+                                await _supabase.from('vendors').update({ internal_notes: JSON.stringify(freshNotes) }).eq('id', v.id);
+                                await new Promise(r => setTimeout(r, 1500));
+                            }
+                        } finally {
+                            aiSummaryRunning = false;
+                        }
+                    })();
+                }
             }
 
             // AI Duplicate Detection (non-blocking)
