@@ -2391,7 +2391,7 @@
                 </div>
 
                 <!-- System Settings & API Keys -->
-                <div style="display: none; background: var(--card-bg); border: 0.5px solid var(--glass-border); padding: 25px; border-radius: var(--radius-card);">
+                <div style="background: var(--card-bg); border: 0.5px solid var(--glass-border); padding: 25px; border-radius: var(--radius-card);">
                     <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">System Configuration & API Keys</label>
                     <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Set your live website URL (to ensure email confirmation links work) and your AI/Email API keys here. Delivery tracking now scopes Brevo logs to each market using message IDs, tracking tags, and subject matching. These values are stored securely in Supabase (not GitHub).</p>
                     
@@ -3457,7 +3457,7 @@
                     const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                     
                     const scanTimeout = (getBuiltinSetting('ai_license_scan', 'timeout') || 15) * 1000;
-                    const scanModel = 'nvidia/nemotron-nano-12b-v2-vl:free';
+                    const scanModel = 'inclusionai/ling-3.0-flash:free';
 
                     const MAX_RETRIES = 2;
                     let lastApiError = null;
