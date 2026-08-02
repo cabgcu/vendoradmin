@@ -3242,9 +3242,13 @@
                 }
                 clearTimeout(_realtimeRefreshTimer);
                 console.log('Scheduling refreshData for realtime update');
-                _realtimeRefreshTimer = setTimeout(() => {
+                _realtimeRefreshTimer = setTimeout(async () => {
                     console.log('Executing refreshData from realtime event');
-                    refreshData(null, true);
+                    await refreshData(null, true);
+                    if (eventType === 'INSERT' && newRecord?.id) {
+                        const vendor = currentData.vendors.find(v => v.id === newRecord.id);
+                        if (vendor) fireAutomationTrigger('on_new_app', vendor);
+                    }
                 }, 500); // Faster than 2000ms
             })
             .subscribe((status, err) => {
@@ -3806,6 +3810,7 @@
         
         // Calculate the strikes before updating stats and rendering
         await calculateStrikes();
+        await checkScheduledAutomations();
         updateStats();
         buildCategoryDropdown();
         populateSettingsForm();
@@ -3892,7 +3897,8 @@
                         if (newCount > prevCount) {
                             const vendor = currentData.vendors.find(v => v.preferred_email === app.preferred_email && v.id === app.id);
                             if (vendor) {
-                                // Fire the matching strike trigger
+                                // Fire once for the late application itself, plus the matching cumulative-strike trigger
+                                fireAutomationTrigger('on_late_app', vendor);
                                 if (newCount === 1) fireAutomationTrigger('on_strike_1', vendor);
                                 else if (newCount === 2) fireAutomationTrigger('on_strike_2', vendor);
                                 else if (newCount >= 3) fireAutomationTrigger('on_strike_3', vendor);
@@ -7971,7 +7977,8 @@
         const delayUnit = document.getElementById('autoDelayUnit');
         if (delayVal && delayVal.value) { delay.value = parseInt(delayVal.value) || 0; delay.unit = delayUnit.value; }
 
-        const automation = { name, trigger, action, config, delay, enabled: true, created: new Date().toISOString() };
+        const existingId = editingAutomationIndex >= 0 ? automationsConfig.custom[editingAutomationIndex]?.id : null;
+        const automation = { id: existingId || (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString()), name, trigger, action, config, delay, enabled: true, created: new Date().toISOString() };
 
         if (editingAutomationIndex >= 0) {
             automationsConfig.custom[editingAutomationIndex] = automation;
@@ -8051,6 +8058,60 @@
                 }
             }
         }
+    }
+
+    // Date/schedule-based triggers (post_event, before_event, app_deadline) — checked on each data load.
+    // Fires at most once per automation per event, tracked in automationsConfig.scheduledFired.
+    async function checkScheduledAutomations() {
+        if (!automationsConfig.custom || automationsConfig.custom.length === 0) return;
+        const ev = currentData.activeEvent;
+        if (!ev || !currentData.activeId) return;
+
+        const scheduledAutos = automationsConfig.custom.filter(a => a.enabled && ['post_event', 'before_event', 'app_deadline'].includes(a.trigger));
+        if (scheduledAutos.length === 0) return;
+
+        const marketDate = ev.market_date ? new Date(ev.market_date) : null;
+        const deadline = ev.app_close ? new Date(ev.app_close) : null;
+        const now = new Date();
+
+        if (!automationsConfig.scheduledFired) automationsConfig.scheduledFired = {};
+        const eventKey = String(currentData.activeId);
+        if (!automationsConfig.scheduledFired[eventKey]) automationsConfig.scheduledFired[eventKey] = {};
+        const firedForEvent = automationsConfig.scheduledFired[eventKey];
+
+        let configChanged = false;
+
+        for (const auto of scheduledAutos) {
+            const autoKey = auto.id || auto.created || auto.name;
+            if (firedForEvent[autoKey]) continue; // already fired for this event
+
+            const unitMs = auto.delay?.unit === 'minutes' ? 60000 : auto.delay?.unit === 'hours' ? 3600000 : 86400000;
+            const offsetMs = (auto.delay?.value || 0) * unitMs;
+
+            let targetTime = null;
+            if (auto.trigger === 'post_event' && marketDate) targetTime = new Date(marketDate.getTime() + offsetMs);
+            else if (auto.trigger === 'before_event' && marketDate) targetTime = new Date(marketDate.getTime() - offsetMs);
+            else if (auto.trigger === 'app_deadline' && deadline) targetTime = new Date(deadline.getTime() + offsetMs);
+
+            if (!targetTime || now < targetTime) continue;
+
+            const target = auto.config?.target || 'all_active';
+            const vendors = currentData.vendors.filter(v => {
+                const status = (v.status || '').toLowerCase();
+                if (target === 'approved') return status === 'approved';
+                if (target === 'checked_in') return status === 'checked in';
+                if (target === 'denied') return status === 'denied';
+                if (target === 'pending') return status === 'pending';
+                if (target === 'all_active') return status === 'approved' || status === 'checked in';
+                return true; // 'all'
+            });
+
+            if (vendors.length > 0) await fireAutomationTrigger(auto.trigger, vendors);
+            firedForEvent[autoKey] = true;
+            configChanged = true;
+        }
+
+        if (configChanged) await saveAutomationsConfig();
     }
 
     // --- AI AUTOMATION GENERATION (using free local model) ---
