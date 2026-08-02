@@ -1467,6 +1467,84 @@
             color: #cc2d24;
             background: #fde8e7;
         }
+
+        /* Cabbie AI Assistant */
+        .cabbie-fab { position: fixed; right: 22px; bottom: 22px; z-index: 9998; width: 58px; height: 58px; border-radius: 50%;
+            background: var(--gradient-accent); border: 1px solid rgba(255,255,255,0.12); cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; box-shadow: 0 10px 30px rgba(79,70,229,0.5), 0 0 0 1px rgba(255,255,255,0.08); transition: transform 0.2s ease, box-shadow 0.2s ease;
+            touch-action: none; user-select: none; -webkit-user-select: none; }
+        .cabbie-fab:hover { transform: scale(1.07); box-shadow: 0 14px 36px rgba(79,70,229,0.65), 0 0 0 1px rgba(255,255,255,0.1); }
+        .cabbie-fab.hidden { display: none; }
+        .cabbie-overlay { position: fixed; inset: 0; z-index: 10000; opacity: 0; pointer-events: none; }
+        .cabbie-overlay.open { opacity: 1; pointer-events: auto; }
+        .cabbie-panel {
+            position: fixed; right: 22px; bottom: 96px; z-index: 10001;
+            width: 400px; max-width: calc(100vw - 32px);
+            height: min(min(640px, calc(100vh - 140px)), 720px);
+            background: var(--glass-surface);
+            backdrop-filter: blur(var(--blur)) saturate(110%);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(110%);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-card);
+            display: flex; flex-direction: column; overflow: hidden;
+            opacity: 0; transform: translateY(24px) scale(0.96); pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .cabbie-panel.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+        .cabbie-header { padding: 18px 64px 18px 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .cabbie-header-title { display: flex; align-items: center; gap: 10px; }
+        .cabbie-header-title .icon { width: 38px; height: 38px; border-radius: var(--radius-input); background: var(--gradient-accent); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; }
+        .cabbie-header h2 { margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
+        .cabbie-header .sub { margin: 0; font-size: 0.72rem; color: var(--text-muted); }
+        .cabbie-messages { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        .cabbie-msg {
+            max-width: 88%; padding: 11px 15px; border-radius: var(--radius-input); font-size: 0.88rem; line-height: 1.45;
+            white-space: pre-wrap; word-wrap: break-word;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25), inset 0 1px 1px rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
+        }
+        .cabbie-msg.user { align-self: flex-end; background: var(--gradient-accent); border: 1px solid rgba(255,255,255,0.12); color: #fff; }
+        .cabbie-msg.bot { align-self: flex-start; background: linear-gradient(160deg, rgba(35,35,45,0.6) 0%, rgba(15,15,20,0.4) 100%); border: 1px solid var(--glass-border); color: #eee; }
+        .cabbie-msg.system-note { align-self: center; background: none; box-shadow: none; backdrop-filter: none; color: var(--text-muted); font-size: 0.75rem; font-style: italic; text-align: center; padding: 4px 10px; }
+        .cabbie-msg.error { border-color: rgba(255,59,48,0.4); background: rgba(255,59,48,0.1); }
+        .cabbie-actions-tag { display: inline-block; margin-top: 6px; font-size: 0.7rem; padding: 3px 8px; border-radius: var(--radius-button); background: rgba(52,199,89,0.15); color: #34C759; border: 1px solid rgba(52,199,89,0.3); }
+        .cabbie-typing { align-self: flex-start; display: flex; gap: 4px; padding: 12px 16px; border-radius: var(--radius-input); background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); }
+        .cabbie-typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); animation: cabbie-bounce 1.2s infinite ease-in-out; }
+        .cabbie-typing span:nth-child(2) { animation-delay: 0.15s; }
+        .cabbie-typing span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes cabbie-bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-5px); opacity: 1; } }
+        .cabbie-input-area { padding: 14px; border-top: 1px solid var(--glass-border); flex-shrink: 0; display: flex; gap: 8px; align-items: flex-end; }
+        .cabbie-input-area textarea {
+            flex: 1; resize: none; max-height: 100px; width: auto;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: var(--radius-input);
+            color: #fff; padding: 12px 16px; font-size: 0.88rem !important; font-family: inherit; outline: none; transition: all 0.2s; box-sizing: border-box;
+        }
+        .cabbie-input-area textarea:focus { border-color: rgba(124,58,237,0.5); background: rgba(255,255,255,0.08); }
+        .cabbie-send-btn { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--gradient-accent); color: #fff; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        .cabbie-send-btn:active { transform: scale(0.94); }
+        .cabbie-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .cabbie-setup-note { margin: 14px 16px 0; padding: 12px 14px; border-radius: var(--radius-input); background: rgba(255,149,0,0.1); border: 1px solid rgba(255,149,0,0.3); color: #FF9500; font-size: 0.8rem; line-height: 1.4; }
+
+        .cabbie-close-btn { position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.5); border: none; color: #fff; font-size: 1.4rem; cursor: pointer; z-index: 10; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: 0.2s; flex-shrink: 0; }
+        .cabbie-close-btn:hover { background: rgba(0,0,0,0.8); transform: scale(1.05); }
+
+        /* FAB sits above the floating bottom nav bar on mobile so it never covers the nav */
+        @media (max-width: 900px) {
+            .cabbie-fab { right: 16px; bottom: calc(70px + env(safe-area-inset-bottom)); }
+
+            /* Full-screen chat on mobile */
+            .cabbie-panel {
+                right: 0; bottom: 0; left: 0; top: 0;
+                width: 100%; max-width: 100%; height: 100dvh; max-height: 100dvh;
+                border-radius: 0; border: none;
+                transform: translateY(100%) scale(1);
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            .cabbie-panel.open { transform: translateY(0) scale(1); }
+            .cabbie-close-btn { top: calc(16px + env(safe-area-inset-top)); right: 16px; width: 40px; height: 40px; font-size: 1.6rem; }
+        }
     </style>
 </head>
 <body>
@@ -3160,6 +3238,7 @@
 
     function handleLogout() {
         stopEmailStatusPolling();
+        resetCabbieChatState();
         localStorage.removeItem('cab_market_auth');
         location.reload();
     }
@@ -3202,6 +3281,7 @@
         }
 
         await loadAutomationsConfig();
+        updateCabbieVisibility();
         if (BREVO_API_KEY) testBrevoApiAccess();
         refreshData();
         setupRealtime();
@@ -7561,6 +7641,13 @@
             ]
         },
         {
+            id: 'cabbie_ai',
+            name: 'Cabbie AI Assistant',
+            description: 'Floating chat assistant that can answer questions about vendors and events, and make changes when asked (confirm attendance, set power status, add internal notes). Uses the OpenRouter API key configured above.',
+            icon: '🚕', color: '#7c3aed', defaultEnabled: true,
+            settings: []
+        },
+        {
             id: 'vendor_profiles_lookback',
             name: 'Vendor Profiles Archive',
             description: 'Controls the time period for vendor profiles and storage cleanup.',
@@ -7651,6 +7738,7 @@
             if (!current) { setupRealtime(); }
             else { if (realtimeSubscription) _supabase.removeChannel(realtimeSubscription); }
         }
+        if (id === 'cabbie_ai') updateCabbieVisibility();
 
         addAutomationLog(`${!current ? 'Enabled' : 'Disabled'} "${BUILTIN_AUTOMATIONS.find(a=>a.id===id)?.name}"`);
         showToast(`Automation ${!current ? 'enabled' : 'disabled'}`);
@@ -9294,6 +9382,454 @@
             _qrRaf = requestAnimationFrame(_scanFrame);
         }
     }
+
+    /* ============================= CABBIE AI ============================= */
+    const CABBIE_MODEL = 'inclusionai/ling-3.0-flash:free';
+    let cabbieHistory = [];
+    let cabbieBusy = false;
+
+    function updateCabbieVisibility() {
+        const fab = document.getElementById('cabbieFab');
+        if (!fab) return;
+        const enabled = isBuiltinEnabled('cabbie_ai');
+        fab.classList.toggle('hidden', !enabled);
+        initCabbieFabDrag();
+    }
+
+    function isCabbieMobileViewport() {
+        return window.innerWidth <= 900;
+    }
+
+    function clampCabbieFabPosition(left, top) {
+        const fab = document.getElementById('cabbieFab');
+        const size = fab ? fab.offsetWidth || 58 : 58;
+        const margin = 8;
+        const maxLeft = Math.max(margin, window.innerWidth - size - margin);
+        const maxTop = Math.max(margin, window.innerHeight - size - margin);
+        return { left: Math.min(Math.max(left, margin), maxLeft), top: Math.min(Math.max(top, margin), maxTop) };
+    }
+
+    function applyCabbieFabPosition(left, top) {
+        const fab = document.getElementById('cabbieFab');
+        if (!fab) return;
+        const clamped = clampCabbieFabPosition(left, top);
+        fab.style.left = clamped.left + 'px';
+        fab.style.top = clamped.top + 'px';
+        fab.style.right = 'auto';
+        fab.style.bottom = 'auto';
+    }
+
+    function applyCabbieFabLayout() {
+        const fab = document.getElementById('cabbieFab');
+        if (!fab) return;
+        if (!isCabbieMobileViewport()) {
+            fab.style.left = ''; fab.style.top = ''; fab.style.right = ''; fab.style.bottom = '';
+            return;
+        }
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem('cabbieFabPos') || 'null'); } catch (e) {}
+        if (saved && typeof saved.left === 'number' && typeof saved.top === 'number') {
+            applyCabbieFabPosition(saved.left, saved.top);
+        } else {
+            fab.style.left = ''; fab.style.top = ''; fab.style.right = ''; fab.style.bottom = '';
+        }
+    }
+
+    function initCabbieFabDrag() {
+        const fab = document.getElementById('cabbieFab');
+        if (!fab || fab.dataset.dragInit) return;
+        fab.dataset.dragInit = '1';
+        applyCabbieFabLayout();
+
+        let pointerDown = false, dragging = false, justDragged = false;
+        let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+        const DRAG_THRESHOLD = 6;
+
+        fab.addEventListener('pointerdown', (e) => {
+            if (!isCabbieMobileViewport()) return;
+            pointerDown = true;
+            dragging = false;
+            const rect = fab.getBoundingClientRect();
+            startX = e.clientX; startY = e.clientY;
+            startLeft = rect.left; startTop = rect.top;
+            try { fab.setPointerCapture(e.pointerId); } catch (err) {}
+        });
+
+        fab.addEventListener('pointermove', (e) => {
+            if (!pointerDown) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            if (!dragging && Math.hypot(dx, dy) > DRAG_THRESHOLD) dragging = true;
+            if (dragging) applyCabbieFabPosition(startLeft + dx, startTop + dy);
+        });
+
+        function endDrag() {
+            if (!pointerDown) return;
+            pointerDown = false;
+            if (dragging) {
+                const rect = fab.getBoundingClientRect();
+                try { localStorage.setItem('cabbieFabPos', JSON.stringify({ left: rect.left, top: rect.top })); } catch (e) {}
+                justDragged = true;
+                setTimeout(() => { justDragged = false; }, 50);
+            }
+            dragging = false;
+        }
+        fab.addEventListener('pointerup', endDrag);
+        fab.addEventListener('pointercancel', endDrag);
+
+        fab.addEventListener('click', (e) => {
+            if (justDragged) { e.preventDefault(); e.stopPropagation(); return; }
+            toggleCabbiePanel();
+        });
+
+        window.addEventListener('resize', applyCabbieFabLayout);
+    }
+
+    function toggleCabbiePanel() {
+        const panel = document.getElementById('cabbiePanel');
+        const overlay = document.getElementById('cabbieOverlay');
+        if (!panel || !overlay) return;
+        const opening = !panel.classList.contains('open');
+        panel.classList.toggle('open');
+        overlay.classList.toggle('open');
+        if (opening) {
+            const note = document.getElementById('cabbieSetupNote');
+            if (note) note.style.display = OPENROUTER_API_KEY ? 'none' : 'block';
+            const messages = document.getElementById('cabbieMessages');
+            if (messages && messages.children.length === 0) {
+                const name = currentUser && currentUser.name ? ' ' + currentUser.name.split(' ')[0] : '';
+                appendCabbieMessage('bot', `Hey${name}! I'm Cabbie AI 🚕. Ask me about vendors, attendance, power requests, or applications on this event — or tell me to make a change, like "confirm attendance for Sunset Tacos" or "add a note to Java Jane saying they need a new food license".`);
+            }
+            const input = document.getElementById('cabbieInput');
+            if (input) setTimeout(() => input.focus(), 300);
+        }
+    }
+
+    function clearCabbieChat() {
+        cabbieHistory = [];
+        const list = document.getElementById('cabbieMessages');
+        if (list) list.innerHTML = '';
+        appendCabbieMessage('bot', `Chat cleared. What would you like to know about this event's vendors?`);
+    }
+
+    // Cabbie's chat only ever lives in this tab's memory (never saved to Supabase),
+    // so wipe it on logout to stop one admin's conversation from being visible to
+    // whoever logs in next on the same device.
+    function resetCabbieChatState() {
+        cabbieHistory = [];
+        const messages = document.getElementById('cabbieMessages');
+        if (messages) messages.innerHTML = '';
+        const panel = document.getElementById('cabbiePanel');
+        const overlay = document.getElementById('cabbieOverlay');
+        if (panel) panel.classList.remove('open');
+        if (overlay) overlay.classList.remove('open');
+    }
+
+    function handleCabbieKeydown(evt) {
+        if (evt.key === 'Enter' && !evt.shiftKey) {
+            evt.preventDefault();
+            sendCabbieMessage();
+        }
+    }
+
+    function escapeCabbieHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str == null ? '' : String(str);
+        return div.innerHTML;
+    }
+
+    function appendCabbieMessage(role, text, opts) {
+        const list = document.getElementById('cabbieMessages');
+        if (!list) return;
+        const el = document.createElement('div');
+        el.className = 'cabbie-msg ' + (role === 'user' ? 'user' : (opts && opts.error ? 'bot error' : 'bot'));
+        el.innerHTML = escapeCabbieHtml(text).replace(/\n/g, '<br>');
+        if (opts && opts.actionCount) {
+            const tag = document.createElement('span');
+            tag.className = 'cabbie-actions-tag';
+            tag.textContent = `✓ ${opts.actionCount} change${opts.actionCount === 1 ? '' : 's'} made`;
+            el.appendChild(document.createElement('br'));
+            el.appendChild(tag);
+        }
+        list.appendChild(el);
+        list.scrollTop = list.scrollHeight;
+    }
+
+    function showCabbieTyping() {
+        const list = document.getElementById('cabbieMessages');
+        if (!list) return;
+        const el = document.createElement('div');
+        el.className = 'cabbie-typing';
+        el.id = 'cabbieTypingIndicator';
+        el.innerHTML = '<span></span><span></span><span></span>';
+        list.appendChild(el);
+        list.scrollTop = list.scrollHeight;
+    }
+
+    function hideCabbieTyping() {
+        const el = document.getElementById('cabbieTypingIndicator');
+        if (el) el.remove();
+    }
+
+    function cabbieVendorLabel(v) {
+        const name = [v.first_name, v.last_name].filter(Boolean).join(' ');
+        return v.business_name ? `${v.business_name}${name ? ' (' + name + ')' : ''}` : (name || 'Unnamed vendor');
+    }
+
+    function findCabbieVendor(query) {
+        if (!query) return null;
+        const vendors = currentData.vendors || [];
+        const q = String(query).trim().toLowerCase();
+        const nameOf = v => cabbieVendorLabel(v).toLowerCase();
+        let match = vendors.find(v => (v.business_name || '').toLowerCase() === q);
+        if (!match) match = vendors.find(v => nameOf(v) === q);
+        if (!match) match = vendors.find(v => (v.business_name || '').toLowerCase().includes(q));
+        if (!match) match = vendors.find(v => nameOf(v).includes(q));
+        if (!match) match = vendors.find(v => q.includes((v.business_name || '').toLowerCase()) && v.business_name);
+        return match || null;
+    }
+
+    function buildCabbieContext() {
+        const now = new Date();
+        const lines = [];
+        lines.push(`Today's date: ${now.toISOString().slice(0,10)} (${now.toLocaleDateString('en-US',{weekday:'long'})}).`);
+        const eventName = currentData.activeEvent ? currentData.activeEvent.name : null;
+        if (!eventName) {
+            lines.push('No active market event is selected right now.');
+            return lines.join('\n');
+        }
+        lines.push(`Active market event: "${eventName}".`);
+        const vendors = currentData.vendors || [];
+        lines.push(`There are ${vendors.length} vendor applications for this event.`);
+        const stripHtml = html => (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        const vendorLines = vendors.slice(0, 400).map(v => {
+            const parts = [`- "${cabbieVendorLabel(v)}"`, `status: ${v.status || 'Pending'}`];
+            parts.push(`attendance: ${getAttendanceState(v)}`);
+            parts.push(`power: ${v.needs_power === 'Yes' ? (v.power_confirmed ? 'needs power (confirmed)' : 'needs power (unconfirmed)') : 'no power needed'}`);
+            if (v.food_license) parts.push(`food license: ${v.food_license}`);
+            if (v.preferred_email || v.gcu_email) parts.push(`email: ${v.preferred_email || v.gcu_email}`);
+            if (v.phone) parts.push(`phone: ${v.phone}`);
+            const desc = stripHtml(v.description).slice(0, 240);
+            if (desc) parts.push(`description: ${desc}${stripHtml(v.description).length > 240 ? '…' : ''}`);
+            const notes = getParsedNotes(v.internal_notes).filter(n => n.type !== 'ai_analysis').slice(0, 3);
+            if (notes.length) parts.push(`recent notes: ${notes.map(n => n.text).join(' | ')}`);
+            return parts.join(' | ');
+        });
+        lines.push('Vendors:');
+        lines.push(vendorLines.join('\n') || '(no vendors yet)');
+        return lines.join('\n');
+    }
+
+    function cabbieAppKnowledge() {
+        return [
+            `- Approve, mark Needs Review, or Deny a vendor: on the Vendors list, click "Approve" / "Needs Review" / "Deny" on that vendor's card (clicking the active one again resets it to Pending). Needs Review and Deny require a reason comment.`,
+            `- Confirm/decline a vendor's attendance or power request as an admin: open the vendor's review modal and use the comment box, or ask Cabbie to do it directly.`,
+            `- Add an internal note/comment on a vendor: open the vendor -> review modal -> type in the new comment box at the bottom -> Add.`,
+            `- Delete a comment: in the vendor's review modal, click "Delete" next to that comment.`,
+            `- Filter vendors: the filter tabs (All, New, Approved, Review, Power, Denied) above the table, plus the search bar (matches student ID, name, email, description) and the dropdown filter (power needed, food license, attendance state, category).`,
+            `- Switch or create a market event: the event dropdown in the topbar switches events; Settings -> Event Setup creates/edits events.`,
+            `- Send vendor emails: Settings -> Email Templates lets you edit the approved/denied/power templates; individual emails can be sent from a vendor's row, and automations can auto-send on approve/deny.`,
+            `- Export data: Settings -> System & Data -> "Download Full CSV Backup" (all data) or "Download Checked-In Vendors (CSV)" (checked-in only).`,
+            `- Manage admins/users: Settings -> User Management.`,
+            `- Customize the public vendor application form: Settings -> Form Builder.`,
+            `- Configure automations and built-in AI features (including turning Cabbie AI itself on/off): Settings -> Automations.`,
+            `- Change the admin password: Settings -> System & Data -> Change Admin Password.`,
+            `- Clean up old storage/files: Settings -> System & Data -> Delete Old Files.`,
+            `- Check vendors in at the market: the "Check In" nav button opens the QR/manual check-in scanner.`
+        ].join('\n');
+    }
+
+    function cabbieSystemPrompt() {
+        return [
+            `You are "Cabbie AI", an assistant that lives inside a vendor admin portal web app used by a student Campus Activities Board (CAB) to manage vendor applications for student markets. You were built by Chris Hinojosa — only mention this if someone explicitly asks who made/built/created you; never bring it up on your own.`,
+            `Your ONLY job is to help with THIS app: its features (how to do things in it) and its data (vendor applications, statuses, attendance, power requests, food licenses, internal notes, events, users/admins, automations). You know nothing else and have no other purpose. If someone asks something unrelated to this app (general trivia, coding help, other topics), politely decline and steer them back to what you can help with here.`,
+            `You can ANSWER questions about the vendor data below, EXPLAIN how to do something in the app using the HOW THIS APP WORKS reference below (e.g. "how do I approve a vendor", "where do I export a CSV"), and EXECUTE actions when asked (e.g. "confirm attendance for X", "mark that they no longer need power", "add a note to X saying...").`,
+            `When a question is about how to use the app (a "how do I..." / "where is..." question about a feature, not about a specific vendor's data), answer directly from the HOW THIS APP WORKS reference with "actions": []. Don't say you don't know how the app works — that reference covers the app's main features.`,
+            ``,
+            `HOW THIS APP WORKS (use this to answer "how do I..." / "where is..." questions about the app itself):`,
+            cabbieAppKnowledge(),
+            ``,
+            `CURRENT EVENT DATA:`,
+            buildCabbieContext(),
+            ``,
+            `You MUST reply with ONLY a single valid JSON object, no markdown fences, no commentary outside the JSON, matching exactly this shape:`,
+            `{"reply": "<short friendly message to show the user>", "actions": [<zero or more action objects>]}`,
+            `Each action object has a "type" field plus parameters. Supported action types:`,
+            `- {"type":"set_attendance","vendor":"<business/vendor name or close match>","confirmed":true|false}`,
+            `- {"type":"set_power","vendor":"<business/vendor name>","needed":true|false}`,
+            `- {"type":"add_note","vendor":"<business/vendor name>","text":"<note text>"}`,
+            `If the user is just asking a question, return "actions": [] and put the full answer in "reply", grounded strictly in the CURRENT EVENT DATA above. If you can't find a vendor that matches what they asked for, say so in "reply" instead of guessing an action. Never invent data that isn't in the vendor data.`
+        ].join('\n');
+    }
+
+    async function executeCabbieAction(action) {
+        const vendor = findCabbieVendor(action.vendor);
+        if (!vendor) return { ok: false, msg: `Couldn't find a vendor matching "${action.vendor}".` };
+
+        switch (action.type) {
+            case 'set_attendance': {
+                const confirmed = !!action.confirmed;
+                const { error } = await _supabase.from('vendors').update({ attendance_confirmed: confirmed }).eq('id', vendor.id);
+                if (error) return { ok: false, msg: `Failed to update attendance for "${cabbieVendorLabel(vendor)}".` };
+                vendor.attendance_confirmed = confirmed;
+                return { ok: true, msg: `Marked "${cabbieVendorLabel(vendor)}" as ${confirmed ? 'attending' : 'not attending'}.` };
+            }
+            case 'set_power': {
+                const needed = !!action.needed;
+                const updates = { needs_power: needed ? 'Yes' : 'No', power_confirmed: needed };
+                const { error } = await _supabase.from('vendors').update(updates).eq('id', vendor.id);
+                if (error) return { ok: false, msg: `Failed to update power status for "${cabbieVendorLabel(vendor)}".` };
+                vendor.needs_power = updates.needs_power;
+                vendor.power_confirmed = updates.power_confirmed;
+                return { ok: true, msg: `Set power status for "${cabbieVendorLabel(vendor)}" to ${needed ? 'needs power' : 'no power needed'}.` };
+            }
+            case 'add_note': {
+                if (!action.text) return { ok: false, msg: 'Missing note text.' };
+                const comments = getParsedNotes(vendor.internal_notes);
+                const author = (currentUser && currentUser.name ? currentUser.name : 'Admin') + ' (via Cabbie AI)';
+                comments.unshift({
+                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
+                    date: new Date().toISOString(),
+                    text: action.text, author, type: 'manual'
+                });
+                const newNotesStr = JSON.stringify(comments);
+                const { error } = await _supabase.from('vendors').update({ internal_notes: newNotesStr }).eq('id', vendor.id);
+                if (error) return { ok: false, msg: `Failed to add note to "${cabbieVendorLabel(vendor)}".` };
+                vendor.internal_notes = newNotesStr;
+                return { ok: true, msg: `Added a note to "${cabbieVendorLabel(vendor)}".` };
+            }
+            default:
+                return { ok: false, msg: `Unknown action "${action.type}".` };
+        }
+    }
+
+    function parseCabbieResponse(content) {
+        let raw = (content || '').trim();
+        raw = raw.replace(/^```(json)?/i, '').replace(/```$/, '').trim();
+        try {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') {
+                return { reply: parsed.reply || '', actions: Array.isArray(parsed.actions) ? parsed.actions : [] };
+            }
+        } catch (e) {
+            const match = raw.match(/\{[\s\S]*\}/);
+            if (match) {
+                try {
+                    const parsed = JSON.parse(match[0]);
+                    return { reply: parsed.reply || '', actions: Array.isArray(parsed.actions) ? parsed.actions : [] };
+                } catch (e2) { /* fall through */ }
+            }
+        }
+        return { reply: raw, actions: [] };
+    }
+
+    async function sendCabbieMessage() {
+        if (cabbieBusy) return;
+        const input = document.getElementById('cabbieInput');
+        if (!input) return;
+        const text = input.value.trim();
+        if (!text) return;
+
+        if (!OPENROUTER_API_KEY) {
+            appendCabbieMessage('user', text);
+            input.value = ''; input.style.height = 'auto';
+            appendCabbieMessage('bot', "I'm not connected yet — ask an admin to add an OpenRouter API key in Settings → System & Data.", { error: true });
+            return;
+        }
+
+        appendCabbieMessage('user', text);
+        cabbieHistory.push({ role: 'user', content: text });
+        input.value = ''; input.style.height = 'auto';
+        cabbieBusy = true;
+        const sendBtn = document.getElementById('cabbieSendBtn');
+        if (sendBtn) sendBtn.disabled = true;
+        showCabbieTyping();
+
+        try {
+            const messages = [
+                { role: 'system', content: cabbieSystemPrompt() },
+                ...cabbieHistory.slice(-16)
+            ];
+            const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + OPENROUTER_API_KEY,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': location.origin || 'https://cabvendoradmin.app',
+                    'X-Title': 'Cabbie AI - Vendor Admin'
+                },
+                body: JSON.stringify({
+                    model: CABBIE_MODEL,
+                    messages,
+                    temperature: 0.3,
+                    max_tokens: 900
+                })
+            });
+
+            if (!resp.ok) {
+                const errText = await resp.text().catch(() => '');
+                throw new Error(`OpenRouter error ${resp.status}: ${errText.slice(0, 200)}`);
+            }
+            const data = await resp.json();
+            const content = data?.choices?.[0]?.message?.content || '';
+            const { reply, actions } = parseCabbieResponse(content);
+
+            let executedCount = 0;
+            const failures = [];
+            for (const action of actions) {
+                if (!action || !action.type) continue;
+                const result = await executeCabbieAction(action);
+                if (result.ok) executedCount++;
+                else failures.push(result.msg);
+            }
+            if (executedCount > 0) {
+                updateStats();
+                renderTable();
+                if (currentReviewingId) {
+                    const reviewedVendor = currentData.vendors.find(v => v.id === currentReviewingId);
+                    if (reviewedVendor) renderCommentsFeed(reviewedVendor);
+                }
+            }
+
+            let finalReply = reply || "Done.";
+            if (failures.length) finalReply += `\n\n⚠️ ${failures.join(' ')}`;
+            cabbieHistory.push({ role: 'assistant', content: content });
+            hideCabbieTyping();
+            appendCabbieMessage('bot', finalReply, executedCount > 0 ? { actionCount: executedCount } : undefined);
+        } catch (err) {
+            console.error('Cabbie AI error:', err);
+            hideCabbieTyping();
+            appendCabbieMessage('bot', `Sorry, I ran into an error talking to OpenRouter: ${err.message || err}`, { error: true });
+        } finally {
+            cabbieBusy = false;
+            if (sendBtn) sendBtn.disabled = false;
+        }
+    }
 </script>
+
+<!-- Cabbie AI Assistant -->
+<button class="cabbie-fab" id="cabbieFab" aria-label="Cabbie AI" title="Ask Cabbie AI">🚕</button>
+<div class="cabbie-overlay" id="cabbieOverlay" onclick="toggleCabbiePanel()"></div>
+<div class="cabbie-panel" id="cabbiePanel">
+    <div class="cabbie-header">
+        <div class="cabbie-header-title">
+            <div class="icon">🚕</div>
+            <div>
+                <h2>Cabbie AI</h2>
+                <p class="sub">Your vendor admin assistant</p>
+            </div>
+        </div>
+        <button class="btn-amber-outline" style="padding:4px 10px; font-size:0.75rem; border-color:rgba(255,59,48,0.4); color:#FF3B30;" onclick="clearCabbieChat()">Clear</button>
+    </div>
+    <button class="cabbie-close-btn" onclick="toggleCabbiePanel()" aria-label="Close">&times;</button>
+    <div id="cabbieSetupNote" class="cabbie-setup-note" style="display:none;">
+        Cabbie AI isn't connected yet. Ask an admin to add an OpenRouter API key in Settings → System.
+    </div>
+    <div class="cabbie-messages" id="cabbieMessages"></div>
+    <div class="cabbie-input-area">
+        <textarea id="cabbieInput" rows="1" placeholder="Ask about vendors, attendance, power…" onkeydown="handleCabbieKeydown(event)" oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,100)+'px';"></textarea>
+        <button class="cabbie-send-btn" id="cabbieSendBtn" onclick="sendCabbieMessage()" aria-label="Send">➤</button>
+    </div>
+</div>
 </body>
 </html>
