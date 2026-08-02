@@ -9600,7 +9600,7 @@
         }
         lines.push(`Active market event: "${eventName}".`);
         const vendors = currentData.vendors || [];
-        lines.push(`There are ${vendors.length} vendor applications for this event.`);
+        lines.push(`There are ${vendors.length} vendor applications for this event. This is the ONLY market you can see or act on — vendors from any other market/event are not listed here and are off-limits.`);
         const stripHtml = html => (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
         const vendorLines = vendors.slice(0, 400).map(v => {
             const parts = [`- "${cabbieVendorLabel(v)}"`, `status: ${v.status || 'Pending'}`];
@@ -9643,8 +9643,10 @@
         return [
             `You are "Cabbie AI", an assistant that lives inside a vendor admin portal web app used by a student Campus Activities Board (CAB) to manage vendor applications for student markets. You were built by Chris Hinojosa — only mention this if someone explicitly asks who made/built/created you; never bring it up on your own.`,
             `Your ONLY job is to help with THIS app: its features (how to do things in it) and its data (vendor applications, statuses, attendance, power requests, food licenses, internal notes, events, users/admins, automations). You know nothing else and have no other purpose. If someone asks something unrelated to this app (general trivia, coding help, other topics), politely decline and steer them back to what you can help with here.`,
-            `You can ANSWER questions about the vendor data below, EXPLAIN how to do something in the app using the HOW THIS APP WORKS reference below (e.g. "how do I approve a vendor", "where do I export a CSV"), and EXECUTE actions when asked (e.g. "confirm attendance for X", "mark that they no longer need power", "add a note to X saying...").`,
+            `You can ANSWER questions about the vendor data below, EXPLAIN how to do something in the app using the HOW THIS APP WORKS reference below (e.g. "how do I approve a vendor", "where do I export a CSV"), and EXECUTE actions when asked (e.g. "confirm attendance for X", "mark that they no longer need power", "approve X", "deny X because...", "email X", "add a note to X saying...").`,
             `When a question is about how to use the app (a "how do I..." / "where is..." question about a feature, not about a specific vendor's data), answer directly from the HOW THIS APP WORKS reference with "actions": []. Don't say you don't know how the app works — that reference covers the app's main features.`,
+            `CRITICAL SCOPING RULE: you can only see and act on vendors for the ONE market event currently open in the admin's view (listed in CURRENT EVENT DATA below). Never claim knowledge of, or take action on, vendors from any other market/event — you have no visibility into other markets at all. If asked about another market, say you can only help with the one currently open.`,
+            `Denying a vendor or marking them "Needs Review" always requires a short reason — if the user didn't give one, ask for it in "reply" and return "actions": [] rather than guessing a reason.`,
             ``,
             `HOW THIS APP WORKS (use this to answer "how do I..." / "where is..." questions about the app itself):`,
             cabbieAppKnowledge(),
@@ -9658,6 +9660,8 @@
             `- {"type":"set_attendance","vendor":"<business/vendor name or close match>","confirmed":true|false}`,
             `- {"type":"set_power","vendor":"<business/vendor name>","needed":true|false}`,
             `- {"type":"add_note","vendor":"<business/vendor name>","text":"<note text>"}`,
+            `- {"type":"set_status","vendor":"<business/vendor name>","status":"Pending"|"Approved"|"Needs Review"|"Denied"|"Checked In","reason":"<required for Denied/Needs Review, optional otherwise>"}`,
+            `- {"type":"send_email","vendor":"<business/vendor name>","template":"approved"|"denied"|"power"|"power_denied" (optional — omit to auto-pick based on the vendor's current status)}`,
             `If the user is just asking a question, return "actions": [] and put the full answer in "reply", grounded strictly in the CURRENT EVENT DATA above. If you can't find a vendor that matches what they asked for, say so in "reply" instead of guessing an action. Never invent data that isn't in the vendor data.`
         ].join('\n');
     }
@@ -9665,6 +9669,12 @@
     async function executeCabbieAction(action) {
         const vendor = findCabbieVendor(action.vendor);
         if (!vendor) return { ok: false, msg: `Couldn't find a vendor matching "${action.vendor}".` };
+        // Defense in depth: findCabbieVendor only ever searches currentData.vendors, which
+        // refreshData() already scopes to the active market via `event_id`, but this guards
+        // against Cabbie ever touching a vendor from a different market if that ever changes.
+        if (vendor.event_id && currentData.activeId && vendor.event_id !== currentData.activeId) {
+            return { ok: false, msg: `"${cabbieVendorLabel(vendor)}" isn't part of the currently open market.` };
+        }
 
         switch (action.type) {
             case 'set_attendance': {
@@ -9697,6 +9707,41 @@
                 if (error) return { ok: false, msg: `Failed to add note to "${cabbieVendorLabel(vendor)}".` };
                 vendor.internal_notes = newNotesStr;
                 return { ok: true, msg: `Added a note to "${cabbieVendorLabel(vendor)}".` };
+            }
+            case 'set_status': {
+                const validStatuses = ['Pending', 'Approved', 'Needs Review', 'Denied', 'Checked In'];
+                const status = validStatuses.includes(action.status) ? action.status : null;
+                if (!status) return { ok: false, msg: `"${action.status}" isn't a valid status.` };
+                if ((status === 'Denied' || status === 'Needs Review') && !action.reason) {
+                    return { ok: false, msg: `A reason is needed to mark "${cabbieVendorLabel(vendor)}" as ${status} — ask what to note before trying again.` };
+                }
+                const updates = { status };
+                if (action.reason) {
+                    const comments = getParsedNotes(vendor.internal_notes);
+                    comments.unshift({
+                        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
+                        date: new Date().toISOString(),
+                        text: action.reason, author: 'System', type: 'status_change', status
+                    });
+                    updates.internal_notes = JSON.stringify(comments);
+                }
+                const { error } = await _supabase.from('vendors').update(updates).eq('id', vendor.id);
+                if (error) return { ok: false, msg: `Failed to update status for "${cabbieVendorLabel(vendor)}".` };
+                vendor.status = status;
+                if (updates.internal_notes) vendor.internal_notes = updates.internal_notes;
+                if (status === 'Approved') fireAutomationTrigger('on_approve', vendor);
+                if (status === 'Denied') fireAutomationTrigger('on_deny', vendor);
+                return { ok: true, msg: `Marked "${cabbieVendorLabel(vendor)}" as ${status}.` };
+            }
+            case 'send_email': {
+                if (currentUser.role !== 'admin') return { ok: false, msg: 'Only admins can send emails.' };
+                if (!BREVO_API_KEY) return { ok: false, msg: 'Brevo API key is not configured in Settings, so emails cannot be sent yet.' };
+                if (!vendor.preferred_email) return { ok: false, msg: `"${cabbieVendorLabel(vendor)}" doesn't have an email on file.` };
+                const validTemplates = ['approved', 'denied', 'power', 'power_denied'];
+                const forceTemplateId = validTemplates.includes(action.template) ? action.template : null;
+                const sent = await sendSingleEmail(vendor, forceTemplateId);
+                if (!sent) return { ok: false, msg: `Couldn't send an email to "${cabbieVendorLabel(vendor)}" — check their status and email templates.` };
+                return { ok: true, msg: `Sent an email to "${cabbieVendorLabel(vendor)}".` };
             }
             default:
                 return { ok: false, msg: `Unknown action "${action.type}".` };
