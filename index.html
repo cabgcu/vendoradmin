@@ -9751,16 +9751,18 @@
         return match || null;
     }
 
-    // Cross-market vendor lookup, used ONLY so Cabbie can answer questions about a specific
-    // named past vendor (e.g. "has Sunset Tacos applied before?"). Cached per session (cleared
-    // on logout) since it's read-only history, unlike currentData.vendors which stays scoped to
-    // the active market for everything else Cabbie does (context, matching, actions).
+    // Cross-market vendor lookup, used so Cabbie can answer questions about a specific named
+    // vendor's FULL profile — what they sell, every market they've applied to, and their late
+    // strike history — even for markets that aren't currently active. Cached per session
+    // (cleared on logout) since it's read-only history, unlike currentData.vendors which stays
+    // scoped to the active market for everything Cabbie can actually ACT on (context, matching,
+    // actions) — Cabbie may know about any vendor, but can only control the current market.
     let cabbiePastVendorCache = null;
 
     async function ensureCabbiePastVendorCache() {
         if (cabbiePastVendorCache) return cabbiePastVendorCache;
         const { data, error } = await _supabase.from('vendors')
-            .select('id, business_name, first_name, last_name, preferred_email, gcu_email, event_id, status, created_at')
+            .select('id, business_name, first_name, last_name, preferred_email, gcu_email, phone, description, event_id, status, created_at')
             .order('created_at', { ascending: false })
             .limit(2000);
         cabbiePastVendorCache = error ? [] : (data || []);
@@ -9768,15 +9770,14 @@
     }
 
     // Only surfaces vendors the admin's message actually names (same substring-containment
-    // approach as findCabbieVendor's last fallback) and who aren't already part of the active
-    // market — so a plain question about today's vendors never pulls in other markets' data.
+    // approach as findCabbieVendor's last fallback) — so a plain question about today's vendors
+    // never pulls in other markets' data. Groups every application (in the active market or not)
+    // for that vendor so their full cross-market profile can be built.
     function findCabbiePastVendorGroups(userText) {
         if (!cabbiePastVendorCache || !userText) return [];
         const q = String(userText).toLowerCase();
-        const currentIds = new Set((currentData.vendors || []).map(v => v.id));
         const groups = new Map();
         cabbiePastVendorCache.forEach(v => {
-            if (currentIds.has(v.id)) return;
             const bizName = (v.business_name || '').toLowerCase().trim();
             const fullName = cabbieVendorLabel(v).toLowerCase().trim();
             const nameToMatch = bizName.length > 2 ? bizName : (fullName.length > 2 ? fullName : '');
@@ -9788,20 +9789,47 @@
         return Array.from(groups.values());
     }
 
+    // Builds a full cross-market profile for one vendor (all applications for the same
+    // person/business): what they sell, every market applied to with status, and late strike
+    // history — mirroring the Vendor Profiles page, just scoped to this one named vendor.
+    function buildCabbieVendorProfile(apps) {
+        const stripHtml = html => (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        apps = apps.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const latest = apps[0];
+        const eventMap = {}, eventCloseMap = {};
+        (currentData.allEvents || []).forEach(e => { eventMap[e.id] = e.name; eventCloseMap[e.id] = e.app_close; });
+
+        const catSet = new Set();
+        apps.forEach(a => extractVendorCategories(a.description || '').forEach(c => catSet.add(c)));
+
+        const emailKey = normalizeStrikeEmail(latest.preferred_email || latest.gcu_email);
+        const strikes = [];
+        apps.forEach(a => {
+            const closeDate = eventCloseMap[a.event_id];
+            const evName = eventMap[a.event_id] || 'an earlier market';
+            if (!closeDate) return;
+            const forgiven = (strikeOverrides[emailKey] || []).includes(evName);
+            if (new Date(a.created_at) > new Date(closeDate) && !forgiven && !strikes.includes(evName)) strikes.push(evName);
+        });
+
+        const history = apps.map(a => `${eventMap[a.event_id] || 'an earlier market'} (status: ${a.status || 'Pending'})`).join(', ');
+        const desc = stripHtml(latest.description).slice(0, 240);
+        const parts = [`- "${cabbieVendorLabel(latest)}"`, `sells: ${Array.from(catSet).join(', ') || 'Crafts'}`];
+        if (desc) parts.push(`description: ${desc}`);
+        parts.push(`markets applied to (${apps.length}): ${history}`);
+        parts.push(`late strikes: ${strikes.length ? strikes.join(', ') : 'none'}`);
+        if (latest.preferred_email || latest.gcu_email) parts.push(`email: ${latest.preferred_email || latest.gcu_email}`);
+        if (latest.phone) parts.push(`phone: ${latest.phone}`);
+        return parts.join(' | ');
+    }
+
     async function buildCabbiePastVendorContext(userText) {
         await ensureCabbiePastVendorCache();
         const groups = findCabbiePastVendorGroups(userText);
         if (!groups.length) return '';
-        const eventMap = {};
-        (currentData.allEvents || []).forEach(e => { eventMap[e.id] = e.name; });
-        const lines = groups.slice(0, 3).map(apps => {
-            apps.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            const label = cabbieVendorLabel(apps[0]);
-            const history = apps.map(a => `${eventMap[a.event_id] || 'an earlier market'} (status: ${a.status || 'Pending'})`).join(', ');
-            return `- "${label}" — past applications: ${history}.`;
-        });
+        const lines = groups.slice(0, 3).map(buildCabbieVendorProfile);
         return [
-            `PAST VENDOR LOOKUP (these vendors were explicitly named by the admin, so you may answer about their history — but do not assume knowledge of any OTHER vendor beyond CURRENT EVENT DATA and this list):`,
+            `VENDOR PROFILE LOOKUP (full cross-market history for vendors explicitly named by the admin — you know everything about them: what they sell, every market they've applied to and its status, and late strike history. You do NOT have general visibility into every past vendor at once — only ones named here or in CURRENT EVENT DATA. Remember: you can ANSWER about any of these vendors, but you can only ACT on vendors that are part of CURRENT EVENT DATA — never take an action on a vendor from a past/other market):`,
             lines.join('\n')
         ].join('\n');
     }
@@ -9817,7 +9845,7 @@
         }
         lines.push(`Active market event: "${eventName}".`);
         const vendors = currentData.vendors || [];
-        lines.push(`There are ${vendors.length} vendor applications for this event. This is the ONLY market you can see or act on — vendors from any other market/event are not listed here and are off-limits.`);
+        lines.push(`There are ${vendors.length} vendor applications for this event. This is the ONLY market you can ACT on — vendors from any other market/event are not listed here and are off-limits for actions (though you may know about a specific one if a VENDOR PROFILE LOOKUP section is present below).`);
         const stripHtml = html => (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
         const vendorLines = vendors.slice(0, 400).map(v => {
             const parts = [`- "${cabbieVendorLabel(v)}"`, `status: ${v.status || 'Pending'}`];
@@ -9863,7 +9891,7 @@
             `Your ONLY job is to help with THIS app: its features (how to do things in it) and its data (vendor applications, statuses, attendance, power requests, food licenses, internal notes, events, users/admins, automations). You know nothing else and have no other purpose. If someone asks something unrelated to this app (general trivia, coding help, other topics), politely decline and steer them back to what you can help with here.`,
             `You can ANSWER questions about the vendor data below, EXPLAIN how to do something in the app using the HOW THIS APP WORKS reference below (e.g. "how do I approve a vendor", "where do I export a CSV"), and EXECUTE actions when asked (e.g. "confirm attendance for X", "mark that they no longer need power", "approve X", "deny X because...", "email X", "add a note to X saying...").`,
             `When a question is about how to use the app (a "how do I..." / "where is..." question about a feature, not about a specific vendor's data), answer directly from the HOW THIS APP WORKS reference with "actions": []. Don't say you don't know how the app works — that reference covers the app's main features.`,
-            `CRITICAL SCOPING RULE: your default focus is the ONE market event currently open in the admin's view (listed in CURRENT EVENT DATA below), and you can only ACT on vendors in that market — never take an action on a vendor from another market/event. For general or open-ended questions ("who needs power", "what's pending"), only ever answer from CURRENT EVENT DATA. The ONE exception: if the admin explicitly names a specific vendor who applied to a past market, and a PAST VENDOR LOOKUP section appears below, you may use it to answer questions about that named vendor's history. You have no visibility into any other vendor or market beyond CURRENT EVENT DATA and (if present) PAST VENDOR LOOKUP — don't imply you can browse other markets generally.`,
+            `CRITICAL SCOPING RULE: your default focus is the ONE market event currently open in the admin's view (listed in CURRENT EVENT DATA below), and you can only ACT (approve/deny/set status/attendance/power/notes/email) on vendors in that market — never take an action on a vendor from another market/event, even one you know a lot about. For general or open-ended questions about "the vendors" as a group ("who needs power", "what's pending", "who applied late this time"), only ever answer from CURRENT EVENT DATA — you don't have a standing list of every vendor across every market. The exception is per-vendor knowledge: if the admin explicitly names a specific vendor (past or present), and a VENDOR PROFILE LOOKUP section appears below, you know that vendor's FULL profile — what they sell, every market they've ever applied to and its status, and their late strike history — not just whether they applied once. You have no visibility into any vendor or market beyond CURRENT EVENT DATA and (if present) VENDOR PROFILE LOOKUP — don't imply you can browse other markets generally, and never fabricate profit/sales figures since this app doesn't track that.`,
             `Denying a vendor or marking them "Needs Review" always requires a short reason — if the user didn't give one, ask for it in "reply" and return "actions": [] rather than guessing a reason.`,
             ``,
             `HOW THIS APP WORKS (use this to answer "how do I..." / "where is..." questions about the app itself):`,
