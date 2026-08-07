@@ -3511,7 +3511,7 @@
                     const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                     
                     const scanTimeout = (getBuiltinSetting('ai_license_scan', 'timeout') || 15) * 1000;
-                    const scanModel = 'google/gemma-4-26b-a4b-it:free';
+                    const scanModel = 'google/gemma-3-27b-it:free';
 
                     const MAX_RETRIES = 2;
                     let lastApiError = null;
