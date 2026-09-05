@@ -8810,6 +8810,41 @@
         </div>`;
         html += `</div></div>`;
 
+        // --- FORM HEADER section ---
+        const eventTitle = formConfig.eventTitle || '';
+        const eventDesc = formConfig.eventDesc || '';
+        const headerUrl = formConfig.headerUrl || '';
+        html += `<div style="margin:14px 0;">`;
+        html += `<div style="font-size:0.58rem; color:rgba(10,132,255,0.8); font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><span style="flex:1; border-top:1px solid rgba(10,132,255,0.15); display:inline-block;"></span>FORM HEADER<span style="flex:1; border-top:1px solid rgba(10,132,255,0.15); display:inline-block;"></span></div>`;
+        html += `<div style="display:flex; flex-direction:column; gap:7px;">`;
+        html += `<div>
+            <label style="font-size:0.65rem;color:var(--text-muted);display:block;margin-bottom:3px;">Event Title <span style="opacity:0.6;">(shown when multiple markets are open at once)</span></label>
+            <input id="adminEventTitle" type="text" value="${escapeHtml(eventTitle)}" placeholder="Leave Blank (Auto Generated)"
+                oninput="formConfig.eventTitle=this.value;scheduleFormAutoSave()"
+                onclick="event.stopPropagation()"
+                style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:0.82rem;outline:none;padding:6px 10px;border-radius:8px;font-family:inherit;box-sizing:border-box;">
+        </div>`;
+        html += `<div>
+            <label style="font-size:0.65rem;color:var(--text-muted);display:block;margin-bottom:3px;">Description</label>
+            <textarea id="adminEventDesc"
+                oninput="formConfig.eventDesc=this.value;scheduleFormAutoSave()"
+                onclick="event.stopPropagation()"
+                placeholder="Short description..."
+                style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:var(--text-muted);font-size:0.72rem;outline:none;padding:6px 10px;border-radius:8px;font-family:inherit;box-sizing:border-box;resize:vertical;min-height:48px;line-height:1.4;">${escapeHtml(eventDesc)}</textarea>
+        </div>`;
+        html += `<div>
+            <label style="font-size:0.65rem;color:var(--text-muted);display:block;margin-bottom:3px;">Header Image</label>
+            <div style="display:flex;gap:5px;align-items:center;">
+                <input id="adminHeaderUrl" type="text" value="${escapeHtml(headerUrl)}" placeholder="image URL (optional)"
+                    oninput="formConfig.headerUrl=this.value;scheduleFormAutoSave()"
+                    onchange="renderFormPreview()"
+                    onclick="event.stopPropagation()"
+                    style="flex:1;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:var(--text-muted);font-size:0.68rem;outline:none;padding:5px 8px;border-radius:8px;font-family:inherit;min-width:0;">
+                <label class="fb-pill" style="padding:4px 8px;font-size:0.65rem;cursor:pointer;margin:0;white-space:nowrap;flex-shrink:0;">Upload<input type="file" accept="image/*" onchange="uploadFormHeaderImage(this)" onclick="event.stopPropagation()" style="display:none;"></label>
+                ${headerUrl ? `<button class="fb-pill fb-pill-danger" onclick="event.stopPropagation();formConfig.headerUrl='';renderFormPreview();scheduleFormAutoSave();" style="padding:4px 8px;font-size:0.65rem;flex-shrink:0;">✕</button>` : ''}
+            </div>
+        </div>`;
+        html += `</div></div>`;
 
         // --- QUESTIONS section ---
         html += `<div style="font-size:0.58rem; color:rgba(255,255,255,0.3); font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin:14px 0 8px; display:flex; align-items:center; gap:6px;"><span style="flex:1; border-top:1px solid rgba(255,255,255,0.06); display:inline-block;"></span>QUESTIONS<span style="flex:1; border-top:1px solid rgba(255,255,255,0.06); display:inline-block;"></span></div>`;
