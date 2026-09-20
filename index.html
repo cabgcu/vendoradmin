@@ -8825,7 +8825,7 @@
                 style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:0.82rem;outline:none;padding:6px 10px;border-radius:8px;font-family:inherit;box-sizing:border-box;">
         </div>`;
         html += `<div>
-            <label style="font-size:0.65rem;color:var(--text-muted);display:block;margin-bottom:3px;">Description</label>
+            <label style="font-size:0.65rem;color:var(--text-muted);display:block;margin-bottom:3px;">Description <span style="opacity:0.6;">(shown when multiple markets are open at once)</span></label>
             <textarea id="adminEventDesc"
                 oninput="formConfig.eventDesc=this.value;scheduleFormAutoSave()"
                 onclick="event.stopPropagation()"
