@@ -4255,6 +4255,39 @@
             console.error(error);
             alert("Database Error updating event.");
         } else {
+            // Keep the public form's per-market title/description (MARKET_FORM_CONFIG_V3)
+            // in sync with the renamed/rescheduled event. Without this, editing an existing
+            // market's name/date here left its old auto-generated title & description behind,
+            // so the application page kept showing a previous market's stale copy.
+            const formatDate = (dStr) => {
+                if(!dStr) return '';
+                const d = new Date(dStr + 'T12:00:00');
+                return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            };
+            const formatDateTime = (dtStr) => {
+                if(!dtStr) return '';
+                const d = new Date(dtStr);
+                return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) + ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            };
+
+            const { data: secData } = await _supabase.from('secrets').select('value').eq('name', 'MARKET_FORM_CONFIG_V3').maybeSingle();
+            let configToSave = {};
+            if (secData && secData.value) {
+                try { configToSave = JSON.parse(secData.value); } catch(e){}
+            }
+
+            configToSave[currentData.activeId] = {
+                ...(configToSave[currentData.activeId] || {}),
+                title: `${name} Vendor Application`,
+                description: `Hello! Thank you for your interest in applying to a CAB Student Market! CAB Applications for the ${name}.<br><br><strong>Date of Market:</strong> ${formatDate(date)}<br><strong>Time:</strong> ${time}<br><strong>Location:</strong> ${location}<br><br>This application will close on ${formatDateTime(close)}.<br>Select vendors will be contacted via email on ${formatDate(contact)}.<br>Respond to confirm your spot by ${formatDate(confirm)}.`
+            };
+            const valStr = JSON.stringify(configToSave);
+
+            let { data: updData, error: updErr } = await _supabase.from('secrets').update({ value: valStr }).eq('name', 'MARKET_FORM_CONFIG_V3').select();
+            if (!updErr && (!updData || updData.length === 0)) {
+                await _supabase.from('secrets').insert([{ name: 'MARKET_FORM_CONFIG_V3', value: valStr }]);
+            }
+
             showToast("Active Market Updated!");
             refreshData(null, true);
         }
