@@ -1965,14 +1965,19 @@
         <h2 style="margin-top:0; font-weight: 800;">Send Custom Email</h2>
         <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 20px;">Write a one-off message and pick exactly who gets it — any vendor, any status. This won't affect their Approved/Denied email tracking.</p>
 
-        <label class="stat-label">1. Subject</label>
+        <label class="stat-label">1. Start from a Template (optional)</label>
+        <select id="customEmailTemplateSource" class="modern-input" style="margin-bottom: 16px; font-weight: bold; background: var(--input-bg);" onchange="applyCustomEmailTemplate(this.value)">
+            <option value="">Blank — write from scratch</option>
+        </select>
+
+        <label class="stat-label">2. Subject</label>
         <input type="text" id="customEmailSubject" class="modern-input" style="margin-bottom: 16px; font-weight: bold;" placeholder="e.g. Quick update about Saturday's market">
 
-        <label class="stat-label">2. Message</label>
+        <label class="stat-label">3. Message</label>
         <textarea id="customEmailBody" class="modern-input" style="margin-bottom: 6px; min-height: 160px; resize: vertical;" placeholder="Hi {{FIRST}}, ..."></textarea>
-        <p style="color:var(--text-muted); font-size:0.75rem; margin: 0 0 20px;">Supports **bold**, and variables like {{FIRST}}, {{MARKET_NAME}}, {{MARKET_DATE}}, {{LOCATION}}.</p>
+        <p style="color:var(--text-muted); font-size:0.75rem; margin: 0 0 20px;">Supports **bold**, and variables like {{FIRST}}, {{MARKET_NAME}}, {{MARKET_DATE}}, {{LOCATION}}. Picking a template above keeps this email's look consistent with it (color, badge, and QR ticket if it's an approval template) without touching that vendor's tracked Approved/Denied status.</p>
 
-        <label class="stat-label">3. Select Recipients</label>
+        <label class="stat-label">4. Select Recipients</label>
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem;">
             <button onclick="toggleAllCustomEmailCheckboxes(true)" style="background:transparent; border:none; color:#0A84FF; cursor:pointer; font-weight:bold;">Select All</button>
             <button onclick="toggleAllCustomEmailCheckboxes(false)" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;">Deselect All</button>
@@ -6185,10 +6190,15 @@
         // customContent lets a one-off compose (Custom Email modal) bypass the saved
         // template library entirely, while still going through the same branded HTML
         // wrapper, variable parsing, Brevo send, and tracking as every other email.
+        // styleAs (optional) borrows a template's badge/color/QR treatment for visual
+        // consistency when the compose was started from one — it never controls whether
+        // the vendor's real email_sent tracking gets touched; skipStatusUpdate does that,
+        // and it's always true for an ad-hoc customContent send regardless of styleAs.
         const templates = customContent
-            ? { subj: customContent.subj, body: customContent.body, targetTemplate: 'custom' }
+            ? { subj: customContent.subj, body: customContent.body, targetTemplate: customContent.styleAs || 'custom' }
             : getTemplateDetails(vendor, forceTemplateId);
         if (!templates) return false;
+        const skipStatusUpdate = !!customContent || templates.targetTemplate === 'custom';
 
         // Use defined Public URL or extremely clean fallback URL
         let baseUrl = currentData.publicUrl;
@@ -6344,7 +6354,7 @@
                 email_html_content: htmlContent,
                 email_subject: parsedSubj
             };
-            if (templates.targetTemplate !== 'custom') {
+            if (!skipStatusUpdate) {
                 updatePayload.email_sent = templates.targetTemplate;
             }
             // Note: email_sent_event_id column is bigint, incompatible with UUID — omitting
@@ -6363,7 +6373,7 @@
                     email_delivery_status: 'sent',
                     email_sent_at: updatePayload.email_sent_at
                 };
-                if (templates.targetTemplate !== 'custom') {
+                if (!skipStatusUpdate) {
                     fallbackPayload.email_sent = templates.targetTemplate;
                 }
                 const { error: fallbackErr } = await updateVendorWithSchemaFallback(vendor.id, fallbackPayload);
@@ -6384,7 +6394,7 @@
             vendor.email_tracking_token = trackingToken;
             vendor.email_html_content = htmlContent;
             vendor.email_subject = parsedSubj;
-            if (templates.targetTemplate !== 'custom') {
+            if (!skipStatusUpdate) {
                 vendor.email_sent = templates.targetTemplate;
             }
 
@@ -6959,10 +6969,48 @@
             </div>`;
         }).join('');
 
+        const tplSelect = document.getElementById('customEmailTemplateSource');
+        const tpls = { ...((emailTemplateLibrary && emailTemplateLibrary.templates) || {}) };
+        // Many markets never touch the Template Library and just use the per-market
+        // Approved/Power/Denied fields from Settings — fall back to those so the picker
+        // still offers the templates that are actually in use, not just custom-saved ones.
+        const fallbacks = {
+            approved: { name: 'Approved Template', subj: currentData.apprSubj, body: currentData.apprBody },
+            power: { name: 'Approved (Power Granted)', subj: currentData.powSubj, body: currentData.powBody },
+            power_denied: { name: 'Approved (Power Denied)', subj: currentData.powDenSubj, body: currentData.powDenBody },
+            denied: { name: 'Denied Template', subj: currentData.denSubj, body: currentData.denBody }
+        };
+        Object.entries(fallbacks).forEach(([id, f]) => {
+            if (!tpls[id] && f.subj) tpls[id] = { name: f.name, subj: f.subj, body: f.body };
+        });
+        tplSelect.innerHTML = `<option value="">Blank — write from scratch</option>` +
+            Object.entries(tpls).map(([id, t]) => `<option value="${id}">${escapeHtml(t.name || id)}</option>`).join('');
+        tplSelect.value = '';
+        _customEmailTemplateOptions = tpls;
+        _customEmailStyleTemplateId = null;
+
         document.getElementById('customEmailSubject').value = '';
         document.getElementById('customEmailBody').value = '';
         document.getElementById('customEmailSearch').value = '';
         document.getElementById('customEmailModal').style.display = 'flex';
+    }
+
+    // Tracks which saved template (if any) the current compose was started from, so the send
+    // can keep that template's visual style (badge/color/QR) consistent — without letting an
+    // ad-hoc send overwrite the vendor's real Approved/Denied email_sent tracking.
+    // _customEmailTemplateOptions includes both real template-library entries and the
+    // per-market Approved/Power/Denied fallbacks offered in the dropdown (see above), so
+    // lookups here must go through it rather than emailTemplateLibrary.templates directly.
+    let _customEmailStyleTemplateId = null;
+    let _customEmailTemplateOptions = {};
+
+    function applyCustomEmailTemplate(templateId) {
+        _customEmailStyleTemplateId = templateId || null;
+        if (!templateId) return;
+        const tpl = _customEmailTemplateOptions[templateId];
+        if (!tpl) return;
+        document.getElementById('customEmailSubject').value = tpl.subj || '';
+        document.getElementById('customEmailBody').value = tpl.body || '';
     }
 
     function closeCustomEmailModal() {
@@ -7014,7 +7062,7 @@
             if (isUnauthorized) break;
 
             const batch = targetVendors.slice(i, i + BATCH_SIZE);
-            const results = await Promise.all(batch.map(v => sendSingleEmail(v, 'custom', { subj, body })));
+            const results = await Promise.all(batch.map(v => sendSingleEmail(v, 'custom', { subj, body, styleAs: _customEmailStyleTemplateId })));
 
             for (const success of results) {
                 if (success === 'unauthorized') isUnauthorized = true;
