@@ -6910,16 +6910,33 @@
 
         if (!window.currentProfiles) {
             document.getElementById('loader').style.display = 'flex';
-            await fetchAndRenderProfiles();
+            try {
+                await fetchAndRenderProfiles();
+            } catch (e) {
+                console.error('Custom Email: failed to load cross-market vendor profiles, falling back to the current market roster.', e);
+            }
             document.getElementById('loader').style.display = 'none';
         }
 
-        const profiles = Object.values(window.currentProfiles || {}).sort((a, b) =>
+        // Merge the current market's roster with the cross-market profile cache so this list
+        // is never empty just because the profiles fetch above failed, returned nothing, or
+        // hasn't populated yet — currentData.vendors is always available once vendors are loaded.
+        const merged = {};
+        (currentData.vendors || []).forEach(v => {
+            const email = normalizeStrikeEmail(v.preferred_email);
+            if (!email) return;
+            merged[email] = { ...v, originalEmail: email, appCount: merged[email]?.appCount || 1 };
+        });
+        Object.values(window.currentProfiles || {}).forEach(p => {
+            merged[p.originalEmail] = p; // richer cross-market data wins when both exist
+        });
+
+        const profiles = Object.values(merged).sort((a, b) =>
             `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
         );
 
         if (profiles.length === 0) {
-            showToast("No vendors found.");
+            showToast("No vendors found. Make sure a market with applications is loaded.");
             return;
         }
 
