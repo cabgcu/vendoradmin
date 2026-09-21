@@ -9464,6 +9464,48 @@
                         }
                     }
 
+                    // Surface the vendor's own strike count + reasons so the public form can
+                    // show them why they've been flagged, same info admins see in vendoradmin.
+                    if (data && data[0]) {
+                        const emailKey = normalizeStrikeEmail(data[0].preferred_email || data[0].gcu_email || '');
+                        let strikeInfo = { total: 0, late: [], manual: [] };
+                        if (emailKey) {
+                            const [{ data: allApps }, { data: allEvents }, { data: overridesRow }, { data: manualRow }] = await Promise.all([
+                                _supabase.from('vendors').select('event_id, created_at').eq('student_id', studentId),
+                                _supabase.from('events').select('id, name, app_close'),
+                                _supabase.from('secrets').select('value').eq('name', 'MARKET_STRIKE_OVERRIDES').maybeSingle(),
+                                _supabase.from('secrets').select('value').eq('name', 'MARKET_MANUAL_STRIKES').maybeSingle()
+                            ]);
+
+                            let overrides = {};
+                            try { overrides = overridesRow?.value ? JSON.parse(overridesRow.value) : {}; } catch (e) {}
+                            let manual = {};
+                            try { manual = manualRow?.value ? JSON.parse(manualRow.value) : {}; } catch (e) {}
+
+                            const eventMap = {}, closeMap = {};
+                            (allEvents || []).forEach(e => { eventMap[e.id] = e.name; closeMap[e.id] = e.app_close; });
+
+                            const forgiven = overrides[emailKey] || [];
+                            const lateNames = [];
+                            (allApps || []).forEach(a => {
+                                const closeDate = closeMap[a.event_id];
+                                const evName = eventMap[a.event_id];
+                                if (!closeDate || !evName) return;
+                                if (new Date(a.created_at) > new Date(closeDate) && !forgiven.includes(evName) && !lateNames.includes(evName)) {
+                                    lateNames.push(evName);
+                                }
+                            });
+
+                            const manualList = manual[emailKey] || [];
+                            strikeInfo = {
+                                total: lateNames.length + manualList.length,
+                                late: lateNames,
+                                manual: manualList.map(s => ({ reason: s.reason, addedAt: s.addedAt }))
+                            };
+                        }
+                        data[0]._strikeInfo = strikeInfo;
+                    }
+
                     respond(data || []);
                     break;
                 }
