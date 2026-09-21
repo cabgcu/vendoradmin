@@ -1805,6 +1805,8 @@
                 <button type="button" class="sidebar-btn sidebar-btn-deny" onclick="processReview('Denied')">Deny</button>
             </div>
 
+            <button type="button" class="sidebar-btn sidebar-btn-neutral" style="margin-bottom: 16px;" onclick="openCustomEmailModal(currentReviewingId)">✉️ Send Custom Email</button>
+
             <div style="height: 1px; background: var(--glass-border); margin-bottom: 16px;"></div>
 
             <!-- Check-In / Attendance -->
@@ -1955,6 +1957,35 @@
     </div>
 </div>
 
+<!-- CUSTOM EMAIL MODAL -->
+<div id="customEmailModal" class="modal-overlay" style="z-index: 10006;">
+    <div class="modal-content" style="max-width: 700px; padding: 30px;">
+        <button class="close-modal" onclick="closeCustomEmailModal()">&times;</button>
+        <h2 style="margin-top:0; font-weight: 800;">Send Custom Email</h2>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 20px;">Write a one-off message and pick exactly who gets it — any vendor, any status. This won't affect their Approved/Denied email tracking.</p>
+
+        <label class="stat-label">1. Subject</label>
+        <input type="text" id="customEmailSubject" class="modern-input" style="margin-bottom: 16px; font-weight: bold;" placeholder="e.g. Quick update about Saturday's market">
+
+        <label class="stat-label">2. Message</label>
+        <textarea id="customEmailBody" class="modern-input" style="margin-bottom: 6px; min-height: 160px; resize: vertical;" placeholder="Hi {{FIRST}}, ..."></textarea>
+        <p style="color:var(--text-muted); font-size:0.75rem; margin: 0 0 20px;">Supports **bold**, and variables like {{FIRST}}, {{MARKET_NAME}}, {{MARKET_DATE}}, {{LOCATION}}.</p>
+
+        <label class="stat-label">3. Select Recipients</label>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem;">
+            <button onclick="toggleAllCustomEmailCheckboxes(true)" style="background:transparent; border:none; color:#0A84FF; cursor:pointer; font-weight:bold;">Select All</button>
+            <button onclick="toggleAllCustomEmailCheckboxes(false)" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;">Deselect All</button>
+        </div>
+        <input type="text" id="customEmailSearch" class="modern-input" placeholder="Search vendors by name..." style="margin-bottom:10px;" oninput="filterCustomEmailList()">
+
+        <div id="customEmailList" style="max-height: 300px; overflow-y: auto; background: var(--card-bg); border: 0.5px solid var(--glass-border); border-radius: var(--radius-inner); margin-bottom: 20px;">
+            <!-- Vendor Checkboxes Injected Here -->
+        </div>
+
+        <button onclick="executeCustomEmail()" class="btn-action" style="width: 100%; padding: 15px; font-size: 1.1rem;">Send Custom Email</button>
+    </div>
+</div>
+
 <div class="app-container" id="main-app">
     <div class="topbar">
         <div class="brand">
@@ -2045,6 +2076,7 @@
                 </select>
 
                 <button id="bulkEmailButton" onclick="openBulkEmailModal()" class="btn-action" style="flex: 0 0 auto; display: none; white-space: nowrap;">Bulk Email</button>
+                <button id="customEmailButton" onclick="openCustomEmailModal()" class="btn-action" style="flex: 0 0 auto; white-space: nowrap; background: #2a2a2a;">✉️ Custom Email</button>
             </div>
 
             <table>
@@ -6141,14 +6173,19 @@
         return { error: error, payload: payload };
     }
 
-    async function sendSingleEmail(vendor, forceTemplateId = null) {
+    async function sendSingleEmail(vendor, forceTemplateId = null, customContent = null) {
         if (currentUser.role !== 'admin') return false;
         if (!vendor || !vendor.preferred_email) return false;
         if (!BREVO_API_KEY) { console.warn('Brevo API key not configured'); return false; }
         // Only block Pending/Needs Review for auto-sends (not forced blasts)
         if (!forceTemplateId && (vendor.status === 'Needs Review' || vendor.status === 'Pending')) return false;
 
-        const templates = getTemplateDetails(vendor, forceTemplateId);
+        // customContent lets a one-off compose (Custom Email modal) bypass the saved
+        // template library entirely, while still going through the same branded HTML
+        // wrapper, variable parsing, Brevo send, and tracking as every other email.
+        const templates = customContent
+            ? { subj: customContent.subj, body: customContent.body, targetTemplate: 'custom' }
+            : getTemplateDetails(vendor, forceTemplateId);
         if (!templates) return false;
 
         // Use defined Public URL or extremely clean fallback URL
@@ -6856,6 +6893,109 @@
 
     function toggleAllCheckboxes(state) {
         document.querySelectorAll('.bulk-vendor-checkbox').forEach(cb => cb.checked = state);
+    }
+
+    // --- CUSTOM EMAIL (ad-hoc message to any hand-picked set of vendors) ---
+    function openCustomEmailModal(preselectVendorId = null) {
+        if (currentUser.role !== 'admin') {
+            showToast("Only admins can send emails.");
+            return;
+        }
+
+        const vendors = (currentData.vendors || []).slice().sort((a, b) =>
+            `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
+        );
+
+        if (vendors.length === 0) {
+            showToast("No vendors found in this market.");
+            return;
+        }
+
+        const listEl = document.getElementById('customEmailList');
+        listEl.innerHTML = vendors.map(v => {
+            const searchKey = `${v.first_name || ''} ${v.last_name || ''} ${v.business_name || ''}`.toLowerCase();
+            const checked = preselectVendorId && v.id === preselectVendorId;
+            return `
+            <div class="vendor-checkbox-item" data-name="${escapeHtml(searchKey)}">
+                <input type="checkbox" id="chkce-${v.id}" class="custom-email-checkbox" value="${v.id}" ${checked ? 'checked' : ''}>
+                <label for="chkce-${v.id}"><strong>${v.first_name} ${v.last_name}</strong> <span style="color:var(--text-muted); font-size:0.8rem;">— ${v.status || 'Pending'}</span></label>
+            </div>`;
+        }).join('');
+
+        document.getElementById('customEmailSubject').value = '';
+        document.getElementById('customEmailBody').value = '';
+        document.getElementById('customEmailSearch').value = '';
+        document.getElementById('customEmailModal').style.display = 'flex';
+    }
+
+    function closeCustomEmailModal() {
+        document.getElementById('customEmailModal').style.display = 'none';
+    }
+
+    function toggleAllCustomEmailCheckboxes(state) {
+        document.querySelectorAll('#customEmailList .vendor-checkbox-item').forEach(item => {
+            if (item.style.display !== 'none') {
+                const cb = item.querySelector('.custom-email-checkbox');
+                if (cb) cb.checked = state;
+            }
+        });
+    }
+
+    function filterCustomEmailList() {
+        const q = document.getElementById('customEmailSearch').value.trim().toLowerCase();
+        document.querySelectorAll('#customEmailList .vendor-checkbox-item').forEach(item => {
+            item.style.display = (!q || item.dataset.name.includes(q)) ? '' : 'none';
+        });
+    }
+
+    async function executeCustomEmail() {
+        if (currentUser.role !== 'admin') return;
+
+        const subj = document.getElementById('customEmailSubject').value.trim();
+        const body = document.getElementById('customEmailBody').value.trim();
+        if (!subj || !body) { showToast("Subject and message are required."); return; }
+
+        const checkboxes = document.querySelectorAll('.custom-email-checkbox:checked');
+        const vendorIds = Array.from(checkboxes).map(cb => cb.value);
+        if (vendorIds.length === 0) { showToast("No vendors selected."); return; }
+
+        if (!confirm(`Send this custom email to ${vendorIds.length} vendor(s)?`)) return;
+
+        closeCustomEmailModal();
+        _realtimePaused = true;
+        let successCount = 0;
+        let failCount = 0;
+        let isUnauthorized = false;
+
+        document.getElementById('loader').style.display = 'flex';
+        const loaderText = document.querySelector('#loader span');
+
+        const targetVendors = vendorIds.map(id => currentData.vendors.find(v => v.id === id)).filter(Boolean);
+
+        const BATCH_SIZE = 10;
+        for (let i = 0; i < targetVendors.length; i += BATCH_SIZE) {
+            if (isUnauthorized) break;
+
+            const batch = targetVendors.slice(i, i + BATCH_SIZE);
+            const results = await Promise.all(batch.map(v => sendSingleEmail(v, 'custom', { subj, body })));
+
+            for (const success of results) {
+                if (success === 'unauthorized') isUnauthorized = true;
+                else if (success) successCount++;
+                else failCount++;
+            }
+            loaderText.innerText = `SENDING ${Math.min(i + BATCH_SIZE, targetVendors.length)} / ${targetVendors.length}`;
+        }
+
+        document.getElementById('loader').style.display = 'none';
+        loaderText.innerText = 'LOADING';
+
+        if (isUnauthorized) alert(`STOPPING: Email API Key is invalid.\n\nSent: ${successCount}\nFailed: ${failCount}`);
+        else if (failCount > 0) alert(`Batch complete.\n\nSent: ${successCount}\nFailed: ${failCount}`);
+        else showToast(`Custom email sent to ${successCount} vendor(s)!`);
+
+        _realtimePaused = false;
+        refreshData(null, true);
     }
 
     async function executeBulkEmail() {
