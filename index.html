@@ -1974,8 +1974,42 @@
         <input type="text" id="customEmailSubject" class="modern-input" style="margin-bottom: 16px; font-weight: bold;" placeholder="e.g. Quick update about Saturday's market">
 
         <label class="stat-label">3. Message</label>
-        <textarea id="customEmailBody" class="modern-input" style="margin-bottom: 6px; min-height: 160px; resize: vertical;" placeholder="Hi {{FIRST}}, ..."></textarea>
-        <p style="color:var(--text-muted); font-size:0.75rem; margin: 0 0 20px;">Supports **bold**, and variables like {{FIRST}}, {{MARKET_NAME}}, {{MARKET_DATE}}, {{LOCATION}}. Picking a template above keeps this email's look consistent with it (color, badge, and QR ticket if it's an approval template) without touching that vendor's tracked Approved/Denied status.</p>
+        <p style="color:var(--text-muted); font-size:0.75rem; margin: -4px 0 10px;">This is the exact email your vendors will see — banner, heading, badge, and QR ticket included when a template's picked above. Edit the text directly below.</p>
+
+        <!-- Hidden backing store: the raw text (with **bold** and {{VAR}} tokens) that actually gets sent -->
+        <textarea id="customEmailBody" style="display:none;"></textarea>
+
+        <div class="rich-toolbar-floating">
+            <button type="button" class="rich-toolbar-btn" onclick="richToggleBold('customEmailRichEditor','customEmailBody')" title="Bold"><b>B</b></button>
+            <div class="rich-toolbar-sep"></div>
+            <span class="rich-toolbar-label">Insert</span>
+            <button type="button" class="var-chip" onclick="richInsertVar('{{FIRST}}', 'First Name', 'customEmailRichEditor','customEmailBody')">First Name</button>
+            <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_NAME}}', 'Market Name', 'customEmailRichEditor','customEmailBody')">Market Name</button>
+            <button type="button" class="var-chip" onclick="richInsertVar('{{LOCATION}}', 'Location', 'customEmailRichEditor','customEmailBody')">Location</button>
+            <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_DATE}}', 'Market Date', 'customEmailRichEditor','customEmailBody')">Market Date</button>
+            <button type="button" class="var-chip" onclick="richInsertVar('{{MARKET_TIME}}', 'Market Time', 'customEmailRichEditor','customEmailBody')">Market Time</button>
+            <button type="button" class="var-chip" onclick="richInsertVar('{{APP_OPENS}}', 'App Opens', 'customEmailRichEditor','customEmailBody')">App Opens</button>
+            <button type="button" class="var-chip" onclick="richInsertVar('{{APP_CLOSES}}', 'App Closes', 'customEmailRichEditor','customEmailBody')">App Closes</button>
+            <button type="button" class="var-chip" onclick="richInsertVar('{{CONTACT_DATE}}', 'Contact Date', 'customEmailRichEditor','customEmailBody')">Contact Date</button>
+            <button type="button" class="var-chip" onclick="richInsertVar('{{CONFIRM_DEADLINE}}', 'Confirm Deadline', 'customEmailRichEditor','customEmailBody')">Deadline</button>
+            <button type="button" class="var-chip confirm" onclick="richInsertVar('{{CONFIRM_LINK}}', 'Confirm Link', 'customEmailRichEditor','customEmailBody')">Confirm Link</button>
+            <button type="button" class="var-chip decline" onclick="richInsertVar('{{DECLINE_LINK}}', 'Decline Link', 'customEmailRichEditor','customEmailBody')">Decline Link</button>
+            <button type="button" class="var-chip" style="background:rgba(10,132,255,0.15); border-color:rgba(10,132,255,0.3); color:#0A84FF;" onclick="richInsertVar('{{POWER_CONFIRM_LINK}}', 'Confirm Power', 'customEmailRichEditor','customEmailBody')">Confirm Power</button>
+            <button type="button" class="var-chip" style="background:rgba(255,149,0,0.15); border-color:rgba(255,149,0,0.3); color:#FF9500;" onclick="richInsertVar('{{POWER_DECLINE_LINK}}', 'No Power Needed', 'customEmailRichEditor','customEmailBody')">No Power Needed</button>
+        </div>
+
+        <!-- Editable email preview — matches the Settings > Email Templates editor exactly -->
+        <div style="background: #f3f4f6; border-radius: var(--radius-card); padding: 20px 20px 30px; overflow-y: auto; max-height: 50vh; margin-bottom: 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+                <div id="customEmailLiveBanner"></div>
+                <div align="center" style="padding: 30px;">
+                    <h1 id="customEmailLiveHeading" style="margin: 0; font-size: 20px; font-weight: 800; text-transform: uppercase; color: #000;">Market Status Update</h1>
+                    <p id="customEmailLiveBadge" style="margin: 10px 0 0 0; font-size: 11px; font-weight: 700; color: #fff; display: inline-block; padding: 4px 12px; text-transform: uppercase; border-radius: 12px;">MARKET UPDATE</p>
+                </div>
+                <div id="customEmailRichEditor" contenteditable="true" oninput="richEditorChanged('customEmailRichEditor','customEmailBody')" style="padding: 0 30px 30px 30px; font-size: 14px; color: #333; line-height: 1.6; font-family: 'Segoe UI', sans-serif; outline: none; min-height: 180px;"></div>
+                <div id="customEmailLiveQR"></div>
+            </div>
+        </div>
 
         <label class="stat-label">4. Select Recipients</label>
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem;">
@@ -6991,7 +7025,9 @@
 
         document.getElementById('customEmailSubject').value = '';
         document.getElementById('customEmailBody').value = '';
+        document.getElementById('customEmailRichEditor').innerHTML = '';
         document.getElementById('customEmailSearch').value = '';
+        updateCustomEmailPreview();
         document.getElementById('customEmailModal').style.display = 'flex';
     }
 
@@ -7006,11 +7042,15 @@
 
     function applyCustomEmailTemplate(templateId) {
         _customEmailStyleTemplateId = templateId || null;
-        if (!templateId) return;
-        const tpl = _customEmailTemplateOptions[templateId];
-        if (!tpl) return;
-        document.getElementById('customEmailSubject').value = tpl.subj || '';
-        document.getElementById('customEmailBody').value = tpl.body || '';
+        if (templateId) {
+            const tpl = _customEmailTemplateOptions[templateId];
+            if (tpl) {
+                document.getElementById('customEmailSubject').value = tpl.subj || '';
+                document.getElementById('customEmailBody').value = tpl.body || '';
+                syncTextareaToRich('customEmailRichEditor', 'customEmailBody');
+            }
+        }
+        updateCustomEmailPreview();
     }
 
     function closeCustomEmailModal() {
@@ -7378,47 +7418,51 @@
     }
 
     // Sync rich editor content to the hidden textarea (for save/preview)
-    function syncRichToTextarea() {
-        const editor = document.getElementById('richEmailEditor');
-        const textarea = document.getElementById('emailTemplateInput');
+    // editorId/textareaId default to the Settings > Email Templates editor so every
+    // existing call site (onclick attributes included) keeps working unchanged; the
+    // Custom Email modal's WYSIWYG compose passes its own element ids instead.
+    function syncRichToTextarea(editorId = 'richEmailEditor', textareaId = 'emailTemplateInput') {
+        const editor = document.getElementById(editorId);
+        const textarea = document.getElementById(textareaId);
         if (editor && textarea) {
             textarea.value = richToPlain(editor);
         }
     }
 
     // Load content into the rich editor from the hidden textarea
-    function syncTextareaToRich() {
-        const editor = document.getElementById('richEmailEditor');
-        const textarea = document.getElementById('emailTemplateInput');
+    function syncTextareaToRich(editorId = 'richEmailEditor', textareaId = 'emailTemplateInput') {
+        const editor = document.getElementById(editorId);
+        const textarea = document.getElementById(textareaId);
         if (editor && textarea) {
             editor.innerHTML = plainToRich(textarea.value);
         }
     }
 
     // Called on every keystroke in the rich editor
-    function richEditorChanged() {
-        syncRichToTextarea();
-        updatePreview();
+    function richEditorChanged(editorId = 'richEmailEditor', textareaId = 'emailTemplateInput') {
+        syncRichToTextarea(editorId, textareaId);
+        if (editorId === 'customEmailRichEditor') updateCustomEmailPreview();
+        else updatePreview();
     }
 
     // Toggle bold formatting
-    function richToggleBold() {
-        const editor = document.getElementById('richEmailEditor');
+    function richToggleBold(editorId = 'richEmailEditor', textareaId = 'emailTemplateInput') {
+        const editor = document.getElementById(editorId);
         editor.focus();
         document.execCommand('bold', false, null);
-        richEditorChanged();
+        richEditorChanged(editorId, textareaId);
     }
 
     // Insert a variable pill into the rich editor at cursor position
-    function richInsertVar(varCode, label) {
-        const editor = document.getElementById('richEmailEditor');
+    function richInsertVar(varCode, label, editorId = 'richEmailEditor', textareaId = 'emailTemplateInput') {
+        const editor = document.getElementById(editorId);
         editor.focus();
         let extraClass = '';
         if (varCode === '{{CONFIRM_LINK}}' || varCode === '{{POWER_CONFIRM_LINK}}') extraClass = ' link-var';
         else if (varCode === '{{DECLINE_LINK}}' || varCode === '{{POWER_DECLINE_LINK}}') extraClass = ' decline-var';
         const pill = `<span class="email-var${extraClass}" contenteditable="false" data-var="${varCode}">${label}</span>&nbsp;`;
         document.execCommand('insertHTML', false, pill);
-        richEditorChanged();
+        richEditorChanged(editorId, textareaId);
     }
 
     // Legacy insertTag still works for any external callers
@@ -7487,6 +7531,50 @@
 
         // QR code
         const qrEl = document.getElementById('liveEmailQR');
+        if (qrEl) {
+            if (isApprovalType) {
+                const barcodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=PREVIEW1&format=png&bgcolor=FFFFFF&color=000000&margin=10";
+                qrEl.innerHTML = `
+                    <div style="border-top: 2px dashed #e5e7eb; margin: 0 15px;"></div>
+                    <div align="center" style="padding: 40px 30px;">
+                        <div style="background: #fff; padding: 25px; border-radius: 16px; border: 2px solid #eee; display: inline-block;">
+                            <img src="${barcodeUrl}" alt="QR Code" width="200" height="200" style="display:block; border:0; background:#fff;">
+                        </div>
+                        <p style="margin: 20px 0 0; font-size: 14px; color: #1a1a1a; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">SCAN AT CHECK-IN</p>
+                        <p style="margin: 6px 0 0; font-size: 12px; color: #888; font-family: monospace;">ID: #PREVIEW1</p>
+                    </div>`;
+            } else {
+                qrEl.innerHTML = '';
+            }
+        }
+    }
+
+    // Same live chrome as updatePreview(), driven by whichever template (if any) the
+    // Custom Email compose was started from, so what the admin edits there looks exactly
+    // like the real template — banner, heading, badge color, and QR ticket included.
+    function updateCustomEmailPreview() {
+        const bannerEl = document.getElementById('customEmailLiveBanner');
+        if (bannerEl) {
+            const bannerUrl = currentData.bannerUrl ? processImageUrl(currentData.bannerUrl) : "";
+            bannerEl.innerHTML = bannerUrl ? `<img src="${bannerUrl}" alt="Banner" style="display:block; width:100%; height:auto; border:0;">` : '';
+        }
+
+        const styleId = _customEmailStyleTemplateId;
+        const isApprovalType = ['approved', 'power', 'power_denied'].includes(styleId);
+        const isDeniedType = styleId === 'denied';
+        let statusColor = isApprovalType ? '#34C759' : isDeniedType ? '#FF3B30' : '#0A84FF';
+        let statusBadge = isApprovalType ? 'APPROVED' : isDeniedType ? 'STATUS UPDATE' : 'MARKET UPDATE';
+
+        const headingEl = document.getElementById('customEmailLiveHeading');
+        if (headingEl) headingEl.textContent = currentData.headingText || 'Market Status Update';
+
+        const badgeEl = document.getElementById('customEmailLiveBadge');
+        if (badgeEl) {
+            badgeEl.textContent = statusBadge;
+            badgeEl.style.backgroundColor = statusColor;
+        }
+
+        const qrEl = document.getElementById('customEmailLiveQR');
         if (qrEl) {
             if (isApprovalType) {
                 const barcodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=PREVIEW1&format=png&bgcolor=FFFFFF&color=000000&margin=10";
