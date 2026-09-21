@@ -454,6 +454,15 @@ These come pre-configured and can be toggled on or off:
 | **Late Application Tracking** | Assigns a "strike" to vendors who apply after the deadline |
 | **Auto-Confirmation Reminders** | Sends reminder emails to vendors who haven't confirmed yet |
 
+### Manual Strikes
+
+Admins can assign a strike to a vendor by hand — for anything other than a late application (a no-show, a rule violation, etc.).
+
+- From a vendor's **Review** modal or their **Profile** modal, click **+ Add Strike**.
+- Enter a reason when prompted. The strike is saved with your name and a timestamp.
+- Manual strikes count toward the same strike badges and thresholds as late-application strikes (⚠️/🚨 badges, and the "reaches 1/2/3+ strikes" automation triggers).
+- Remove a manual strike any time by clicking **Remove** next to it.
+
 ### Creating a Custom Automation
 
 Click **+ New Automation**. You can either:

@@ -1670,8 +1670,8 @@
             <!-- Tags dynamically populated -->
         </div>
 
-        <!-- NEW: STRIKES SECTION IN PROFILE -->
-        <div class="review-field-label">Late Applications</div>
+        <!-- STRIKES SECTION IN PROFILE (late applications + manually-assigned) -->
+        <div class="review-field-label">Strikes</div>
         <div style="background: var(--card-bg); border: 0.5px solid var(--glass-border); border-radius: var(--radius-inner); padding: 15px; margin-bottom: 25px;" id="profileModalStrikes">
             <!-- Strikes dynamically populated -->
         </div>
@@ -1759,6 +1759,12 @@
 
             <div class="review-field-label" id="reviewStrikesLabel" style="display:none;">Late Applications</div>
             <div class="review-field-value" id="reviewStrikes" style="display:none; color: #FF3B30; background: rgba(255, 59, 48, 0.05); border-color: rgba(255, 59, 48, 0.2); font-size: 0.95rem;"></div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                <div class="review-field-label" style="margin-bottom:0;">Manual Strikes</div>
+                <button type="button" class="btn-action" style="padding: 4px 10px; font-size: 0.75rem; background: #2a2a2a;" onclick="addManualStrikeForReview()">+ Add Strike</button>
+            </div>
+            <div class="review-field-value" id="reviewManualStrikes" style="color: #FF9500; background: rgba(255, 149, 0, 0.05); border-color: rgba(255, 149, 0, 0.2); font-size: 0.95rem; margin-bottom: 16px;"></div>
 
             <div id="reviewCustomAnswersSection" style="display:none;">
                 <div id="reviewCustomAnswers"></div>
@@ -3335,6 +3341,7 @@
 
         await loadAutomationsConfig();
         await loadStrikeOverrides();
+        await loadManualStrikes();
         updateCabbieVisibility();
         if (BREVO_API_KEY) testBrevoApiAccess();
         refreshData();
@@ -4653,16 +4660,21 @@
 
         const strikesContainer = document.getElementById('profileModalStrikes');
         const strikesArr = window.vendorStrikes[normalizeStrikeEmail(email)] || [];
-        
-        if (strikesArr.length === 0) {
-            strikesContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">0 Late Applications. Vendor is in good standing.</span>';
+        const manualStrikesArr = getManualStrikes(email);
+        const totalStrikeCount = strikesArr.length + manualStrikesArr.length;
+
+        const addStrikeBtnHtml = `<div style="display:flex; justify-content:flex-end; margin-bottom: 10px;"><button onclick="addManualStrike('${email}')" style="background:none; border:1px solid rgba(255,149,0,0.4); color:#FF9500; font-size:0.75rem; font-weight:700; padding:5px 10px; border-radius:6px; cursor:pointer; white-space:nowrap;">+ Add Strike</button></div>`;
+
+        if (totalStrikeCount === 0) {
+            strikesContainer.innerHTML = `${addStrikeBtnHtml}<span style="color:var(--text-muted); font-size:0.85rem;">0 Strikes. Vendor is in good standing.</span>`;
             strikesContainer.style.borderColor = 'rgba(255,255,255,0.1)';
             strikesContainer.style.background = 'rgba(255,255,255,0.03)';
         } else {
             strikesContainer.style.borderColor = 'rgba(255,59,48,0.3)';
             strikesContainer.style.background = 'rgba(255,59,48,0.05)';
-            const listHtml = strikesArr.map(eventName => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 6px;"><span style="color: #FF3B30; font-size: 0.9rem; font-weight: bold;">🚨 Late to: ${eventName}</span><button onclick="removeStrike('${email}', '${eventName.replace(/'/g, "\\'")}')" style="background:none; border:1px solid rgba(255,59,48,0.4); color:#FF3B30; font-size:0.7rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
-            strikesContainer.innerHTML = `<div style="margin-bottom: 12px; font-weight: 800; color: #FF3B30;">Total Strikes: ${strikesArr.length}</div>${listHtml}`;
+            const lateListHtml = strikesArr.map(eventName => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 6px;"><span style="color: #FF3B30; font-size: 0.9rem; font-weight: bold;">🚨 Late to: ${eventName}</span><button onclick="removeStrike('${email}', '${eventName.replace(/'/g, "\\'")}')" style="background:none; border:1px solid rgba(255,59,48,0.4); color:#FF3B30; font-size:0.7rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
+            const manualListHtml = manualStrikesArr.map(s => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 6px;"><span style="color: #FF9500; font-size: 0.9rem; font-weight: bold;">⚠️ ${s.reason} <span style="color:var(--text-muted); font-weight:normal; font-size:0.8rem;">— ${s.addedBy}, ${formatCommentDate(s.addedAt)}</span></span><button onclick="removeManualStrike('${email}', '${s.id}')" style="background:none; border:1px solid rgba(255,59,48,0.4); color:#FF3B30; font-size:0.7rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
+            strikesContainer.innerHTML = `${addStrikeBtnHtml}<div style="margin-bottom: 12px; font-weight: 800; color: #FF3B30;">Total Strikes: ${totalStrikeCount}</div>${lateListHtml}${manualListHtml}`;
         }
 
         const historyContainer = document.getElementById('profileModalHistory');
@@ -5186,14 +5198,14 @@
             const rowBgStyle = rowColor ? `background: ${rowColor}20 !important;` : '';
             const rowBorderStyle = rowColor ? `background: ${rowColor}20 !important; border-left: 6px solid ${rowColor} !important; border-radius: 16px 0 0 16px;` : 'border-radius: 16px 0 0 16px;';
 
-            // Late Strikes Badge (configurable thresholds)
-            const strikes = window.vendorStrikes[normalizeStrikeEmail(v.preferred_email)]?.length || 0;
+            // Strikes Badge (late-application + manually-assigned, configurable thresholds)
+            const strikes = getTotalStrikeCount(v.preferred_email);
             const severeAt = getBuiltinSetting('late_strike_tracking', 'severeThreshold') || 3;
             const warnAt = getBuiltinSetting('late_strike_tracking', 'threshold') || 1;
             if (strikes >= severeAt) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">🚨 ${strikes} LATE STRIKES</span>`);
+                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">🚨 ${strikes} STRIKES</span>`);
             } else if (strikes >= warnAt) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">⚠️ ${strikes} LATE</span>`);
+                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">⚠️ ${strikes} STRIKE${strikes === 1 ? '' : 'S'}</span>`);
             }
 
             const emailKey = (v.preferred_email || '').toLowerCase();
@@ -5466,9 +5478,11 @@
         
         const strikesArr = window.vendorStrikes[normalizeStrikeEmail(vendor.preferred_email)] || [];
         const strikes = strikesArr.length;
-        
-        if (strikes >= 3) {
-            tagsArray.push(`<span class="group-tag" style="background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); font-size: 0.85rem; margin-top:0;">🚨 ${strikes} LATE STRIKES</span>`);
+        const manualStrikesArr = getManualStrikes(vendor.preferred_email);
+        const totalStrikeCount = strikes + manualStrikesArr.length;
+
+        if (totalStrikeCount >= 3) {
+            tagsArray.push(`<span class="group-tag" style="background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); font-size: 0.85rem; margin-top:0;">🚨 ${totalStrikeCount} STRIKES</span>`);
         }
 
         const emailCounts = {};
@@ -5608,6 +5622,13 @@
         } else {
             reviewStrikesLabel.style.display = 'none';
             reviewStrikes.style.display = 'none';
+        }
+
+        const reviewManualStrikes = document.getElementById('reviewManualStrikes');
+        if (manualStrikesArr.length === 0) {
+            reviewManualStrikes.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">No manual strikes.</div>';
+        } else {
+            reviewManualStrikes.innerHTML = manualStrikesArr.map(s => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;"><span>⚠️ <strong>${s.reason}</strong> <span style="color: var(--text-muted); font-size:0.8rem;">— ${s.addedBy}, ${formatCommentDate(s.addedAt)}</span></span><button onclick="removeManualStrike('${vendor.preferred_email}', '${s.id}')" style="background:none; border:1px solid rgba(255,59,48,0.4); color:#FF3B30; font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
         }
 
         const foodLicEl = document.getElementById('reviewFoodLicense');
@@ -7858,6 +7879,102 @@
             await _supabase.from('secrets').update({ value: json }).eq('name', 'MARKET_STRIKE_OVERRIDES');
         } else {
             await _supabase.from('secrets').insert({ name: 'MARKET_STRIKE_OVERRIDES', value: json });
+        }
+    }
+
+    // --- MANUAL STRIKES (admin-assigned, independent of late-application tracking) ---
+    // { 'normalized email': [{ id, reason, addedBy, addedAt }] }
+    let manualStrikes = {};
+
+    async function loadManualStrikes() {
+        const { data } = await _supabase.from('secrets').select('value').eq('name', 'MARKET_MANUAL_STRIKES').single();
+        if (data && data.value) {
+            try { manualStrikes = JSON.parse(data.value); } catch (e) { console.error('Bad manual strikes', e); manualStrikes = {}; }
+        }
+    }
+
+    async function saveManualStrikes() {
+        const json = JSON.stringify(manualStrikes);
+        const { data: existing } = await _supabase.from('secrets').select('name').eq('name', 'MARKET_MANUAL_STRIKES').single();
+        if (existing) {
+            await _supabase.from('secrets').update({ value: json }).eq('name', 'MARKET_MANUAL_STRIKES');
+        } else {
+            await _supabase.from('secrets').insert({ name: 'MARKET_MANUAL_STRIKES', value: json });
+        }
+    }
+
+    function getManualStrikes(rawEmail) {
+        return manualStrikes[normalizeStrikeEmail(rawEmail)] || [];
+    }
+
+    // Combined count shown on badges — late-application strikes plus manually-assigned
+    // ones, regardless of which feature added them.
+    function getTotalStrikeCount(rawEmail) {
+        const emailKey = normalizeStrikeEmail(rawEmail);
+        const lateCount = (window.vendorStrikes && window.vendorStrikes[emailKey]) ? window.vendorStrikes[emailKey].length : 0;
+        return lateCount + getManualStrikes(rawEmail).length;
+    }
+
+    async function addManualStrike(rawEmail, vendorId) {
+        if (currentUser.role !== 'admin') { showToast('Only admins can assign strikes.'); return; }
+        const email = normalizeStrikeEmail(rawEmail);
+        if (!email) { showToast('This vendor has no email on file.'); return; }
+
+        const reason = await promptForComment('Manual Strike — Reason');
+        if (reason === null || reason.trim() === '') {
+            showToast('Strike cancelled: a reason is required.');
+            return;
+        }
+
+        if (!manualStrikes[email]) manualStrikes[email] = [];
+        manualStrikes[email].push({
+            id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
+            reason: reason.trim(),
+            addedBy: (currentUser && currentUser.name) || 'Admin',
+            addedAt: new Date().toISOString()
+        });
+        await saveManualStrikes();
+
+        const vendor = currentData.vendors.find(v => v.id === vendorId) || currentData.vendors.find(v => normalizeStrikeEmail(v.preferred_email) === email);
+        if (vendor) {
+            const newCount = getTotalStrikeCount(email);
+            if (newCount === 1) fireAutomationTrigger('on_strike_1', vendor);
+            else if (newCount === 2) fireAutomationTrigger('on_strike_2', vendor);
+            else if (newCount >= 3) fireAutomationTrigger('on_strike_3', vendor);
+        }
+
+        showToast('Strike added.');
+        renderTable();
+        if (currentReviewingId) {
+            const rv = currentData.vendors.find(v => v.id === currentReviewingId);
+            if (rv) openReviewModal(rv.id);
+        }
+        if (window.currentProfiles && window.currentProfiles[email]) {
+            openProfileModal(email);
+        }
+    }
+
+    function addManualStrikeForReview() {
+        const vendor = currentData.vendors.find(v => v.id === currentReviewingId);
+        if (!vendor) return;
+        addManualStrike(vendor.preferred_email, vendor.id);
+    }
+
+    async function removeManualStrike(rawEmail, strikeId) {
+        if (currentUser.role !== 'admin') { showToast('Only admins can remove strikes.'); return; }
+        if (!confirm('Remove this strike?')) return;
+        const email = normalizeStrikeEmail(rawEmail);
+        manualStrikes[email] = (manualStrikes[email] || []).filter(s => s.id !== strikeId);
+        await saveManualStrikes();
+
+        showToast('Strike removed.');
+        renderTable();
+        if (currentReviewingId) {
+            const rv = currentData.vendors.find(v => v.id === currentReviewingId);
+            if (rv) openReviewModal(rv.id);
+        }
+        if (window.currentProfiles && window.currentProfiles[email]) {
+            openProfileModal(email);
         }
     }
 
