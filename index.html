@@ -1757,6 +1757,8 @@
                 <a href="#" target="_blank" style="color: #0A84FF; text-decoration: none; font-weight: bold;">-</a>
             </div>
 
+            <div id="reviewTotalStrikes" style="display:none; font-weight: 800; color: #FF3B30; margin-bottom: 10px; font-size: 0.95rem;"></div>
+
             <div class="review-field-label" id="reviewStrikesLabel" style="display:none;">Late Applications</div>
             <div class="review-field-value" id="reviewStrikes" style="display:none; color: #FF3B30; background: rgba(255, 59, 48, 0.05); border-color: rgba(255, 59, 48, 0.2); font-size: 0.95rem;"></div>
 
@@ -5613,6 +5615,14 @@
         }
 
         // STRIKES REVIEW MODAL UI
+        const reviewTotalStrikes = document.getElementById('reviewTotalStrikes');
+        if (totalStrikeCount > 0) {
+            reviewTotalStrikes.style.display = 'block';
+            reviewTotalStrikes.innerText = `🚨 Total Strikes: ${totalStrikeCount}`;
+        } else {
+            reviewTotalStrikes.style.display = 'none';
+        }
+
         const reviewStrikesLabel = document.getElementById('reviewStrikesLabel');
         const reviewStrikes = document.getElementById('reviewStrikes');
         if (strikes > 0) {
