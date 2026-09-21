@@ -1652,6 +1652,7 @@
             <div style="width: 80px; height: 80px; background: var(--gradient-accent); border-radius: 50%; margin: 0 auto 15px auto; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; color: white;" id="profileModalInitial">A</div>
             <h2 style="margin:0; font-weight: 800; font-size: 1.8rem;" id="profileModalName">Vendor Name</h2>
             <p style="color:var(--text-muted); margin-top: 5px; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 10px;" id="profileModalEmail">email@example.com</p>
+            <button type="button" id="profileModalEmailBtn" class="btn-action" style="margin-top: 14px; padding: 8px 16px; font-size: 0.8rem; background: #2a2a2a;">✉️ Email Vendor</button>
         </div>
 
         <div class="stats-container" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
@@ -4681,6 +4682,7 @@
         document.getElementById('profileModalName').innerText = `${p.first_name} ${p.last_name}`;
         document.getElementById('profileModalEmail').innerText = p.preferred_email;
         document.getElementById('profileModalCount').innerText = p.appCount;
+        document.getElementById('profileModalEmailBtn').onclick = () => openCustomEmailModal(null, email);
 
         const catArray = Array.from(p.allCategories);
         document.getElementById('profileModalMainCat').innerText = catArray.length > 0 ? catArray[0] : 'Uncategorized';
@@ -6896,29 +6898,47 @@
     }
 
     // --- CUSTOM EMAIL (ad-hoc message to any hand-picked set of vendors) ---
-    function openCustomEmailModal(preselectVendorId = null) {
+    // Built from window.currentProfiles — the cross-market, deduplicated-by-email "person"
+    // roster the Profiles tab uses — rather than currentData.vendors, which only holds
+    // applications for whichever single market is currently active. That market-scoped list
+    // was silently hiding vendors who applied to a *different* market from selection here.
+    async function openCustomEmailModal(preselectVendorId = null, preselectEmail = null) {
         if (currentUser.role !== 'admin') {
             showToast("Only admins can send emails.");
             return;
         }
 
-        const vendors = (currentData.vendors || []).slice().sort((a, b) =>
+        if (!window.currentProfiles) {
+            document.getElementById('loader').style.display = 'flex';
+            await fetchAndRenderProfiles();
+            document.getElementById('loader').style.display = 'none';
+        }
+
+        const profiles = Object.values(window.currentProfiles || {}).sort((a, b) =>
             `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
         );
 
-        if (vendors.length === 0) {
-            showToast("No vendors found in this market.");
+        if (profiles.length === 0) {
+            showToast("No vendors found.");
             return;
         }
 
+        // The Review modal only knows the application row id, not the person's email —
+        // resolve it against that market's roster so preselection still works from there.
+        let resolvedEmail = preselectEmail ? normalizeStrikeEmail(preselectEmail) : null;
+        if (!resolvedEmail && preselectVendorId) {
+            const rowVendor = (currentData.vendors || []).find(v => v.id === preselectVendorId);
+            if (rowVendor) resolvedEmail = normalizeStrikeEmail(rowVendor.preferred_email);
+        }
+
         const listEl = document.getElementById('customEmailList');
-        listEl.innerHTML = vendors.map(v => {
-            const searchKey = `${v.first_name || ''} ${v.last_name || ''} ${v.business_name || ''}`.toLowerCase();
-            const checked = preselectVendorId && v.id === preselectVendorId;
+        listEl.innerHTML = profiles.map(p => {
+            const searchKey = `${p.first_name || ''} ${p.last_name || ''} ${p.preferred_email || ''} ${p.business_name || ''}`.toLowerCase();
+            const checked = resolvedEmail && p.originalEmail === resolvedEmail;
             return `
             <div class="vendor-checkbox-item" data-name="${escapeHtml(searchKey)}">
-                <input type="checkbox" id="chkce-${v.id}" class="custom-email-checkbox" value="${v.id}" ${checked ? 'checked' : ''}>
-                <label for="chkce-${v.id}"><strong>${v.first_name} ${v.last_name}</strong> <span style="color:var(--text-muted); font-size:0.8rem;">— ${v.status || 'Pending'}</span></label>
+                <input type="checkbox" id="chkce-${p.id}" class="custom-email-checkbox" value="${escapeHtml(p.originalEmail)}" ${checked ? 'checked' : ''}>
+                <label for="chkce-${p.id}"><strong>${p.first_name} ${p.last_name}</strong> <span style="color:var(--text-muted); font-size:0.8rem;">— ${p.status || 'Pending'} · ${p.appCount} app${p.appCount === 1 ? '' : 's'}</span></label>
             </div>`;
         }).join('');
 
@@ -6956,10 +6976,10 @@
         if (!subj || !body) { showToast("Subject and message are required."); return; }
 
         const checkboxes = document.querySelectorAll('.custom-email-checkbox:checked');
-        const vendorIds = Array.from(checkboxes).map(cb => cb.value);
-        if (vendorIds.length === 0) { showToast("No vendors selected."); return; }
+        const emails = Array.from(checkboxes).map(cb => cb.value);
+        if (emails.length === 0) { showToast("No vendors selected."); return; }
 
-        if (!confirm(`Send this custom email to ${vendorIds.length} vendor(s)?`)) return;
+        if (!confirm(`Send this custom email to ${emails.length} vendor(s)?`)) return;
 
         closeCustomEmailModal();
         _realtimePaused = true;
@@ -6970,7 +6990,7 @@
         document.getElementById('loader').style.display = 'flex';
         const loaderText = document.querySelector('#loader span');
 
-        const targetVendors = vendorIds.map(id => currentData.vendors.find(v => v.id === id)).filter(Boolean);
+        const targetVendors = emails.map(email => window.currentProfiles[email]).filter(Boolean);
 
         const BATCH_SIZE = 10;
         for (let i = 0; i < targetVendors.length; i += BATCH_SIZE) {
