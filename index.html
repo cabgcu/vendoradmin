@@ -4421,6 +4421,10 @@
         document.querySelectorAll('.control-item, .control-item-filter').forEach(el => el.classList.remove('active', 'active-new', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan', 'active-power'));
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
 
+        // The camera scanner stays on between check-ins; shut it off when leaving Check In
+        // so it doesn't keep scanning (and checking people in) from another tab.
+        if (_qrStream) stopCameraScanner();
+
         // Reset dropdowns on tab switch (unless restoring from localStorage)
         if (!preserveDropdowns) {
             if (document.getElementById('unifiedFilter')) { document.getElementById('unifiedFilter').value = 'all'; localStorage.setItem('marketLastUnifiedFilter', 'all'); }
@@ -4480,6 +4484,7 @@
     }
 
     function toggleView(v) {
+        if (v !== 'scan' && _qrStream) stopCameraScanner();
         document.querySelectorAll('.control-item, .control-item-filter').forEach(e => e.classList.remove('active', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan', 'active-new', 'active-power'));
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
         // Hide filter tabs when on settings/scan
@@ -10083,6 +10088,7 @@
         // _scanFrame sets _qrCooldown after a successful read; it must be cleared here or
         // every later session silently skips decoding until the page is refreshed.
         _qrCooldown = false;
+        _qrLastVal = null;
         navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } })
             .then(stream => {
                 _qrStream = stream;
@@ -10107,27 +10113,50 @@
         document.getElementById('startCameraBtn').style.display = 'block';
     }
 
+    // Continuous scanning: the camera stays on between vendors. After a read, decoding
+    // pauses while the check-in runs and its result pop-up is showing, then resumes on its
+    // own. The same ticket is ignored while it stays in frame so it isn't re-scanned.
+    let _qrLastVal = null;
+    let _qrLastSeenAt = 0;
+    const QR_SAME_CODE_IGNORE_MS = 4000;
+
     function _scanFrame() {
-        if (!_qrStream || _qrCooldown) { _qrRaf = requestAnimationFrame(_scanFrame); return; }
+        if (!_qrStream) return;
+        _qrRaf = requestAnimationFrame(_scanFrame);
+
+        const alertEl = document.getElementById('checkInAlert');
+        const alertOpen = alertEl && alertEl.style.display === 'flex';
+        const statusEl = document.getElementById('qrStatusText');
+        if (_qrCooldown || alertOpen) return;
+        if (statusEl.textContent !== 'Scanning…') statusEl.textContent = 'Scanning…';
+
         const video = document.getElementById('qrVideo');
-        if (video.readyState < video.HAVE_ENOUGH_DATA) { _qrRaf = requestAnimationFrame(_scanFrame); return; }
+        if (video.readyState < video.HAVE_ENOUGH_DATA) return;
         const canvas = document.getElementById('qrCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0);
         const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const code = typeof jsQR !== 'undefined' && jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
-        if (code && code.data) {
-            _qrCooldown = true;
-            let val = code.data.trim();
-            if (val.includes('id=')) val = val.split('id=')[1].split('&')[0];
-            document.getElementById('qrStatusText').textContent = '✓ Found: ' + val.substring(0, 20);
-            stopCameraScanner();
-            checkIn(val, true, null);
-        } else {
-            _qrRaf = requestAnimationFrame(_scanFrame);
+        if (!code || !code.data) return;
+
+        let val = code.data.trim();
+        if (val.includes('id=')) val = val.split('id=')[1].split('&')[0];
+
+        const now = Date.now();
+        if (val === _qrLastVal && now - _qrLastSeenAt < QR_SAME_CODE_IGNORE_MS) {
+            _qrLastSeenAt = now; // still in frame — keep ignoring until it's moved away
+            return;
         }
+        _qrLastVal = val;
+        _qrLastSeenAt = now;
+
+        _qrCooldown = true;
+        statusEl.textContent = '✓ Found: ' + val.substring(0, 20);
+        Promise.resolve(checkIn(val, true, null))
+            .catch(err => console.error('Camera check-in failed:', err))
+            .finally(() => { _qrCooldown = false; _qrLastSeenAt = Date.now(); });
     }
 
     /* ============================= CABBIE AI ============================= */
