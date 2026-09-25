@@ -6952,7 +6952,9 @@
             return;
         }
 
-        if (!window.currentProfiles) {
+        // currentProfiles is initialized to {} (truthy), so check for emptiness — otherwise
+        // the cross-market fetch never runs unless the Profiles tab was opened first.
+        if (!window.currentProfiles || Object.keys(window.currentProfiles).length === 0) {
             document.getElementById('loader').style.display = 'flex';
             try {
                 await fetchAndRenderProfiles();
@@ -6974,6 +6976,11 @@
         Object.values(window.currentProfiles || {}).forEach(p => {
             merged[p.originalEmail] = p; // richer cross-market data wins when both exist
         });
+
+        // Remember exactly what the checkbox list was built from, so the send resolves each
+        // checked email against the same roster rather than currentProfiles alone (which may
+        // be missing current-market vendors, silently dropping them to "sent to 0").
+        _customEmailRoster = merged;
 
         const profiles = Object.values(merged).sort((a, b) =>
             `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
@@ -7039,6 +7046,7 @@
     // lookups here must go through it rather than emailTemplateLibrary.templates directly.
     let _customEmailStyleTemplateId = null;
     let _customEmailTemplateOptions = {};
+    let _customEmailRoster = {};
 
     function applyCustomEmailTemplate(templateId) {
         _customEmailStyleTemplateId = templateId || null;
@@ -7095,7 +7103,13 @@
         document.getElementById('loader').style.display = 'flex';
         const loaderText = document.querySelector('#loader span');
 
-        const targetVendors = emails.map(email => window.currentProfiles[email]).filter(Boolean);
+        const targetVendors = emails.map(email => _customEmailRoster[email] || (window.currentProfiles || {})[email]).filter(Boolean);
+        if (targetVendors.length === 0) {
+            document.getElementById('loader').style.display = 'none';
+            _realtimePaused = false;
+            alert(`Couldn't match the ${emails.length} selected vendor(s) to a roster entry, so nothing was sent. Please reopen Custom Email and try again.`);
+            return;
+        }
 
         const BATCH_SIZE = 10;
         for (let i = 0; i < targetVendors.length; i += BATCH_SIZE) {
