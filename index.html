@@ -10077,12 +10077,18 @@
             alert('Camera access is not supported in this browser.');
             return;
         }
+        // Release any stream left over from a previous session before opening a new one.
+        if (_qrRaf) { cancelAnimationFrame(_qrRaf); _qrRaf = null; }
+        if (_qrStream) { _qrStream.getTracks().forEach(t => t.stop()); _qrStream = null; }
+        // _scanFrame sets _qrCooldown after a successful read; it must be cleared here or
+        // every later session silently skips decoding until the page is refreshed.
+        _qrCooldown = false;
         navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } })
             .then(stream => {
                 _qrStream = stream;
                 const video = document.getElementById('qrVideo');
                 video.srcObject = stream;
-                video.play();
+                video.play().catch(() => {});
                 document.getElementById('cameraScannerWrapper').style.display = 'block';
                 document.getElementById('startCameraBtn').style.display = 'none';
                 document.getElementById('qrStatusText').textContent = 'Scanning…';
@@ -10096,6 +10102,7 @@
     function stopCameraScanner() {
         if (_qrRaf) { cancelAnimationFrame(_qrRaf); _qrRaf = null; }
         if (_qrStream) { _qrStream.getTracks().forEach(t => t.stop()); _qrStream = null; }
+        _qrCooldown = false;
         document.getElementById('cameraScannerWrapper').style.display = 'none';
         document.getElementById('startCameraBtn').style.display = 'block';
     }
