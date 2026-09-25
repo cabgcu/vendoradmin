@@ -6942,44 +6942,32 @@
     }
 
     // --- CUSTOM EMAIL (ad-hoc message to any hand-picked set of vendors) ---
-    // Built from window.currentProfiles — the cross-market, deduplicated-by-email "person"
-    // roster the Profiles tab uses — rather than currentData.vendors, which only holds
-    // applications for whichever single market is currently active. That market-scoped list
-    // was silently hiding vendors who applied to a *different* market from selection here.
+    // Scoped to the currently active market: the list is built from currentData.vendors
+    // (this market's applications), deduplicated by email. Using this market's application
+    // rows also means confirm/decline links and {{MARKET_*}} variables point at this market.
     async function openCustomEmailModal(preselectVendorId = null, preselectEmail = null) {
         if (currentUser.role !== 'admin') {
             showToast("Only admins can send emails.");
             return;
         }
 
-        // currentProfiles is initialized to {} (truthy), so check for emptiness — otherwise
-        // the cross-market fetch never runs unless the Profiles tab was opened first.
-        if (!window.currentProfiles || Object.keys(window.currentProfiles).length === 0) {
-            document.getElementById('loader').style.display = 'flex';
-            try {
-                await fetchAndRenderProfiles();
-            } catch (e) {
-                console.error('Custom Email: failed to load cross-market vendor profiles, falling back to the current market roster.', e);
-            }
-            document.getElementById('loader').style.display = 'none';
-        }
-
-        // Merge the current market's roster with the cross-market profile cache so this list
-        // is never empty just because the profiles fetch above failed, returned nothing, or
-        // hasn't populated yet — currentData.vendors is always available once vendors are loaded.
         const merged = {};
         (currentData.vendors || []).forEach(v => {
             const email = normalizeStrikeEmail(v.preferred_email);
-            if (!email) return;
-            merged[email] = { ...v, originalEmail: email, appCount: merged[email]?.appCount || 1 };
-        });
-        Object.values(window.currentProfiles || {}).forEach(p => {
-            merged[p.originalEmail] = p; // richer cross-market data wins when both exist
+            if (!email || merged[email]) return;
+            merged[email] = { ...v, originalEmail: email };
         });
 
+        // Opened from a vendor's profile who never applied to this market — still include
+        // just that one person so the profile's "Email" button works, without pulling in
+        // every other market's vendors.
+        const preEmailNorm = preselectEmail ? normalizeStrikeEmail(preselectEmail) : null;
+        if (preEmailNorm && !merged[preEmailNorm] && window.currentProfiles?.[preEmailNorm]) {
+            merged[preEmailNorm] = window.currentProfiles[preEmailNorm];
+        }
+
         // Remember exactly what the checkbox list was built from, so the send resolves each
-        // checked email against the same roster rather than currentProfiles alone (which may
-        // be missing current-market vendors, silently dropping them to "sent to 0").
+        // checked email against the same roster.
         _customEmailRoster = merged;
 
         const profiles = Object.values(merged).sort((a, b) =>
@@ -6987,7 +6975,7 @@
         );
 
         if (profiles.length === 0) {
-            showToast("No vendors found. Make sure a market with applications is loaded.");
+            showToast("No vendors in this market yet. Load a market with applications first.");
             return;
         }
 
@@ -7006,7 +6994,7 @@
             return `
             <div class="vendor-checkbox-item" data-name="${escapeHtml(searchKey)}">
                 <input type="checkbox" id="chkce-${p.id}" class="custom-email-checkbox" value="${escapeHtml(p.originalEmail)}" ${checked ? 'checked' : ''}>
-                <label for="chkce-${p.id}"><strong>${p.first_name} ${p.last_name}</strong> <span style="color:var(--text-muted); font-size:0.8rem;">— ${p.status || 'Pending'} · ${p.appCount} app${p.appCount === 1 ? '' : 's'}</span></label>
+                <label for="chkce-${p.id}"><strong>${p.first_name} ${p.last_name}</strong> <span style="color:var(--text-muted); font-size:0.8rem;">— ${p.status || 'Pending'}</span></label>
             </div>`;
         }).join('');
 
@@ -7103,7 +7091,7 @@
         document.getElementById('loader').style.display = 'flex';
         const loaderText = document.querySelector('#loader span');
 
-        const targetVendors = emails.map(email => _customEmailRoster[email] || (window.currentProfiles || {})[email]).filter(Boolean);
+        const targetVendors = emails.map(email => _customEmailRoster[email]).filter(Boolean);
         if (targetVendors.length === 0) {
             document.getElementById('loader').style.display = 'none';
             _realtimePaused = false;
