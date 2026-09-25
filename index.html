@@ -2191,9 +2191,18 @@
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     <input type="text" id="profileSearch" class="modern-input" placeholder="Search profiles by name, email, or ID..." onkeyup="renderProfilesTable()">
                 </div>
+
+                <select id="profileStrikeFilter" class="modern-input" style="flex: 1; min-width: 170px;" onchange="renderProfilesTable()">
+                    <option value="all">All Profiles</option>
+                    <option value="any">Has a Strike</option>
+                    <option value="1">1 Strike</option>
+                    <option value="2">2 Strikes</option>
+                    <option value="3">3+ Strikes</option>
+                    <option value="none">No Strikes</option>
+                </select>
             </div>
             <table>
-                <thead><tr><th>Student ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Most Recent Application</th><th>Total Apps</th></tr></thead>
+                <thead><tr><th>Student ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Most Recent Application</th><th>Total Apps</th><th>Strikes</th></tr></thead>
                 <tbody id="profilesTableBody"></tbody>
             </table>
         </div>
@@ -4697,8 +4706,21 @@
             });
         }
         
+        // Strike filter uses the same combined count (late-application + manual strikes)
+        // shown on the profile modal and vendor badges.
+        const strikeFilter = document.getElementById('profileStrikeFilter')?.value || 'all';
+        if (strikeFilter !== 'all') {
+            profiles = profiles.filter(p => {
+                const n = getTotalStrikeCount(p.originalEmail);
+                if (strikeFilter === 'any') return n > 0;
+                if (strikeFilter === 'none') return n === 0;
+                if (strikeFilter === '3') return n >= 3;
+                return n === Number(strikeFilter);
+            });
+        }
+
         if (profiles.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No vendor profiles found matching your search.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No vendor profiles found matching your filters.</td></tr>';
         } else {
             tbody.innerHTML = profiles.map(p => `
                 <tr class="clickable-row" onclick="openProfileModal('${p.originalEmail}')">
@@ -4708,6 +4730,12 @@
                     <td>${p.phone || 'N/A'}</td>
                     <td>${p.lastEvent}</td>
                     <td><span class="status-badge sent" style="background: rgba(191, 90, 242, 0.1); border-color: rgba(191, 90, 242, 0.3); color: #BF5AF2;">${p.appCount} Apps</span></td>
+                    <td>${(() => {
+                        const n = getTotalStrikeCount(p.originalEmail);
+                        return n > 0
+                            ? `<span class="status-badge" style="background: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.3); color: #FF3B30;">${n} Strike${n === 1 ? '' : 's'}</span>`
+                            : '<span style="color:var(--text-muted);">—</span>';
+                    })()}</td>
                 </tr>
             `).join('');
         }
