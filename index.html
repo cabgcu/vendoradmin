@@ -283,13 +283,17 @@
         .nav-badge { display: inline-block; min-width: 18px; padding: 1px 6px; margin-left: 6px; border-radius: 9px; background: var(--danger-text); color: #fff; font-size: 0.68rem; font-weight: 800; line-height: 16px; text-align: center; }
 
         /* ── MAIL (Gmail inbox via Apps Script) ── */
-        .mail-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
-        .mail-folders { display: flex; flex-wrap: wrap; gap: 6px; }
-        .mail-folder { background: var(--input-bg); border: 1px solid var(--border-light); color: var(--text-muted); padding: 6px 12px; border-radius: 18px; font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: inherit; }
-        .mail-folder:hover { color: var(--text-main); background: var(--bg-hover); }
-        .mail-folder.active { background: var(--brand-primary-light); color: var(--text-main); border-color: var(--brand-primary); }
+        .mail-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .mail-folders { display: flex; gap: 4px; background: #1a1625; padding: 4px; border-radius: var(--radius-lg); border: 1px solid var(--border-light); overflow-x: auto; scrollbar-width: none; }
+        .mail-folders::-webkit-scrollbar { display: none; }
+        .mail-folder { background: transparent; border: none; color: var(--text-muted); padding: 7px 14px; border-radius: var(--radius-md); font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background 0.15s, color 0.15s; }
+        .mail-folder:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.06); }
+        .mail-folder.active { background: var(--gradient-accent); color: #ffffff; box-shadow: 0 2px 10px rgba(79, 70, 229, 0.35); }
+        .mail-searchbar { display: flex; gap: 8px; margin-bottom: 14px; }
+        .mail-searchbar .modern-input { height: 38px; background: #1a1625; }
+        #view-mail select.modern-input { background-color: #1a1625; }
         .mail-layout { display: grid; grid-template-columns: minmax(300px, 400px) 1fr; gap: 14px; height: calc(100vh - 230px); min-height: 480px; }
-        .mail-pane { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-card); overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+        .mail-pane { background: #0b0f1e; border: 1px solid var(--glass-border); border-radius: var(--radius-card); overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
         .mail-pane-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--glass-border); flex-wrap: wrap; }
         .mail-scroll { overflow-y: auto; flex: 1; min-height: 0; }
         .mail-row { display: flex; gap: 10px; padding: 12px; border-bottom: 1px solid var(--table-border); cursor: pointer; align-items: flex-start; }
@@ -304,10 +308,10 @@
         .mail-row-subject { color: var(--text-muted); font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
         .mail-row-snippet { color: var(--text-muted); font-size: 0.78rem; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
         .mail-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-primary-hover); display: inline-block; margin-right: 6px; flex-shrink: 0; }
-        .mail-chip { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 1px 7px; border-radius: 8px; background: var(--bg-hover); border: 1px solid var(--border-light); color: var(--text-muted); margin: 4px 4px 0 0; }
+        .mail-chip { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 1px 7px; border-radius: 8px; background: #1a1625; border: 1px solid var(--border-light); color: var(--text-muted); margin: 4px 4px 0 0; }
         .mail-chip.vendor { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); cursor: pointer; }
-        .mail-btn { background: var(--input-bg); border: 1px solid var(--border-light); color: var(--text-main); padding: 6px 11px; border-radius: var(--radius-md); font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit; }
-        .mail-btn:hover { background: var(--bg-hover); border-color: var(--border-medium); }
+        .mail-btn { background: #1a1625; border: 1px solid var(--border-light); color: var(--text-main); padding: 6px 11px; border-radius: var(--radius-md); font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit; }
+        .mail-btn:hover { background: #252036; border-color: var(--border-medium); }
         .mail-btn.danger { color: var(--danger-text); }
         .mail-btn:disabled { opacity: 0.4; cursor: default; }
         .mail-msg { border-bottom: 1px solid var(--table-border); }
@@ -315,9 +319,12 @@
         .mail-msg-head:hover { background: var(--row-hover); }
         .mail-msg-from { font-weight: 700; font-size: 0.9rem; color: var(--text-main); }
         .mail-msg-meta { color: var(--text-muted); font-size: 0.75rem; margin-top: 2px; word-break: break-word; }
-        .mail-msg-body { padding: 0 16px 14px; }
-        .mail-msg-body iframe { width: 100%; border: none; background: #ffffff; border-radius: var(--radius-md); display: block; min-height: 60px; }
+        .mail-msg-body { padding: 0 12px 14px; }
+        .mail-msg-body iframe { width: 100%; height: 200px; border: none; background: #ffffff; border-radius: var(--radius-md); display: block; }
         .mail-msg.collapsed .mail-msg-body { display: none; }
+        .mail-msg-snippet { display: none; color: var(--text-muted); font-size: 0.8rem; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mail-msg.collapsed .mail-msg-snippet { display: block; }
+        .mail-msg.collapsed .mail-msg-meta.recipients { display: none; }
         .mail-empty { color: var(--text-muted); text-align: center; padding: 40px 20px; font-size: 0.9rem; }
         .mail-compose { padding: 12px 16px 16px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 8px; }
         .mail-compose textarea.modern-input { min-height: 120px; resize: vertical; }
@@ -2255,14 +2262,14 @@
     <div id="view-mail" class="view" style="display:none;">
         <div class="mail-toolbar">
             <div class="mail-folders" id="mailFolders"></div>
-            <select id="mailLabelSelect" class="modern-input" style="width:auto; min-width:140px; height:32px; padding:0 12px; font-size:0.8rem;" onchange="mailSelectLabel(this.value)">
+            <select id="mailLabelSelect" class="modern-input" style="width:auto; min-width:140px; height:38px; padding:0 32px 0 12px; font-size:0.82rem;" onchange="mailSelectLabel(this.value)">
                 <option value="">Labels…</option>
             </select>
-            <div style="flex:1; min-width:180px;">
-                <input type="text" id="mailSearch" class="modern-input" style="height:32px; font-size:0.85rem;" placeholder="Search mail (Gmail search, e.g. from:name@gcu.edu)" onkeydown="if(event.key==='Enter') mailLoadList()">
-            </div>
-            <button class="mail-btn" onclick="mailLoadList()" title="Refresh">↻ Refresh</button>
-            <button class="btn-action" style="padding:7px 16px; font-size:0.82rem;" onclick="mailOpenCompose()">✎ Compose</button>
+            <button class="btn-action" style="padding:9px 18px; font-size:0.85rem; margin-left:auto;" onclick="mailOpenCompose()">✎ Compose</button>
+        </div>
+        <div class="mail-searchbar">
+            <input type="text" id="mailSearch" class="modern-input" placeholder="Search mail — e.g. from:name@gcu.edu, has:attachment, booth" onkeydown="if(event.key==='Enter') mailLoadList()">
+            <button class="mail-btn" style="padding:0 14px;" onclick="mailLoadList()" title="Refresh">↻</button>
         </div>
         <div id="mailNotConfigured" class="mail-pane" style="display:none; padding:30px; text-align:center;">
             <h3 style="margin:0 0 8px;">Connect a Gmail inbox</h3>
@@ -3254,7 +3261,7 @@
         const lastIdx = t.messages.length - 1;
 
         detail.innerHTML = `
-            <div class="mail-pane-head" style="position:sticky; top:0; background:var(--bg-page); z-index:1;">
+            <div class="mail-pane-head" style="position:sticky; top:0; background:#0b0f1e; z-index:1;">
                 <button class="mail-btn mail-back" onclick="mailCloseThread()">← Back</button>
                 ${inTrash || inSpam
                     ? `<button class="mail-btn" data-op="inbox">Move to Inbox</button>`
@@ -3263,7 +3270,7 @@
                        <button class="mail-btn" data-op="spam">Spam</button>`}
                 <button class="mail-btn" data-op="unread">Mark unread</button>
                 <button class="mail-btn" data-op="${t.starred ? 'unstar' : 'star'}">${t.starred ? '★ Unstar' : '☆ Star'}</button>
-                <select class="modern-input" id="mailThreadLabel" style="width:auto; height:30px; font-size:0.78rem; padding:0 10px;">
+                <select class="modern-input" id="mailThreadLabel" style="width:auto; height:30px; font-size:0.78rem; padding:0 30px 0 10px;">
                     <option value="">Add label…</option>${labelOptions}
                 </select>
             </div>
@@ -3280,7 +3287,8 @@
                         <div class="mail-msg-head">
                             <div style="min-width:0;">
                                 <div class="mail-msg-from">${escapeHtml(mailDisplayName(m.from))}</div>
-                                <div class="mail-msg-meta">${escapeHtml(m.from)}<br>to ${escapeHtml(m.to)}${m.cc ? ' · cc ' + escapeHtml(m.cc) : ''}</div>
+                                <div class="mail-msg-meta recipients">${escapeHtml(m.from)}<br>to ${escapeHtml(m.to)}${m.cc ? ' · cc ' + escapeHtml(m.cc) : ''}</div>
+                                <div class="mail-msg-snippet">${escapeHtml((m.text || '').replace(/\s+/g, ' ').slice(0, 140))}</div>
                             </div>
                             <div class="mail-msg-meta" style="white-space:nowrap;">${new Date(m.date).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</div>
                         </div>
@@ -3328,16 +3336,38 @@
     function mailFillFrame(frame, m) {
         if (!frame || frame.dataset.filled) return;
         frame.dataset.filled = '1';
-        const body = m.html && m.html.trim()
-            ? m.html
-            : `<pre style="white-space:pre-wrap; font-family:inherit; margin:0;">${escapeHtml(m.text || '')}</pre>`;
-        frame.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><base target="_blank"><style>body{margin:12px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#222;word-wrap:break-word;overflow-wrap:anywhere;}img{max-width:100%;height:auto;}table{max-width:100%;}</style></head><body>${body}</body></html>`;
+        // Defaults go first so the email's own styles override them; links open in a new tab.
+        const head = `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank">` +
+            `<style>html,body{margin:0;padding:0;background:#ffffff;}body{padding:16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#222;overflow-wrap:anywhere;}img{max-width:100%;height:auto;}pre{white-space:pre-wrap;font-family:inherit;margin:0;}</style>`;
+        let doc;
+        const html = (m.html || '').trim();
+        if (!html) {
+            doc = `<!DOCTYPE html><html><head>${head}</head><body><pre>${escapeHtml(m.text || '')}</pre></body></html>`;
+        } else if (/<head[\s>]/i.test(html)) {
+            doc = html.replace(/<head([^>]*)>/i, `<head$1>${head}`);
+        } else if (/<html[\s>]/i.test(html)) {
+            doc = html.replace(/<html([^>]*)>/i, `<html$1><head>${head}</head>`);
+        } else {
+            doc = `<!DOCTYPE html><html><head>${head}</head><body>${html}</body></html>`;
+        }
+        frame.srcdoc = doc;
+
         const resize = () => {
-            try { frame.style.height = Math.min(4000, frame.contentDocument.documentElement.scrollHeight + 4) + 'px'; } catch (e) { frame.style.height = '500px'; }
+            try {
+                const d = frame.contentDocument;
+                const h = Math.max(d.documentElement.scrollHeight, d.body ? d.body.scrollHeight : 0);
+                if (h) frame.style.height = Math.min(6000, h + 2) + 'px';
+            } catch (e) { frame.style.height = '600px'; }
         };
         frame.onload = () => {
             resize();
-            try { frame.contentDocument.querySelectorAll('img').forEach(img => img.addEventListener('load', resize)); } catch (e) {}
+            try {
+                const d = frame.contentDocument;
+                d.querySelectorAll('img').forEach(img => { if (!img.complete) img.addEventListener('load', resize); });
+                if (window.ResizeObserver && d.body) new ResizeObserver(resize).observe(d.body);
+            } catch (e) {}
+            setTimeout(resize, 400);
+            setTimeout(resize, 1500);
         };
     }
 
