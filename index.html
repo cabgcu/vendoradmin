@@ -329,6 +329,16 @@
         .mail-compose { padding: 12px 16px 16px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 8px; }
         .mail-compose textarea.modern-input { min-height: 120px; resize: vertical; }
         .mail-back { display: none; }
+        .mail-compose-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .mail-compose-tools select.modern-input { width: auto; min-width: 170px; height: 32px; padding: 0 30px 0 10px; font-size: 0.8rem; background-color: #1a1625; }
+        .mail-compose-tools label.mail-check { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+        .mail-compose-tools label.mail-check input { accent-color: var(--brand-primary); }
+        .mail-attach-list { display: flex; flex-wrap: wrap; gap: 6px; }
+        .mail-attach-list:empty { display: none; }
+        .mail-attach-chip { display: inline-flex; align-items: center; gap: 6px; background: #1a1625; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 4px 6px 4px 10px; font-size: 0.78rem; color: var(--text-main); }
+        .mail-attach-chip button { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; line-height: 1; padding: 0 4px; }
+        .mail-attach-chip button:hover { color: var(--danger-text); }
+        .mail-hint { color: var(--text-muted); font-size: 0.75rem; }
         @media (max-width: 900px) {
             .mail-layout { grid-template-columns: 1fr; height: auto; min-height: 0; }
             .mail-layout .mail-pane { height: calc(100vh - 250px); min-height: 420px; }
@@ -1682,7 +1692,7 @@
     <div class="modal-content" style="max-width: 900px; width: 95%; padding: 0; overflow: hidden; max-height: 92vh;" onclick="event.stopPropagation()">
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--glass-border); background: var(--glass-surface);">
             <div>
-                <div style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #BF5AF2;">Sent Email Preview</div>
+                <div style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #BF5AF2;" id="emailPreviewTitle">Sent Email Preview</div>
                 <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px;" id="emailPreviewSubject"></div>
             </div>
             <button style="background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); color: var(--text-muted); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; line-height: 1;" onclick="closeEmailPreviewModal()">&times;</button>
@@ -3300,12 +3310,15 @@
                     </div>`).join('')}
             </div>
             <div class="mail-compose">
+                ${mailComposeToolsHtml('reply')}
                 <textarea id="mailReplyBody" class="modern-input" placeholder="Write a reply…"></textarea>
+                <div class="mail-attach-list" id="mailReplyAttachments"></div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <button class="btn-action" style="padding:9px 18px; font-size:0.85rem;" onclick="mailSendReply(false)">Reply</button>
                     <button class="mail-btn" onclick="mailSendReply(true)">Reply all</button>
                 </div>
             </div>`;
+        mailResetComposer('reply');
 
         // Thread-level actions
         detail.querySelectorAll('.mail-pane-head [data-op]').forEach(b => b.addEventListener('click', () => {
@@ -3400,10 +3413,14 @@
         const box = document.getElementById('mailReplyBody');
         const body = box.value.trim();
         if (!t || !body) { showToast('Write a reply first.'); return; }
+        const vendor = mailVendorFor(t.fromEmail);
+        const built = mailBuildOutgoing('reply', body, '', vendor);
+        if (!built) return;
         document.querySelectorAll('.mail-compose button').forEach(b => b.disabled = true);
         showToast('Sending…');
         try {
-            await gmailApi('reply', { threadId: t.id, body, replyAll });
+            const attachments = await mailEncodeAttachments('reply');
+            await gmailApi('reply', { threadId: t.id, body: built.text, html: built.html, replyAll, attachments });
             box.value = '';
             showToast('Reply sent!');
             mailOpenThread(t.id, false);
@@ -3413,6 +3430,202 @@
         } finally {
             document.querySelectorAll('.mail-compose button').forEach(b => b.disabled = false);
         }
+    }
+
+    // ---- Compose tools: Brevo template library + attachments (Mail tab only; Brevo sending is untouched) ----
+    const MAIL_ATTACH_MAX_BYTES = 20 * 1024 * 1024;
+    const mailComposers = { reply: { files: [], templateId: '' }, new: { files: [], templateId: '' } };
+    const mailComposerIds = {
+        reply: { body: 'mailReplyBody', subject: null, list: 'mailReplyAttachments' },
+        new: { body: 'mailComposeBody', subject: 'mailComposeSubject', list: 'mailNewAttachments' }
+    };
+
+    function mailComposeToolsHtml(key) {
+        const tpls = Object.entries(emailTemplateLibrary.templates || {})
+            .map(([id, t]) => `<option value="${escapeHtml(id)}">${escapeHtml(t.name || id)}</option>`).join('');
+        return `<div class="mail-compose-tools">
+            <select class="modern-input" id="mailTpl-${key}" onchange="mailApplyTemplate('${key}', this.value)" title="Fill from an email template">
+                <option value="">Use a template…</option>${tpls}
+            </select>
+            <label class="mail-btn" style="display:inline-flex; align-items:center;" title="Attach files">📎 Attach
+                <input type="file" multiple style="display:none;" onchange="mailAddFiles('${key}', this.files); this.value='';">
+            </label>
+            <label class="mail-check" title="Send in the same branded layout as the Brevo market emails"><input type="checkbox" id="mailBranded-${key}"> Market design</label>
+            <button type="button" class="mail-btn" onclick="mailPreviewOutgoing('${key}')">Preview</button>
+        </div>`;
+    }
+
+    function mailResetComposer(key) {
+        mailComposers[key] = { files: [], templateId: '' };
+        mailRenderAttachments(key);
+    }
+
+    function mailFirstAddress(str) {
+        const first = String(str || '').split(/[,;]/)[0] || '';
+        const m = first.match(/<([^>]+)>/);
+        return (m ? m[1] : first).trim().toLowerCase();
+    }
+
+    function mailApplyTemplate(key, id) {
+        const c = mailComposers[key];
+        const bodyEl = document.getElementById(mailComposerIds[key].body);
+        // Drop files that came from the previously chosen template
+        c.files = c.files.filter(f => !f.fromTemplate);
+        c.templateId = id;
+        if (!id) { mailRenderAttachments(key); return; }
+        // getTemplateDetails only reads the library (and adds the confirm buttons to approval templates)
+        const tpl = getTemplateDetails({}, id);
+        if (!tpl) return;
+        if (bodyEl.value.trim() && !confirm('Replace what you have written with this template?')) {
+            document.getElementById('mailTpl-' + key).value = '';
+            c.templateId = '';
+            mailRenderAttachments(key);
+            return;
+        }
+        bodyEl.value = tpl.body || '';
+        const subjId = mailComposerIds[key].subject;
+        if (subjId) document.getElementById(subjId).value = tpl.subj || '';
+        (tpl.attachments || []).forEach(a => c.files.push({ name: a.name, size: a.size || 0, url: a.url, content: a.content, fromTemplate: true }));
+        document.getElementById('mailBranded-' + key).checked = true;
+        mailRenderAttachments(key);
+        showToast('Template added — {{variables}} fill in when sent. Use Preview to check.');
+    }
+
+    function mailAddFiles(key, fileList) {
+        const c = mailComposers[key];
+        Array.from(fileList || []).forEach(file => c.files.push({ name: file.name, size: file.size, type: file.type, file }));
+        const total = c.files.reduce((n, f) => n + (f.size || 0), 0);
+        if (total > MAIL_ATTACH_MAX_BYTES) showToast('Attachments are over 20 MB — Gmail will reject this email.');
+        mailRenderAttachments(key);
+    }
+
+    function mailRemoveFile(key, idx) {
+        mailComposers[key].files.splice(idx, 1);
+        mailRenderAttachments(key);
+    }
+
+    function mailRenderAttachments(key) {
+        const el = document.getElementById(mailComposerIds[key].list);
+        if (!el) return;
+        el.innerHTML = mailComposers[key].files.map((f, i) =>
+            `<span class="mail-attach-chip">📎 ${escapeHtml(f.name)}${f.size ? ` <span style="opacity:.6">(${formatAttachmentSize(f.size)})</span>` : ''}<button type="button" title="Remove" onclick="mailRemoveFile('${key}', ${i})">×</button></span>`
+        ).join('');
+    }
+
+    async function mailEncodeAttachments(key) {
+        const toBase64 = buf => {
+            const bytes = new Uint8Array(buf);
+            let bin = '';
+            for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+            return btoa(bin);
+        };
+        const out = [];
+        for (const f of mailComposers[key].files) {
+            if (f.content) { out.push({ name: f.name, type: f.type || '', data: f.content }); continue; }
+            let blob = f.file;
+            if (!blob && f.url) {
+                const resp = await fetch(f.url);
+                if (!resp.ok) throw new Error(`Could not load template attachment "${f.name}".`);
+                blob = await resp.blob();
+            }
+            if (!blob) continue;
+            out.push({ name: f.name, type: blob.type || f.type || 'application/octet-stream', data: toBase64(await blob.arrayBuffer()) });
+        }
+        const total = out.reduce((n, a) => n + a.data.length * 0.75, 0);
+        if (total > MAIL_ATTACH_MAX_BYTES) throw new Error('Attachments are over 20 MB — remove some and try again.');
+        return out;
+    }
+
+    // Turns the typed message (which may contain template {{VARIABLES}}) into the email that
+    // will be sent: plain HTML, or the same branded layout the Brevo emails use.
+    function mailBuildOutgoing(key, bodyText, subjectText, vendor) {
+        const branded = document.getElementById('mailBranded-' + key)?.checked;
+        const usesLinks = /\{\{(CONFIRM_LINK|DECLINE_LINK|POWER_CONFIRM_LINK|POWER_DECLINE_LINK)\}\}/.test(bodyText);
+        if (usesLinks && !vendor) {
+            showToast('Confirm/decline buttons only work when emailing a vendor in the active market. Remove them or change the recipient.');
+            return null;
+        }
+        const v = vendor || { first_name: 'there' };
+
+        let baseUrl = currentData.publicUrl || window.location.href.split('?')[0].split('#')[0];
+        if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+        if (baseUrl && !baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
+        const id = vendor ? vendor.id : '';
+        const urls = { confirm: `${baseUrl}?confirm=${id}`, decline: `${baseUrl}?decline=${id}`, powConfirm: `${baseUrl}?confirm_power=${id}`, powDecline: `${baseUrl}?decline_power=${id}` };
+        if (usesLinks && (baseUrl.startsWith('file:') || baseUrl.includes('localhost'))) {
+            showToast("Set the System Public URL in Settings first — confirm links would be broken.");
+            return null;
+        }
+
+        const parsed = parseEmailVariables(bodyText, v, urls.confirm, urls.decline, urls.powConfirm, urls.powDecline);
+        const subject = parseEmailVariables(subjectText || '', v, urls.confirm, urls.decline, urls.powConfirm, urls.powDecline);
+        const bodyHtml = parsed.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+        const text = parseEmailVariables(bodyText, v, '', '', '', '')
+            .replace(/<a href="[^"]*"[^>]*>[^<]*<\/a>/g, '')
+            .replace(/\*\*(.*?)\*\*/g, '$1')
+            + (usesLinks ? `\n\nConfirm: ${urls.confirm}\nCan't make it: ${urls.decline}` : '');
+
+        if (!branded) {
+            return { subject, text, html: `<div style="font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:1.5; color:#222;">${bodyHtml}</div>` };
+        }
+
+        const tplId = mailComposers[key].templateId || 'custom';
+        const good = ['approved', 'power', 'power_denied'].includes(tplId);
+        const statusColor = good ? '#34C759' : (['denied'].includes(tplId) ? '#FF3B30' : '#0A84FF');
+        const statusBadge = good ? 'APPROVED' : (tplId === 'denied' ? 'STATUS UPDATE' : 'MARKET UPDATE');
+        const bannerUrl = processImageUrl(currentData.bannerUrl || '');
+        const bannerHtml = bannerUrl ? `<tr><td align="center" style="padding: 0;"><img src="${bannerUrl}" alt="Banner" width="600" style="display: block; width: 100%; max-width: 100%; height: auto; border: 0;"></td></tr>` : '';
+        const showQr = vendor && good && (vendor.status === 'Approved' || vendor.status === 'Checked In');
+        const barcodeData = vendor ? (vendor.student_id || String(vendor.id).substring(0, 8)) : '';
+        const qrHtml = showQr ? `
+            <tr><td style="padding: 0 15px; background-color: #ffffff;"><div style="border-top: 2px dashed #e5e7eb; width: 100%; height: 1px;"></div></td></tr>
+            <tr><td align="center" style="padding: 40px 30px; background-color: #ffffff;">
+                <table border="0" cellspacing="0" cellpadding="0" width="100%"><tr><td align="center" style="background: #ffffff; padding: 25px; border-radius: 16px; border: 2px solid #eeeeee;">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(barcodeData)}&format=png&bgcolor=FFFFFF&color=000000&margin=10" alt="Ticket QR Code" width="250" height="250" style="display: block; margin: 0 auto; border: 0; max-width: 100%; height: auto; padding: 10px; border-radius: 8px;">
+                </td></tr></table>
+                <p style="margin: 25px 0 0 0; font-size: 14px; color: #1a1a1a; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">SCAN AT CHECK-IN</p>
+                <p style="margin: 8px 0 0 0; font-size: 12px; color: #888888; font-family: monospace;">ID: #${escapeHtml(String(barcodeData).toUpperCase())}</p>
+            </td></tr>` : '';
+
+        const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+        <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Segoe UI', sans-serif;">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f3f4f6;"><tr><td align="center" style="padding: 20px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                    ${bannerHtml}
+                    <tr><td align="center" style="background-color: #ffffff; padding: 40px 30px 20px 30px;">
+                        <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #111; text-transform: uppercase;">${currentData.headingText || 'Market Update'}</h1>
+                        <p style="margin: 12px 0 0 0; font-size: 12px; font-weight: 700; color: #fff; background-color: ${statusColor}; display: inline-block; padding: 6px 16px; text-transform: uppercase; letter-spacing: 1px; border-radius: 20px;">${statusBadge}</p>
+                    </td></tr>
+                    <tr><td style="padding: 10px 40px 40px 40px; background-color: #ffffff; font-size: 16px; color: #333; line-height: 1.6;">${bodyHtml}</td></tr>
+                    ${qrHtml}
+                    <tr><td align="center" style="background-color: #f9fafb; padding: 20px; border-top: 1px solid #eaeaea;">
+                        <p style="margin: 0; font-size: 12px; font-weight: 600; color: #aaa; text-transform: uppercase;">&copy; Canyon Activities Board</p>
+                    </td></tr>
+                </table>
+            </td></tr></table>
+        </body></html>`;
+        return { subject, text, html };
+    }
+
+    function mailPreviewOutgoing(key) {
+        const ids = mailComposerIds[key];
+        const body = document.getElementById(ids.body).value;
+        let subject, vendor;
+        if (key === 'reply') {
+            const t = mailState.openThread;
+            subject = t ? 'Re: ' + t.subject : '';
+            vendor = t ? mailVendorFor(t.fromEmail) : null;
+        } else {
+            subject = document.getElementById(ids.subject).value;
+            vendor = mailVendorFor(mailFirstAddress(document.getElementById('mailComposeTo').value));
+        }
+        const built = mailBuildOutgoing(key, body, subject, vendor);
+        if (!built) return;
+        const files = mailComposers[key].files.map(f => f.name);
+        document.getElementById('emailPreviewSubject').innerText = (key === 'reply' ? subject : built.subject || '(no subject)') + (files.length ? '  ·  📎 ' + files.join(', ') : '');
+        document.getElementById('emailPreviewTitle').innerText = 'Preview — not sent yet';
+        document.getElementById('emailPreviewFrame').srcdoc = built.html;
+        document.getElementById('emailPreviewModal').style.display = 'flex';
     }
 
     function mailOpenCompose(to = '', subject = '') {
@@ -3426,12 +3639,15 @@
                 <input id="mailComposeTo" class="modern-input" placeholder="To (separate multiple with commas)" value="${escapeHtml(to)}">
                 <input id="mailComposeCc" class="modern-input" placeholder="Cc (optional)">
                 <input id="mailComposeSubject" class="modern-input" placeholder="Subject" value="${escapeHtml(subject)}">
+                ${mailComposeToolsHtml('new')}
                 <textarea id="mailComposeBody" class="modern-input" style="min-height:220px;" placeholder="Message"></textarea>
+                <div class="mail-attach-list" id="mailNewAttachments"></div>
                 <div style="display:flex; gap:8px;">
                     <button class="btn-action" id="mailComposeSend" style="padding:9px 18px; font-size:0.85rem;" onclick="mailSendNew()">Send</button>
                     <button class="mail-btn" onclick="mailCloseThread()">Discard</button>
                 </div>
             </div>`;
+        mailResetComposer('new');
         document.getElementById(to ? 'mailComposeSubject' : 'mailComposeTo').focus();
     }
 
@@ -3442,11 +3658,15 @@
         const body = document.getElementById('mailComposeBody').value.trim();
         if (!to) { showToast('Add a recipient.'); return; }
         if (!body && !confirm('Send without a message?')) return;
+        const vendor = mailVendorFor(mailFirstAddress(to));
+        const built = mailBuildOutgoing('new', body, subject, vendor);
+        if (!built) return;
         const btn = document.getElementById('mailComposeSend');
         btn.disabled = true;
         showToast('Sending…');
         try {
-            await gmailApi('send', { to, cc, subject, body });
+            const attachments = await mailEncodeAttachments('new');
+            await gmailApi('send', { to, cc, subject: built.subject, body: built.text, html: built.html, attachments });
             showToast('Email sent!');
             mailCloseThread();
             if (mailState.folder === 'sent') mailLoadList(true);
@@ -7516,6 +7736,7 @@
 
     function closeEmailPreviewModal() {
         document.getElementById('emailPreviewModal').style.display = 'none';
+        document.getElementById('emailPreviewTitle').innerText = 'Sent Email Preview';
         document.getElementById('emailPreviewFrame').srcdoc = '';
     }
 
