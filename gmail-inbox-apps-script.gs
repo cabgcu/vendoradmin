@@ -29,6 +29,7 @@
 
 const PAGE_SIZE_MAX = 50;
 const ATTACHMENT_MAX_BYTES = 15 * 1024 * 1024;
+const OUTGOING_ATTACHMENTS_MAX_BYTES = 20 * 1024 * 1024; // Gmail's limit is 25 MB per email
 
 function doGet() {
   return json_({ ok: true, service: 'cab-gmail-inbox' });
@@ -106,7 +107,7 @@ const ACTIONS = {
     return { name: att.getName(), type: att.getContentType(), data: Utilities.base64Encode(att.getBytes()) };
   },
 
-  // { threadId, body, replyAll, cc } — replies to the latest message not sent by this account
+  // { threadId, body, html, replyAll, cc, attachments: [{ name, type, data (base64) }] } — replies to the latest message not sent by this account
   reply: function (req) {
     const thread = getThread_(req.threadId);
     const messages = thread.getMessages();
@@ -121,7 +122,7 @@ const ACTIONS = {
     return {};
   },
 
-  // { to, cc, bcc, subject, body }
+  // { to, cc, bcc, subject, body, html, attachments: [{ name, type, data (base64) }] }
   send: function (req) {
     if (!req.to) throw new Error('Recipient is required');
     const opts = composeOptions_(req);
@@ -210,6 +211,16 @@ function summarizeThread_(t) {
 function composeOptions_(req) {
   const opts = { htmlBody: req.html || textToHtml_(req.body || '') };
   if (req.cc) opts.cc = req.cc;
+  const files = [].concat(req.attachments || []);
+  if (files.length) {
+    let total = 0;
+    opts.attachments = files.map(function (f) {
+      const bytes = Utilities.base64Decode(String(f.data || ''));
+      total += bytes.length;
+      return Utilities.newBlob(bytes, f.type || 'application/octet-stream', f.name || 'attachment');
+    });
+    if (total > OUTGOING_ATTACHMENTS_MAX_BYTES) throw new Error('Attachments are over 20 MB — Gmail will not send them.');
+  }
   const name = PropertiesService.getScriptProperties().getProperty('SENDER_NAME');
   if (name) opts.name = name;
   return opts;

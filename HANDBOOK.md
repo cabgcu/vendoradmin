@@ -305,6 +305,8 @@ What you can do:
 - **Read:** click a conversation. Older messages in a thread are collapsed — click one to expand it. Attachments open in a preview (images/PDFs) or download.
 - **Reply / Reply all:** type in the box under the conversation. Replies thread correctly in Gmail and go to the vendor, not to yourself.
 - **Compose:** start a new email from the Gmail account.
+- **Templates:** in Compose or Reply, pick from **Use a template…** to fill in the subject and message from the same template library the Brevo emails use (Settings → Email Templates), including any files attached to that template. Variables like `{{FIRST}}` and the Confirm / Can't Make It buttons fill in when you send to a vendor in the active market. Tick **Market design** to send it in the branded layout, and click **Preview** to see exactly what will go out.
+- **Attachments:** click **📎 Attach** to add files (up to 20 MB total per email).
 - **Organize:** Archive, Delete (moves to Trash), Spam, Mark unread, Star, add/remove labels. Tick the checkboxes in the list to archive, delete or mark several at once.
 - **Vendor match:** if the sender is a vendor in the active market, a green **Vendor · Status** tag appears — click it in an open conversation to jump to their application.
 
