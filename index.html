@@ -1609,6 +1609,14 @@
 </div>
 
 <!-- EMAIL PREVIEW MODAL -->
+<div id="filePreviewModal" onclick="if (event.target === this || event.target.id === 'filePreviewBody') closeFilePreview()" style="display:none; position:fixed; inset:0; z-index:20005; background:rgba(0,0,0,0.9); flex-direction:column; align-items:center; justify-content:center; padding:56px 16px 16px; box-sizing:border-box;">
+    <div style="position:absolute; top:12px; right:16px; display:flex; gap:8px;" onclick="event.stopPropagation()">
+        <a id="filePreviewOpenLink" href="#" target="_blank" rel="noopener" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; padding:6px 14px; border-radius:18px; font-size:0.8rem; font-weight:700; text-decoration:none; display:flex; align-items:center;">Open original ↗</a>
+        <button type="button" onclick="closeFilePreview()" title="Close (Esc)" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:1.3rem; line-height:1;">&times;</button>
+    </div>
+    <div id="filePreviewBody" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;"></div>
+</div>
+
 <div id="emailPreviewModal" class="modal-overlay" style="z-index:20003;" onclick="closeEmailPreviewModal()">
     <div class="modal-content" style="max-width: 900px; width: 95%; padding: 0; overflow: hidden; max-height: 92vh;" onclick="event.stopPropagation()">
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--glass-border); background: var(--glass-surface);">
@@ -1908,7 +1916,7 @@
                 <label class="review-field-label">Food License File Link</label>
                 <input type="text" id="editFoodLink" class="modern-input" placeholder="https://...">
                 <div id="editFoodImagePreview" style="margin-top: 10px; display: none;">
-                    <img src="" style="max-width:100%; max-height:120px; border-radius:16px; border:1px solid rgba(255,255,255,0.2);">
+                    <img src="" title="Click to enlarge" onclick="openFilePreview(document.getElementById('editFoodLink').value.trim())" style="max-width:100%; max-height:120px; border-radius:16px; border:1px solid rgba(255,255,255,0.2); cursor:zoom-in;">
                 </div>
             </div>
         </div>
@@ -2882,6 +2890,49 @@
             }
         }
         return url;
+    }
+
+    function getDriveFileId(url) {
+        if (!url || !url.includes('drive.google.com')) return null;
+        const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        return match ? match[1] : null;
+    }
+
+    // Full-screen viewer for uploaded files (food handler licenses) so admins don't have to download them
+    function openFilePreview(url) {
+        if (!url) return;
+        const body = document.getElementById('filePreviewBody');
+        const ext = url.toLowerCase().split('.').pop().split('?')[0];
+        const driveId = getDriveFileId(url);
+        const frameStyle = 'width:100%; max-width:1000px; height:100%; border:none; border-radius:12px; background:#fff;';
+
+        body.innerHTML = '';
+        if (driveId) {
+            const frame = document.createElement('iframe');
+            frame.src = `https://drive.google.com/file/d/${driveId}/preview`;
+            frame.style.cssText = frameStyle;
+            frame.allow = 'autoplay';
+            body.appendChild(frame);
+        } else if (ext === 'pdf') {
+            const frame = document.createElement('iframe');
+            frame.src = url;
+            frame.style.cssText = frameStyle;
+            body.appendChild(frame);
+        } else {
+            const img = document.createElement('img');
+            img.src = processImageUrl(url);
+            img.alt = 'File preview';
+            img.style.cssText = 'max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,0.5);';
+            body.appendChild(img);
+        }
+
+        document.getElementById('filePreviewOpenLink').href = url;
+        document.getElementById('filePreviewModal').style.display = 'flex';
+    }
+
+    function closeFilePreview() {
+        document.getElementById('filePreviewModal').style.display = 'none';
+        document.getElementById('filePreviewBody').innerHTML = '';
     }
 
     // --- AUTO-CATEGORIZER ENGINE ---
@@ -5785,17 +5836,22 @@
             const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension);
             const isPdf = fileExtension === 'pdf';
 
+            const driveId = getDriveFileId(fileUrl);
+            const clickHint = `<div style="color:var(--text-muted); font-size:0.75rem; margin-top:6px;">Click to enlarge</div>`;
+
             let previewHtml = `<a href="${fileUrl}" target="_blank" style="color:#0A84FF; font-weight:bold; display:block; margin-bottom:8px;">📥 Download File ↗</a>`;
 
-            if (isImage) {
-                previewHtml += `<img src="${processImageUrl(fileUrl)}" style="max-width:100%; max-height:200px; border-radius:16px; border:1px solid rgba(255,255,255,0.2); object-fit:contain;" onerror="this.style.display='none'">`;
+            if (isImage || driveId) {
+                previewHtml += `<img class="file-preview-trigger" src="${processImageUrl(fileUrl)}" title="Click to enlarge" style="max-width:100%; max-height:200px; border-radius:16px; border:1px solid rgba(255,255,255,0.2); object-fit:contain; cursor:zoom-in;" onerror="this.style.display='none'">${clickHint}`;
             } else if (isPdf) {
-                previewHtml += `<iframe src="${fileUrl}" style="width:100%; height:300px; border:1px solid rgba(255,255,255,0.2); border-radius:16px;" frameborder="0"></iframe>`;
+                // Transparent layer over the iframe so a click opens the viewer instead of scrolling the PDF
+                previewHtml += `<div class="file-preview-trigger" title="Click to enlarge" style="position:relative; cursor:zoom-in;"><iframe src="${fileUrl}" style="width:100%; height:300px; border:1px solid rgba(255,255,255,0.2); border-radius:16px; pointer-events:none;" frameborder="0"></iframe><div style="position:absolute; inset:0;"></div></div>${clickHint}`;
             } else {
                 previewHtml += `<div style="background:rgba(255,255,255,0.05); padding:16px; border-radius:16px; border:1px solid rgba(255,255,255,0.1); color:var(--text-muted); text-align:center; font-size:0.9rem;">File type: .${fileExtension.toUpperCase()}</div>`;
             }
 
             fLinkEl.innerHTML = previewHtml;
+            fLinkEl.querySelectorAll('.file-preview-trigger').forEach(el => el.addEventListener('click', () => openFilePreview(fileUrl)));
         } else {
             fLinkEl.innerHTML = `<span style="color:var(--text-muted);">N/A</span>`;
         }
@@ -6034,6 +6090,11 @@
     // Add keyboard escape key support for modal close
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape' || event.keyCode === 27) {
+            const filePreview = document.getElementById('filePreviewModal');
+            if (filePreview && filePreview.style.display === 'flex') {
+                closeFilePreview();
+                return;
+            }
             const reviewModal = document.getElementById('reviewModal');
             if (reviewModal && reviewModal.style.display === 'flex') {
                 closeReviewModal();
