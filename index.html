@@ -5860,9 +5860,18 @@
         renderCommentsFeed(vendor);
 
         const linkEl = document.getElementById('reviewLink');
-        if (vendor.link) {
-            let validUrl = vendor.link.startsWith('http') ? vendor.link : `https://${vendor.link}`;
-            linkEl.innerHTML = `<a href="${validUrl}" target="_blank" style="color: #0A84FF; text-decoration: none; font-weight: bold;">${vendor.link} ↗</a>`;
+        const linkVal = (vendor.link || '').trim();
+        // Only link real URLs/domains (e.g. "https://…", "etsy.com/shop/x"); handles like "@shopname" stay plain text
+        const looksLikeUrl = /^https?:\/\//i.test(linkVal) || (!linkVal.startsWith('@') && /^[^\s@]+\.[a-z]{2,}(\/\S*)?$/i.test(linkVal));
+        if (linkVal && looksLikeUrl) {
+            let validUrl = /^https?:\/\//i.test(linkVal) ? linkVal : `https://${linkVal}`;
+            linkEl.innerHTML = `<a href="${validUrl}" target="_blank" style="color: #0A84FF; text-decoration: none; font-weight: bold;">${linkVal} ↗</a>`;
+        } else if (linkVal) {
+            linkEl.innerHTML = '';
+            const span = document.createElement('span');
+            span.style.fontWeight = 'bold';
+            span.textContent = linkVal;
+            linkEl.appendChild(span);
         } else {
             linkEl.innerHTML = `<span style="color:var(--text-muted);">No link provided</span>`;
         }
