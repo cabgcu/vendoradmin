@@ -3118,6 +3118,7 @@
     let BREVO_API_KEY = '';
     const SENDER_EMAIL = 'studentmarkets@cabgcu.com';
     const SENDER_NAME = 'Canyon Activities Board';
+    const REPLY_TO_EMAIL = 'lopetownmarket@gmail.com';
 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
@@ -6397,6 +6398,7 @@
 
         const payload = {
             sender: { name: SENDER_NAME, email: SENDER_EMAIL },
+            replyTo: { name: SENDER_NAME, email: REPLY_TO_EMAIL },
             to: [{ email: vendor.preferred_email, name: `${vendor.first_name} ${vendor.last_name}`.trim() }],
             subject: parsedSubj,
             htmlContent: htmlContent,
@@ -10193,6 +10195,7 @@
                         headers: { 'accept': 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
                         body: JSON.stringify({
                             sender: { name: 'Canyon Activities Board', email: 'studentmarkets@cabgcu.com' },
+                            replyTo: { name: SENDER_NAME, email: REPLY_TO_EMAIL },
                             to: [{ email: vendor.preferred_email, name: `${vendor.first_name} ${vendor.last_name}` }],
                             subject: parsedSubj,
                             htmlContent: fullHtml,
