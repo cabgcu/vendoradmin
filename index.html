@@ -280,6 +280,10 @@
         .control-item.active-denied { background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); }
         .control-item.active-settings { background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-medium); }
         .control-item.active-mail { background: var(--gradient-accent); color: #ffffff; border: none; box-shadow: 0 4px 16px rgba(29, 78, 216, 0.35); }
+        .control-item.nav-mail-icon { position: relative; padding: 9px 12px; margin-right: 18px; border: 1px solid var(--border-light); background: #1a1625; color: var(--text-main); }
+        .control-item.nav-mail-icon:hover { border-color: var(--border-medium); background: #252036; }
+        .control-item.nav-mail-icon.active-mail { border-color: transparent; background: var(--gradient-accent); color: #ffffff; box-shadow: 0 4px 16px rgba(29, 78, 216, 0.35); }
+        .control-item.nav-mail-icon .nav-badge { position: absolute; top: -7px; right: -9px; margin: 0; box-shadow: 0 0 0 2px var(--bg-page); }
         .nav-badge { display: inline-block; min-width: 18px; padding: 1px 6px; margin-left: 6px; border-radius: 9px; background: var(--danger-text); color: #fff; font-size: 0.68rem; font-weight: 800; line-height: 16px; text-align: center; }
 
         /* ── MAIL (Gmail inbox via Apps Script) ── */
@@ -2128,9 +2132,12 @@
             </div>
         </div>
         <div class="controls" id="viewNavTabs">
+            <button onclick="toggleView('mail')" id="nav-mail" class="control-item nav-mail-icon" title="Mail" aria-label="Mail" style="display:none;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+                <span id="mailNavBadge" class="nav-badge" style="display:none;"></span>
+            </button>
             <button onclick="setFilter('inbox')" id="nav-inbox" class="control-item">Vendors</button>
             <button onclick="setFilter('profiles')" id="nav-profiles" class="control-item">Profiles</button>
-            <button onclick="toggleView('mail')" id="nav-mail" class="control-item" style="display:none;">Mail<span id="mailNavBadge" class="nav-badge" style="display:none;"></span></button>
             <button onclick="toggleView('scan')" id="nav-scan" class="control-item">Check In</button>
             <button onclick="toggleView('settings')" id="nav-settings" class="control-item">Settings</button>
             <button onclick="handleLogout()" class="control-item" style="color: var(--danger-text);" onmouseover="this.style.background='var(--danger-bg)'" onmouseout="this.style.background='transparent'">Logout</button>
