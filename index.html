@@ -339,6 +339,10 @@
         .mail-attach-chip button { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; line-height: 1; padding: 0 4px; }
         .mail-attach-chip button:hover { color: var(--danger-text); }
         .mail-hint { color: var(--text-muted); font-size: 0.75rem; }
+        .mail-designed { display: none; flex-direction: column; gap: 8px; }
+        .mail-designed.on { display: flex; }
+        .mail-designed .rich-toolbar-floating { margin: 0; }
+        .mail-designed-canvas { background: #f3f4f6; border-radius: var(--radius-card); padding: 20px 16px 26px; overflow-y: auto; max-height: 60vh; }
         @media (max-width: 900px) {
             .mail-layout { grid-template-columns: 1fr; height: auto; min-height: 0; }
             .mail-layout .mail-pane { height: calc(100vh - 250px); min-height: 420px; }
@@ -1515,7 +1519,7 @@
             color: #bbb;
             pointer-events: none;
         }
-        #richEmailEditor .email-var {
+        #richEmailEditor .email-var, .mail-rich-editor .email-var {
             display: inline-block;
             background: #e8f4fd;
             border: 1px solid #b3d9f2;
@@ -1529,12 +1533,12 @@
             vertical-align: baseline;
             line-height: 1.6;
         }
-        #richEmailEditor .email-var.link-var {
+        #richEmailEditor .email-var.link-var, .mail-rich-editor .email-var.link-var {
             border-color: #a8e6c1;
             color: #1a8a3e;
             background: #e6f9ee;
         }
-        #richEmailEditor .email-var.decline-var {
+        #richEmailEditor .email-var.decline-var, .mail-rich-editor .email-var.decline-var {
             border-color: #f5b3ae;
             color: #cc2d24;
             background: #fde8e7;
@@ -3312,6 +3316,7 @@
             <div class="mail-compose">
                 ${mailComposeToolsHtml('reply')}
                 <textarea id="mailReplyBody" class="modern-input" placeholder="Write a reply…"></textarea>
+                ${mailDesignedEditorHtml('reply')}
                 <div class="mail-attach-list" id="mailReplyAttachments"></div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <button class="btn-action" style="padding:9px 18px; font-size:0.85rem;" onclick="mailSendReply(false)">Reply</button>
@@ -3410,6 +3415,7 @@
 
     async function mailSendReply(replyAll) {
         const t = mailState.openThread;
+        mailSyncBody('reply');
         const box = document.getElementById('mailReplyBody');
         const body = box.value.trim();
         if (!t || !body) { showToast('Write a reply first.'); return; }
@@ -3422,6 +3428,8 @@
             const attachments = await mailEncodeAttachments('reply');
             await gmailApi('reply', { threadId: t.id, body: built.text, html: built.html, replyAll, attachments });
             box.value = '';
+            const rich = document.getElementById('mailRich-reply');
+            if (rich) rich.innerHTML = '';
             showToast('Reply sent!');
             mailOpenThread(t.id, false);
             mailLoadList(true);
@@ -3450,7 +3458,7 @@
             <label class="mail-btn" style="display:inline-flex; align-items:center;" title="Attach files">📎 Attach
                 <input type="file" multiple style="display:none;" onchange="mailAddFiles('${key}', this.files); this.value='';">
             </label>
-            <label class="mail-check" title="Send in the same branded layout as the Brevo market emails"><input type="checkbox" id="mailBranded-${key}"> Market design</label>
+            <label class="mail-check" title="Write and send in the same branded layout as the Brevo market emails"><input type="checkbox" id="mailBranded-${key}" onchange="mailSetBranded('${key}', this.checked)"> Market design</label>
             <button type="button" class="mail-btn" onclick="mailPreviewOutgoing('${key}')">Preview</button>
         </div>`;
     }
@@ -3458,6 +3466,95 @@
     function mailResetComposer(key) {
         mailComposers[key] = { files: [], templateId: '' };
         mailRenderAttachments(key);
+    }
+
+    // The same editable email as Settings → Email Templates / Custom Email: banner, heading,
+    // badge and QR around a rich editor with variable chips. The textarea stays the backing store.
+    function mailDesignedEditorHtml(key) {
+        const richId = 'mailRich-' + key, taId = mailComposerIds[key].body;
+        const chip = (code, label, extra = '') => `<button type="button" class="var-chip${extra}" onclick="richInsertVar('${code}', '${label}', '${richId}', '${taId}')">${label}</button>`;
+        return `<div class="mail-designed" id="mailDesigned-${key}">
+            <div class="rich-toolbar-floating">
+                <button type="button" class="rich-toolbar-btn" onclick="richToggleBold('${richId}', '${taId}')" title="Bold"><b>B</b></button>
+                <div class="rich-toolbar-sep"></div>
+                <span class="rich-toolbar-label">Insert</span>
+                ${chip('{{FIRST}}', 'First Name')}${chip('{{MARKET_NAME}}', 'Market Name')}${chip('{{LOCATION}}', 'Location')}
+                ${chip('{{MARKET_DATE}}', 'Market Date')}${chip('{{MARKET_TIME}}', 'Market Time')}${chip('{{CONFIRM_DEADLINE}}', 'Deadline')}
+                ${chip('{{CONFIRM_LINK}}', 'Confirm Link', ' confirm')}${chip('{{DECLINE_LINK}}', 'Decline Link', ' decline')}
+            </div>
+            <div class="mail-designed-canvas">
+                <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+                    <div id="mailLiveBanner-${key}"></div>
+                    <div align="center" style="padding: 30px;">
+                        <h1 id="mailLiveHeading-${key}" style="margin: 0; font-size: 20px; font-weight: 800; text-transform: uppercase; color: #000;">Market Status Update</h1>
+                        <p id="mailLiveBadge-${key}" style="margin: 10px 0 0 0; font-size: 11px; font-weight: 700; color: #fff; display: inline-block; padding: 4px 12px; text-transform: uppercase; border-radius: 12px;">MARKET UPDATE</p>
+                    </div>
+                    <div id="${richId}" class="mail-rich-editor" contenteditable="true" oninput="syncRichToTextarea('${richId}', '${taId}')" style="padding: 0 30px 30px 30px; font-size: 14px; color: #333; line-height: 1.6; font-family: 'Segoe UI', sans-serif; outline: none; min-height: 180px;"></div>
+                    <div id="mailLiveQR-${key}"></div>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    // Badge/color rule shared by the live editor and the sent email (same rule as Settings)
+    function mailBadgeFor(tplId) {
+        const defs = emailTemplateLibrary.defaults || {};
+        const approval = ['approved', 'power', 'power_denied'].includes(tplId) || [defs.approved, defs.power, defs.power_denied].includes(tplId);
+        const denied = tplId === 'denied' || (tplId && defs.denied === tplId);
+        return approval ? { approval: true, color: '#34C759', text: 'APPROVED' }
+             : denied ? { approval: false, color: '#FF3B30', text: 'STATUS UPDATE' }
+             : { approval: false, color: '#0A84FF', text: 'MARKET UPDATE' };
+    }
+
+    function mailComposerVendor(key) {
+        if (key === 'reply') return mailState.openThread ? mailVendorFor(mailState.openThread.fromEmail) : null;
+        const toEl = document.getElementById('mailComposeTo');
+        return toEl ? mailVendorFor(mailFirstAddress(toEl.value)) : null;
+    }
+
+    function mailUpdateLiveChrome(key) {
+        const badge = mailBadgeFor(mailComposers[key].templateId);
+        const bannerUrl = currentData.bannerUrl ? processImageUrl(currentData.bannerUrl) : '';
+        const bannerEl = document.getElementById('mailLiveBanner-' + key);
+        if (!bannerEl) return;
+        bannerEl.innerHTML = bannerUrl ? `<img src="${bannerUrl}" alt="Banner" style="display:block; width:100%; height:auto; border:0;">` : '';
+        document.getElementById('mailLiveHeading-' + key).textContent = currentData.headingText || 'Market Status Update';
+        const badgeEl = document.getElementById('mailLiveBadge-' + key);
+        badgeEl.textContent = badge.text;
+        badgeEl.style.backgroundColor = badge.color;
+        const vendor = mailComposerVendor(key);
+        const qrId = vendor ? (vendor.student_id || String(vendor.id).substring(0, 8)) : 'PREVIEW1';
+        document.getElementById('mailLiveQR-' + key).innerHTML = badge.approval ? `
+            <div style="border-top: 2px dashed #e5e7eb; margin: 0 15px;"></div>
+            <div align="center" style="padding: 40px 30px;">
+                <div style="background: #fff; padding: 25px; border-radius: 16px; border: 2px solid #eee; display: inline-block;">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrId)}&format=png&bgcolor=FFFFFF&color=000000&margin=10" alt="QR Code" width="200" height="200" style="display:block; border:0; background:#fff;">
+                </div>
+                <p style="margin: 20px 0 0; font-size: 14px; color: #1a1a1a; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">SCAN AT CHECK-IN</p>
+                <p style="margin: 6px 0 0; font-size: 12px; color: #888; font-family: monospace;">ID: #${escapeHtml(String(qrId).toUpperCase())}</p>
+            </div>` : '';
+    }
+
+    function mailSyncBody(key) {
+        if (document.getElementById('mailDesigned-' + key)?.classList.contains('on')) syncRichToTextarea('mailRich-' + key, mailComposerIds[key].body);
+    }
+
+    function mailSetBranded(key, on) {
+        const taId = mailComposerIds[key].body, richId = 'mailRich-' + key;
+        const ta = document.getElementById(taId), wrap = document.getElementById('mailDesigned-' + key);
+        const cb = document.getElementById('mailBranded-' + key);
+        if (!ta || !wrap) return;
+        if (cb) cb.checked = on;
+        if (on) {
+            syncTextareaToRich(richId, taId);
+            mailUpdateLiveChrome(key);
+            ta.style.display = 'none';
+            wrap.classList.add('on');
+        } else {
+            if (wrap.classList.contains('on')) syncRichToTextarea(richId, taId);
+            wrap.classList.remove('on');
+            ta.style.display = '';
+        }
     }
 
     function mailFirstAddress(str) {
@@ -3476,6 +3573,7 @@
         // getTemplateDetails only reads the library (and adds the confirm buttons to approval templates)
         const tpl = getTemplateDetails({}, id);
         if (!tpl) return;
+        if (document.getElementById('mailDesigned-' + key)?.classList.contains('on')) syncRichToTextarea('mailRich-' + key, mailComposerIds[key].body);
         if (bodyEl.value.trim() && !confirm('Replace what you have written with this template?')) {
             document.getElementById('mailTpl-' + key).value = '';
             c.templateId = '';
@@ -3486,9 +3584,8 @@
         const subjId = mailComposerIds[key].subject;
         if (subjId) document.getElementById(subjId).value = tpl.subj || '';
         (tpl.attachments || []).forEach(a => c.files.push({ name: a.name, size: a.size || 0, url: a.url, content: a.content, fromTemplate: true }));
-        document.getElementById('mailBranded-' + key).checked = true;
+        mailSetBranded(key, true);
         mailRenderAttachments(key);
-        showToast('Template added — {{variables}} fill in when sent. Use Preview to check.');
     }
 
     function mailAddFiles(key, fileList) {
@@ -3569,10 +3666,8 @@
             return { subject, text, html: `<div style="font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:1.5; color:#222;">${bodyHtml}</div>` };
         }
 
-        const tplId = mailComposers[key].templateId || 'custom';
-        const good = ['approved', 'power', 'power_denied'].includes(tplId);
-        const statusColor = good ? '#34C759' : (['denied'].includes(tplId) ? '#FF3B30' : '#0A84FF');
-        const statusBadge = good ? 'APPROVED' : (tplId === 'denied' ? 'STATUS UPDATE' : 'MARKET UPDATE');
+        const badge = mailBadgeFor(mailComposers[key].templateId);
+        const good = badge.approval, statusColor = badge.color, statusBadge = badge.text;
         const bannerUrl = processImageUrl(currentData.bannerUrl || '');
         const bannerHtml = bannerUrl ? `<tr><td align="center" style="padding: 0;"><img src="${bannerUrl}" alt="Banner" width="600" style="display: block; width: 100%; max-width: 100%; height: auto; border: 0;"></td></tr>` : '';
         const showQr = vendor && good && (vendor.status === 'Approved' || vendor.status === 'Checked In');
@@ -3608,6 +3703,7 @@
     }
 
     function mailPreviewOutgoing(key) {
+        mailSyncBody(key);
         const ids = mailComposerIds[key];
         const body = document.getElementById(ids.body).value;
         let subject, vendor;
@@ -3636,11 +3732,12 @@
         document.getElementById('mailDetail').innerHTML = `
             <div class="mail-pane-head"><button class="mail-btn mail-back" onclick="mailCloseThread()">← Back</button><strong>New email</strong></div>
             <div class="mail-compose" style="border-top:none;">
-                <input id="mailComposeTo" class="modern-input" placeholder="To (separate multiple with commas)" value="${escapeHtml(to)}">
+                <input id="mailComposeTo" class="modern-input" placeholder="To (separate multiple with commas)" value="${escapeHtml(to)}" onchange="if (document.getElementById('mailDesigned-new')?.classList.contains('on')) mailUpdateLiveChrome('new')">
                 <input id="mailComposeCc" class="modern-input" placeholder="Cc (optional)">
                 <input id="mailComposeSubject" class="modern-input" placeholder="Subject" value="${escapeHtml(subject)}">
                 ${mailComposeToolsHtml('new')}
                 <textarea id="mailComposeBody" class="modern-input" style="min-height:220px;" placeholder="Message"></textarea>
+                ${mailDesignedEditorHtml('new')}
                 <div class="mail-attach-list" id="mailNewAttachments"></div>
                 <div style="display:flex; gap:8px;">
                     <button class="btn-action" id="mailComposeSend" style="padding:9px 18px; font-size:0.85rem;" onclick="mailSendNew()">Send</button>
@@ -3652,6 +3749,7 @@
     }
 
     async function mailSendNew() {
+        mailSyncBody('new');
         const to = document.getElementById('mailComposeTo').value.trim();
         const cc = document.getElementById('mailComposeCc').value.trim();
         const subject = document.getElementById('mailComposeSubject').value.trim();
