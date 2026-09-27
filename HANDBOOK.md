@@ -16,6 +16,7 @@
 9. [Vendor Confirmation & Attendance](#9-vendor-confirmation--attendance)
 10. [Check-In on Event Day](#10-check-in-on-event-day)
 11. [Vendor Profiles](#11-vendor-profiles)
+    - [Mail (Gmail Inbox)](#11a-mail-gmail-inbox)
 12. [Settings — Event Setup](#12-settings--event-setup)
 13. [Settings — Email Templates](#13-settings--email-templates)
 14. [Settings — Form Builder](#14-settings--form-builder)
@@ -76,6 +77,7 @@ The active market event is shown in the top bar next to the logo. If you manage 
 |--------|-------------|
 | **Vendors** | Main application list (where you spend most of your time) |
 | **Profiles** | Archive of all vendors across all past markets |
+| **Mail** | The market's Gmail inbox — read, reply, organize (admins only) |
 | **Check In** | Event-day scanner and manual check-in |
 | **Settings** | Configuration, templates, user management |
 | **Logout** | Signs you out |
@@ -288,6 +290,34 @@ Use it to:
 **Search** works the same as the main vendor list — type a name, email, or student ID.
 
 Click any row to see that vendor's full profile summary, including which markets they applied to and their application outcomes.
+
+---
+
+## 11a. Mail (Gmail Inbox)
+
+The **Mail** tab (admins only) shows the market's Gmail inbox inside the dashboard, so you can handle vendor replies without switching apps. The unread count shows as a red badge on the tab.
+
+**This is separate from Brevo.** Approval/denial/status emails still send through Brevo exactly as before. The Mail tab is for reading and answering the replies that land in Gmail.
+
+What you can do:
+- **Folders:** Inbox, Unread, Starred, Sent, All Mail, Spam, Trash — plus any Gmail label from the **Labels…** menu (or create a new one there).
+- **Search:** uses Gmail search, e.g. `from:someone@gcu.edu`, `has:attachment`, `subject:booth`.
+- **Read:** click a conversation. Older messages in a thread are collapsed — click one to expand it. Attachments open in a preview (images/PDFs) or download.
+- **Reply / Reply all:** type in the box under the conversation. Replies thread correctly in Gmail and go to the vendor, not to yourself.
+- **Compose:** start a new email from the Gmail account.
+- **Organize:** Archive, Delete (moves to Trash), Spam, Mark unread, Star, add/remove labels. Tick the checkboxes in the list to archive, delete or mark several at once.
+- **Vendor match:** if the sender is a vendor in the active market, a green **Vendor · Status** tag appears — click it in an open conversation to jump to their application.
+
+### Connecting Gmail (one-time setup)
+
+The connection is a small Google Apps Script that runs as the Gmail account. Full steps are at the top of `gmail-inbox-apps-script.gs` in the repo:
+
+1. Signed in as the Gmail account, create a project at script.google.com and paste in `gmail-inbox-apps-script.gs`.
+2. In **Project Settings → Script Properties**, add `APP_SECRET` (a long random password). Optionally add `SENDER_NAME` (e.g. `Canyon Activities Board`) for the From name on replies.
+3. **Deploy → New deployment → Web app**, Execute as **Me**, Who has access **Anyone**. Approve the Gmail permissions and copy the Web app URL.
+4. In the dashboard go to **Settings → System & Data**, paste the URL into **Gmail Inbox Script URL** and the same secret into **Gmail Inbox Script Secret**, then **Save System Settings**.
+
+> If you edit the script later, publish it with **Deploy → Manage deployments → Edit → New version** — the URL stays the same.
 
 ---
 

@@ -279,6 +279,56 @@
         .control-item.active-approved { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
         .control-item.active-denied { background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); }
         .control-item.active-settings { background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-medium); }
+        .control-item.active-mail { background: var(--gradient-accent); color: #ffffff; border: none; box-shadow: 0 4px 16px rgba(29, 78, 216, 0.35); }
+        .nav-badge { display: inline-block; min-width: 18px; padding: 1px 6px; margin-left: 6px; border-radius: 9px; background: var(--danger-text); color: #fff; font-size: 0.68rem; font-weight: 800; line-height: 16px; text-align: center; }
+
+        /* ── MAIL (Gmail inbox via Apps Script) ── */
+        .mail-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+        .mail-folders { display: flex; flex-wrap: wrap; gap: 6px; }
+        .mail-folder { background: var(--input-bg); border: 1px solid var(--border-light); color: var(--text-muted); padding: 6px 12px; border-radius: 18px; font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .mail-folder:hover { color: var(--text-main); background: var(--bg-hover); }
+        .mail-folder.active { background: var(--brand-primary-light); color: var(--text-main); border-color: var(--brand-primary); }
+        .mail-layout { display: grid; grid-template-columns: minmax(300px, 400px) 1fr; gap: 14px; height: calc(100vh - 230px); min-height: 480px; }
+        .mail-pane { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-card); overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+        .mail-pane-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--glass-border); flex-wrap: wrap; }
+        .mail-scroll { overflow-y: auto; flex: 1; min-height: 0; }
+        .mail-row { display: flex; gap: 10px; padding: 12px; border-bottom: 1px solid var(--table-border); cursor: pointer; align-items: flex-start; }
+        .mail-row:hover { background: var(--row-hover); }
+        .mail-row.open { background: var(--brand-primary-light); }
+        .mail-row.unread .mail-row-from, .mail-row.unread .mail-row-subject { color: var(--text-main); font-weight: 800; }
+        .mail-row input[type=checkbox] { margin-top: 3px; accent-color: var(--brand-primary); flex-shrink: 0; }
+        .mail-row-main { flex: 1; min-width: 0; }
+        .mail-row-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+        .mail-row-from { color: var(--text-muted); font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mail-row-date { color: var(--text-muted); font-size: 0.72rem; white-space: nowrap; flex-shrink: 0; }
+        .mail-row-subject { color: var(--text-muted); font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .mail-row-snippet { color: var(--text-muted); font-size: 0.78rem; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .mail-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-primary-hover); display: inline-block; margin-right: 6px; flex-shrink: 0; }
+        .mail-chip { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 1px 7px; border-radius: 8px; background: var(--bg-hover); border: 1px solid var(--border-light); color: var(--text-muted); margin: 4px 4px 0 0; }
+        .mail-chip.vendor { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); cursor: pointer; }
+        .mail-btn { background: var(--input-bg); border: 1px solid var(--border-light); color: var(--text-main); padding: 6px 11px; border-radius: var(--radius-md); font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit; }
+        .mail-btn:hover { background: var(--bg-hover); border-color: var(--border-medium); }
+        .mail-btn.danger { color: var(--danger-text); }
+        .mail-btn:disabled { opacity: 0.4; cursor: default; }
+        .mail-msg { border-bottom: 1px solid var(--table-border); }
+        .mail-msg-head { display: flex; justify-content: space-between; gap: 10px; padding: 12px 16px; cursor: pointer; }
+        .mail-msg-head:hover { background: var(--row-hover); }
+        .mail-msg-from { font-weight: 700; font-size: 0.9rem; color: var(--text-main); }
+        .mail-msg-meta { color: var(--text-muted); font-size: 0.75rem; margin-top: 2px; word-break: break-word; }
+        .mail-msg-body { padding: 0 16px 14px; }
+        .mail-msg-body iframe { width: 100%; border: none; background: #ffffff; border-radius: var(--radius-md); display: block; min-height: 60px; }
+        .mail-msg.collapsed .mail-msg-body { display: none; }
+        .mail-empty { color: var(--text-muted); text-align: center; padding: 40px 20px; font-size: 0.9rem; }
+        .mail-compose { padding: 12px 16px 16px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 8px; }
+        .mail-compose textarea.modern-input { min-height: 120px; resize: vertical; }
+        .mail-back { display: none; }
+        @media (max-width: 900px) {
+            .mail-layout { grid-template-columns: 1fr; height: auto; min-height: 0; }
+            .mail-layout .mail-pane { height: calc(100vh - 250px); min-height: 420px; }
+            .mail-layout.show-detail .mail-list-pane { display: none; }
+            .mail-layout:not(.show-detail) .mail-detail-pane { display: none; }
+            .mail-back { display: inline-block; }
+        }
         .control-item.active-profiles { background: var(--gradient-purple); color: #ffffff; border: none; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35); }
         .control-item.active-scan { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success-text); }
 
@@ -1568,6 +1618,10 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span>Profiles</span>
     </button>
+    <button class="mob-nav-btn" data-view="mail" id="mob-nav-mail" onclick="mobileNavTo('mail')" style="display:none;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+        <span>Mail</span>
+    </button>
     <button class="mob-nav-btn" data-view="scan" onclick="mobileNavTo('scan')">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
         <span>Check In</span>
@@ -2055,6 +2109,7 @@
         <div class="controls" id="viewNavTabs">
             <button onclick="setFilter('inbox')" id="nav-inbox" class="control-item">Vendors</button>
             <button onclick="setFilter('profiles')" id="nav-profiles" class="control-item">Profiles</button>
+            <button onclick="toggleView('mail')" id="nav-mail" class="control-item" style="display:none;">Mail<span id="mailNavBadge" class="nav-badge" style="display:none;"></span></button>
             <button onclick="toggleView('scan')" id="nav-scan" class="control-item">Check In</button>
             <button onclick="toggleView('settings')" id="nav-settings" class="control-item">Settings</button>
             <button onclick="handleLogout()" class="control-item" style="color: var(--danger-text);" onmouseover="this.style.background='var(--danger-bg)'" onmouseout="this.style.background='transparent'">Logout</button>
@@ -2192,6 +2247,44 @@
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 10px;">Type a name to search manually, or simply point your barcode scanner here.</p>
                 <input type="text" id="unifiedCheckInInput" class="modern-input" placeholder="Ready to scan QR Code or type name..." style="text-align:center; font-size: 1.1rem; padding: 16px; background: rgba(10, 132, 255, 0.05); border-color: rgba(10, 132, 255, 0.4);" autocomplete="off">
                 <div id="unifiedCheckInResults" style="margin-top: 15px; max-height: 350px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW: MAIL (Gmail inbox via Google Apps Script — separate from Brevo sending) -->
+    <div id="view-mail" class="view" style="display:none;">
+        <div class="mail-toolbar">
+            <div class="mail-folders" id="mailFolders"></div>
+            <select id="mailLabelSelect" class="modern-input" style="width:auto; min-width:140px; height:32px; padding:0 12px; font-size:0.8rem;" onchange="mailSelectLabel(this.value)">
+                <option value="">Labels…</option>
+            </select>
+            <div style="flex:1; min-width:180px;">
+                <input type="text" id="mailSearch" class="modern-input" style="height:32px; font-size:0.85rem;" placeholder="Search mail (Gmail search, e.g. from:name@gcu.edu)" onkeydown="if(event.key==='Enter') mailLoadList()">
+            </div>
+            <button class="mail-btn" onclick="mailLoadList()" title="Refresh">↻ Refresh</button>
+            <button class="btn-action" style="padding:7px 16px; font-size:0.82rem;" onclick="mailOpenCompose()">✎ Compose</button>
+        </div>
+        <div id="mailNotConfigured" class="mail-pane" style="display:none; padding:30px; text-align:center;">
+            <h3 style="margin:0 0 8px;">Connect a Gmail inbox</h3>
+            <p style="color:var(--text-muted); font-size:0.9rem; max-width:520px; margin:0 auto 16px;">Deploy the Google Apps Script in <code>gmail-inbox-apps-script.gs</code> (instructions are at the top of that file), then paste its Web app URL and secret key under <strong>Settings → System &amp; Data</strong>.</p>
+            <button class="btn-action" onclick="toggleView('settings'); switchSettingsTab('system');">Open Settings</button>
+        </div>
+        <div class="mail-layout" id="mailLayout">
+            <div class="mail-pane mail-list-pane">
+                <div class="mail-pane-head">
+                    <input type="checkbox" id="mailSelectAll" title="Select all" onchange="mailToggleSelectAll(this.checked)" style="accent-color: var(--brand-primary);">
+                    <div id="mailBulkActions" style="display:none; gap:6px; flex-wrap:wrap;">
+                        <button class="mail-btn" onclick="mailModify('archive', mailSelectedIds())" title="Archive">Archive</button>
+                        <button class="mail-btn" onclick="mailModify('read', mailSelectedIds())">Read</button>
+                        <button class="mail-btn" onclick="mailModify('unread', mailSelectedIds())">Unread</button>
+                        <button class="mail-btn danger" onclick="mailModify('trash', mailSelectedIds())">Delete</button>
+                    </div>
+                    <span id="mailListInfo" style="color:var(--text-muted); font-size:0.78rem; margin-left:auto;"></span>
+                </div>
+                <div class="mail-scroll" id="mailList"></div>
+            </div>
+            <div class="mail-pane mail-detail-pane">
+                <div id="mailDetail" class="mail-scroll"><div class="mail-empty">Select a conversation to read it.</div></div>
             </div>
         </div>
     </div>
@@ -2527,6 +2620,14 @@
                         <div>
                             <label class="stat-label">Brevo API Key (Emails)</label>
                             <input type="password" id="brevoKeyInput" class="modern-input" placeholder="xkeysib-...">
+                        </div>
+                        <div>
+                            <label class="stat-label">Gmail Inbox Script URL (Mail tab)</label>
+                            <input type="text" id="gmailScriptUrlInput" class="modern-input" placeholder="https://script.google.com/macros/s/.../exec">
+                        </div>
+                        <div>
+                            <label class="stat-label">Gmail Inbox Script Secret</label>
+                            <input type="password" id="gmailScriptSecretInput" class="modern-input" placeholder="Same value as APP_SECRET in the script">
                         </div>
                     </div>
                     <button onclick="saveSystemSettings()" class="btn-action" style="width: 100%; padding: 15px; font-size: 1.1rem;">Save System Settings</button>
@@ -2892,6 +2993,439 @@
         return url;
     }
 
+    // ============================================================
+    // MAIL TAB — Gmail inbox through a Google Apps Script web app
+    // (gmail-inbox-apps-script.gs). Completely separate from Brevo:
+    // vendor status emails still send through Brevo as before.
+    // ============================================================
+    let GMAIL_SCRIPT_URL = '';
+    let GMAIL_SCRIPT_SECRET = '';
+    const MAIL_FOLDERS = [
+        { id: 'inbox', label: 'Inbox', query: 'in:inbox' },
+        { id: 'unread', label: 'Unread', query: 'in:inbox is:unread' },
+        { id: 'starred', label: 'Starred', query: 'is:starred' },
+        { id: 'sent', label: 'Sent', query: 'in:sent' },
+        { id: 'all', label: 'All Mail', query: '-in:trash -in:spam' },
+        { id: 'spam', label: 'Spam', query: 'in:spam' },
+        { id: 'trash', label: 'Trash', query: 'in:trash' }
+    ];
+    const MAIL_PAGE_SIZE = 25;
+    const mailState = { folder: 'inbox', label: '', threads: [], hasMore: false, selected: new Set(), openThread: null, labels: [], listToken: 0, lastUnread: null };
+    let _mailPollTimer = null;
+
+    async function gmailApi(action, params = {}) {
+        if (!GMAIL_SCRIPT_URL) throw new Error('Gmail inbox is not connected. Add the script URL in Settings → System & Data.');
+        // text/plain keeps this a "simple" CORS request, which Apps Script web apps accept from the browser
+        const resp = await fetch(GMAIL_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ ...params, action, secret: GMAIL_SCRIPT_SECRET })
+        });
+        let data;
+        try { data = await resp.json(); } catch (e) { throw new Error('The Gmail script returned an unexpected response. Check that it is deployed as a Web app with access "Anyone".'); }
+        if (!data.ok) throw new Error(data.error === 'unauthorized' ? 'Gmail script rejected the secret key. Check Settings → System & Data.' : (data.error || 'Gmail request failed'));
+        return data;
+    }
+
+    function mailOnOpen() {
+        const configured = !!GMAIL_SCRIPT_URL;
+        document.getElementById('mailNotConfigured').style.display = configured ? 'none' : 'block';
+        document.getElementById('mailLayout').style.display = configured ? '' : 'none';
+        renderMailFolders();
+        if (!configured) return;
+        mailLoadLabels();
+        mailLoadList();
+        mailStartPolling();
+    }
+
+    function mailIsVisible() {
+        const v = document.getElementById('view-mail');
+        return v && v.style.display !== 'none';
+    }
+
+    // Light poll: only the unread count is checked; the list reloads when it changes.
+    function mailStartPolling() {
+        if (_mailPollTimer) return;
+        _mailPollTimer = setInterval(() => {
+            if (!GMAIL_SCRIPT_URL || document.hidden) return;
+            mailRefreshUnreadCount(true);
+        }, 120000);
+    }
+
+    async function mailRefreshUnreadCount(reloadIfChanged = false) {
+        try {
+            const data = await gmailApi('labels');
+            mailApplyLabels(data);
+            if (reloadIfChanged && mailIsVisible() && mailState.lastUnread !== null && data.unread !== mailState.lastUnread && mailState.selected.size === 0) {
+                mailLoadList(true);
+            }
+            mailState.lastUnread = data.unread;
+        } catch (e) { console.warn('Mail unread check failed:', e.message); }
+    }
+
+    function mailApplyLabels(data) {
+        mailState.labels = data.labels || [];
+        const badge = document.getElementById('mailNavBadge');
+        if (badge) {
+            badge.textContent = data.unread > 99 ? '99+' : String(data.unread || '');
+            badge.style.display = data.unread ? 'inline-block' : 'none';
+        }
+        const sel = document.getElementById('mailLabelSelect');
+        if (sel) {
+            sel.innerHTML = '<option value="">Labels…</option>' +
+                mailState.labels.map(l => `<option value="${escapeHtml(l)}" ${l === mailState.label ? 'selected' : ''}>${escapeHtml(l)}</option>`).join('') +
+                '<option value="__new__">+ New label…</option>';
+        }
+    }
+
+    async function mailLoadLabels() {
+        try { mailApplyLabels(await gmailApi('labels')); } catch (e) { showToast(e.message); }
+    }
+
+    function renderMailFolders() {
+        document.getElementById('mailFolders').innerHTML = MAIL_FOLDERS.map(f =>
+            `<button class="mail-folder ${!mailState.label && mailState.folder === f.id ? 'active' : ''}" onclick="mailSelectFolder('${f.id}')">${f.label}</button>`
+        ).join('');
+    }
+
+    function mailSelectFolder(id) {
+        mailState.folder = id;
+        mailState.label = '';
+        document.getElementById('mailLabelSelect').value = '';
+        renderMailFolders();
+        mailLoadList();
+    }
+
+    async function mailSelectLabel(name) {
+        if (name === '__new__') {
+            document.getElementById('mailLabelSelect').value = mailState.label || '';
+            const created = prompt('New label name:');
+            if (!created || !created.trim()) return;
+            try {
+                await gmailApi('createLabel', { label: created.trim() });
+                showToast('Label created');
+                await mailLoadLabels();
+            } catch (e) { showToast(e.message); }
+            return;
+        }
+        mailState.label = name;
+        renderMailFolders();
+        mailLoadList();
+    }
+
+    function mailCurrentQuery() {
+        const base = mailState.label ? `label:"${mailState.label.replace(/"/g, '')}"` : (MAIL_FOLDERS.find(f => f.id === mailState.folder) || MAIL_FOLDERS[0]).query;
+        const search = document.getElementById('mailSearch').value.trim();
+        return search ? `${base} ${search}` : base;
+    }
+
+    async function mailLoadList(silent = false, append = false) {
+        const token = ++mailState.listToken;
+        const listEl = document.getElementById('mailList');
+        if (!append) {
+            mailState.selected.clear();
+            mailUpdateBulkBar();
+            if (!silent) listEl.innerHTML = '<div class="mail-empty">Loading…</div>';
+        }
+        try {
+            const start = append ? mailState.threads.length : 0;
+            const data = await gmailApi('list', { query: mailCurrentQuery(), start, pageSize: MAIL_PAGE_SIZE });
+            if (token !== mailState.listToken) return; // a newer request replaced this one
+            mailState.threads = append ? mailState.threads.concat(data.threads) : data.threads;
+            mailState.hasMore = data.hasMore;
+            renderMailList();
+        } catch (e) {
+            if (token !== mailState.listToken) return;
+            listEl.innerHTML = `<div class="mail-empty" style="color:var(--danger-text);">${escapeHtml(e.message)}</div>`;
+        }
+    }
+
+    function mailVendorFor(email) {
+        if (!email) return null;
+        const e = email.toLowerCase();
+        return (currentData.vendors || []).find(v => (v.preferred_email || '').toLowerCase().trim() === e) || null;
+    }
+
+    function mailFormatDate(iso) {
+        const d = new Date(iso), now = new Date();
+        if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        if (d.getFullYear() === now.getFullYear()) return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function mailDisplayName(from) {
+        const m = String(from || '').match(/^\s*"?([^"<]+?)"?\s*</);
+        return m ? m[1].trim() : String(from || '').replace(/[<>]/g, '');
+    }
+
+    function renderMailList() {
+        const listEl = document.getElementById('mailList');
+        const openId = mailState.openThread && mailState.openThread.id;
+        document.getElementById('mailListInfo').textContent = mailState.threads.length ? `${mailState.threads.length}${mailState.hasMore ? '+' : ''} conversations` : '';
+        document.getElementById('mailSelectAll').checked = false;
+        if (!mailState.threads.length) {
+            listEl.innerHTML = '<div class="mail-empty">No conversations here.</div>';
+            return;
+        }
+        listEl.innerHTML = mailState.threads.map(t => {
+            const vendor = mailVendorFor(t.fromEmail);
+            const who = mailState.folder === 'sent' && !mailState.label ? 'To: ' + (t.participants || []).join(', ') : (t.participants || []).join(', ');
+            const labelChips = (t.labels || []).map(l => `<span class="mail-chip">${escapeHtml(l)}</span>`).join('');
+            const vendorChip = vendor ? `<span class="mail-chip vendor">Vendor · ${escapeHtml(vendor.status || '')}</span>` : '';
+            return `<div class="mail-row ${t.unread ? 'unread' : ''} ${t.id === openId ? 'open' : ''}" data-id="${escapeHtml(t.id)}" onclick="mailOpenThread(this.dataset.id)">
+                <input type="checkbox" ${mailState.selected.has(t.id) ? 'checked' : ''} onclick="event.stopPropagation(); mailToggleSelect('${escapeHtml(t.id)}', this.checked)">
+                <div class="mail-row-main">
+                    <div class="mail-row-top">
+                        <span class="mail-row-from">${t.unread ? '<span class="mail-unread-dot"></span>' : ''}${t.starred ? '★ ' : ''}${escapeHtml(who)}${t.count > 1 ? ` <span style="opacity:.7">(${t.count})</span>` : ''}</span>
+                        <span class="mail-row-date">${t.hasAttachments ? '📎 ' : ''}${mailFormatDate(t.date)}</span>
+                    </div>
+                    <div class="mail-row-subject">${escapeHtml(t.subject)}</div>
+                    <div class="mail-row-snippet">${escapeHtml(t.snippet)}</div>
+                    ${vendorChip || labelChips ? `<div>${vendorChip}${labelChips}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('') + (mailState.hasMore ? '<div style="padding:12px; text-align:center;"><button class="mail-btn" onclick="mailLoadList(true, true)">Load more</button></div>' : '');
+    }
+
+    function mailToggleSelect(id, on) {
+        if (on) mailState.selected.add(id); else mailState.selected.delete(id);
+        mailUpdateBulkBar();
+    }
+
+    function mailToggleSelectAll(on) {
+        mailState.selected = new Set(on ? mailState.threads.map(t => t.id) : []);
+        document.querySelectorAll('#mailList .mail-row input[type=checkbox]').forEach(cb => cb.checked = on);
+        mailUpdateBulkBar();
+    }
+
+    function mailSelectedIds() { return Array.from(mailState.selected); }
+
+    function mailUpdateBulkBar() {
+        const bar = document.getElementById('mailBulkActions');
+        if (bar) bar.style.display = mailState.selected.size ? 'flex' : 'none';
+    }
+
+    async function mailModify(op, ids, label) {
+        if (!ids || !ids.length) return;
+        const names = { archive: 'Archived', inbox: 'Moved to Inbox', trash: 'Moved to Trash', spam: 'Marked as spam', read: 'Marked read', unread: 'Marked unread', star: 'Starred', unstar: 'Unstarred', addLabel: 'Label added', removeLabel: 'Label removed' };
+        try {
+            await gmailApi('modify', { threadIds: ids, op, label });
+            showToast(names[op] || 'Done');
+            const leavesView = ['archive', 'trash', 'spam', 'inbox'].includes(op);
+            if (leavesView && mailState.openThread && ids.includes(mailState.openThread.id)) mailCloseThread();
+            else if (mailState.openThread && ids.includes(mailState.openThread.id)) mailOpenThread(mailState.openThread.id, false, op !== 'unread');
+            mailLoadList(true);
+            mailRefreshUnreadCount();
+        } catch (e) { showToast(e.message); }
+    }
+
+    function mailCloseThread() {
+        mailState.openThread = null;
+        document.getElementById('mailLayout').classList.remove('show-detail');
+        document.getElementById('mailDetail').innerHTML = '<div class="mail-empty">Select a conversation to read it.</div>';
+        document.querySelectorAll('#mailList .mail-row.open').forEach(r => r.classList.remove('open'));
+    }
+
+    async function mailOpenThread(id, showLoading = true, markRead = true) {
+        const detail = document.getElementById('mailDetail');
+        document.getElementById('mailLayout').classList.add('show-detail');
+        document.querySelectorAll('#mailList .mail-row').forEach(r => r.classList.toggle('open', r.dataset.id === id));
+        if (showLoading) detail.innerHTML = '<div class="mail-empty">Loading conversation…</div>';
+        try {
+            const { thread } = await gmailApi('thread', { threadId: id, markRead });
+            mailState.openThread = thread;
+            renderMailThread(thread);
+            const row = mailState.threads.find(t => t.id === id);
+            if (row && row.unread && markRead) {
+                row.unread = false;
+                renderMailList();
+                mailRefreshUnreadCount();
+            }
+        } catch (e) {
+            detail.innerHTML = `<div class="mail-empty" style="color:var(--danger-text);">${escapeHtml(e.message)}</div>`;
+        }
+    }
+
+    function renderMailThread(t) {
+        const detail = document.getElementById('mailDetail');
+        const vendor = mailVendorFor(t.fromEmail);
+        const inTrash = t.inTrash, inSpam = t.inSpam;
+        const labelOptions = mailState.labels.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+        const lastIdx = t.messages.length - 1;
+
+        detail.innerHTML = `
+            <div class="mail-pane-head" style="position:sticky; top:0; background:var(--bg-page); z-index:1;">
+                <button class="mail-btn mail-back" onclick="mailCloseThread()">← Back</button>
+                ${inTrash || inSpam
+                    ? `<button class="mail-btn" data-op="inbox">Move to Inbox</button>`
+                    : `${t.inInbox ? '<button class="mail-btn" data-op="archive">Archive</button>' : '<button class="mail-btn" data-op="inbox">Move to Inbox</button>'}
+                       <button class="mail-btn danger" data-op="trash">Delete</button>
+                       <button class="mail-btn" data-op="spam">Spam</button>`}
+                <button class="mail-btn" data-op="unread">Mark unread</button>
+                <button class="mail-btn" data-op="${t.starred ? 'unstar' : 'star'}">${t.starred ? '★ Unstar' : '☆ Star'}</button>
+                <select class="modern-input" id="mailThreadLabel" style="width:auto; height:30px; font-size:0.78rem; padding:0 10px;">
+                    <option value="">Add label…</option>${labelOptions}
+                </select>
+            </div>
+            <div style="padding:14px 16px 6px;">
+                <h3 style="margin:0; font-size:1.15rem; word-break:break-word;">${escapeHtml(t.subject)}</h3>
+                <div>
+                    ${vendor ? `<span class="mail-chip vendor" id="mailVendorChip" title="Open vendor application">Vendor: ${escapeHtml(vendor.first_name + ' ' + vendor.last_name)} · ${escapeHtml(vendor.status || '')} ↗</span>` : ''}
+                    ${(t.labels || []).map(l => `<span class="mail-chip">${escapeHtml(l)} <a href="#" data-remove-label="${escapeHtml(l)}" style="color:inherit; text-decoration:none; margin-left:3px;" title="Remove label">×</a></span>`).join('')}
+                </div>
+            </div>
+            <div id="mailMessages">
+                ${t.messages.map((m, i) => `
+                    <div class="mail-msg ${i === lastIdx || m.unread ? '' : 'collapsed'}" data-idx="${i}">
+                        <div class="mail-msg-head">
+                            <div style="min-width:0;">
+                                <div class="mail-msg-from">${escapeHtml(mailDisplayName(m.from))}</div>
+                                <div class="mail-msg-meta">${escapeHtml(m.from)}<br>to ${escapeHtml(m.to)}${m.cc ? ' · cc ' + escapeHtml(m.cc) : ''}</div>
+                            </div>
+                            <div class="mail-msg-meta" style="white-space:nowrap;">${new Date(m.date).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</div>
+                        </div>
+                        <div class="mail-msg-body">
+                            <iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" title="Email message"></iframe>
+                            ${m.attachments.length ? `<div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;">${m.attachments.map(a =>
+                                `<button class="mail-btn" data-msg="${escapeHtml(m.id)}" data-att="${a.index}" data-name="${escapeHtml(a.name)}" data-type="${escapeHtml(a.type)}">📎 ${escapeHtml(a.name)} <span style="opacity:.6">(${Math.max(1, Math.round(a.size / 1024))} KB)</span></button>`).join('')}</div>` : ''}
+                        </div>
+                    </div>`).join('')}
+            </div>
+            <div class="mail-compose">
+                <textarea id="mailReplyBody" class="modern-input" placeholder="Write a reply…"></textarea>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn-action" style="padding:9px 18px; font-size:0.85rem;" onclick="mailSendReply(false)">Reply</button>
+                    <button class="mail-btn" onclick="mailSendReply(true)">Reply all</button>
+                </div>
+            </div>`;
+
+        // Thread-level actions
+        detail.querySelectorAll('.mail-pane-head [data-op]').forEach(b => b.addEventListener('click', () => {
+            const op = b.dataset.op;
+            if (op === 'unread') { mailModify('unread', [t.id]); mailCloseThread(); return; }
+            mailModify(op, [t.id]);
+        }));
+        detail.querySelector('#mailThreadLabel').addEventListener('change', e => { if (e.target.value) mailModify('addLabel', [t.id], e.target.value); });
+        detail.querySelectorAll('[data-remove-label]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); mailModify('removeLabel', [t.id], a.dataset.removeLabel); }));
+        const vChip = detail.querySelector('#mailVendorChip');
+        if (vChip && vendor) vChip.addEventListener('click', () => openReviewModal(vendor.id));
+
+        // Messages: render each email body in a sandboxed iframe (scripts never run)
+        detail.querySelectorAll('.mail-msg').forEach(el => {
+            const m = t.messages[Number(el.dataset.idx)];
+            el.querySelector('.mail-msg-head').addEventListener('click', () => {
+                el.classList.toggle('collapsed');
+                if (!el.classList.contains('collapsed')) mailFillFrame(el.querySelector('iframe'), m);
+            });
+            if (!el.classList.contains('collapsed')) mailFillFrame(el.querySelector('iframe'), m);
+        });
+        detail.querySelectorAll('[data-att]').forEach(b => b.addEventListener('click', () => mailOpenAttachment(b)));
+        detail.scrollTop = 0;
+        const last = detail.querySelector(`.mail-msg[data-idx="${lastIdx}"]`);
+        if (last && t.messages.length > 1) setTimeout(() => last.scrollIntoView({ block: 'start' }), 50);
+    }
+
+    function mailFillFrame(frame, m) {
+        if (!frame || frame.dataset.filled) return;
+        frame.dataset.filled = '1';
+        const body = m.html && m.html.trim()
+            ? m.html
+            : `<pre style="white-space:pre-wrap; font-family:inherit; margin:0;">${escapeHtml(m.text || '')}</pre>`;
+        frame.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><base target="_blank"><style>body{margin:12px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#222;word-wrap:break-word;overflow-wrap:anywhere;}img{max-width:100%;height:auto;}table{max-width:100%;}</style></head><body>${body}</body></html>`;
+        const resize = () => {
+            try { frame.style.height = Math.min(4000, frame.contentDocument.documentElement.scrollHeight + 4) + 'px'; } catch (e) { frame.style.height = '500px'; }
+        };
+        frame.onload = () => {
+            resize();
+            try { frame.contentDocument.querySelectorAll('img').forEach(img => img.addEventListener('load', resize)); } catch (e) {}
+        };
+    }
+
+    async function mailOpenAttachment(btn) {
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.textContent = 'Loading…';
+        try {
+            const data = await gmailApi('attachment', { messageId: btn.dataset.msg, index: Number(btn.dataset.att) });
+            const bytes = Uint8Array.from(atob(data.data), c => c.charCodeAt(0));
+            const url = URL.createObjectURL(new Blob([bytes], { type: data.type }));
+            if ((data.type || '').startsWith('image/') || data.type === 'application/pdf') {
+                openFilePreview(url, data.type);
+            } else {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = data.name || 'attachment';
+                a.click();
+            }
+        } catch (e) {
+            showToast(e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = original;
+        }
+    }
+
+    async function mailSendReply(replyAll) {
+        const t = mailState.openThread;
+        const box = document.getElementById('mailReplyBody');
+        const body = box.value.trim();
+        if (!t || !body) { showToast('Write a reply first.'); return; }
+        document.querySelectorAll('.mail-compose button').forEach(b => b.disabled = true);
+        showToast('Sending…');
+        try {
+            await gmailApi('reply', { threadId: t.id, body, replyAll });
+            box.value = '';
+            showToast('Reply sent!');
+            mailOpenThread(t.id, false);
+            mailLoadList(true);
+        } catch (e) {
+            showToast(e.message);
+        } finally {
+            document.querySelectorAll('.mail-compose button').forEach(b => b.disabled = false);
+        }
+    }
+
+    function mailOpenCompose(to = '', subject = '') {
+        if (!GMAIL_SCRIPT_URL) { mailOnOpen(); return; }
+        document.getElementById('mailLayout').classList.add('show-detail');
+        mailState.openThread = null;
+        document.querySelectorAll('#mailList .mail-row.open').forEach(r => r.classList.remove('open'));
+        document.getElementById('mailDetail').innerHTML = `
+            <div class="mail-pane-head"><button class="mail-btn mail-back" onclick="mailCloseThread()">← Back</button><strong>New email</strong></div>
+            <div class="mail-compose" style="border-top:none;">
+                <input id="mailComposeTo" class="modern-input" placeholder="To (separate multiple with commas)" value="${escapeHtml(to)}">
+                <input id="mailComposeCc" class="modern-input" placeholder="Cc (optional)">
+                <input id="mailComposeSubject" class="modern-input" placeholder="Subject" value="${escapeHtml(subject)}">
+                <textarea id="mailComposeBody" class="modern-input" style="min-height:220px;" placeholder="Message"></textarea>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-action" id="mailComposeSend" style="padding:9px 18px; font-size:0.85rem;" onclick="mailSendNew()">Send</button>
+                    <button class="mail-btn" onclick="mailCloseThread()">Discard</button>
+                </div>
+            </div>`;
+        document.getElementById(to ? 'mailComposeSubject' : 'mailComposeTo').focus();
+    }
+
+    async function mailSendNew() {
+        const to = document.getElementById('mailComposeTo').value.trim();
+        const cc = document.getElementById('mailComposeCc').value.trim();
+        const subject = document.getElementById('mailComposeSubject').value.trim();
+        const body = document.getElementById('mailComposeBody').value.trim();
+        if (!to) { showToast('Add a recipient.'); return; }
+        if (!body && !confirm('Send without a message?')) return;
+        const btn = document.getElementById('mailComposeSend');
+        btn.disabled = true;
+        showToast('Sending…');
+        try {
+            await gmailApi('send', { to, cc, subject, body });
+            showToast('Email sent!');
+            mailCloseThread();
+            if (mailState.folder === 'sent') mailLoadList(true);
+        } catch (e) {
+            showToast(e.message);
+            btn.disabled = false;
+        }
+    }
+
     function getDriveFileId(url) {
         if (!url || !url.includes('drive.google.com')) return null;
         const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
@@ -2899,10 +3433,11 @@
     }
 
     // Full-screen viewer for uploaded files (food handler licenses) so admins don't have to download them
-    function openFilePreview(url) {
+    function openFilePreview(url, mimeType) {
         if (!url) return;
         const body = document.getElementById('filePreviewBody');
-        const ext = url.toLowerCase().split('.').pop().split('?')[0];
+        // Blob URLs (e.g. Gmail attachments) have no extension, so callers pass the MIME type instead
+        const ext = mimeType === 'application/pdf' ? 'pdf' : url.toLowerCase().split('.').pop().split('?')[0];
         const driveId = getDriveFileId(url);
         const frameStyle = 'width:100%; max-width:1000px; height:100%; border:none; border-radius:12px; background:#fff;';
 
@@ -3466,13 +4001,23 @@
         } else {
             document.getElementById('nav-settings').style.display = 'flex';
         }
+        // Mail tab is admin-only (the Gmail script credentials are only loaded for admins)
+        const isAdminUser = currentUser && currentUser.role === 'admin';
+        document.getElementById('nav-mail').style.display = isAdminUser ? 'flex' : 'none';
+        document.getElementById('mob-nav-mail').style.display = isAdminUser ? '' : 'none';
 
         // Securely fetch API keys from Supabase Secrets
-        const keysToFetch = currentUser.role === 'admin' ? ['BREVO_API_KEY', 'OPENROUTER_API_KEY'] : ['OPENROUTER_API_KEY'];
+        const keysToFetch = currentUser.role === 'admin' ? ['BREVO_API_KEY', 'OPENROUTER_API_KEY', 'GMAIL_SCRIPT_URL', 'GMAIL_SCRIPT_SECRET'] : ['OPENROUTER_API_KEY'];
         const { data, error } = await _supabase.from('secrets').select('name, value').in('name', keysToFetch);
         if (data) {
             const brevo = data.find(s => s.name === 'BREVO_API_KEY');
             const openRouter = data.find(s => s.name === 'OPENROUTER_API_KEY');
+            const gmailUrl = data.find(s => s.name === 'GMAIL_SCRIPT_URL');
+            const gmailSecret = data.find(s => s.name === 'GMAIL_SCRIPT_SECRET');
+            GMAIL_SCRIPT_URL = gmailUrl && gmailUrl.value ? gmailUrl.value.trim() : '';
+            GMAIL_SCRIPT_SECRET = gmailSecret && gmailSecret.value ? gmailSecret.value.trim() : '';
+            if (document.getElementById('gmailScriptUrlInput')) document.getElementById('gmailScriptUrlInput').value = GMAIL_SCRIPT_URL;
+            if (document.getElementById('gmailScriptSecretInput')) document.getElementById('gmailScriptSecretInput').value = GMAIL_SCRIPT_SECRET;
             
             if (brevo) {
                 BREVO_API_KEY = brevo.value.trim();
@@ -3497,6 +4042,7 @@
         await loadManualStrikes();
         updateCabbieVisibility();
         if (BREVO_API_KEY) testBrevoApiAccess();
+        if (isAdminUser && GMAIL_SCRIPT_URL) mailRefreshUnreadCount();
         refreshData();
         setupRealtime();
         startEmailStatusPolling();
@@ -4323,6 +4869,8 @@
         const pubUrl = document.getElementById('publicUrlInput').value.trim();
         const orKey = document.getElementById('openRouterKeyInput').value.trim();
         const brKey = document.getElementById('brevoKeyInput').value.trim();
+        const gmUrl = document.getElementById('gmailScriptUrlInput').value.trim();
+        const gmSecret = document.getElementById('gmailScriptSecretInput').value.trim();
         
         showToast("Saving Settings...");
 
@@ -4330,6 +4878,8 @@
         if (pubUrl) updates.push({ name: 'PUBLIC_APP_URL', value: pubUrl });
         if (orKey) updates.push({ name: 'OPENROUTER_API_KEY', value: orKey });
         if (brKey) updates.push({ name: 'BREVO_API_KEY', value: brKey });
+        if (gmUrl) updates.push({ name: 'GMAIL_SCRIPT_URL', value: gmUrl });
+        if (gmSecret) updates.push({ name: 'GMAIL_SCRIPT_SECRET', value: gmSecret });
         
         if (updates.length > 0) {
             const { error } = await _supabase.from('secrets').upsert(updates, { onConflict: 'name' });
@@ -4343,6 +4893,8 @@
         currentData.publicUrl = pubUrl;
         if (orKey) OPENROUTER_API_KEY = orKey;
         if (brKey) BREVO_API_KEY = brKey;
+        if (gmUrl) GMAIL_SCRIPT_URL = gmUrl;
+        if (gmSecret) GMAIL_SCRIPT_SECRET = gmSecret;
         
         showToast("System Settings Saved!");
     }
@@ -4488,7 +5040,7 @@
         activeFilter = filter;
         const vendorFilters = ['inbox', 'new', 'approved', 'review', 'power', 'denied'];
         if (vendorFilters.includes(filter)) localStorage.setItem('marketLastFilter', filter);
-        document.querySelectorAll('.control-item, .control-item-filter').forEach(el => el.classList.remove('active', 'active-new', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan', 'active-power'));
+        document.querySelectorAll('.control-item, .control-item-filter').forEach(el => el.classList.remove('active', 'active-new', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan', 'active-power', 'active-mail'));
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
 
         // The camera scanner stays on between check-ins; shut it off when leaving Check In
@@ -4555,7 +5107,7 @@
 
     function toggleView(v) {
         if (v !== 'scan' && _qrStream) stopCameraScanner();
-        document.querySelectorAll('.control-item, .control-item-filter').forEach(e => e.classList.remove('active', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan', 'active-new', 'active-power'));
+        document.querySelectorAll('.control-item, .control-item-filter').forEach(e => e.classList.remove('active', 'active-review', 'active-approved', 'active-denied', 'active-settings', 'active-profiles', 'active-scan', 'active-new', 'active-power', 'active-mail'));
         document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
         // Hide filter tabs when on settings/scan
         document.querySelectorAll('#vendorFilterTabs .control-item-filter').forEach(t => t.style.display = 'none');
@@ -4572,6 +5124,11 @@
             filterUnifiedCheckIn('');
             setTimeout(() => document.getElementById('unifiedCheckInInput').focus(), 100);
             syncMobileNav('scan');
+        } else if (v === 'mail') {
+            document.getElementById('nav-mail').classList.add('active-mail');
+            document.getElementById('view-mail').style.display = 'block';
+            syncMobileNav('mail');
+            mailOnOpen();
         }
     }
 
@@ -4585,6 +5142,8 @@
             setFilter(vendorFilters.includes(activeFilter) ? activeFilter : 'inbox');
         } else if (view === 'profiles') {
             setFilter('profiles');
+        } else if (view === 'mail') {
+            toggleView('mail');
         } else if (view === 'scan') {
             toggleView('scan');
         } else if (view === 'settings') {
