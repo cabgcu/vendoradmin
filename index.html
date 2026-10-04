@@ -288,7 +288,7 @@
         .mail-row-snippet { color: var(--text-muted); font-size: 0.78rem; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
         .mail-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-primary-hover); display: inline-block; margin-right: 6px; flex-shrink: 0; }
         .mail-chip { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 1px 7px; border-radius: 8px; background: var(--card-bg); border: 1px solid var(--border-light); color: var(--text-muted); margin: 4px 4px 0 0; }
-        .mail-chip.vendor { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); cursor: pointer; }
+        .mail-chip.vendor { background: var(--success-bg); border-color: transparent; color: var(--success-text); cursor: pointer; }
         .mail-btn { background: var(--card-bg); border: 1px solid var(--border-light); color: var(--text-main); padding: 6px 12px; border-radius: 9999px; font: 500 12px var(--font-stack); cursor: pointer; white-space: nowrap; }
         .mail-btn:hover { background: var(--highlight-bg); border-color: var(--border-medium); }
         .mail-btn.danger { color: var(--danger-text); }
@@ -391,7 +391,7 @@
         #emailPreview { display: none; }
 
         /* ── TABLE ── */
-        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th { padding: 10px 16px; text-align: left; color: var(--text-dim); font-size: 12px; font-weight: 500; border-bottom: 1px solid var(--line); border-top: 1px solid var(--line); }
         th:first-child, td:first-child { padding-left: 24px; }
         th:last-child, td:last-child { padding-right: 24px; }
@@ -409,6 +409,46 @@
         .power-tag { display: inline-block; font-size: 12px; font-weight: 500; color: var(--warning-text); background: var(--warning-bg); padding: 3px 9px; border-radius: 6px; margin-top: 4px; }
 
         .action-wrapper { display: flex; align-items: center; justify-content: flex-end; gap: 4px; flex-wrap: nowrap; }
+
+        /* Flat tags — one shape for every chip in the app */
+        .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 6px; white-space: nowrap; line-height: 1.35; color: var(--text-muted); background: rgba(255,255,255,0.06); }
+        .tag.green { color: var(--success-text); background: var(--success-bg); }
+        .tag.yellow { color: var(--warning-text); background: var(--warning-bg); }
+        .tag.red { color: var(--danger-text); background: var(--danger-bg); }
+        .tag.blue { color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
+        .tag.purple { color: #c4b5fd; background: rgba(139, 92, 246, 0.12); }
+
+        /* Vendor table — mirrors the check-in guest table */
+        .name-cell { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; position: relative; }
+        .avatar .flag { position: absolute; right: -2px; bottom: -2px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--card-bg); }
+        .vendor-name { font-weight: 600; font-size: 14px; }
+        .vendor-sub { color: var(--text-dim); font-size: 12px; margin-top: 2px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .vendor-sub .tag { font-size: 11px; padding: 1px 7px; }
+        .cat-cell { display: flex; gap: 6px; flex-wrap: wrap; max-width: 260px; }
+        td.c-checkin, th.c-checkin { text-align: right; }
+        td.c-actions { width: 1%; }
+        tr.clickable-row .action-wrapper { opacity: 0; transition: opacity 0.15s; }
+        tr.clickable-row:hover .action-wrapper, tr.clickable-row .action-wrapper:focus-within { opacity: 1; }
+        .m-only { display: none; }
+
+        .status-select {
+            appearance: none; -webkit-appearance: none; border: none; outline: none; cursor: pointer;
+            font: 500 12px var(--font-stack); padding: 3px 24px 3px 9px; border-radius: 6px;
+            background-repeat: no-repeat; background-position: right 7px center; background-size: 10px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='3' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            color: var(--text-muted); background-color: rgba(255,255,255,0.06);
+        }
+        .status-select option { background: var(--card-bg); color: #fff; }
+        .status-select.approved { color: var(--success-text); background-color: var(--success-bg); }
+        .status-select.review { color: var(--warning-text); background-color: var(--warning-bg); }
+        .status-select.denied { color: var(--danger-text); background-color: var(--danger-bg); }
+        .status-select.new { color: #60a5fa; background-color: rgba(96, 165, 250, 0.1); }
+
+        .btn-checkin { padding: 7px 16px; font-size: 13px; white-space: nowrap; }
+        .btn-action.btn-checkin.in { background: var(--success-bg); color: var(--success-text); }
+        .btn-action.btn-checkin.in:hover { background: rgba(74, 222, 128, 0.18); }
+        .label-only { color: var(--text-dim); font-size: 12px; font-weight: 500; }
 
         /* ── EMAIL STATUS BADGES ── */
         .status-badge { display: inline-block; font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 6px; white-space: nowrap; text-align: center; }
@@ -481,11 +521,11 @@
         /* Sidebar Buttons */
         .sidebar-btn { width: 100%; padding: 11px 0; font: 500 13px var(--font-stack); border-radius: 9999px; cursor: pointer; transition: 0.15s; border: 1px solid transparent; }
         .sidebar-btn:active { transform: scale(0.97); }
-        .sidebar-btn-approve { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
+        .sidebar-btn-approve { background: var(--success-bg); color: var(--success-text); }
         .sidebar-btn-approve:hover { background: rgba(74, 222, 128, 0.18); }
-        .sidebar-btn-neutral { background: var(--inset-bg); color: var(--text-muted); border-color: var(--line-strong); }
+        .sidebar-btn-neutral { background: var(--card-bg); color: #e4e4e7; border-color: var(--line-strong); }
         .sidebar-btn-neutral:hover { background: var(--highlight-bg); color: #fff; }
-        .sidebar-btn-deny { background: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-border); }
+        .sidebar-btn-deny { background: var(--danger-bg); color: var(--danger-text); }
         .sidebar-btn-deny:hover { background: rgba(248, 113, 113, 0.18); }
         .sidebar-btn-sm { padding: 7px 0; font-size: 12px; font-weight: 500; text-transform: none; }
 
@@ -636,51 +676,20 @@
             .modern-input { height: 46px; font-size: 16px; }
             textarea.modern-input { height: auto; }
 
-            /* ── VENDOR ROWS — flat two-line list ── */
+            /* ── VENDOR ROWS — flat two-line list, like the check-in guest list ── */
             .table-container { overflow-x: visible; }
             table { min-width: 0; }
             thead { display: none; }
             tbody, tr, td { display: block; }
-            tr.clickable-row {
-                display: grid !important;
-                grid-template-columns: 1fr auto;
-                grid-template-rows: auto auto;
-                grid-template-areas: "meta status" "name status";
-                align-items: center;
-                gap: 2px 12px;
-                padding: 14px 16px;
-                border-bottom: 1px solid var(--line);
-            }
+            tbody tr { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name checkin" "type checkin"; gap: 8px 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
             tbody tr:last-child { border-bottom: none; }
-            tr.clickable-row:active { background: rgba(255,255,255,0.03); }
-            td { border: none !important; padding: 0 !important; background: transparent !important; border-radius: 0 !important; }
-
-            /* td(1) — #N · date — top-left meta row */
-            td:nth-child(1) {
-                grid-area: meta;
-                display: flex !important; align-items: center; gap: 5px;
-                height: auto !important; font-size: inherit !important; line-height: normal !important;
-                overflow: visible !important;
-            }
-            td:nth-child(1) > span:first-child { font-size: 12px !important; font-weight: 600; color: #c4b5fd !important; display: inline !important; margin-right: 0; }
-            td:nth-child(1) > br { display: none !important; }
-            td:nth-child(1) > span:not(:first-child) { font-size: 12px !important; color: var(--text-dim) !important; font-weight: 500; display: inline !important; }
-
-            /* td(2) — vendor name — bottom-left */
-            td:nth-child(2) { grid-area: name; display: block !important; }
-            td:nth-child(2) strong { font-size: 15px; font-weight: 600; }
-            td:nth-child(2) .mobile-status-pill { display: none !important; }
-            td:nth-child(2) [style*="flex-wrap"] { display: none !important; }
-            td:nth-child(2) .mobile-action-btn { display: none !important; }
-
-            /* td(5) — check-in status — right column spanning both rows */
-            td:nth-child(5) { grid-area: status; display: flex !important; align-items: center; justify-content: flex-end; align-self: stretch; }
-            td:nth-child(5) span { font-size: 12px !important; font-weight: 500; text-align: right; }
-            td:nth-child(5) .btn-action { padding: 7px 14px; font-size: 13px; white-space: nowrap; }
-
-            /* Hide all other cells */
-            td:nth-child(3), td:nth-child(4),
-            td:nth-child(6), td:nth-child(7) { display: none !important; }
+            td { border: none !important; padding: 0 !important; }
+            td.c-name { grid-area: name; }
+            td.c-status { grid-area: type; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding-left: 44px !important; }
+            td.c-checkin { grid-area: checkin; align-self: center; }
+            td.c-cat, td.c-resp, td.c-email, td.c-actions { display: none; }
+            .m-only { display: inline-flex; }
+            .vendor-sub .tag { display: none; }
 
             .mobile-action-btn { display: none !important; }
             .mobile-status-pending, .mobile-status-needs-review { background: var(--warning-bg); color: var(--warning-text); }
@@ -954,7 +963,7 @@
         .btn-amber-outline {
             white-space: nowrap; padding: 10px 20px;
             background: var(--warning-bg); color: var(--warning-text);
-            border: 1px solid var(--warning-border); border-radius: 9999px;
+            border: none; border-radius: 9999px;
             font: 500 13px var(--font-stack); cursor: pointer; transition: 0.15s;
         }
         .btn-amber-outline:hover { background: rgba(251, 191, 36, 0.18); }
@@ -1082,9 +1091,9 @@
             flex-shrink: 0;
         }
         .var-chip:hover { background: rgba(139, 92, 246, 0.22); }
-        .var-chip.confirm { border-color: var(--success-border); color: var(--success-text); background: var(--success-bg); }
+        .var-chip.confirm { border-color: transparent; color: var(--success-text); background: var(--success-bg); }
         .var-chip.confirm:hover { background: rgba(74, 222, 128, 0.2); }
-        .var-chip.decline { border-color: var(--danger-border); color: var(--danger-text); background: var(--danger-bg); }
+        .var-chip.decline { border-color: transparent; color: var(--danger-text); background: var(--danger-bg); }
         .var-chip.decline:hover { background: rgba(248, 113, 113, 0.2); }
         #richEmailEditor:empty::before {
             content: 'Click here and start typing your email...';
@@ -1095,7 +1104,7 @@
             display: inline-block;
             background: #e8f4fd;
             border: 1px solid #b3d9f2;
-            color: #0A84FF;
+            color: #60a5fa;
             padding: 1px 8px;
             border-radius: var(--radius-button);
             font-size: 0.78rem;
@@ -1152,8 +1161,8 @@
         .cabbie-msg.user { align-self: flex-end; background: var(--gradient-accent); border: 1px solid rgba(255,255,255,0.12); color: #fff; }
         .cabbie-msg.bot { align-self: flex-start; background: var(--card-bg); border: 1px solid var(--line); color: #eee; }
         .cabbie-msg.system-note { align-self: center; background: none; color: var(--text-muted); font-size: 0.75rem; font-style: italic; text-align: center; padding: 4px 10px; }
-        .cabbie-msg.error { border-color: rgba(255,59,48,0.4); background: rgba(255,59,48,0.1); }
-        .cabbie-actions-tag { display: inline-block; margin-top: 6px; font-size: 0.7rem; padding: 3px 8px; border-radius: var(--radius-button); background: rgba(52,199,89,0.15); color: #34C759; border: 1px solid rgba(52,199,89,0.3); }
+        .cabbie-msg.error { border-color: rgba(248, 113, 113,0.4); background: rgba(248, 113, 113,0.1); }
+        .cabbie-actions-tag { display: inline-block; margin-top: 6px; font-size: 0.7rem; padding: 3px 8px; border-radius: var(--radius-button); background: rgba(74, 222, 128,0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128,0.3); }
         .cabbie-typing { align-self: flex-start; display: flex; gap: 4px; padding: 12px 16px; border-radius: var(--radius-input); background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); }
         .cabbie-typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); animation: cabbie-bounce 1.2s infinite ease-in-out; }
         .cabbie-typing span:nth-child(2) { animation-delay: 0.15s; }
@@ -1169,7 +1178,7 @@
         .cabbie-send-btn { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--gradient-accent); color: #fff; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
         .cabbie-send-btn:active { transform: scale(0.94); }
         .cabbie-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .cabbie-setup-note { margin: 14px 16px 0; padding: 12px 14px; border-radius: var(--radius-input); background: rgba(255,149,0,0.1); border: 1px solid rgba(255,149,0,0.3); color: #FF9500; font-size: 0.8rem; line-height: 1.4; }
+        .cabbie-setup-note { margin: 14px 16px 0; padding: 12px 14px; border-radius: var(--radius-input); background: rgba(251, 191, 36,0.1); border: 1px solid rgba(251, 191, 36,0.3); color: #fbbf24; font-size: 0.8rem; line-height: 1.4; }
 
         .cabbie-close-btn { position: absolute; top: 14px; right: 14px; background: var(--card-bg); border: 1px solid var(--line-strong); color: var(--text-muted); font-size: 1.3rem; cursor: pointer; z-index: 10; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.15s; flex-shrink: 0; }
         .cabbie-close-btn:hover { color: #fff; }
@@ -1265,7 +1274,7 @@
     <div class="modal-content" style="max-width: 900px; width: 95%; padding: 0; overflow: hidden; max-height: 92vh;" onclick="event.stopPropagation()">
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--glass-border); background: var(--glass-surface);">
             <div>
-                <div style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #BF5AF2;" id="emailPreviewTitle">Sent Email Preview</div>
+                <div style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #a78bfa;" id="emailPreviewTitle">Sent Email Preview</div>
                 <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px;" id="emailPreviewSubject"></div>
             </div>
             <button style="background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); color: var(--text-muted); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; line-height: 1;" onclick="closeEmailPreviewModal()">&times;</button>
@@ -1278,18 +1287,18 @@
 
 <!-- DYNAMIC CHECK IN ALERT MODAL -->
 <div id="checkInAlert" class="modal-overlay" style="z-index:20002; background:rgba(0,0,0,0.95);" onclick="closeCheckInAlert()">
-    <div id="alertContentBox" class="modal-content" style="text-align:center; border: 2px solid #34C759; max-width:400px;" onclick="event.stopPropagation()">
+    <div id="alertContentBox" class="modal-content" style="text-align:center; border: 2px solid #4ade80; max-width:400px;" onclick="event.stopPropagation()">
         <div id="alertIcon" style="font-size:4rem; margin-bottom:10px;">✓</div>
-        <h2 id="alertTitle" style="color:#34C759; margin:0; font-size:2rem; font-weight:800;">CHECKED IN</h2>
-        <div id="alertMessage" style="color:#FF9500; font-size: 1.1rem; font-weight:bold; margin-top: 15px; display:none;"></div>
+        <h2 id="alertTitle" style="color:#4ade80; margin:0; font-size:2rem; font-weight:800;">CHECKED IN</h2>
+        <div id="alertMessage" style="color:#fbbf24; font-size: 1.1rem; font-weight:bold; margin-top: 15px; display:none;"></div>
         
         <h3 id="alertVendorName" style="color:#fff; margin:15px 0 5px 0; font-size:1.4rem;">Vendor Name</h3>
         <h4 id="alertVendorType" style="color:var(--text-muted); margin:0 0 20px 0; text-transform:uppercase; letter-spacing:1px; font-size:0.9rem;">VIP GROUP</h4>
         
         <div id="vendorDetailsSection">
             <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:15px 0;">
-            <div style="font-size:1.2rem; color:#FFD60A; font-weight:bold; letter-spacing:1px; margin-bottom:10px; display:none;" id="alertPower">POWER REQUESTED</div>
-            <div style="font-size:1.2rem; color:#FF9500; font-weight:bold; letter-spacing:1px; display:none;" id="alertFood">FOOD VENDOR</div>
+            <div style="font-size:1.2rem; color:#fde047; font-weight:bold; letter-spacing:1px; margin-bottom:10px; display:none;" id="alertPower">POWER REQUESTED</div>
+            <div style="font-size:1.2rem; color:#fbbf24; font-weight:bold; letter-spacing:1px; display:none;" id="alertFood">FOOD VENDOR</div>
         </div>
         
         <div style="margin-top:20px; font-size:0.8rem; color:#666; font-style:italic;">Tap anywhere or press ESC to close</div>
@@ -1314,7 +1323,7 @@
             </div>
             <div class="frosted stat-card" style="padding: 15px;">
                 <span class="stat-label">Main Category</span>
-                <span class="stat-val" style="font-size: 1.1rem; margin-top: 15px; color: #BF5AF2; letter-spacing: 0.5px;" id="profileModalMainCat">-</span>
+                <span class="stat-val" style="font-size: 1.1rem; margin-top: 15px; color: #a78bfa; letter-spacing: 0.5px;" id="profileModalMainCat">-</span>
             </div>
         </div>
 
@@ -1351,7 +1360,7 @@
             <div id="reviewDuplicatesContainer" style="margin-bottom: 20px; display: none;"></div>
 
             <!-- ✨ AI INSIGHTS DASHBOARD ✨ -->
-            <div id="aiInsightsBox" style="margin-bottom: 20px; background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.3); padding: 20px; border-radius: 16px; display: none;"></div>
+            <div id="aiInsightsBox" style="margin-bottom: 20px; background: var(--inset-bg); border: 1px solid var(--line); padding: 20px; border-radius: 16px; display: none;"></div>
 
             <div class="form-grid" style="margin-bottom: 16px;">
                 <div>
@@ -1407,19 +1416,19 @@
 
             <div class="review-field-label">Social Media / Website</div>
             <div class="review-field-value" id="reviewLink" style="margin-bottom: 16px;">
-                <a href="#" target="_blank" style="color: #0A84FF; text-decoration: none; font-weight: bold;">-</a>
+                <a href="#" target="_blank" style="color: #60a5fa; text-decoration: none; font-weight: bold;">-</a>
             </div>
 
-            <div id="reviewTotalStrikes" style="display:none; font-weight: 800; color: #FF3B30; margin-bottom: 10px; font-size: 0.95rem;"></div>
+            <div id="reviewTotalStrikes" style="display:none; font-weight: 800; color: #f87171; margin-bottom: 10px; font-size: 0.95rem;"></div>
 
             <div class="review-field-label" id="reviewStrikesLabel" style="display:none;">Late Applications</div>
-            <div class="review-field-value" id="reviewStrikes" style="display:none; color: #FF3B30; background: rgba(255, 59, 48, 0.05); border-color: rgba(255, 59, 48, 0.2); font-size: 0.95rem;"></div>
+            <div class="review-field-value" id="reviewStrikes" style="display:none; color: #f87171; background: rgba(248, 113, 113, 0.05); border-color: rgba(248, 113, 113, 0.2); font-size: 0.95rem;"></div>
 
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
                 <div class="review-field-label" style="margin-bottom:0;">Manual Strikes</div>
                 <button type="button" class="btn-action secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="addManualStrikeForReview()">+ Add Strike</button>
             </div>
-            <div class="review-field-value" id="reviewManualStrikes" style="color: #FF9500; background: rgba(255, 149, 0, 0.05); border-color: rgba(255, 149, 0, 0.2); font-size: 0.95rem; margin-bottom: 16px;"></div>
+            <div class="review-field-value" id="reviewManualStrikes" style="color: #fbbf24; background: rgba(251, 191, 36, 0.05); border-color: rgba(251, 191, 36, 0.2); font-size: 0.95rem; margin-bottom: 16px;"></div>
 
             <div id="reviewCustomAnswersSection" style="display:none;">
                 <div id="reviewCustomAnswers"></div>
@@ -1598,7 +1607,7 @@
 
         <label class="stat-label">2. Select Recipients</label>
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem;">
-            <button onclick="toggleAllCheckboxes(true)" style="background:transparent; border:none; color:#0A84FF; cursor:pointer; font-weight:bold;">Select All</button>
+            <button onclick="toggleAllCheckboxes(true)" style="background:transparent; border:none; color:#60a5fa; cursor:pointer; font-weight:bold;">Select All</button>
             <button onclick="toggleAllCheckboxes(false)" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;">Deselect All</button>
         </div>
         
@@ -1646,8 +1655,8 @@
             <button type="button" class="var-chip" onclick="richInsertVar('{{CONFIRM_DEADLINE}}', 'Confirm Deadline', 'customEmailRichEditor','customEmailBody')">Deadline</button>
             <button type="button" class="var-chip confirm" onclick="richInsertVar('{{CONFIRM_LINK}}', 'Confirm Link', 'customEmailRichEditor','customEmailBody')">Confirm Link</button>
             <button type="button" class="var-chip decline" onclick="richInsertVar('{{DECLINE_LINK}}', 'Decline Link', 'customEmailRichEditor','customEmailBody')">Decline Link</button>
-            <button type="button" class="var-chip" style="background:rgba(10,132,255,0.15); border-color:rgba(10,132,255,0.3); color:#0A84FF;" onclick="richInsertVar('{{POWER_CONFIRM_LINK}}', 'Confirm Power', 'customEmailRichEditor','customEmailBody')">Confirm Power</button>
-            <button type="button" class="var-chip" style="background:rgba(255,149,0,0.15); border-color:rgba(255,149,0,0.3); color:#FF9500;" onclick="richInsertVar('{{POWER_DECLINE_LINK}}', 'No Power Needed', 'customEmailRichEditor','customEmailBody')">No Power Needed</button>
+            <button type="button" class="var-chip" style="background:rgba(96, 165, 250,0.15); color:#60a5fa;" onclick="richInsertVar('{{POWER_CONFIRM_LINK}}', 'Confirm Power', 'customEmailRichEditor','customEmailBody')">Confirm Power</button>
+            <button type="button" class="var-chip" style="background:rgba(251, 191, 36,0.15); color:#fbbf24;" onclick="richInsertVar('{{POWER_DECLINE_LINK}}', 'No Power Needed', 'customEmailRichEditor','customEmailBody')">No Power Needed</button>
         </div>
 
         <!-- Editable email preview — matches the Settings > Email Templates editor exactly -->
@@ -1674,7 +1683,7 @@
 
         <label class="stat-label">5. Select Recipients</label>
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem;">
-            <button onclick="toggleAllCustomEmailCheckboxes(true)" style="background:transparent; border:none; color:#0A84FF; cursor:pointer; font-weight:bold;">Select All</button>
+            <button onclick="toggleAllCustomEmailCheckboxes(true)" style="background:transparent; border:none; color:#60a5fa; cursor:pointer; font-weight:bold;">Select All</button>
             <button onclick="toggleAllCustomEmailCheckboxes(false)" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;">Deselect All</button>
         </div>
         <input type="text" id="customEmailSearch" class="modern-input" placeholder="Search vendors by name..." style="margin-bottom:10px;" oninput="filterCustomEmailList()">
@@ -1810,7 +1819,7 @@
 
             <div class="table-scroll">
                 <table>
-                    <thead><tr><th>App #</th><th>Vendor Name</th><th>Status</th><th>Vendor Response</th><th>Check In</th><th>Email</th><th style="text-align:right;">Actions</th></tr></thead>
+                    <thead><tr><th>Vendor</th><th>Category</th><th>Status</th><th>Response</th><th>Email</th><th class="c-checkin">Check in</th><th></th></tr></thead>
                     <tbody id="vendorTableBody"></tbody>
                 </table>
             </div>
@@ -1840,7 +1849,7 @@
             </div>
 
             <!-- CAMERA QR SCANNER (mobile only) -->
-            <button id="startCameraBtn" onclick="startCameraScanner()" class="btn-action mobile-camera-btn" style="width:100%; margin-bottom:16px; padding:16px; font-size:1rem; background:rgba(124,58,237,0.12); border:1px solid rgba(124,58,237,0.35); color:#a78bfa;">
+            <button id="startCameraBtn" onclick="startCameraScanner()" class="btn-action mobile-camera-btn" style="width:100%; margin-bottom:16px; padding:16px; font-size:1rem; background:rgba(139, 92, 246,0.12); border:1px solid rgba(139, 92, 246,0.35); color:#a78bfa;">
                 📷 &nbsp;Scan QR Code with Camera
             </button>
             <div id="cameraScannerWrapper" style="display:none; margin-bottom:20px;">
@@ -1848,11 +1857,11 @@
                     <video id="qrVideo" style="width:100%; height:100%; object-fit:cover; display:block;" playsinline muted></video>
                     <canvas id="qrCanvas" style="display:none;"></canvas>
                     <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
-                        <div style="width:55%;aspect-ratio:1;border:2.5px solid rgba(124,58,237,0.9);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.45);"></div>
+                        <div style="width:55%;aspect-ratio:1;border:2.5px solid rgba(139, 92, 246,0.9);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.45);"></div>
                     </div>
                     <div id="qrStatusText" style="position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:0.82rem;color:#fff;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,0.9);">Scanning…</div>
                 </div>
-                <button onclick="stopCameraScanner()" class="btn-action" style="width:100%;margin-top:10px;padding:12px;background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger-text);">Stop Camera</button>
+                <button onclick="stopCameraScanner()" class="btn-action" style="width:100%;margin-top:10px;padding:12px;background:var(--danger-bg);border:none;color:var(--danger-text);">Stop Camera</button>
             </div>
 
             <!-- UNIFIED SCANNER & SEARCH BAR -->
@@ -1958,21 +1967,21 @@
             <div id="settings-tab-event" class="settings-section">
                 <!-- Form Access Controls -->
                 <div class="setup-card" style="margin-bottom:24px;">
-                    <div class="setup-card-glow" style="top:-70px; right:-70px; background: rgba(124,58,237,0.22);"></div>
+                    <div class="setup-card-glow" style="top:-70px; right:-70px; background: rgba(139, 92, 246,0.22);"></div>
                     <div class="setup-card-body">
-                        <label class="stat-label" style="color:#a78bfa; font-size:0.8rem; margin-bottom:8px; display:block;">Public Form Access Control <span style="color:var(--text-muted); font-weight:500; text-transform:none; letter-spacing:0;">(This Market Only)</span></label>
+                        <label class="stat-label" style="color:#fff; font-size:15px; font-weight:600; margin-bottom:6px; display:block;">Public form access <span style="color:var(--text-muted); font-weight:500;">(This Market Only)</span></label>
                         <p style="color:var(--text-muted); font-size:0.85rem; margin: 0 0 20px; max-width: 640px;">Override the automatic schedule to manually force the public application form open or closed for this specific market.</p>
 
                         <div class="access-control-grid">
-                            <button id="form-status-auto" onclick="setFormOverride('auto')" class="access-btn" style="background: rgba(255,255,255,0.1); color: #fff;">
+                            <button id="form-status-auto" onclick="setFormOverride('auto')" class="access-btn" style="background: var(--card-bg); color: #e4e4e7;">
                                 <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                 Auto (Use Dates)
                             </button>
-                            <button id="form-status-open" onclick="setFormOverride('open')" class="access-btn" style="background: rgba(255,255,255,0.1); color: #fff;">
+                            <button id="form-status-open" onclick="setFormOverride('open')" class="access-btn" style="background: var(--card-bg); color: #e4e4e7;">
                                 <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                                 Force OPEN
                             </button>
-                            <button id="form-status-closed" onclick="setFormOverride('closed')" class="access-btn" style="background: rgba(255,255,255,0.1); color: #fff;">
+                            <button id="form-status-closed" onclick="setFormOverride('closed')" class="access-btn" style="background: var(--card-bg); color: #e4e4e7;">
                                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                                 Force CLOSED
                             </button>
@@ -1983,7 +1992,7 @@
                 <div class="setup-card" style="margin-bottom:24px;">
                     <div class="setup-card-glow" style="bottom:-80px; left:-80px; width:280px; height:280px; background: rgba(217,70,239,0.1);"></div>
                     <div class="setup-card-body">
-                        <label class="stat-label" style="color:#e879f9; font-size:0.8rem; margin-bottom:24px; display:block;">Edit Active Event / Create New</label>
+                        <label class="stat-label" style="color:#fff; font-size:15px; font-weight:600; margin-bottom:20px; display:block;">Edit active event / create new</label>
 
                         <div class="form-grid" style="gap: 20px; margin-bottom: 20px;">
                             <div>
@@ -2047,14 +2056,14 @@
 
                 <div class="setup-card setup-footer" style="margin-bottom:24px;">
                     <div>
-                        <label class="stat-label" style="color: var(--warning-text);">Email Delivery Status (Current Market)</label>
+                        <label class="stat-label" style="color: #fff; font-size: 15px; font-weight: 600;">Email delivery status (current market)</label>
                         <p style="font-size:0.85rem; color:var(--text-muted); margin: 4px 0 0;">If the new market has stale Brevo status checkmarks, reset everything back to unsent/unchecked.</p>
                     </div>
                     <button onclick="resetCurrentMarketEmailTracking()" class="btn-amber-outline">Reset Current Market Delivery Status</button>
                 </div>
 
-                <div style="padding: 20px; border: 1px solid rgba(255, 59, 48, 0.3); border-radius: 16px; background: rgba(255, 59, 48, 0.05);">
-                    <label class="stat-label" style="color: #FF3B30;">Danger Zone</label>
+                <div style="padding: 24px; border: 1px solid var(--danger-border); border-radius: var(--radius-xl); background: rgba(248, 113, 113, 0.04);">
+                    <label class="stat-label" style="color: var(--danger-text); font-size: 15px; font-weight: 600;">Danger zone</label>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <strong style="display:block; margin-bottom: 5px;">Delete Current Event</strong>
@@ -2103,7 +2112,7 @@
                                 <input type="file" id="bannerFileInput" accept="image/*" style="display: none;" onchange="handleBannerSelection(event)">
                                 <button type="button" onclick="document.getElementById('bannerFileInput').click()" class="btn-action" style="padding: 6px 14px; font-size: 0.78rem; flex-shrink: 0; margin: 0;">Upload</button>
                                 <span id="bannerFileName" style="font-size: 0.8rem; color: var(--text-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">No file chosen</span>
-                                <button type="button" onclick="clearBannerSelection()" style="background: transparent; border: none; color: #FF3B30; cursor: pointer; display: none; font-size: 1.2rem; line-height: 1; padding: 0 5px;" id="clearBannerBtn">&times;</button>
+                                <button type="button" onclick="clearBannerSelection()" style="background: transparent; border: none; color: #f87171; cursor: pointer; display: none; font-size: 1.2rem; line-height: 1; padding: 0 5px;" id="clearBannerBtn">&times;</button>
                             </div>
                         </div>
                         <div>
@@ -2133,8 +2142,8 @@
                     <button type="button" class="var-chip" onclick="richInsertVar('{{CONFIRM_DEADLINE}}', 'Confirm Deadline')">Deadline</button>
                     <button type="button" class="var-chip confirm" onclick="richInsertVar('{{CONFIRM_LINK}}', 'Confirm Link')">Confirm Link</button>
                     <button type="button" class="var-chip decline" onclick="richInsertVar('{{DECLINE_LINK}}', 'Decline Link')">Decline Link</button>
-                    <button type="button" class="var-chip" style="background:rgba(10,132,255,0.15); border-color:rgba(10,132,255,0.3); color:#0A84FF;" onclick="richInsertVar('{{POWER_CONFIRM_LINK}}', 'Confirm Power')">Confirm Power</button>
-                    <button type="button" class="var-chip" style="background:rgba(255,149,0,0.15); border-color:rgba(255,149,0,0.3); color:#FF9500;" onclick="richInsertVar('{{POWER_DECLINE_LINK}}', 'No Power Needed')">No Power Needed</button>
+                    <button type="button" class="var-chip" style="background:rgba(96, 165, 250,0.15); color:#60a5fa;" onclick="richInsertVar('{{POWER_CONFIRM_LINK}}', 'Confirm Power')">Confirm Power</button>
+                    <button type="button" class="var-chip" style="background:rgba(251, 191, 36,0.15); color:#fbbf24;" onclick="richInsertVar('{{POWER_DECLINE_LINK}}', 'No Power Needed')">No Power Needed</button>
                 </div>
 
                 <!-- Editable email preview — you edit directly in the email -->
@@ -2185,15 +2194,15 @@
             <div id="settings-tab-system" class="settings-section" style="display:none;">
 
                 <!-- Full Data Backup -->
-                <div style="margin-bottom:30px; background: rgba(10, 132, 255, 0.05); border: 1px solid rgba(10, 132, 255, 0.2); padding: 25px; border-radius: var(--radius-lg);">
-                    <label class="stat-label" style="color: #0A84FF; font-size: 1rem; margin-bottom: 10px;">Full Database Backup</label>
+                <div style="margin-bottom:30px; background: var(--inset-bg); border: 1px solid var(--line); padding: 25px; border-radius: var(--radius-lg);">
+                    <label class="stat-label" style="color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 8px;">Full Database Backup</label>
                     <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Download a complete CSV spreadsheet of ALL vendor applications, internal notes, and data for the current market event.</p>
                     <button onclick="exportBackupCSV()" class="btn-action" style="background: var(--gradient-accent); padding: 12px 24px;">💾 Download Full CSV Backup</button>
                 </div>
 
                 <!-- Admin Password Management -->
                 <div style="margin-bottom:30px; background: var(--card-bg); border: 0.5px solid var(--glass-border); padding: 25px; border-radius: var(--radius-card);">
-                    <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">Change Admin Password</label>
+                    <label class="stat-label" style="color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 8px;">Change Admin Password</label>
                     <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Update the master password required to access this admin portal.</p>
                     
                     <div class="form-grid" style="gap: 16px; margin-bottom: 0;">
@@ -2208,22 +2217,22 @@
                 </div>
 
                 <!-- Data Export -->
-                <div style="margin-bottom:30px; background: rgba(52, 199, 89, 0.05); border: 1px solid rgba(52, 199, 89, 0.2); padding: 25px; border-radius: var(--radius-lg);">
-                    <label class="stat-label" style="color: #34C759; font-size: 1rem; margin-bottom: 10px;">Data Export</label>
+                <div style="margin-bottom:30px; background: var(--inset-bg); border: 1px solid var(--line); padding: 25px; border-radius: var(--radius-lg);">
+                    <label class="stat-label" style="color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 8px;">Data Export</label>
                     <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Download a CSV spreadsheet of all vendors who have officially checked in to this market event. Contains their names, student IDs, and GCU emails.</p>
                     <button onclick="exportCheckedInVendorsCSV()" class="btn-action" style="background: var(--gradient-success); padding: 12px 24px;">↓ Download Checked-In Vendors (CSV)</button>
                 </div>
 
                 <!-- Storage Cleanup -->
-                <div style="margin-bottom:30px; background: rgba(255, 149, 0, 0.05); border: 1px solid rgba(255, 149, 0, 0.2); padding: 25px; border-radius: var(--radius-lg);">
-                    <label class="stat-label" style="color: #FF9500; font-size: 1rem; margin-bottom: 10px;">Storage Space Cleanup</label>
+                <div style="margin-bottom:30px; background: var(--inset-bg); border: 1px solid var(--line); padding: 25px; border-radius: var(--radius-lg);">
+                    <label class="stat-label" style="color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 8px;">Storage Space Cleanup</label>
                     <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Supabase limits free storage to 50MB. Click below to permanently delete food license images attached to applications older than <span id="storageCleanupMonths">12</span> months. The vendor profile will remain, but the image file will be erased.</p>
                     <button onclick="runStorageCleanup()" class="btn-action" style="background: var(--gradient-warning); color: #000; padding: 12px 24px;">🗑 Delete Old Files (> <span id="storageCleanupButtonMonths">12</span> Months)</button>
                 </div>
 
                 <!-- System Settings & API Keys -->
                 <div style="background: var(--card-bg); border: 0.5px solid var(--glass-border); padding: 25px; border-radius: var(--radius-card);">
-                    <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">System Configuration & API Keys</label>
+                    <label class="stat-label" style="color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 8px;">System Configuration & API Keys</label>
                     <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Set your live website URL (to ensure email confirmation links work) and your AI/Email API keys here. Delivery tracking now scopes Brevo logs to each market using message IDs, tracking tags, and subject matching. These values are stored securely in Supabase (not GitHub).</p>
                     
                     <div class="form-grid" style="gap: 16px; margin-bottom: 20px;">
@@ -2255,7 +2264,7 @@
             <!-- TAB 4: USERS -->
             <div id="settings-tab-users" class="settings-section" style="display:none;">
                 <div style="margin-bottom:30px; background: var(--card-bg); border: 0.5px solid var(--glass-border); padding: 25px; border-radius: var(--radius-card);">
-                    <label class="stat-label" style="color: #0A84FF; font-size: 1rem; margin-bottom: 10px;">Authorized Emails (Whitelist)</label>
+                    <label class="stat-label" style="color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 8px;">Authorized Emails (Whitelist)</label>
                     <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 15px;">Add emails here to allow staff members to create their own accounts.</p>
                     <div style="display:flex; gap:10px; margin-bottom: 20px;">
                         <input type="email" id="newAuthEmail" class="modern-input" placeholder="staff@gcu.edu">
@@ -2265,7 +2274,7 @@
 
                     <hr style="border:0; border-top:1px solid var(--glass-border); margin:30px 0;">
 
-                    <label class="stat-label" style="color: #BF5AF2; font-size: 1rem; margin-bottom: 10px;">Active Staff Accounts</label>
+                    <label class="stat-label" style="color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 8px;">Active Staff Accounts</label>
                     <div id="activeStaffList" style="max-height: 300px; overflow-y: auto; background: var(--card-bg); border-radius: var(--radius-inner); padding: 10px; border: 0.5px solid var(--glass-border);"></div>
                 </div>
             </div>
@@ -2280,7 +2289,7 @@
 
                 <!-- BUILT-IN AUTOMATIONS -->
                 <div style="margin-bottom:16px;">
-                    <label class="stat-label" style="color: #BF5AF2; font-size: 0.85rem; margin-bottom: 8px; letter-spacing: 1px;">BUILT-IN AUTOMATIONS</label>
+                    <label class="stat-label" style="color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 8px;">Built-in automations</label>
                     <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom: 16px;">Core system automations that run automatically. Toggle them on or off.</p>
                 </div>
                 <div id="builtinAutomationsList"></div>
@@ -2288,16 +2297,16 @@
                 <!-- CUSTOM AUTOMATIONS -->
                 <div style="margin-top:30px; margin-bottom:16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <div>
-                        <label class="stat-label" style="color: #FF9500; font-size: 0.85rem; margin-bottom: 8px; letter-spacing: 1px;">CUSTOM AUTOMATIONS</label>
+                        <label class="stat-label" style="color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 8px;">Custom automations</label>
                         <p style="color:var(--text-muted); font-size:0.8rem; margin: 4px 0 0;">Event-driven automations you create. Triggered automatically when conditions are met.</p>
                     </div>
-                    <button onclick="openAddAutomationModal()" class="btn-action" style="white-space: nowrap; background: rgba(255, 149, 0, 0.15); border: 1px solid rgba(255, 149, 0, 0.3); color: #FF9500; padding: 10px 18px; font-size: 0.85rem;">+ New Automation</button>
+                    <button onclick="openAddAutomationModal()" class="btn-action" style="white-space: nowrap; background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; padding: 10px 18px; font-size: 0.85rem;">+ New Automation</button>
                 </div>
                 <div id="customAutomationsList"></div>
 
                 <!-- AUTOMATION LOG -->
                 <div style="margin-top:30px; margin-bottom:16px;">
-                    <label class="stat-label" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; letter-spacing: 1px;">RECENT ACTIVITY</label>
+                    <label class="stat-label" style="color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 8px;">Recent activity</label>
                 </div>
                 <div id="automationLogList" style="max-height: 250px; overflow-y: auto; background: var(--card-bg); border: 0.5px solid var(--glass-border); border-radius: var(--radius-inner); padding: 12px;">
                     <p style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 20px 0;">No automation activity yet.</p>
@@ -2312,15 +2321,15 @@
                     <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom: 24px;">Set up an automated action that triggers when conditions are met.</p>
 
                     <!-- AI PROMPT BUILDER -->
-                    <div style="margin-bottom: 24px; padding: 16px; background: rgba(191, 90, 242, 0.08); border: 1px solid rgba(191, 90, 242, 0.2); border-radius: 12px;">
+                    <div style="margin-bottom: 24px; padding: 16px; background: var(--inset-bg); border: 1px solid var(--line); border-radius: 12px;">
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                             <span style="font-size: 1.2rem;">✨</span>
                             <label class="stat-label" style="margin: 0;">AI Automation Builder</label>
-                            <span style="font-size: 0.65rem; background: rgba(191, 90, 242, 0.3); color: #BF5AF2; padding: 2px 8px; border-radius: 4px; font-weight: 600;">BETA</span>
+                            <span style="font-size: 0.65rem; background: rgba(167, 139, 250, 0.3); color: #a78bfa; padding: 2px 8px; border-radius: 4px; font-weight: 600;">BETA</span>
                         </div>
                         <p style="color:var(--text-muted); font-size:0.75rem; margin: 0 0 12px;">Describe what you want to automate in plain language, and AI will generate the automation for you.</p>
                         <textarea id="aiPromptInput" class="modern-input" placeholder="e.g. Send an email to all denied vendors thanking them for applying" style="min-height: 80px; resize: vertical; font-family: inherit;"></textarea>
-                        <button onclick="generateAutomationFromPrompt()" style="margin-top: 10px; width: 100%; padding: 10px 14px; background: rgba(191, 90, 242, 0.2); color: #BF5AF2; border: 1px solid rgba(191, 90, 242, 0.3); border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.8rem;">Generate from Prompt</button>
+                        <button onclick="generateAutomationFromPrompt()" style="margin-top: 10px; width: 100%; padding: 10px 14px; background: rgba(167, 139, 250, 0.2); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.3); border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.8rem;">Generate from Prompt</button>
                         <div id="aiPromptStatus" style="margin-top: 8px; font-size: 0.7rem; color: var(--text-muted); display: none;"></div>
                     </div>
 
@@ -2480,7 +2489,7 @@
             const msgDiv = document.createElement('div');
             msgDiv.id = 'confirmation-loading-screen';
             msgDiv.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#050505; color:white; font-family:var(--font-stack); z-index:999999;";
-            msgDiv.innerHTML = `<div class="spinner" style="margin-bottom:20px; width:40px; height:40px; border-top-color:${isConfirming ? '#34C759' : '#FF3B30'};"></div><h2 style="font-weight:800;">${isConfirming ? 'Confirming your attendance...' : 'Updating your status...'}</h2>`;
+            msgDiv.innerHTML = `<div class="spinner" style="margin-bottom:20px; width:40px; height:40px; border-top-color:${isConfirming ? '#4ade80' : '#f87171'};"></div><h2 style="font-weight:800;">${isConfirming ? 'Confirming your attendance...' : 'Updating your status...'}</h2>`;
             document.body.appendChild(msgDiv);
             
             if (isConfirming) {
@@ -2488,8 +2497,8 @@
                 if (error) throw error;
                 
                 msgDiv.innerHTML = `
-                    <div style="font-size: 5rem; color: #34C759; margin-bottom: 20px; text-shadow: 0 0 30px rgba(52, 199, 89, 0.4);">✓</div>
-                    <h2 style="color:#34C759; margin-bottom: 15px; font-weight:800; font-size:2.5rem;">Confirmed!</h2>
+                    <div style="font-size: 5rem; color: #4ade80; margin-bottom: 20px; text-shadow: 0 0 30px rgba(74, 222, 128, 0.4);">✓</div>
+                    <h2 style="color:#4ade80; margin-bottom: 15px; font-weight:800; font-size:2.5rem;">Confirmed!</h2>
                     <p style="color:var(--text-muted); font-size:1.1rem; max-width:400px; text-align:center;">Your attendance has been successfully recorded. We look forward to seeing you at the market!</p>
                 `;
             } else {
@@ -2519,8 +2528,8 @@
                 if (error) throw error;
                 
                 msgDiv.innerHTML = `
-                    <div style="font-size: 5rem; color: #FF3B30; margin-bottom: 20px; text-shadow: 0 0 30px rgba(255, 59, 48, 0.4);">✕</div>
-                    <h2 style="color:#FF3B30; margin-bottom: 15px; font-weight:800; font-size:2.5rem;">Declined</h2>
+                    <div style="font-size: 5rem; color: #f87171; margin-bottom: 20px; text-shadow: 0 0 30px rgba(248, 113, 113, 0.4);">✕</div>
+                    <h2 style="color:#f87171; margin-bottom: 15px; font-weight:800; font-size:2.5rem;">Declined</h2>
                     <p style="color:var(--text-muted); font-size:1.1rem; max-width:400px; text-align:center;">We've received your notice that you can no longer attend. Your spot has been released. We hope to see you at the next market!</p>
                 `;
             }
@@ -2530,8 +2539,8 @@
             // Catch-all safety screen so they NEVER see a blank page
             document.body.innerHTML = `
                 <div style="position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#050505; color:white; font-family:sans-serif; z-index:999999;">
-                    <div style="font-size: 4rem; color: #FF3B30; margin-bottom: 20px;">✕</div>
-                    <h2 style="color:#FF3B30; font-weight:800; margin-bottom:10px;">System Error</h2>
+                    <div style="font-size: 4rem; color: #f87171; margin-bottom: 20px;">✕</div>
+                    <h2 style="color:#f87171; font-weight:800; margin-bottom:10px;">System Error</h2>
                     <p style="color:#a1a1aa; text-align:center; max-width: 400px;">${(err.message || 'We could not process your status automatically. Please reply directly to the email to update us.').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
                 </div>
             `;
@@ -2567,8 +2576,8 @@
                 if (error) throw error;
 
                 msgDiv.innerHTML = `
-                    <div style="font-size: 5rem; color: #0A84FF; margin-bottom: 20px; text-shadow: 0 0 30px rgba(10, 132, 255, 0.4);">⚡</div>
-                    <h2 style="color:#0A84FF; margin-bottom: 15px; font-weight:800; font-size:2.2rem;">Power Confirmed!</h2>
+                    <div style="font-size: 5rem; color: #60a5fa; margin-bottom: 20px; text-shadow: 0 0 30px rgba(96, 165, 250, 0.4);">⚡</div>
+                    <h2 style="color:#60a5fa; margin-bottom: 15px; font-weight:800; font-size:2.2rem;">Power Confirmed!</h2>
                     <p style="color:var(--text-muted); font-size:1.1rem; max-width:400px; text-align:center;">Your power request has been confirmed. Please remember to bring your own extension cords to the market!</p>
                 `;
             } else {
@@ -2583,8 +2592,8 @@
                 if (error) throw error;
 
                 msgDiv.innerHTML = `
-                    <div style="font-size: 5rem; color: #FF9500; margin-bottom: 20px; text-shadow: 0 0 30px rgba(255, 149, 0, 0.4);">🔌</div>
-                    <h2 style="color:#FF9500; margin-bottom: 15px; font-weight:800; font-size:2.2rem;">Power Released</h2>
+                    <div style="font-size: 5rem; color: #fbbf24; margin-bottom: 20px; text-shadow: 0 0 30px rgba(251, 191, 36, 0.4);">🔌</div>
+                    <h2 style="color:#fbbf24; margin-bottom: 15px; font-weight:800; font-size:2.2rem;">Power Released</h2>
                     <p style="color:var(--text-muted); font-size:1.1rem; max-width:400px; text-align:center;">Your power spot has been released. You're still confirmed for the market — just without a power source. Thank you for letting us know!</p>
                 `;
             }
@@ -2593,8 +2602,8 @@
             console.error("Power Confirmation Error:", err);
             document.body.innerHTML = `
                 <div style="position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#050505; color:white; font-family:sans-serif; z-index:999999;">
-                    <div style="font-size: 4rem; color: #FF3B30; margin-bottom: 20px;">✕</div>
-                    <h2 style="color:#FF3B30; font-weight:800; margin-bottom:10px;">System Error</h2>
+                    <div style="font-size: 4rem; color: #f87171; margin-bottom: 20px;">✕</div>
+                    <h2 style="color:#f87171; font-weight:800; margin-bottom:10px;">System Error</h2>
                     <p style="color:#a1a1aa; text-align:center; max-width: 400px;">${(err.message || 'We could not process your power status. Please reply directly to the email to update us.').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
                 </div>
             `;
@@ -4283,10 +4292,10 @@
                     
                     aiBox.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="font-size: 0.85rem; color: #FF3B30; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                            <div style="font-size: 0.85rem; color: #f87171; font-weight: 600; display: flex; align-items: center; gap: 8px;">
                                 ⚠️ Scan Error: ${errMsg}
                             </div>
-                            <button onclick="forceAIRescan('${passedVendor.id}')" class="btn-action" style="padding: 6px 12px; font-size: 0.75rem; background: rgba(255, 59, 48, 0.2); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.4);">Retry</button>
+                            <button onclick="forceAIRescan('${passedVendor.id}')" class="btn-action" style="padding: 6px 12px; font-size: 0.75rem; background: rgba(248, 113, 113, 0.2); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.4);">Retry</button>
                         </div>
                     `;
                     aiBox.style.display = 'block';
@@ -4337,24 +4346,24 @@
 
         if (forceLoading || aiAnalyzingSet.has(vendor.id)) {
             aiBox.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 12px; color: #0A84FF; font-weight: 700; font-size: 0.9rem;">
-                    <div class="spinner" style="width:16px; height:16px; border-width:2px; border-top-color:#0A84FF;"></div>
+                <div style="display: flex; align-items: center; gap: 12px; color: #60a5fa; font-weight: 700; font-size: 0.9rem;">
+                    <div class="spinner" style="width:16px; height:16px; border-width:2px; border-top-color:#60a5fa;"></div>
                     Scanning Food License...
                 </div>
             `;
             aiBox.style.display = 'block';
         } else if (vendor.aiData && vendor.aiData.license_status) {
             let isGood = vendor.aiData.license_status.includes('✅');
-            let lColor = isGood ? '#34C759' : '#FF3B30';
-            let lBg = isGood ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)';
-            let lBorder = isGood ? 'rgba(52, 199, 89, 0.3)' : 'rgba(255, 59, 48, 0.3)';
+            let lColor = isGood ? '#4ade80' : '#f87171';
+            let lBg = isGood ? 'rgba(74, 222, 128, 0.1)' : 'rgba(248, 113, 113, 0.1)';
+            let lBorder = isGood ? 'rgba(74, 222, 128, 0.3)' : 'rgba(248, 113, 113, 0.3)';
             
             aiBox.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <div style="font-size: 0.75rem; color: #0A84FF; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px;">
+                    <div style="font-size: 0.75rem; color: #60a5fa; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px;">
                         ✨ Auto-Scan
                     </div>
-                    <button onclick="forceAIRescan('${vendor.id}')" title="Force Rescan" style="background:none; border:none; color:#0A84FF; cursor:pointer; opacity:0.3; font-size:1.1rem; padding:0; transition:0.2s; line-height:1;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.3">↻</button>
+                    <button onclick="forceAIRescan('${vendor.id}')" title="Force Rescan" style="background:none; border:none; color:#60a5fa; cursor:pointer; opacity:0.3; font-size:1.1rem; padding:0; transition:0.2s; line-height:1;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.3">↻</button>
                 </div>
                 <div style="padding: 12px 15px; border-radius: 16px; background: ${lBg}; border: 1px solid ${lBorder}; color: ${lColor}; font-size: 0.9rem; font-weight: 700;">
                     ${vendor.aiData.license_status}
@@ -4368,7 +4377,7 @@
                     <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 8px;">
                         ✨ Food License not scanned yet.
                     </div>
-                    <button onclick="forceAIRescan('${vendor.id}')" class="btn-action" style="padding: 6px 12px; font-size: 0.75rem; background: rgba(10, 132, 255, 0.2); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.4);">Scan Now</button>
+                    <button onclick="forceAIRescan('${vendor.id}')" class="btn-action" style="padding: 6px 12px; font-size: 0.75rem; background: rgba(96, 165, 250, 0.2); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.4);">Scan Now</button>
                 </div>
             `;
             aiBox.style.display = 'block';
@@ -4797,17 +4806,17 @@
             const isFoodCategory = v.autoCategories && v.autoCategories.includes('Food');
 
             let foodBadge = '';
-            if (isFoodLicense) foodBadge = '<span style="color: #FF9500; font-weight: bold; font-size: 0.75rem;">[FOOD LICENSE]</span> ';
-            else if (isFoodCategory) foodBadge = '<span style="color: #0A84FF; font-weight: bold; font-size: 0.75rem;">[FOOD]</span> ';
+            if (isFoodLicense) foodBadge = '<span style="color: #fbbf24; font-weight: bold; font-size: 0.75rem;">[FOOD LICENSE]</span> ';
+            else if (isFoodCategory) foodBadge = '<span style="color: #60a5fa; font-weight: bold; font-size: 0.75rem;">[FOOD]</span> ';
 
-            const powerBadge = v.needs_power === 'Yes' ? '<span style="color: #FFD60A; font-weight: bold; font-size: 0.75rem;">[POWER]</span> ' : '';
+            const powerBadge = v.needs_power === 'Yes' ? '<span style="color: #fde047; font-weight: bold; font-size: 0.75rem;">[POWER]</span> ' : '';
 
             let btnHtml = '';
             // Show check-in button for approved vendors (regardless of confirmation) or already checked in
             if (v.status === 'Approved' || v.status === 'Checked In') {
                 btnHtml = `<button class="btn-action" style="padding: 6px 16px; font-size: 0.8rem; white-space: nowrap; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}" onclick="checkIn('${v.id}', false, this)">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`;
             } else {
-                btnHtml = `<span style="color: #FF3B30; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; padding-right: 10px;">${v.status}</span>`;
+                btnHtml = `<span style="color: #f87171; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; padding-right: 10px;">${v.status}</span>`;
             }
 
             d.innerHTML = `<div><strong>${v.first_name} ${v.last_name}</strong><br><small style="color:var(--text-muted);">${foodBadge}${powerBadge} ID: ${v.student_id || 'N/A'}</small></div>${btnHtml}`;
@@ -5139,35 +5148,22 @@
     }
 
     function updateFormStatusUI(status) {
-        // Update settings buttons
-        document.querySelectorAll('#form-status-auto, #form-status-open, #form-status-closed').forEach(btn => {
-            btn.style.background = 'rgba(255,255,255,0.1)';
-            btn.style.boxShadow = 'none';
+        const looks = {
+            auto: { background: '#3f3f46', color: '#ffffff' },
+            open: { background: 'var(--success-bg)', color: 'var(--success-text)' },
+            closed: { background: 'var(--danger-bg)', color: 'var(--danger-text)' }
+        };
+        ['auto', 'open', 'closed'].forEach(key => {
+            [`form-status-${key}`, `form-status-${key}-scan`].forEach(id => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                const on = key === status;
+                btn.style.background = on ? looks[key].background : 'var(--card-bg)';
+                btn.style.color = on ? looks[key].color : '#e4e4e7';
+                btn.style.borderColor = on ? 'transparent' : 'var(--line-strong)';
+                btn.style.boxShadow = 'none';
+            });
         });
-
-        // Update scan screen buttons
-        document.querySelectorAll('#form-status-auto-scan, #form-status-open-scan, #form-status-closed-scan').forEach(btn => {
-            btn.style.background = 'rgba(255,255,255,0.1)';
-            btn.style.boxShadow = 'none';
-        });
-
-        // Highlight active settings button
-        const activeBtn = document.getElementById(`form-status-${status}`);
-        if (activeBtn) {
-            if (status === 'auto') activeBtn.style.background = 'var(--gradient-accent)';
-            if (status === 'open') activeBtn.style.background = 'var(--gradient-success)';
-            if (status === 'closed') activeBtn.style.background = 'var(--gradient-danger)';
-            activeBtn.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
-        }
-
-        // Highlight active scan button
-        const activeScanBtn = document.getElementById(`form-status-${status}-scan`);
-        if (activeScanBtn) {
-            if (status === 'auto') activeScanBtn.style.background = 'var(--gradient-accent)';
-            if (status === 'open') activeScanBtn.style.background = 'var(--gradient-success)';
-            if (status === 'closed') activeScanBtn.style.background = 'var(--gradient-danger)';
-            activeScanBtn.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
-        }
     }
 
     async function setFormOverride(status) {
@@ -5335,11 +5331,11 @@
                     <td><a href="mailto:${p.preferred_email}" style="color:var(--text-muted);" onclick="event.stopPropagation()">${p.preferred_email}</a></td>
                     <td>${p.phone || 'N/A'}</td>
                     <td>${p.lastEvent}</td>
-                    <td><span class="status-badge sent" style="background: rgba(191, 90, 242, 0.1); border-color: rgba(191, 90, 242, 0.3); color: #BF5AF2;">${p.appCount} Apps</span></td>
+                    <td><span class="tag purple">${p.appCount} app${p.appCount === 1 ? '' : 's'}</span></td>
                     <td>${(() => {
                         const n = getTotalStrikeCount(p.originalEmail);
                         return n > 0
-                            ? `<span class="status-badge" style="background: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.3); color: #FF3B30;">${n} Strike${n === 1 ? '' : 's'}</span>`
+                            ? `<span class="status-badge" style="background: rgba(248, 113, 113, 0.1); color: #f87171;">${n} Strike${n === 1 ? '' : 's'}</span>`
                             : '<span style="color:var(--text-muted);">—</span>';
                     })()}</td>
                 </tr>
@@ -5364,7 +5360,7 @@
         if (catArray.length === 0) {
             tagsContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.9rem;">No distinct themes identified.</span>';
         } else {
-            tagsContainer.innerHTML = catArray.map(c => `<span class="group-tag" style="font-size: 0.85rem; padding: 6px 12px; border-radius: var(--radius-lg);">${c}</span>`).join('');
+            tagsContainer.innerHTML = catArray.map(c => `<span class="tag purple">${c}</span>`).join('');
         }
 
         const strikesContainer = document.getElementById('profileModalStrikes');
@@ -5372,18 +5368,18 @@
         const manualStrikesArr = getManualStrikes(email);
         const totalStrikeCount = strikesArr.length + manualStrikesArr.length;
 
-        const addStrikeBtnHtml = `<div style="display:flex; justify-content:flex-end; margin-bottom: 10px;"><button onclick="addManualStrike('${email}')" style="background:none; border:1px solid rgba(255,149,0,0.4); color:#FF9500; font-size:0.75rem; font-weight:700; padding:5px 10px; border-radius:6px; cursor:pointer; white-space:nowrap;">+ Add Strike</button></div>`;
+        const addStrikeBtnHtml = `<div style="display:flex; justify-content:flex-end; margin-bottom: 10px;"><button onclick="addManualStrike('${email}')" style="background:none; border:1px solid rgba(251, 191, 36,0.4); color:#fbbf24; font-size:0.75rem; font-weight:700; padding:5px 10px; border-radius:6px; cursor:pointer; white-space:nowrap;">+ Add Strike</button></div>`;
 
         if (totalStrikeCount === 0) {
             strikesContainer.innerHTML = `${addStrikeBtnHtml}<span style="color:var(--text-muted); font-size:0.85rem;">0 Strikes. Vendor is in good standing.</span>`;
             strikesContainer.style.borderColor = 'rgba(255,255,255,0.1)';
             strikesContainer.style.background = 'rgba(255,255,255,0.03)';
         } else {
-            strikesContainer.style.borderColor = 'rgba(255,59,48,0.3)';
-            strikesContainer.style.background = 'rgba(255,59,48,0.05)';
-            const lateListHtml = strikesArr.map(eventName => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 6px;"><span style="color: #FF3B30; font-size: 0.9rem; font-weight: bold;">🚨 Late to: ${eventName}</span><button onclick="removeStrike('${email}', '${eventName.replace(/'/g, "\\'")}')" style="background:none; border:1px solid rgba(255,59,48,0.4); color:#FF3B30; font-size:0.7rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
-            const manualListHtml = manualStrikesArr.map(s => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 6px;"><span style="color: #FF9500; font-size: 0.9rem; font-weight: bold;">⚠️ ${s.reason} <span style="color:var(--text-muted); font-weight:normal; font-size:0.8rem;">— ${s.addedBy}, ${formatCommentDate(s.addedAt)}</span></span><button onclick="removeManualStrike('${email}', '${s.id}')" style="background:none; border:1px solid rgba(255,59,48,0.4); color:#FF3B30; font-size:0.7rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
-            strikesContainer.innerHTML = `${addStrikeBtnHtml}<div style="margin-bottom: 12px; font-weight: 800; color: #FF3B30;">Total Strikes: ${totalStrikeCount}</div>${lateListHtml}${manualListHtml}`;
+            strikesContainer.style.borderColor = 'rgba(248, 113, 113,0.3)';
+            strikesContainer.style.background = 'rgba(248, 113, 113,0.05)';
+            const lateListHtml = strikesArr.map(eventName => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 6px;"><span style="color: #f87171; font-size: 0.9rem; font-weight: bold;">🚨 Late to: ${eventName}</span><button onclick="removeStrike('${email}', '${eventName.replace(/'/g, "\\'")}')" style="background:none; color:#f87171; font-size:0.7rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
+            const manualListHtml = manualStrikesArr.map(s => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 6px;"><span style="color: #fbbf24; font-size: 0.9rem; font-weight: bold;">⚠️ ${s.reason} <span style="color:var(--text-muted); font-weight:normal; font-size:0.8rem;">— ${s.addedBy}, ${formatCommentDate(s.addedAt)}</span></span><button onclick="removeManualStrike('${email}', '${s.id}')" style="background:none; color:#f87171; font-size:0.7rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
+            strikesContainer.innerHTML = `${addStrikeBtnHtml}<div style="margin-bottom: 12px; font-weight: 800; color: #f87171;">Total Strikes: ${totalStrikeCount}</div>${lateListHtml}${manualListHtml}`;
         }
 
         const historyContainer = document.getElementById('profileModalHistory');
@@ -5393,9 +5389,9 @@
             historyContainer.innerHTML = p.allEvents.map(e => {
                 let sColor = '#a1a1aa';
                 let sText = e.status || 'Pending';
-                if (sText === 'Approved' || sText === 'Checked In') { sColor = '#34C759'; sText = 'Accepted'; }
-                else if (sText === 'Denied') { sColor = '#FF3B30'; sText = 'Denied'; }
-                else if (sText === 'Needs Review') { sColor = '#FF9500'; sText = 'Reviewing'; }
+                if (sText === 'Approved' || sText === 'Checked In') { sColor = '#4ade80'; sText = 'Accepted'; }
+                else if (sText === 'Denied') { sColor = '#f87171'; sText = 'Denied'; }
+                else if (sText === 'Needs Review') { sColor = '#fbbf24'; sText = 'Reviewing'; }
                 
                 return `
                 <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; gap: 10px;">
@@ -5477,10 +5473,10 @@
 
             if (c.type === 'status_change') {
                 if (c.status === 'Denied' || c.status === 'Declined') {
-                    badgeHtml = `<span style="background: rgba(255,59,48,0.2); color: #FF3B30; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px; text-transform: uppercase;">${c.status}</span>`;
+                    badgeHtml = `<span style="background: rgba(248, 113, 113,0.2); color: #f87171; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px; text-transform: uppercase;">${c.status}</span>`;
                 }
                 if (c.status === 'Needs Review') {
-                    badgeHtml = `<span style="background: rgba(255,149,0,0.2); color: #FF9500; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">NEEDS REVIEW</span>`;
+                    badgeHtml = `<span style="background: rgba(251, 191, 36,0.2); color: #fbbf24; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">NEEDS REVIEW</span>`;
                 }
             }
 
@@ -5615,20 +5611,20 @@
         }
 
         if (type === 'success') {
-            box.style.borderColor = '#34C759';
-            titleEl.style.color = '#34C759';
+            box.style.borderColor = '#4ade80';
+            titleEl.style.color = '#4ade80';
             icon.innerText = '✓';
-            msgEl.style.color = '#34C759';
+            msgEl.style.color = '#4ade80';
         } else if (type === 'warning') {
-            box.style.borderColor = '#FF9500';
-            titleEl.style.color = '#FF9500';
+            box.style.borderColor = '#fbbf24';
+            titleEl.style.color = '#fbbf24';
             icon.innerText = '⚠';
-            msgEl.style.color = '#FF9500';
+            msgEl.style.color = '#fbbf24';
         } else if (type === 'error') {
-            box.style.borderColor = '#FF3B30';
-            titleEl.style.color = '#FF3B30';
+            box.style.borderColor = '#f87171';
+            titleEl.style.color = '#f87171';
             icon.innerText = '✕';
-            msgEl.style.color = '#FF3B30';
+            msgEl.style.color = '#f87171';
         }
 
         const alertModal = document.getElementById('checkInAlert');
@@ -5852,14 +5848,15 @@
 
         const generateRowHtml = (v) => {
             const isAppr = v.status === 'Approved' || v.status === 'Checked In';
-            const statusToggle = `
-                <div class="status-toggle-group" onclick="event.stopPropagation()">
-                    <button onclick="quickStatus('${v.id}', 'Approved')" class="btn-quick-status ${isAppr ? 'active-approve' : ''}" title="Mark as Approved">Approve</button>
-                    <button onclick="quickStatus('${v.id}', 'Needs Review')" class="btn-quick-status ${v.status === 'Needs Review' ? 'active-review' : ''}" title="Mark as Needs Review">Needs Review</button>
-                    <button onclick="quickStatus('${v.id}', 'Denied')" class="btn-quick-status ${v.status === 'Denied' ? 'active-deny' : ''}" title="Mark as Denied">Deny</button>
-                </div>
-            `;
-            
+            const statusKey = isAppr ? 'approved' : v.status === 'Needs Review' ? 'review' : v.status === 'Denied' ? 'denied' : 'new';
+            const statusSelect = `
+                <select class="status-select ${statusKey}" onclick="event.stopPropagation()" onchange="onRowStatusChange('${v.id}', this.value)" title="Change status">
+                    <option value="Pending" ${statusKey === 'new' ? 'selected' : ''}>New</option>
+                    <option value="Approved" ${statusKey === 'approved' ? 'selected' : ''}>Approved</option>
+                    <option value="Needs Review" ${statusKey === 'review' ? 'selected' : ''}>Needs review</option>
+                    <option value="Denied" ${statusKey === 'denied' ? 'selected' : ''}>Denied</option>
+                </select>`;
+
             // Contextual badge logic based on the active tab
             // Only consider email "sent" if we have proof it was actually sent (email_sent_at timestamp)
             let isEmailSentForView = false;
@@ -5891,101 +5888,66 @@
                 if (deliveryStatus && deliveryStatus !== 'sent') {
                     console.log(`Rendering vendor ${v.id}: displaying delivery status "${deliveryStatus}"`);
                     const dDisplay = getEmailDeliveryDisplay(deliveryStatus);
-                    emailSentBadge = `<span class="status-badge sent" style="background: ${dDisplay.bg}; color: ${dDisplay.color}; border: 1px solid ${dDisplay.color}40;">${dDisplay.icon} ${dDisplay.label.toUpperCase()}</span>`;
+                    emailSentBadge = `<span class="tag" style="background: ${dDisplay.bg}; color: ${dDisplay.color};">${dDisplay.icon} ${dDisplay.label}</span>`;
                 } else {
-                    emailSentBadge = `<span class="status-badge sent">SENT</span>`;
+                    emailSentBadge = `<span class="tag green">Sent</span>`;
                 }
             } else {
-                emailSentBadge = `<span class="status-badge draft">UNSENT</span>`;
+                emailSentBadge = `<span class="tag yellow">Unsent</span>`;
             }
-
-            // Clean Badge Layout Generation
-            let tagsArray = [];
 
             const colorNote = getParsedNotes(v.internal_notes).find(n => n.type === 'color_code');
             const rowColor = colorNote ? colorNote.color : '';
-            const rowBgStyle = rowColor ? `background: ${rowColor}20 !important;` : '';
-            const rowBorderStyle = rowColor ? `background: ${rowColor}20 !important; border-left: 6px solid ${rowColor} !important; border-radius: 16px 0 0 16px;` : 'border-radius: 16px 0 0 16px;';
 
-            // Strikes Badge (late-application + manually-assigned, configurable thresholds)
+            // Warnings sit under the name; categories get their own column
+            const warnTags = [];
             const strikes = getTotalStrikeCount(v.preferred_email);
             const severeAt = getBuiltinSetting('late_strike_tracking', 'severeThreshold') || 3;
             const warnAt = getBuiltinSetting('late_strike_tracking', 'threshold') || 1;
-            if (strikes >= severeAt) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">🚨 ${strikes} STRIKES</span>`);
-            } else if (strikes >= warnAt) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">⚠️ ${strikes} STRIKE${strikes === 1 ? '' : 'S'}</span>`);
-            }
-
+            if (strikes >= severeAt) warnTags.push(`<span class="tag red">${strikes} strikes</span>`);
+            else if (strikes >= warnAt) warnTags.push(`<span class="tag yellow">${strikes} strike${strikes === 1 ? '' : 's'}</span>`);
             const emailKey = (v.preferred_email || '').toLowerCase();
-            if (emailKey && emailCounts[emailKey] > 1) {
-                tagsArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">🚨 DUPLICATE APP</span>`);
-            }
+            if (emailKey && emailCounts[emailKey] > 1) warnTags.push(`<span class="tag red">Duplicate</span>`);
 
             const hasFoodLicense = v.food_license && v.food_license.toLowerCase() === 'yes';
-
-            // Use the local matched tags — these render next to the vendor's name
-            let displayTags = v.autoCategories;
-            const categoryBadgesArray = [];
-
-            if (displayTags && displayTags.length > 0) {
-                displayTags.forEach(cat => {
-                    // Prevent redundant 'food' tags if they already have the hardcoded license badge
-                    if (!(cat.toLowerCase().includes('food') && hasFoodLicense)) {
-                        categoryBadgesArray.push(`<span style="font-size: 0.65rem; background: rgba(10, 132, 255, 0.1); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap; text-transform: uppercase;">${cat}</span>`);
-                    }
-                });
-            }
-
-            if (hasFoodLicense) {
-                categoryBadgesArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap;">FOOD LICENSE</span>`);
-            }
-
-            if (v.needs_power === 'Yes') {
-                categoryBadgesArray.push(`<span style="font-size: 0.65rem; background: rgba(255, 214, 10, 0.15); color: #FFD60A; border: 1px solid rgba(255, 214, 10, 0.3); padding: 3px 6px; border-radius: 4px; font-weight: 800; white-space: nowrap;">POWER</span>`);
-            }
-
-            const categoryBadgesHtml = categoryBadgesArray.join('');
-            const tagsContainer = tagsArray.length > 0 ? `<div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">${tagsArray.join('')}</div>` : '';
+            const catTags = (v.autoCategories || [])
+                .filter(cat => !(cat.toLowerCase().includes('food') && hasFoodLicense))
+                .map(cat => `<span class="tag purple">${escapeHtml(cat)}</span>`);
+            if (hasFoodLicense) catTags.push(`<span class="tag yellow">Food license</span>`);
+            if (v.needs_power === 'Yes') catTags.push(`<span class="tag blue">Power</span>`);
 
             const attState = getAttendanceState(v);
-            let confirmedCell = '';
-            if (attState === 'confirmed') {
-                confirmedCell = '<span style="color: #34C759; font-weight: 800; background: rgba(52, 199, 89, 0.1); padding: 4px 10px; border-radius: var(--radius-button); border: 1px solid rgba(52, 199, 89, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✓ Confirmed</span>';
-            } else if (attState === 'declined') {
-                confirmedCell = '<span style="color: #FF3B30; font-weight: 800; background: rgba(255, 59, 48, 0.1); padding: 4px 10px; border-radius: var(--radius-button); border: 1px solid rgba(255, 59, 48, 0.2); font-size: 0.75rem; text-transform: uppercase; white-space: nowrap;">✕ Declined</span>';
-            } else {
-                confirmedCell = '<span style="color: var(--text-muted); font-weight: 700; font-size: 0.7rem; background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: var(--radius-button); border: 1px solid rgba(255, 255, 255, 0.1); text-transform: uppercase; white-space: nowrap;">Awaiting Reply</span>';
-            }
+            const responseTag = attState === 'confirmed' ? '<span class="tag green">Confirmed</span>'
+                : attState === 'declined' ? '<span class="tag red">Declined</span>'
+                : '<span class="tag">Awaiting reply</span>';
 
+            const isIn = v.status === 'Checked In';
             const checkInCell = isAppr
-                ? `<button onclick="checkIn('${v.id}', false, this); event.stopPropagation();" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; white-space: nowrap; ${v.status === 'Checked In' ? 'background:var(--gradient-success)' : ''}">${v.status === 'Checked In' ? '✓ IN' : 'MARK IN'}</button>`
-                : `<span style="color:var(--text-muted); font-size:0.75rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">${v.status}</span>`;
+                ? `<button onclick="checkIn('${v.id}', false, this); event.stopPropagation();" class="btn-action btn-checkin ${isIn ? 'in' : ''}">${isIn ? '✓ Arrived' : 'Mark In'}</button>`
+                : `<span class="label-only">—</span>`;
 
             // Only allow resend email if they aren't pending, user is admin, and viewing a specific filter (not all applicants)
             const canEmail = currentUser.role === 'admin' && v.status !== 'Needs Review' && v.status !== 'Pending' && ['approved', 'denied', 'power'].includes(activeFilter);
 
-            const submitDate = v.created_at ? new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown Date';
+            const submitDate = v.created_at ? new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+            const first = v.first_name || '', last = v.last_name || '';
+            const initials = ((first[0] || '?') + (last[0] || '')).toUpperCase();
 
             return `
-            <tr class="clickable-row" style="${rowBgStyle}" draggable="true" ondragstart="handleDragStart(event, '${v.id}')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${v.id}')" onclick="openReviewModal('${v.id}')">
-                <td style="${rowBorderStyle}"><span style="color: #BF5AF2; font-weight: 700; font-size: 0.95rem;">#${v.appNumber}</span><br><span style="font-size: 0.7rem; color: var(--text-muted); opacity: 0.7; font-weight: 500; margin-top: 2px; display: inline-block;">${submitDate}</span></td>
-                <td style="${rowBgStyle}">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-                        <div style="flex: 1; display: flex; align-items: center; gap: 8px; flex-flow: row wrap;">
-                            <strong style="font-size: 1rem; font-weight: 600;">${v.first_name} ${v.last_name}</strong>
-                            ${categoryBadgesHtml}
-                            <span class="mobile-status-pill mobile-status-${(v.status || '').toLowerCase().replace(/\s+/g, '-')}">${v.status || 'Pending'}</span>
-                        </div>
-                        ${canEmail ? `<button onclick="resendEmail('${v.id}'); event.stopPropagation();" class="mobile-action-btn" title="Resend email" style="flex-shrink: 0; white-space: nowrap;">📧</button>` : ''}
+            <tr class="clickable-row" draggable="true" ondragstart="handleDragStart(event, '${v.id}')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${v.id}')" onclick="openReviewModal('${v.id}')">
+                <td class="c-name"><div class="name-cell">
+                    <span class="avatar" style="background:${vendorAvatarColor(first + last)}">${escapeHtml(initials)}${rowColor && rowColor !== '#ffffff' ? `<span class="flag" style="background:${rowColor}"></span>` : ''}</span>
+                    <div style="min-width:0;">
+                        <div class="vendor-name">${escapeHtml(first)} ${escapeHtml(last)}</div>
+                        <div class="vendor-sub">#${v.appNumber}${submitDate ? ` · ${submitDate}` : ''}${warnTags.join('')}</div>
                     </div>
-                    ${tagsContainer}
-                </td>
-                <td style="${rowBgStyle}">${statusToggle}</td>
-                <td style="${rowBgStyle}">${confirmedCell}</td>
-                <td style="${rowBgStyle}">${checkInCell}</td>
-                <td style="${rowBgStyle}">${emailSentBadge}</td>
-                <td style="${rowBgStyle}">
+                </div></td>
+                <td class="c-cat"><div class="cat-cell">${catTags.join('') || '<span class="label-only">—</span>'}</div></td>
+                <td class="c-status">${statusSelect}<span class="m-only">${responseTag}</span></td>
+                <td class="c-resp">${responseTag}</td>
+                <td class="c-email">${emailSentBadge}</td>
+                <td class="c-checkin">${checkInCell}</td>
+                <td class="c-actions">
                     <div class="action-wrapper" onclick="event.stopPropagation()">
                         <div class="color-trigger-wrapper">
                             <button class="btn-icon-sq" title="Color code" style="${rowColor ? 'border-color:' + rowColor + '; box-shadow: inset 0 0 0 2px ' + rowColor + '40;' : ''}">
@@ -6017,6 +5979,23 @@
         };
 
         tbody.innerHTML = filtered.map(v => generateRowHtml(v)).join('');
+    }
+
+    const VENDOR_AVATAR_COLORS = ['#8b5cf6', '#ec4899', '#2563eb', '#10b981', '#f59e0b', '#ef4444'];
+    function vendorAvatarColor(str) {
+        return VENDOR_AVATAR_COLORS[[...(str || '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 0) % VENDOR_AVATAR_COLORS.length];
+    }
+
+    // Row status dropdown. quickStatus toggles back to Pending when given the current
+    // status, so only call it on a real change; re-render to undo a cancelled prompt.
+    async function onRowStatusChange(id, value) {
+        const vendor = currentData.vendors.find(v => v.id === id);
+        if (!vendor) return;
+        const current = vendor.status === 'Checked In' ? 'Approved' : (['Approved', 'Needs Review', 'Denied'].includes(vendor.status) ? vendor.status : 'Pending');
+        if (value === current) return;
+        if (value === 'Pending') await quickStatus(id, current);
+        else await quickStatus(id, value);
+        renderTable();
     }
 
     let draggedVendorId = null;
@@ -6135,7 +6114,7 @@
         const duplicateApps = currentData.vendors.filter(v => v.id !== vendor.id && (v.preferred_email || '').toLowerCase() === (vendor.preferred_email || '').toLowerCase());
         
         if (duplicateApps.length > 0) {
-            let dupHtml = `<div class="review-field-label" style="color: #FF3B30;">🚨 Duplicate Applications Found (${duplicateApps.length})</div>`;
+            let dupHtml = `<div class="review-field-label" style="color: #f87171;">🚨 Duplicate Applications Found (${duplicateApps.length})</div>`;
             
             duplicateApps.forEach(dup => {
                 const dupDate = dup.created_at ? new Date(dup.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown Date';
@@ -6153,17 +6132,17 @@
                 });
                 
                 let diffText = differences.length > 0 
-                    ? `<span style="color: #FF9500; font-size: 0.85rem; display: block; margin-top: 6px; line-height: 1.4;"><strong>Differences Found:</strong> ${differences.join(', ')}</span>` 
-                    : `<span style="color: #34C759; font-size: 0.85rem; display: block; margin-top: 6px; line-height: 1.4;">Identical matching data.</span>`;
+                    ? `<span style="color: #fbbf24; font-size: 0.85rem; display: block; margin-top: 6px; line-height: 1.4;"><strong>Differences Found:</strong> ${differences.join(', ')}</span>` 
+                    : `<span style="color: #4ade80; font-size: 0.85rem; display: block; margin-top: 6px; line-height: 1.4;">Identical matching data.</span>`;
                 
                 dupHtml += `
-                    <div style="background: rgba(255, 59, 48, 0.05); border: 1px solid rgba(255, 59, 48, 0.3); padding: 15px; border-radius: 16px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;" onclick="openReviewModal('${dup.id}')" onmouseover="this.style.background='rgba(255, 59, 48, 0.1)'" onmouseout="this.style.background='rgba(255, 59, 48, 0.05)'">
+                    <div style="background: rgba(248, 113, 113, 0.05); border: 1px solid rgba(248, 113, 113, 0.3); padding: 15px; border-radius: 16px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;" onclick="openReviewModal('${dup.id}')" onmouseover="this.style.background='rgba(248, 113, 113, 0.1)'" onmouseout="this.style.background='rgba(248, 113, 113, 0.05)'">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <strong style="color: #fff;">App #${dup.appNumber} - ${dup.status}</strong>
                             <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold;">${dupDate}</span>
                         </div>
                         ${diffText}
-                        <div style="margin-top: 10px; font-size: 0.8rem; font-weight: bold; color: #0A84FF;">Click to jump to this version ↗</div>
+                        <div style="margin-top: 10px; font-size: 0.8rem; font-weight: bold; color: #60a5fa;">Click to jump to this version ↗</div>
                     </div>
                 `;
             });
@@ -6175,24 +6154,23 @@
         }
 
         let tagsArray = [];
-        if (vendor.status === 'Needs Review') tagsArray.push(`<span class="status-pill review" style="font-size: 0.85rem;">Needs Review</span>`);
-        else if (vendor.status === 'Approved' || vendor.status === 'Checked In') tagsArray.push(`<span class="status-pill approved" style="font-size: 0.85rem;">Approved</span>`);
-        else if (vendor.status === 'Denied') tagsArray.push(`<span class="status-pill denied" style="font-size: 0.85rem;">Denied</span>`);
-        
-        if (vendor.status === 'Checked In') tagsArray.push(`<span class="status-pill approved" style="font-size: 0.85rem; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255,255,255,0.3);">Checked In</span>`);
-        
+        if (vendor.status === 'Needs Review') tagsArray.push(`<span class="tag yellow">Needs review</span>`);
+        else if (vendor.status === 'Approved' || vendor.status === 'Checked In') tagsArray.push(`<span class="tag green">Approved</span>`);
+        else if (vendor.status === 'Denied') tagsArray.push(`<span class="tag red">Denied</span>`);
+        else tagsArray.push(`<span class="tag blue">New</span>`);
+
+        if (vendor.status === 'Checked In') tagsArray.push(`<span class="tag green">✓ Arrived</span>`);
+
         const attState = getAttendanceState(vendor);
-        if (attState === 'confirmed') tagsArray.push(`<span class="status-pill approved" style="font-size: 0.85rem; background: rgba(52, 199, 89, 0.15); color: #34C759; border: 1px solid rgba(52, 199, 89, 0.4);">✓ Attendance Confirmed</span>`);
-        if (attState === 'declined') tagsArray.push(`<span class="status-pill denied" style="font-size: 0.85rem; background: rgba(255, 59, 48, 0.15); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.4);">✕ Attendance Declined</span>`);
-        
+        if (attState === 'confirmed') tagsArray.push(`<span class="tag green">Attendance confirmed</span>`);
+        if (attState === 'declined') tagsArray.push(`<span class="tag red">Attendance declined</span>`);
+
         const strikesArr = window.vendorStrikes[normalizeStrikeEmail(vendor.preferred_email)] || [];
         const strikes = strikesArr.length;
         const manualStrikesArr = getManualStrikes(vendor.preferred_email);
         const totalStrikeCount = strikes + manualStrikesArr.length;
 
-        if (totalStrikeCount >= 3) {
-            tagsArray.push(`<span class="group-tag" style="background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); font-size: 0.85rem; margin-top:0;">🚨 ${totalStrikeCount} STRIKES</span>`);
-        }
+        if (totalStrikeCount >= 3) tagsArray.push(`<span class="tag red">${totalStrikeCount} strikes</span>`);
 
         const emailCounts = {};
         currentData.vendors.forEach(v => {
@@ -6200,28 +6178,16 @@
             if (email) emailCounts[email] = (emailCounts[email] || 0) + 1;
         });
         const emailKey = (vendor.preferred_email || '').toLowerCase();
-        if (emailKey && emailCounts[emailKey] > 1) {
-            tagsArray.push(`<span class="group-tag" style="background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3); font-size: 0.85rem; margin-top:0;">🚨 DUPLICATE APP</span>`);
-        }
+        if (emailKey && emailCounts[emailKey] > 1) tagsArray.push(`<span class="tag red">Duplicate application</span>`);
 
-        if (vendor.needs_power === 'Yes') tagsArray.push(`<span class="power-tag" style="margin-top:0; font-size: 0.85rem; padding: 6px 12px; border-radius: var(--radius-lg);">Power Requested</span>`);
+        if (vendor.needs_power === 'Yes') tagsArray.push(`<span class="tag blue">Power requested</span>`);
 
-        // Category badge(s) — rendered as their own prominent line directly under the applied date
+        // Category badge(s) — rendered as their own line directly under the applied date
         const hasFoodLicense = vendor.food_license && vendor.food_license.toLowerCase() === 'yes';
-        const categoryBadgesArray = [];
-
-        let displayTags = vendor.autoCategories;
-        if (displayTags && displayTags.length > 0) {
-            displayTags.forEach(cat => {
-                if (!(cat.toLowerCase().includes('food') && hasFoodLicense)) {
-                    categoryBadgesArray.push(`<span class="group-tag" style="background: rgba(10, 132, 255, 0.1); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3); margin-top:0; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; padding: 6px 12px; border-radius: var(--radius-lg);">${cat}</span>`);
-                }
-            });
-        }
-
-        if (hasFoodLicense) {
-            categoryBadgesArray.push(`<span class="group-tag" style="background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.3); margin-top:0; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; padding: 6px 12px; border-radius: var(--radius-lg);">FOOD LICENSE</span>`);
-        }
+        const categoryBadgesArray = (vendor.autoCategories || [])
+            .filter(cat => !(cat.toLowerCase().includes('food') && hasFoodLicense))
+            .map(cat => `<span class="tag purple">${escapeHtml(cat)}</span>`);
+        if (hasFoodLicense) categoryBadgesArray.push(`<span class="tag yellow">Food license</span>`);
 
         document.getElementById('reviewCategoryBadge').innerHTML = categoryBadgesArray.join('');
         document.getElementById('reviewTags').innerHTML = tagsArray.join('');
@@ -6335,7 +6301,7 @@
         if (strikes > 0) {
             reviewStrikesLabel.style.display = 'block';
             reviewStrikes.style.display = 'block';
-            reviewStrikes.innerHTML = strikesArr.map(eventName => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">🚨 Applied late to: <strong>${eventName}</strong><button onclick="removeStrike('${vendor.preferred_email}', '${eventName.replace(/'/g, "\\'")}')" style="background:none; border:1px solid rgba(255,59,48,0.4); color:#FF3B30; font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
+            reviewStrikes.innerHTML = strikesArr.map(eventName => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">🚨 Applied late to: <strong>${eventName}</strong><button onclick="removeStrike('${vendor.preferred_email}', '${eventName.replace(/'/g, "\\'")}')" style="background:none; border:1px solid rgba(248, 113, 113,0.4); color:#f87171; font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
         } else {
             reviewStrikesLabel.style.display = 'none';
             reviewStrikes.style.display = 'none';
@@ -6345,7 +6311,7 @@
         if (manualStrikesArr.length === 0) {
             reviewManualStrikes.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">No manual strikes.</div>';
         } else {
-            reviewManualStrikes.innerHTML = manualStrikesArr.map(s => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;"><span>⚠️ <strong>${s.reason}</strong> <span style="color: var(--text-muted); font-size:0.8rem;">— ${s.addedBy}, ${formatCommentDate(s.addedAt)}</span></span><button onclick="removeManualStrike('${vendor.preferred_email}', '${s.id}')" style="background:none; border:1px solid rgba(255,59,48,0.4); color:#FF3B30; font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
+            reviewManualStrikes.innerHTML = manualStrikesArr.map(s => `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;"><span>⚠️ <strong>${s.reason}</strong> <span style="color: var(--text-muted); font-size:0.8rem;">— ${s.addedBy}, ${formatCommentDate(s.addedAt)}</span></span><button onclick="removeManualStrike('${vendor.preferred_email}', '${s.id}')" style="background:none; color:#f87171; font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" title="Remove this strike">Remove</button></div>`).join('');
         }
 
         const foodLicEl = document.getElementById('reviewFoodLicense');
@@ -6353,8 +6319,8 @@
         foodLicEl.innerText = foodVal;
         
         if (foodVal.toLowerCase().includes('no')) {
-            foodLicEl.style.color = '#FF3B30';
-            foodLicEl.style.textShadow = '0 0 10px rgba(255,59,48,0.3)';
+            foodLicEl.style.color = '#f87171';
+            foodLicEl.style.textShadow = '0 0 10px rgba(248, 113, 113,0.3)';
         } else {
             foodLicEl.style.color = '#fff';
             foodLicEl.style.textShadow = 'none';
@@ -6370,7 +6336,7 @@
             const driveId = getDriveFileId(fileUrl);
             const clickHint = `<div style="color:var(--text-muted); font-size:0.75rem; margin-top:6px;">Click to enlarge</div>`;
 
-            let previewHtml = `<a href="${fileUrl}" target="_blank" style="color:#0A84FF; font-weight:bold; display:block; margin-bottom:8px;">📥 Download File ↗</a>`;
+            let previewHtml = `<a href="${fileUrl}" target="_blank" style="color:#60a5fa; font-weight:bold; display:block; margin-bottom:8px;">📥 Download File ↗</a>`;
 
             if (isImage || driveId) {
                 previewHtml += `<img class="file-preview-trigger" src="${processImageUrl(fileUrl)}" title="Click to enlarge" style="max-width:100%; max-height:200px; border-radius:16px; border:1px solid rgba(255,255,255,0.2); object-fit:contain; cursor:zoom-in;" onerror="this.style.display='none'">${clickHint}`;
@@ -6396,7 +6362,7 @@
         const looksLikeUrl = /^https?:\/\//i.test(linkVal) || (!linkVal.startsWith('@') && /^[^\s@]+\.[a-z]{2,}(\/\S*)?$/i.test(linkVal));
         if (linkVal && looksLikeUrl) {
             let validUrl = /^https?:\/\//i.test(linkVal) ? linkVal : `https://${linkVal}`;
-            linkEl.innerHTML = `<a href="${validUrl}" target="_blank" style="color: #0A84FF; text-decoration: none; font-weight: bold;">${linkVal} ↗</a>`;
+            linkEl.innerHTML = `<a href="${validUrl}" target="_blank" style="color: #60a5fa; text-decoration: none; font-weight: bold;">${linkVal} ↗</a>`;
         } else if (linkVal) {
             linkEl.innerHTML = '';
             const span = document.createElement('span');
@@ -6413,10 +6379,10 @@
             const isConfirmed = attState === 'confirmed';
             checkInContainer.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
-                    <button type="button" class="sidebar-btn sidebar-btn-sm" style="background: ${isConfirmed ? 'rgba(52, 199, 89, 0.15)' : 'rgba(255,255,255,0.05)'}; border-color: ${isConfirmed ? 'rgba(52, 199, 89, 0.3)' : 'rgba(255,255,255,0.1)'}; color: ${isConfirmed ? '#34C759' : 'var(--text-muted)'};" onclick="toggleConfirmation('${vendor.id}', ${!isConfirmed})">
+                    <button type="button" class="sidebar-btn sidebar-btn-sm" style="background: ${isConfirmed ? 'rgba(74, 222, 128, 0.15)' : 'rgba(255,255,255,0.05)'};  color: ${isConfirmed ? '#4ade80' : 'var(--text-muted)'};" onclick="toggleConfirmation('${vendor.id}', ${!isConfirmed})">
                         ${isConfirmed ? '✓ Confirmed' : 'Mark Confirmed'}
                     </button>
-                    <button type="button" class="sidebar-btn sidebar-btn-sm" style="${isCheckedIn ? 'background: rgba(52, 199, 89, 0.2); color: #34C759; border-color: rgba(52, 199, 89, 0.3);' : 'background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--text-muted);'}" onclick="checkIn('${vendor.id}')">
+                    <button type="button" class="sidebar-btn sidebar-btn-sm" style="${isCheckedIn ? 'background: rgba(74, 222, 128, 0.2); color: #4ade80;' : 'background: rgba(255,255,255,0.05); color: var(--text-muted);'}" onclick="checkIn('${vendor.id}')">
                         ${isCheckedIn ? '✓ Checked In' : 'Check In'}
                     </button>
                 </div>
@@ -6475,8 +6441,8 @@
                     ${verticalStepsHtml ? `<div style="margin-bottom: 10px;">${verticalStepsHtml}</div>` : ''}
                     ${waitingHtml}
                     <div style="display: flex; gap: 6px;">
-                        <button onclick="openEmailPreviewModal('${vendor.id}'); event.stopPropagation();" class="sidebar-btn sidebar-btn-sm" style="flex:1; background: rgba(191, 90, 242, 0.1); border-color: rgba(191, 90, 242, 0.25); color: #BF5AF2;">View Email</button>
-                        <button onclick="checkSingleEmailStatus('${vendor.id}'); event.stopPropagation();" class="sidebar-btn sidebar-btn-sm" style="flex:1; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--text-muted);" id="refreshEmailStatusBtn">Refresh</button>
+                        <button onclick="openEmailPreviewModal('${vendor.id}'); event.stopPropagation();" class="sidebar-btn sidebar-btn-sm" style="flex:1; background: rgba(167, 139, 250, 0.1); color: #a78bfa;">View Email</button>
+                        <button onclick="checkSingleEmailStatus('${vendor.id}'); event.stopPropagation();" class="sidebar-btn sidebar-btn-sm" style="flex:1; background: rgba(255,255,255,0.05); color: var(--text-muted);" id="refreshEmailStatusBtn">Refresh</button>
                     </div>
                 </div>
             `;
@@ -6494,7 +6460,7 @@
             }).join('');
 
             emailStatusContainer.innerHTML = `
-                <div style="background: rgba(142, 142, 147, 0.08); border: 1px solid rgba(142, 142, 147, 0.25); padding: 12px; border-radius: 16px; margin-bottom: 16px;">
+                <div style="background: var(--inset-bg); border: 1px solid var(--line); padding: 12px; border-radius: 16px; margin-bottom: 16px;">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                         <span style="font-size: 0.95rem;">✉️</span>
                         <div style="flex:1; min-width:0;">
@@ -7272,15 +7238,15 @@
     function getEmailDeliveryDisplay(status) {
         const map = {
             'pending':      { label: 'No Delivery Data Yet', color: '#8E8E93', icon: '⏱', bg: 'rgba(142, 142, 147, 0.1)' },
-            'sent':         { label: 'Sent',        color: '#0A84FF', icon: '📤', bg: 'rgba(10, 132, 255, 0.1)' },
-            'deferred':     { label: 'Deferred',    color: '#FF9500', icon: '⏳', bg: 'rgba(255, 149, 0, 0.1)' },
-            'delivered':    { label: 'Delivered',    color: '#34C759', icon: '✓',  bg: 'rgba(52, 199, 89, 0.1)' },
-            'opened':       { label: 'Open',        color: '#34C759', icon: '👁', bg: 'rgba(52, 199, 89, 0.15)' },
-            'clicked':      { label: 'Clicked',     color: '#30D158', icon: '🔗', bg: 'rgba(48, 209, 88, 0.15)' },
-            'softBounce':   { label: 'Soft Bounce', color: '#FF9500', icon: '⚠',  bg: 'rgba(255, 149, 0, 0.1)' },
-            'hardBounce':   { label: 'Bounced',     color: '#FF3B30', icon: '✕',  bg: 'rgba(255, 59, 48, 0.1)' },
-            'blocked':      { label: 'Blocked',     color: '#FF3B30', icon: '🚫', bg: 'rgba(255, 59, 48, 0.1)' },
-            'error':        { label: 'Error',       color: '#FF3B30', icon: '⚠',  bg: 'rgba(255, 59, 48, 0.1)' },
+            'sent':         { label: 'Sent',        color: '#60a5fa', icon: '📤', bg: 'rgba(96, 165, 250, 0.1)' },
+            'deferred':     { label: 'Deferred',    color: '#fbbf24', icon: '⏳', bg: 'rgba(251, 191, 36, 0.1)' },
+            'delivered':    { label: 'Delivered',    color: '#4ade80', icon: '✓',  bg: 'rgba(74, 222, 128, 0.1)' },
+            'opened':       { label: 'Open',        color: '#4ade80', icon: '👁', bg: 'rgba(74, 222, 128, 0.15)' },
+            'clicked':      { label: 'Clicked',     color: '#4ade80', icon: '🔗', bg: 'rgba(48, 209, 88, 0.15)' },
+            'softBounce':   { label: 'Soft Bounce', color: '#fbbf24', icon: '⚠',  bg: 'rgba(251, 191, 36, 0.1)' },
+            'hardBounce':   { label: 'Bounced',     color: '#f87171', icon: '✕',  bg: 'rgba(248, 113, 113, 0.1)' },
+            'blocked':      { label: 'Blocked',     color: '#f87171', icon: '🚫', bg: 'rgba(248, 113, 113, 0.1)' },
+            'error':        { label: 'Error',       color: '#f87171', icon: '⚠',  bg: 'rgba(248, 113, 113, 0.1)' },
             'unsubscribed': { label: 'Unsubscribed',color: '#8E8E93', icon: '🚫', bg: 'rgba(142, 142, 147, 0.1)' }
         };
         if (map[status]) return map[status];
@@ -7576,7 +7542,7 @@
                 }
             }
             
-            const sentBadge = isSent ? `<span style="color:#34C759; font-size:0.8rem; margin-left:8px;">[Already Sent]</span>` : `<span style="color:#FF9F0A; font-size:0.8rem; margin-left:8px;">[Unsent]</span>`;
+            const sentBadge = isSent ? `<span style="color:#4ade80; font-size:0.8rem; margin-left:8px;">[Already Sent]</span>` : `<span style="color:#fbbf24; font-size:0.8rem; margin-left:8px;">[Unsent]</span>`;
             const powerBadge = v.needs_power === 'Yes' ? ' [Power Requested]' : '';
             const foodBadge = (v.food_license && v.food_license.toLowerCase() === 'yes') ? ' [FOOD]' : '';
             
@@ -8450,7 +8416,7 @@
         return (list || []).map((a, i) => `
             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 12px; margin-bottom:6px; background: var(--card-bg); border: 0.5px solid var(--glass-border); border-radius: var(--radius-inner); font-size: 0.85rem;">
                 <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📄 ${a.url ? `<a href="${escapeHtml(a.url)}" target="_blank" rel="noopener" style="color:inherit;">${escapeHtml(a.name)}</a>` : escapeHtml(a.name)} <span style="color:var(--text-muted);">(${formatAttachmentSize(a.size || 0)})</span></span>
-                <button type="button" onclick="${removeFnName}(${i})" style="background:transparent; border:none; color:#FF3B30; cursor:pointer; font-weight:bold;">Remove</button>
+                <button type="button" onclick="${removeFnName}(${i})" style="background:transparent; border:none; color:#f87171; cursor:pointer; font-weight:bold;">Remove</button>
             </div>`).join('');
     }
 
@@ -8860,14 +8826,14 @@
             id: 'auto_categorize',
             name: 'Auto-Categorize Vendors',
             description: 'Assigns category labels from product descriptions using keyword matching.',
-            icon: '🏷', color: '#BF5AF2', defaultEnabled: true,
+            icon: '🏷', color: '#a78bfa', defaultEnabled: true,
             settings: []
         },
         {
             id: 'ai_license_scan',
             name: 'AI Food License Scanner',
             description: 'Scans uploaded food licenses via AI vision.',
-            icon: '🤖', color: '#0A84FF', defaultEnabled: true,
+            icon: '🤖', color: '#60a5fa', defaultEnabled: true,
             settings: [
                 { key: 'timeout', label: 'Timeout (seconds)', type: 'number', default: 15, min: 5, max: 60 }
             ]
@@ -8876,14 +8842,14 @@
             id: 'email_status_polling',
             name: 'Email Delivery Tracking',
             description: 'Polls Brevo for email delivery status.',
-            icon: '📧', color: '#34C759', defaultEnabled: true, hidden: true,
+            icon: '📧', color: '#4ade80', defaultEnabled: true, hidden: true,
             settings: []
         },
         {
             id: 'late_strike_tracking',
             name: 'Late Application Strikes',
             description: 'Tracks vendors who apply after deadline.',
-            icon: '⚠️', color: '#FF9500', defaultEnabled: true,
+            icon: '⚠️', color: '#fbbf24', defaultEnabled: true,
             settings: [
                 { key: 'expiryMonths', label: 'Strike expiry (months)', type: 'number', default: 12, min: 1, max: 36 },
                 { key: 'threshold', label: 'Warning badge at # strikes', type: 'number', default: 1, min: 1, max: 10 },
@@ -8894,7 +8860,7 @@
             id: 'realtime_sync',
             name: 'Realtime Data Sync',
             description: 'Live-syncs vendor data across admin sessions.',
-            icon: '🔄', color: '#30D158', defaultEnabled: true, hidden: true,
+            icon: '🔄', color: '#4ade80', defaultEnabled: true, hidden: true,
             settings: []
         },
         {
@@ -9267,13 +9233,13 @@
                     'add_label': 'Add Label'
                 }[a.action] || a.action;
                 const delayText = a.delay && a.delay.value > 0 ? ` (${a.delay.value} ${a.delay.unit} delay)` : '';
-                return `<div style="margin-bottom:8px; background: rgba(255, 149, 0, 0.03); border: 1px solid rgba(255, 149, 0, 0.1); padding: 16px 18px; border-radius: 16px; display: flex; align-items: center; gap: 14px; justify-content: space-between; flex-wrap: wrap;">
+                return `<div style="margin-bottom:8px; background: var(--inset-bg); border: 1px solid var(--line); padding: 16px 18px; border-radius: 16px; display: flex; align-items: center; gap: 14px; justify-content: space-between; flex-wrap: wrap;">
                     <div style="flex:1; min-width:200px;">
                         <strong style="font-size:0.88rem; display:block; margin-bottom:4px;">${a.name || 'Untitled'}</strong>
                         <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                            <span style="font-size:0.62rem; padding:3px 8px; border-radius:6px; background:rgba(191,90,242,0.15); color:#BF5AF2; font-weight:600;">${triggerLabel}</span>
+                            <span style="font-size:0.62rem; padding:3px 8px; border-radius:6px; background:rgba(167, 139, 250,0.15); color:#a78bfa; font-weight:600;">${triggerLabel}</span>
                             <span style="font-size:0.62rem; color:var(--text-muted);">→</span>
-                            <span style="font-size:0.62rem; padding:3px 8px; border-radius:6px; background:rgba(10,132,255,0.15); color:#0A84FF; font-weight:600;">${actionLabel}${delayText}</span>
+                            <span style="font-size:0.62rem; padding:3px 8px; border-radius:6px; background:rgba(96, 165, 250,0.15); color:#60a5fa; font-weight:600;">${actionLabel}${delayText}</span>
                         </div>
                         ${a.config?.detail ? `<span style="font-size:0.68rem; color:var(--text-muted); display:block; margin-top:5px;">${a.config.detail}</span>` : ''}
                     </div>
@@ -9283,7 +9249,7 @@
                             <span class="slider"></span>
                         </label>
                         <button onclick="editCustomAutomation(${i})" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem; padding:4px;" title="Edit">✏️</button>
-                        <button onclick="deleteCustomAutomation(${i})" style="background:none; border:none; color:#FF3B30; cursor:pointer; font-size:0.8rem; padding:4px;" title="Delete">🗑</button>
+                        <button onclick="deleteCustomAutomation(${i})" style="background:none; border:none; color:#f87171; cursor:pointer; font-size:0.8rem; padding:4px;" title="Delete">🗑</button>
                     </div>
                 </div>`;
             }).join('');
@@ -9673,7 +9639,7 @@
             }, 100);
 
             statusEl.textContent = '✓ Automation generated! Review and save below.';
-            statusEl.style.color = '#34C759';
+            statusEl.style.color = '#4ade80';
 
             // Clear prompt after successful generation
             setTimeout(() => {
@@ -9683,7 +9649,7 @@
         } catch (e) {
             console.error('AI generation error:', e);
             statusEl.textContent = `✗ Error: ${e.message}`;
-            statusEl.style.color = '#FF3B30';
+            statusEl.style.color = '#f87171';
         }
     }
 
@@ -9766,7 +9732,7 @@
             emailListEl.innerHTML = emails.map(e => `
                 <div style="display:flex; justify-content:space-between; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <span>${e.email}</span>
-                    <button onclick="removeAuthorizedEmail('${e.email}')" style="background:none; border:none; color:#FF3B30; cursor:pointer; font-weight: bold;">Remove</button>
+                    <button onclick="removeAuthorizedEmail('${e.email}')" style="background:none; border:none; color:#f87171; cursor:pointer; font-weight: bold;">Remove</button>
                 </div>
             `).join('');
         } else {
@@ -9780,7 +9746,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <div>
                         <strong>${u.name}</strong> <span style="font-size:0.75rem; color:var(--text-muted); margin-left:8px;">${u.email}</span>
-                        <div style="font-size:0.75rem; color:#BF5AF2; text-transform:uppercase; margin-top:4px; font-weight:bold;">${u.role}</div>
+                        <div style="font-size:0.75rem; color:#a78bfa; text-transform:uppercase; margin-top:4px; font-weight:bold;">${u.role}</div>
                     </div>
                     <div style="display:flex; gap:10px;">
                         <button onclick="resetStaffPassword('${u.id}', '${u.name}')" class="btn-icon-text" style="padding: 6px 12px;">Reset Pass</button>
@@ -9927,7 +9893,7 @@
         if (parents.length === 0) return '';
         const conditions = q.conditions || [];
         const hasConditions = conditions.length > 0;
-        let html = `<div style="margin-top:8px; padding:8px 10px; background:rgba(255,170,0,0.04); border:1px solid rgba(255,170,0,0.12); border-radius:10px; font-size:0.75rem;" onclick="event.stopPropagation()">`;
+        let html = `<div style="margin-top:8px; padding:8px 10px; background: var(--inset-bg); border: 1px solid var(--line); border-radius:10px; font-size:0.75rem;" onclick="event.stopPropagation()">`;
 
         // Header button to toggle first condition
         html += `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:${hasConditions ? '8px' : '0'};"><button class="fb-pill ${hasConditions ? 'fb-pill-active' : ''}" style="font-size:0.7rem; padding:4px 10px; border-color:rgba(255,170,0,0.3); ${hasConditions ? 'background:rgba(255,170,0,0.15); color:#FFA800;' : ''}" onclick="toggleCondition(${i})">${hasConditions ? '&#9889; Conditional' : '+ Add condition'}</button></div>`;
@@ -10053,28 +10019,28 @@
         const previewUrl = getStudentMarketsUrl();
         html += `<div style="display:flex; align-items:center; gap:12px; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.06);">
             <div class="fb-autosave-status" id="fbAutoSaveStatus" style="padding:0; flex:1;">All changes saved</div>
-            <a href="${previewUrl}" target="_blank" style="font-size:0.72rem; color:#0A84FF; text-decoration:none; padding:5px 12px; border:1px solid rgba(10,132,255,0.25); border-radius:8px; white-space:nowrap; flex-shrink:0;">&#8599; Preview site</a>
+            <a href="${previewUrl}" target="_blank" style="font-size:0.72rem; color:#60a5fa; text-decoration:none; padding:5px 12px; border:1px solid rgba(96, 165, 250,0.25); border-radius:8px; white-space:nowrap; flex-shrink:0;">&#8599; Preview site</a>
         </div>`;
 
         // --- HERO / BACKGROUND section ---
         const bgImageUrl = formConfig.bgImageUrl || '';
         const heroTitle = formConfig.heroTitle || '';
         html += `<div style="margin-bottom:14px;">`;
-        html += `<div style="font-size:0.58rem; color:#BF5AF2; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><span style="flex:1; border-top:1px solid rgba(191,90,242,0.2); display:inline-block;"></span>HERO<span style="flex:1; border-top:1px solid rgba(191,90,242,0.2); display:inline-block;"></span></div>`;
+        html += `<div style="font-size:0.58rem; color:#a78bfa; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><span style="flex:1; border-top:1px solid rgba(167, 139, 250,0.2); display:inline-block;"></span>HERO<span style="flex:1; border-top:1px solid rgba(167, 139, 250,0.2); display:inline-block;"></span></div>`;
         html += `<div style="display:flex; flex-direction:column; gap:7px;">`;
         html += `<div>
             <label style="font-size:0.65rem;color:var(--text-muted);display:block;margin-bottom:3px;">Title <span style="opacity:0.4;">(last word gets gradient)</span></label>
             <input id="adminHeroTitle" type="text" value="${escapeHtml(heroTitle)}" placeholder="Vendor Application"
                 oninput="formConfig.heroTitle=this.value;scheduleFormAutoSave()"
                 onclick="event.stopPropagation()"
-                style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:0.82rem;outline:none;padding:6px 10px;border-radius:8px;font-family:inherit;box-sizing:border-box;">
+                style="width:100%;background: var(--inset-bg); border: 1px solid var(--line);color:#fff;font-size:0.82rem;outline:none;padding:6px 10px;border-radius:8px;font-family:inherit;box-sizing:border-box;">
         </div>`;
         html += `<div>
             <label style="font-size:0.65rem;color:var(--text-muted);display:block;margin-bottom:3px;">Background Image URL</label>
             <input id="adminBgImageUrl" type="text" value="${escapeHtml(bgImageUrl)}" placeholder="paste image URL..."
                 oninput="formConfig.bgImageUrl=this.value;scheduleFormAutoSave()"
                 onclick="event.stopPropagation()"
-                style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:var(--text-muted);font-size:0.72rem;outline:none;padding:6px 10px;border-radius:8px;font-family:inherit;box-sizing:border-box;">
+                style="width:100%;background: var(--inset-bg); border: 1px solid var(--line);color:var(--text-muted);font-size:0.72rem;outline:none;padding:6px 10px;border-radius:8px;font-family:inherit;box-sizing:border-box;">
         </div>`;
         html += `</div></div>`;
 
@@ -10083,14 +10049,14 @@
         const eventDesc = formConfig.eventDesc || '';
         const headerUrl = formConfig.headerUrl || '';
         html += `<div style="margin:14px 0;">`;
-        html += `<div style="font-size:0.58rem; color:rgba(10,132,255,0.8); font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><span style="flex:1; border-top:1px solid rgba(10,132,255,0.15); display:inline-block;"></span>FORM HEADER<span style="flex:1; border-top:1px solid rgba(10,132,255,0.15); display:inline-block;"></span></div>`;
+        html += `<div style="font-size:0.58rem; color:rgba(96, 165, 250,0.8); font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><span style="flex:1; border-top:1px solid rgba(96, 165, 250,0.15); display:inline-block;"></span>FORM HEADER<span style="flex:1; border-top:1px solid rgba(96, 165, 250,0.15); display:inline-block;"></span></div>`;
         html += `<div style="display:flex; flex-direction:column; gap:7px;">`;
         html += `<div>
             <label style="font-size:0.65rem;color:var(--text-muted);display:block;margin-bottom:3px;">Event Title <span style="opacity:0.6;">(shown when multiple markets are open at once)</span></label>
             <input id="adminEventTitle" type="text" value="${escapeHtml(eventTitle)}" placeholder="Leave Blank (Auto Generated)"
                 oninput="formConfig.eventTitle=this.value;scheduleFormAutoSave()"
                 onclick="event.stopPropagation()"
-                style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:0.82rem;outline:none;padding:6px 10px;border-radius:8px;font-family:inherit;box-sizing:border-box;">
+                style="width:100%;background: var(--inset-bg); border: 1px solid var(--line);color:#fff;font-size:0.82rem;outline:none;padding:6px 10px;border-radius:8px;font-family:inherit;box-sizing:border-box;">
         </div>`;
         html += `<div>
             <label style="font-size:0.65rem;color:var(--text-muted);display:block;margin-bottom:3px;">Description <span style="opacity:0.6;">(shown when multiple markets are open at once)</span></label>
@@ -10098,7 +10064,7 @@
                 oninput="formConfig.eventDesc=this.value;scheduleFormAutoSave()"
                 onclick="event.stopPropagation()"
                 placeholder="Short description..."
-                style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:var(--text-muted);font-size:0.72rem;outline:none;padding:6px 10px;border-radius:8px;font-family:inherit;box-sizing:border-box;resize:vertical;min-height:48px;line-height:1.4;">${escapeHtml(eventDesc)}</textarea>
+                style="width:100%;background: var(--inset-bg); border: 1px solid var(--line);color:var(--text-muted);font-size:0.72rem;outline:none;padding:6px 10px;border-radius:8px;font-family:inherit;box-sizing:border-box;resize:vertical;min-height:48px;line-height:1.4;">${escapeHtml(eventDesc)}</textarea>
         </div>`;
         html += `<div>
             <label style="font-size:0.65rem;color:var(--text-muted);display:block;margin-bottom:3px;">Header Image</label>
@@ -10107,7 +10073,7 @@
                     oninput="formConfig.headerUrl=this.value;scheduleFormAutoSave()"
                     onchange="renderFormPreview()"
                     onclick="event.stopPropagation()"
-                    style="flex:1;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:var(--text-muted);font-size:0.68rem;outline:none;padding:5px 8px;border-radius:8px;font-family:inherit;min-width:0;">
+                    style="flex:1;background: var(--inset-bg); border: 1px solid var(--line);color:var(--text-muted);font-size:0.68rem;outline:none;padding:5px 8px;border-radius:8px;font-family:inherit;min-width:0;">
                 <label class="fb-pill" style="padding:4px 8px;font-size:0.65rem;cursor:pointer;margin:0;white-space:nowrap;flex-shrink:0;">Upload<input type="file" accept="image/*" onchange="uploadFormHeaderImage(this)" onclick="event.stopPropagation()" style="display:none;"></label>
                 ${headerUrl ? `<button class="fb-pill fb-pill-danger" onclick="event.stopPropagation();formConfig.headerUrl='';renderFormPreview();scheduleFormAutoSave();" style="padding:4px 8px;font-size:0.65rem;flex-shrink:0;">✕</button>` : ''}
             </div>
@@ -10138,9 +10104,9 @@
             // --- Section headers ---
             if (isSection) {
                 const secDrag = !isActive ? `draggable="true" ondragstart="fbDragStart(event,${i})" ondragover="fbDragOver(event,${i})" ondragleave="fbDragLeave(event)" ondrop="fbDrop(event,${i})" ondragend="fbDragEnd()"` : '';
-                html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" ${secDrag} onclick="selectFormField(${i})" style="margin:24px 0 6px; padding:10px 14px; border-radius:12px; border-left:3px solid #BF5AF2; ${isActive ? 'background:rgba(191,90,242,0.06);' : ''}">`;
+                html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" ${secDrag} onclick="selectFormField(${i})" style="margin:24px 0 6px; padding:10px 14px; border-radius:12px; border-left:3px solid #a78bfa; ${isActive ? 'background:rgba(167, 139, 250,0.06);' : ''}">`;
                 if (isActive) {
-                    html += `<input type="text" class="fb-input fb-input-label" value="${escapeHtml(q.label)}" oninput="updateQ(${i},'label',this.value)" onclick="event.stopPropagation()" style="font-size:1.15rem; font-weight:700; border-bottom-color:#BF5AF2;">`;
+                    html += `<input type="text" class="fb-input fb-input-label" value="${escapeHtml(q.label)}" oninput="updateQ(${i},'label',this.value)" onclick="event.stopPropagation()" style="font-size:1.15rem; font-weight:700; border-bottom-color:#a78bfa;">`;
                     html += `<div class="fb-toolbar" onclick="event.stopPropagation()">
                         <button class="fb-pill" onclick="moveQ(${i},-1)" ${i===0?'disabled':''}>&#9650; Up</button>
                         <button class="fb-pill" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''}>&#9660; Down</button>
@@ -10156,7 +10122,7 @@
 
             // --- Regular fields ---
             const dragAttrs = !isActive ? `draggable="true" ondragstart="fbDragStart(event,${i})" ondragover="fbDragOver(event,${i})" ondragleave="fbDragLeave(event)" ondrop="fbDrop(event,${i})" ondragend="fbDragEnd()"` : '';
-            html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" ${dragAttrs} onclick="selectFormField(${i})" style="margin-bottom:4px; padding:12px 14px; border-radius:14px; border:1px solid ${isActive ? 'rgba(10,132,255,0.25)' : 'transparent'}; ${isActive ? 'background:rgba(10,132,255,0.03);' : ''} ${q.width === 'half' ? 'width:48%; display:inline-block; margin-right:2%; vertical-align:top;' : ''} ${condIndent}">`;
+            html += `<div class="fb-field ${isActive ? 'fb-field-active' : ''}" ${dragAttrs} onclick="selectFormField(${i})" style="margin-bottom:4px; padding:12px 14px; border-radius:14px; border:1px solid ${isActive ? 'rgba(96, 165, 250,0.25)' : 'transparent'}; ${isActive ? 'background:rgba(96, 165, 250,0.03);' : ''} ${q.width === 'half' ? 'width:48%; display:inline-block; margin-right:2%; vertical-align:top;' : ''} ${condIndent}">`;
             if (hasConditions && !isActive) {
                 const condLabels = q.conditions.map(cond => {
                     const cp = formConfig.questions[cond.parentIndex];
@@ -10189,7 +10155,7 @@
                         <option value="half" ${q.width==='half'?'selected':''}>Half width</option>
                     </select>
                     <button class="fb-pill ${q.required?'fb-pill-active':''}" onclick="updateQ(${i},'required',${!q.required})">Required</button>
-                    <button class="fb-pill ${q.autofill !== false ? 'fb-pill-active' : ''}" style="font-size:0.7rem; padding:4px 10px; border-color:rgba(52,199,89,0.3); ${q.autofill !== false ? 'background:rgba(52,199,89,0.15); color:#34C759;' : ''}" onclick="updateQ(${i},'autofill',${q.autofill === false ? 'true' : 'false'})">Autofill</button>
+                    <button class="fb-pill ${q.autofill !== false ? 'fb-pill-active' : ''}" style="font-size:0.7rem; padding:4px 10px; border-color:rgba(74, 222, 128,0.3); ${q.autofill !== false ? 'background:rgba(74, 222, 128,0.15); color:#4ade80;' : ''}" onclick="updateQ(${i},'autofill',${q.autofill === false ? 'true' : 'false'})">Autofill</button>
                     <span style="flex:1;"></span>
                     <button class="fb-pill" onclick="moveQ(${i},-1)" ${i===0?'disabled':''}>&#9650;</button>
                     <button class="fb-pill" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''}>&#9660;</button>
@@ -10207,18 +10173,18 @@
 
                 if (q.type === 'checkbox_single') {
                     html += `<div style="display:flex; gap:10px; align-items:flex-start; color:var(--text-muted); font-size:0.85rem; padding:8px 12px; background:rgba(255,255,255,0.025); border-radius:10px; pointer-events:none; border:1px solid rgba(255,255,255,0.05);">
-                        <input type="checkbox" disabled style="width:16px; height:16px; margin-top:1px; accent-color:#0A84FF; flex-shrink:0;">
+                        <input type="checkbox" disabled style="width:16px; height:16px; margin-top:1px; accent-color:#60a5fa; flex-shrink:0;">
                         <span style="line-height:1.4;">${escapeHtml(q.hint || q.label)}</span>
                     </div>`;
                 } else if (q.type === 'textarea') {
-                    html += `<div style="height:52px; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.06); border-radius:12px;"></div>`;
+                    html += `<div style="height:52px; background: var(--inset-bg); border: 1px solid var(--line); border-radius:12px;"></div>`;
                 } else if (q.type === 'dropdown') {
                     const firstOpt = (q.options||'').split(',')[0]?.trim() || 'Select...';
-                    html += `<div style="height:38px; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:8px 14px; font-size:0.85rem; color:rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:space-between;">
+                    html += `<div style="height:38px; background: var(--inset-bg); border: 1px solid var(--line); border-radius:12px; padding:8px 14px; font-size:0.85rem; color:rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:space-between;">
                         <span>${escapeHtml(firstOpt)}</span><span style="font-size:0.7rem;">&#9662;</span>
                     </div>`;
                 } else {
-                    html += `<div style="height:38px; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.06); border-radius:12px;"></div>`;
+                    html += `<div style="height:38px; background: var(--inset-bg); border: 1px solid var(--line); border-radius:12px;"></div>`;
                 }
                 if (q.hint && q.type !== 'checkbox_single') {
                     html += `<span class="preview-form-hint">${escapeHtml(q.hint)}</span>`;
@@ -10230,7 +10196,7 @@
         // --- Add buttons & save inside the form ---
         html += `<div class="fb-add-row">
             <button class="fb-add-btn" onclick="addCustomQuestion('text')">+ Question</button>
-            <button class="fb-add-btn" onclick="addCustomQuestion('section_header')" style="border-color:rgba(191,90,242,0.2); color:#BF5AF2;">+ Section</button>
+            <button class="fb-add-btn" onclick="addCustomQuestion('section_header')" style="border-color:rgba(167, 139, 250,0.2); color:#a78bfa;">+ Section</button>
         </div>`;
         container.innerHTML = html;
     }
@@ -10405,7 +10371,7 @@
         try {
             const { error } = await _supabase.from('secrets').upsert([{ name: 'MARKET_FORM_CONFIG_V8', value: JSON.stringify(formConfig) }], { onConflict: 'name' });
             if (error) throw error;
-            if (statusEl) { statusEl.textContent = 'Saved'; statusEl.style.color = '#34C759'; }
+            if (statusEl) { statusEl.textContent = 'Saved'; statusEl.style.color = '#4ade80'; }
             if (!isAuto) showToast("Form Saved", false);
         } catch(e) {
             if (statusEl) { statusEl.textContent = 'Save failed'; statusEl.style.color = '#FF453A'; }
@@ -11483,7 +11449,7 @@
                 <p class="sub">Your vendor admin assistant</p>
             </div>
         </div>
-        <button class="btn-amber-outline" style="padding:4px 10px; font-size:0.75rem; border-color:rgba(255,59,48,0.4); color:#FF3B30;" onclick="clearCabbieChat()">Clear</button>
+        <button class="btn-amber-outline" style="padding:4px 10px; font-size:0.75rem; border-color:rgba(248, 113, 113,0.4); color:#f87171;" onclick="clearCabbieChat()">Clear</button>
     </div>
     <button class="cabbie-close-btn" onclick="toggleCabbiePanel()" aria-label="Close">&times;</button>
     <div id="cabbieSetupNote" class="cabbie-setup-note" style="display:none;">
