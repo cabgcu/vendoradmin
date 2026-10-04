@@ -533,6 +533,19 @@
         .review-field-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; font-weight: 600; display: block; }
         .review-field-value { font-size: 14px; font-weight: 500; color: var(--text-main); margin-bottom: 20px; word-break: break-word; background: var(--inset-bg); padding: 12px 16px; border-radius: var(--radius-lg); border: 1px solid var(--line); }
 
+        /* Profiles › Revenue */
+        .rev-amount { font-weight: 600; text-align: right; white-space: nowrap; }
+        .rev-answer { color: var(--text-muted); font-size: 13px; max-width: 360px; overflow-wrap: anywhere; }
+        .rev-markets { display: flex; flex-direction: column; }
+        .rev-market { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+        .rev-market:last-child { border-bottom: none; }
+        .rev-market .name { flex: 1; min-width: 0; font-weight: 500; }
+        .rev-market .bar { flex: 2; height: 8px; border-radius: 9999px; background: #27272a; overflow: hidden; }
+        .rev-market .bar span { display: block; height: 100%; background: var(--accent-purple); border-radius: 9999px; }
+        .rev-market .amt { width: 110px; text-align: right; font-weight: 600; }
+        .rev-market .cnt { width: 70px; text-align: right; color: var(--text-dim); font-size: 12px; }
+        tr.rev-skip td { opacity: 0.55; }
+
         /* Vendor detail — same layout as the check-in guest detail */
         .gd-head { display: flex; align-items: center; gap: 18px; margin-bottom: 24px; }
         .gd-avatar { width: 64px; height: 64px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: #fff; }
@@ -694,8 +707,16 @@
             table { min-width: 0; }
             thead { display: none; }
             tbody, tr, td { display: block; }
-            tbody tr { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name checkin" "type checkin"; gap: 8px 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+            tbody tr { padding: 14px 16px; border-bottom: 1px solid var(--line); }
             tbody tr:last-child { border-bottom: none; }
+            #vendorTableBody tr { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name checkin" "type checkin"; gap: 8px 12px; }
+            #profilesTableBody td, #revenueTableBody td { padding: 2px 0 !important; }
+            #revenueTableBody .rev-amount { text-align: left; margin-top: 6px; }
+            .rev-market { flex-wrap: wrap; gap: 6px 12px; }
+            .rev-market .name { flex: 1 1 60%; }
+            .rev-market .bar { order: 3; flex: 1 1 100%; }
+            .rev-market .amt { width: auto; }
+            #profilesTableBody td:first-child, #revenueTableBody td:first-child { font-weight: 600; }
             td { border: none !important; padding: 0 !important; }
             td.c-name { grid-area: name; }
             td.c-status { grid-area: type; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding-left: 44px !important; }
@@ -1920,8 +1941,60 @@
                 <h1>Vendor profiles</h1>
                 <p class="hi" style="margin:6px 0 0;"><span id="profilesTimeframeText">Loading profiles...</span></p>
             </div>
+            <div class="seg" id="profilesTabs">
+                <div class="pill-group">
+                    <button class="control-item-filter active" data-ptab="list" onclick="switchProfilesTab('list')">Profiles</button>
+                    <button class="control-item-filter" data-ptab="revenue" onclick="switchProfilesTab('revenue')">Revenue</button>
+                </div>
+            </div>
         </div>
-        <div class="table-container">
+
+        <!-- PROFILES › REVENUE -->
+        <div id="profilesRevenuePanel" style="display:none; flex-direction:column; gap:24px;">
+            <div class="card">
+                <h2 style="margin:0 0 18px; font-size:17px; font-weight:600;">Reported vendor revenue</h2>
+                <div class="big-number">
+                    <span class="n" id="revTotal">$0</span>
+                    <span class="of">from <span id="revVendorCount">0</span> vendors</span>
+                </div>
+                <p id="revQuestionNote" style="margin:12px 0 0; color:var(--text-dim); font-size:13px;"></p>
+                <div class="stat-grid">
+                    <div><div class="k">Average per vendor</div><div class="v"><span class="dot" style="background:#60a5fa"></span><span id="revAvg">$0</span></div></div>
+                    <div><div class="k">Highest</div><div class="v"><span class="dot" style="background:var(--success-text)"></span><span id="revMax">$0</span></div></div>
+                    <div><div class="k">Markets named</div><div class="v"><span class="dot" style="background:var(--accent-purple)"></span><span id="revMarketCount">0</span></div></div>
+                    <div><div class="k">No amount given</div><div class="v"><span class="dot" style="background:var(--warning-text)"></span><span id="revSkipped">0</span></div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 style="margin:0 0 6px; font-size:17px; font-weight:600;">By market</h2>
+                <p style="margin:0 0 10px; color:var(--text-dim); font-size:13px;">Grouped by the market name vendors typed, so very different spellings can show up as separate rows.</p>
+                <div class="rev-markets" id="revMarkets"></div>
+            </div>
+
+            <div class="table-container">
+                <div class="filter-row">
+                    <h2>Responses</h2>
+                    <div class="search-wrapper">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="revenueSearch" class="modern-input" placeholder="Search vendor, market or answer" oninput="renderRevenueTab()">
+                    </div>
+                    <select id="revenueRange" class="modern-input" onchange="loadRevenueData(true)">
+                        <option value="all">All time</option>
+                        <option value="12">Last 12 months</option>
+                        <option value="6">Last 6 months</option>
+                    </select>
+                </div>
+                <div class="table-scroll">
+                    <table>
+                        <thead><tr><th>Vendor</th><th>Market they named</th><th>Their answer</th><th>Applied to</th><th style="text-align:right;">Counted</th></tr></thead>
+                        <tbody id="revenueTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container" id="profilesListPanel">
             <div class="filter-row">
                 <div class="search-wrapper" style="flex: 2;">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -5282,6 +5355,178 @@
         window.currentProfiles = profilesMap;
         renderProfilesTable();
         document.getElementById('loader').style.display = 'none';
+    }
+
+    // ── Profiles › Revenue ──
+    // Totals the Form Builder question that asks for the last CAB market a vendor
+    // did and roughly what they earned there (e.g. "1000 by to summer").
+    let profilesTab = 'list';
+    let revenueRows = null;
+
+    function switchProfilesTab(tab) {
+        profilesTab = tab;
+        document.querySelectorAll('#profilesTabs [data-ptab]').forEach(b => b.classList.toggle('active', b.dataset.ptab === tab));
+        document.getElementById('profilesListPanel').style.display = tab === 'list' ? '' : 'none';
+        document.getElementById('profilesRevenuePanel').style.display = tab === 'revenue' ? 'flex' : 'none';
+        document.getElementById('profilesTimeframeText').parentElement.style.display = tab === 'list' ? '' : 'none';
+        if (tab === 'revenue') loadRevenueData(false);
+    }
+
+    function getRevenueQuestions() {
+        return (formConfig.questions || []).filter(q => q.type !== 'section_header' && /revenue|earned|how much .*(make|made)/i.test(`${q.label || ''} ${q.hint || ''}`));
+    }
+
+    // "$1,200 at Fall Fest" → { amount: 1200, market: "Fall Fest" }; "N/A" → { amount: null }
+    function parseRevenueAnswer(raw) {
+        const text = String(raw || '').trim();
+        if (!text) return { amount: null, market: '' };
+        const tokens = [];
+        const re = /(\$\s*)?(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)(\s*k\b)?/gi;
+        let m;
+        while ((m = re.exec(text))) {
+            let value = parseFloat(m[2].replace(/,/g, ''));
+            if (m[3]) value *= 1000;
+            const before = text.slice(Math.max(0, m.index - 12), m.index).toLowerCase();
+            const isYear = !m[1] && !m[3] && /^\d{4}$/.test(m[2]) && value >= 2015 && value <= 2035;
+            const yearContext = isYear && (/(spring|summer|fall|autumn|winter|market|holiday|christmas|valentine)\s*'?$/.test(before.trim()) || /^\s*(spring|summer|fall|autumn|winter|market)/i.test(text.slice(m.index + m[0].length, m.index + m[0].length + 10)));
+            tokens.push({ value, start: m.index, end: m.index + m[0].length, dollar: !!m[1], isYear, yearContext, rangeNext: /^\s*(-|–|to)\s*\$?\d/i.test(text.slice(m.index + m[0].length)) });
+        }
+        let picks = tokens.filter(t => t.dollar);
+        if (!picks.length) picks = tokens.filter(t => !t.yearContext);
+        if (!picks.length) return { amount: null, market: '' };
+        // "800-1000" → average of the range
+        let amount = picks[0].value;
+        const idx = tokens.indexOf(picks[0]);
+        if (picks[0].rangeNext && tokens[idx + 1]) amount = (picks[0].value + tokens[idx + 1].value) / 2;
+        const used = picks[0].rangeNext && tokens[idx + 1] ? [picks[0], tokens[idx + 1]] : [picks[0]];
+        return { amount: Math.round(amount * 100) / 100, market: cleanMarketName(text, used) };
+    }
+
+    function cleanMarketName(text, amountTokens) {
+        let t = text;
+        [...amountTokens].sort((a, b) => b.start - a.start).forEach(tok => { t = t.slice(0, tok.start) + ' ' + t.slice(tok.end); });
+        t = t.replace(/\b(approx(imately)?|about|around|roughly|maybe|probably|estimated|est|i|we|made|earned|make|earn|revenue|profit|dollars?|usd|total|at|by|in|from|for|the|was|of|and|about|around|like|cab|student|last|my|it|to)\b/gi, ' ')
+             .replace(/[$~≈:;,.!?()\-–\/]+/g, ' ')
+             .replace(/\s+/g, ' ').trim();
+        return t.replace(/\w\S*/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
+    }
+
+    async function loadRevenueData(force) {
+        if (revenueRows && !force) { renderRevenueTab(); return; }
+        const questions = getRevenueQuestions();
+        const note = document.getElementById('revQuestionNote');
+        if (!questions.length) {
+            revenueRows = [];
+            note.textContent = 'No Form Builder question mentions revenue yet. Add one (e.g. "…the approximate amount of revenue you earned at that market") and answers will be totaled here.';
+            renderRevenueTab();
+            return;
+        }
+        note.textContent = `From the question: "${questions[0].label}"`;
+        document.getElementById('loader').style.display = 'flex';
+        try {
+            let query = _supabase.from('vendors').select('*').order('created_at', { ascending: false });
+            const months = parseInt(document.getElementById('revenueRange').value, 10);
+            if (months) {
+                const since = new Date();
+                since.setMonth(since.getMonth() - months);
+                query = query.gte('created_at', since.toISOString());
+            }
+            const { data, error } = await query;
+            if (error) throw error;
+
+            const eventNames = {};
+            (currentData.allEvents || []).forEach(e => { eventNames[e.id] = e.name; });
+
+            const seen = new Set();
+            revenueRows = [];
+            (data || []).forEach(v => {
+                let custom = {};
+                try { custom = typeof v.custom_answers === 'string' ? JSON.parse(v.custom_answers || '{}') : (v.custom_answers || {}); } catch (e) { custom = {}; }
+                let answer = '';
+                for (const q of questions) {
+                    const a = v[q.id] !== undefined && v[q.id] !== null && v[q.id] !== '' ? v[q.id] : custom[q.id];
+                    if (a !== undefined && a !== null && String(a).trim() !== '') { answer = String(a).trim(); break; }
+                }
+                if (!answer) return;
+                const parsed = parseRevenueAnswer(answer);
+                // The same vendor reporting the same market on several applications counts once
+                const who = (v.preferred_email || `${v.first_name} ${v.last_name}`).toLowerCase().trim();
+                const key = `${who}|${parsed.market.toLowerCase()}|${parsed.amount}`;
+                const duplicate = seen.has(key);
+                seen.add(key);
+                revenueRows.push({
+                    name: `${v.first_name || ''} ${v.last_name || ''}`.trim() || v.preferred_email || 'Unknown',
+                    email: v.preferred_email || '',
+                    answer, market: parsed.market, amount: parsed.amount, duplicate,
+                    appliedTo: eventNames[v.event_id] || '',
+                    createdAt: v.created_at
+                });
+            });
+        } catch (e) {
+            console.error('Revenue load failed:', e);
+            showToast('Could not load revenue answers.');
+            revenueRows = revenueRows || [];
+        }
+        document.getElementById('loader').style.display = 'none';
+        renderRevenueTab();
+    }
+
+    function renderRevenueTab() {
+        const rows = revenueRows || [];
+        const money = n => '$' + Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+        const counted = rows.filter(r => r.amount !== null && !r.duplicate);
+        const total = counted.reduce((sum, r) => sum + r.amount, 0);
+        const vendors = new Set(counted.map(r => r.email || r.name)).size;
+
+        const byMarket = {};
+        counted.forEach(r => {
+            const label = r.market || 'Market not named';
+            // "Summer" and "Summer Market" are the same market
+            const key = label.toLowerCase().replace(/\b(markets?|student|cab)\b/g, '').replace(/\s+/g, ' ').trim() || label.toLowerCase();
+            if (!byMarket[key]) byMarket[key] = { label, total: 0, count: 0 };
+            else if (label.length > byMarket[key].label.length) byMarket[key].label = label;
+            byMarket[key].total += r.amount;
+            byMarket[key].count++;
+        });
+        const markets = Object.values(byMarket).sort((a, b) => b.total - a.total);
+        const top = markets[0]?.total || 1;
+
+        document.getElementById('revTotal').textContent = money(total);
+        document.getElementById('revVendorCount').textContent = vendors;
+        document.getElementById('revAvg').textContent = money(vendors ? total / vendors : 0);
+        document.getElementById('revMax').textContent = money(counted.reduce((m, r) => Math.max(m, r.amount), 0));
+        document.getElementById('revMarketCount').textContent = markets.filter(m => m.label !== 'Market not named').length;
+        document.getElementById('revSkipped').textContent = rows.filter(r => r.amount === null).length;
+
+        document.getElementById('revMarkets').innerHTML = markets.length
+            ? markets.map(m => `
+                <div class="rev-market">
+                    <span class="name">${escapeHtml(m.label)}</span>
+                    <span class="bar"><span style="width:${Math.max(3, Math.round(m.total / top * 100))}%"></span></span>
+                    <span class="amt">${money(m.total)}</span>
+                    <span class="cnt">${m.count} vendor${m.count === 1 ? '' : 's'}</span>
+                </div>`).join('')
+            : '<div style="color:var(--text-dim); padding: 12px 0;">No amounts reported yet.</div>';
+
+        const q = (document.getElementById('revenueSearch')?.value || '').toLowerCase().trim();
+        const list = rows
+            .filter(r => !q || `${r.name} ${r.email} ${r.market} ${r.answer} ${r.appliedTo}`.toLowerCase().includes(q))
+            .sort((a, b) => (b.amount ?? -1) - (a.amount ?? -1));
+        document.getElementById('revenueTableBody').innerHTML = list.length
+            ? list.map(r => {
+                const countedCell = r.amount === null ? '<span class="tag yellow">No amount</span>'
+                    : r.duplicate ? `<span class="tag" title="Same vendor, market and amount as another application">Repeat · ${money(r.amount)}</span>`
+                    : money(r.amount);
+                return `
+                <tr class="${r.amount === null || r.duplicate ? 'rev-skip' : ''}">
+                    <td><div class="vendor-name">${escapeHtml(r.name)}</div><div class="vendor-sub">${escapeHtml(r.email)}</div></td>
+                    <td>${r.market ? escapeHtml(r.market) : '<span class="label-only">—</span>'}</td>
+                    <td class="rev-answer">${escapeHtml(r.answer)}</td>
+                    <td>${escapeHtml(r.appliedTo) || '<span class="label-only">—</span>'}</td>
+                    <td class="rev-amount">${countedCell}</td>
+                </tr>`;
+            }).join('')
+            : '<tr><td colspan="5" style="text-align:center; padding: 32px; color: var(--text-dim);">No revenue answers found.</td></tr>';
     }
 
     function renderProfilesTable() {
