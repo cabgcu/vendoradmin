@@ -200,16 +200,7 @@
             display: flex; align-items: center; justify-content: space-between; gap: 16px;
             padding: 18px 32px; border-bottom: 1px solid var(--line);
         }
-        .header-search { position: relative; width: 320px; max-width: 100%; }
-        .header-search svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; fill: none; stroke: var(--text-dim); stroke-width: 2.2; stroke-linecap: round; pointer-events: none; }
-        .header-search input {
-            width: 100%; background: var(--card-bg); border: 1px solid var(--line);
-            border-radius: 9999px; padding: 10px 16px 10px 42px;
-            color: #fff; font: 14px var(--font-stack); outline: none; transition: border-color 0.15s;
-        }
-        .header-search input::placeholder { color: var(--text-dim); }
-        .header-search input:focus { border-color: #52525b; }
-        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
         .icon-btn {
             width: 40px; height: 40px; border-radius: 50%;
             background: var(--card-bg); border: 1px solid var(--line);
@@ -352,7 +343,8 @@
         .table-container { background: var(--card-bg); border: 1px solid var(--line); border-radius: var(--radius-xl); overflow: hidden; }
         .table-scroll { overflow-x: auto; }
         .filter-row { display: flex; gap: 10px; align-items: center; padding: 20px 24px; flex-wrap: wrap; }
-        .filter-row h2 { margin: 0 auto 0 0; font-size: 17px; font-weight: 600; }
+        .filter-row h2 { margin: 0 8px 0 0; font-size: 17px; font-weight: 600; }
+        .filter-row .search-wrapper { flex: 1 1 240px; min-width: 200px; }
         .filter-row select.modern-input { width: auto; min-width: 170px; border-radius: 9999px; }
 
         /* Search input */
@@ -445,7 +437,7 @@
         .status-select.denied { color: var(--danger-text); background-color: var(--danger-bg); }
         .status-select.new { color: #60a5fa; background-color: rgba(96, 165, 250, 0.1); }
 
-        .btn-checkin { padding: 7px 16px; font-size: 13px; white-space: nowrap; }
+        .btn-action.btn-checkin { padding: 4px 12px; font-size: 12px; font-weight: 500; white-space: nowrap; }
         .btn-action.btn-checkin.in { background: var(--success-bg); color: var(--success-text); }
         .btn-action.btn-checkin.in:hover { background: rgba(74, 222, 128, 0.18); }
         .label-only { color: var(--text-dim); font-size: 12px; font-weight: 500; }
@@ -642,7 +634,6 @@
 
         /* ── TABLET ── */
         @media (max-width: 1100px) {
-            .header-search { width: 240px; }
             .header-actions .btn-action span.lbl { display: none; }
             .stat-grid { grid-template-columns: repeat(2, 1fr); }
         }
@@ -663,11 +654,11 @@
             .sidebar { display: none; }
             .main { height: auto; overflow: visible; }
             .app-header { position: sticky; top: 0; z-index: 50; background: var(--app-bg); padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top)); gap: 10px; flex-wrap: wrap; }
-            .header-search { width: auto; flex: 1; }
             .mobile-event { display: block; width: 100%; padding: 0; }
             .mobile-event label { display: none; }
             .mobile-event select { font-size: 16px; padding: 12px 36px 12px 14px; border-radius: 9999px; }
-            .header-actions .btn-action, .header-actions .icon-btn.desk { display: none; }
+            .header-actions { display: none; }
+            .filter-row .search-wrapper { flex-basis: 100%; }
             .content { overflow: visible; padding: 16px 16px 96px; }
             .mobile-bottom-nav { display: flex; }
 
@@ -1743,10 +1734,6 @@
                 <label for="eventDropdownMobile">Active market</label>
                 <select id="eventDropdownMobile" onchange="switchEvent(this.value)"></select>
             </div>
-            <div class="header-search">
-                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="search" placeholder="Search vendors" oninput="onHeaderSearch()">
-            </div>
             <div class="header-actions">
                 <button class="btn-action" onclick="openCustomEmailModal()"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><span class="lbl">Custom email</span></button>
                 <button class="icon-btn desk" title="Check in" onclick="toggleView('scan')"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg></button>
@@ -1799,6 +1786,10 @@
         <div class="table-container">
             <div class="filter-row">
                 <h2>Vendors</h2>
+                <div class="search-wrapper">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="search" class="modern-input" placeholder="Search name, email, or student ID" oninput="renderTable()">
+                </div>
                 <select id="unifiedFilter" class="modern-input" onchange="localStorage.setItem('marketLastUnifiedFilter', this.value); renderTable()">
                     <option value="all">All Vendors</option>
                     <optgroup label="Special Requests">
@@ -5017,15 +5008,6 @@
         setText('greetEvent', (currentData.activeEvent && currentData.activeEvent.name) || 'Welcome back!');
     }
 
-    // Header search filters the vendor list; jump back to it from any other view
-    function onHeaderSearch() {
-        if (document.getElementById('view-list').style.display === 'none') {
-            const vendorFilters = ['inbox', 'new', 'approved', 'review', 'power', 'denied'];
-            setFilter(vendorFilters.includes(activeFilter) ? activeFilter : 'inbox', true);
-        } else {
-            renderTable();
-        }
-    }
 
     function setFilter(filter, preserveDropdowns = false) {
         activeFilter = filter;
