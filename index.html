@@ -24,6 +24,7 @@
             --app-bg: #131316;
             --card-bg: rgba(28, 28, 34, 0.68);
             --solid-bg: #1c1c22;
+            --modal-backdrop: linear-gradient(rgba(9, 9, 11, 0.4), rgba(9, 9, 11, 0.4)), #131316 url('https://i.imgur.com/APGH0Wv.png') center / cover no-repeat;
             --sidebar-bg: rgba(22, 22, 26, 0.6);
             --highlight-bg: rgba(255, 255, 255, 0.1);
             --inset-bg: rgba(12, 12, 16, 0.45);
@@ -84,7 +85,7 @@
             --shadow-card: 0 10px 25px rgba(0, 0, 0, 0.15);
             --shadow-color: rgba(0, 0, 0, 0.5);
             --toast-bg: #ffffff;
-            --modal-bg: #222228;
+            --modal-bg: rgba(28, 28, 34, 0.62);
             --loader-bg: #222228;
             --text-inverse: #000000;
             --radius-card: var(--radius-xl);
@@ -511,14 +512,16 @@
 
         /* ── MODALS ── */
         /* No backdrop-filter here: blurring the page behind a scrolling panel makes Safari/Chrome flash white */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(9, 9, 11, 0.78); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; overscroll-behavior: contain; transition: opacity 0.25s ease; }
-        .modal-content { background: rgba(34, 34, 40, 0.94); border: 1px solid rgba(63,63,70,0.5); box-shadow: 0 25px 50px rgba(0,0,0,0.5); padding: 32px; border-radius: var(--radius-xl); width: 100%; max-width: 900px; position: relative; max-height: 90vh; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+        /* Pop-ups sit on the background photo itself (darker tint) rather than a flat black
+           wash, so their see-through panels show it the same way the dashboard cards do. */
+        .modal-overlay { position: fixed; inset: 0; background: var(--modal-backdrop); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; overscroll-behavior: contain; transition: opacity 0.25s ease; }
+        .modal-content { background: var(--modal-bg); border: 1px solid rgba(63,63,70,0.5); box-shadow: 0 25px 50px rgba(0,0,0,0.5); padding: 32px; border-radius: var(--radius-xl); width: 100%; max-width: 900px; position: relative; max-height: 90vh; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
         .close-modal { position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; border-radius: 50%; background: var(--card-bg); border: 1px solid var(--line-strong); color: var(--text-muted); font-size: 1.3rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: color 0.15s; }
         .close-modal:hover { color: #fff; }
 
         /* Review Modal - Split Layout */
         .review-modal-container {
-            background: rgba(34, 34, 40, 0.94); border: 1px solid rgba(63,63,70,0.5);
+            background: var(--modal-bg); border: 1px solid rgba(63,63,70,0.5);
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
             border-radius: var(--radius-xl); width: 100%; max-width: 1100px; max-height: 90vh;
             position: relative; display: flex; overflow: hidden;
@@ -2405,7 +2408,7 @@
             </div>
 
             <!-- ADD AUTOMATION MODAL (inline) -->
-            <div id="addAutomationModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:10010; background:rgba(0,0,0,0.88); padding:20px; overflow-y:auto; align-items:center; justify-content:center;">
+            <div id="addAutomationModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:10010; background:var(--modal-backdrop); padding:20px; overflow-y:auto; align-items:center; justify-content:center;">
                 <div style="background: var(--modal-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 32px; max-width: 600px; width: 100%; margin: auto; position: relative;">
                     <button onclick="closeAddAutomationModal()" style="position:absolute; top:16px; right:20px; background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;">&times;</button>
                     <h3 style="margin: 0 0 6px; font-weight: 800; font-size: 1.1rem;">New Automation</h3>
