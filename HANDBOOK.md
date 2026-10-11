@@ -118,6 +118,7 @@ Click any row in the vendor list to open that vendor's full **Review Modal**. Th
 - **Agreements** — Which consent boxes they checked on the form
 - **AI Insights** — If AI is enabled, this shows an auto-categorization of their vendor type and any food license scan results
 - **Duplicate Detection** — A red 🚨 alert appears if another application looks like the same person. Click the linked name to compare side-by-side.
+- **Returning Vendor** — A green **Returning** badge appears on the list (and **Returning vendor · approved for …** in the application) when the same email or student ID was approved for a different market before. Hover the badge to see every market they were approved for.
 
 ### What you'll see on the right:
 
