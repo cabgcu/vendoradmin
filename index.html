@@ -2497,7 +2497,7 @@
 
     // --- API KEYS ---
     let OPENROUTER_API_KEY = '';
-    let currentUser = { role: 'admin', name: 'Master Admin', email: 'admin' };
+    let currentUser = { role: 'guest', name: '', email: '' };
 
     // --- VENDOR CONFIRMATION FLOW ENGINE ---
     window.addEventListener('DOMContentLoaded', () => { 
@@ -2516,21 +2516,9 @@
         } else if (declinePowerId) {
             showLinkConfirmationGate(declinePowerId, 'decline', 'power');
         } else {
-            const savedAuth = localStorage.getItem('cab_market_auth');
-            if (savedAuth) {
-                try { 
-                    const parsed = JSON.parse(savedAuth);
-                    if (parsed.role) {
-                        currentUser = parsed;
-                        unlockApp();
-                    }
-                } catch(e) { 
-                    if(savedAuth === 'true'){ 
-                        currentUser = { role: 'admin', name: 'Master Admin', email: 'admin' }; 
-                        unlockApp(); 
-                    } 
-                }
-            }
+            // Old builds trusted a role saved in localStorage; access now comes only from a Supabase Auth session.
+            localStorage.removeItem('cab_market_auth');
+            restoreStaffSession();
         }
 
         setupUnifiedScanner();
@@ -2587,41 +2575,17 @@
             msgDiv.innerHTML = `<div class="spinner" style="margin-bottom:20px; width:40px; height:40px; border-top-color:${isConfirming ? '#4ade80' : '#f87171'};"></div><h2 style="font-weight:800;">${isConfirming ? 'Confirming your attendance...' : 'Updating your status...'}</h2>`;
             document.body.appendChild(msgDiv);
             
+            // Public visitors can't touch the vendors table; sm_set_attendance does the update server-side.
+            const { error } = await _supabase.rpc('sm_set_attendance', { p_vendor_id: id, p_attending: isConfirming });
+            if (error) throw error;
+
             if (isConfirming) {
-                const { error } = await _supabase.from('vendors').update({ attendance_confirmed: true }).eq('id', id);
-                if (error) throw error;
-                
                 msgDiv.innerHTML = `
                     <div style="font-size: 5rem; color: #4ade80; margin-bottom: 20px; text-shadow: 0 0 30px rgba(74, 222, 128, 0.4);">✓</div>
                     <h2 style="color:#4ade80; margin-bottom: 15px; font-weight:800; font-size:2.5rem;">Confirmed!</h2>
                     <p style="color:var(--text-muted); font-size:1.1rem; max-width:400px; text-align:center;">Your attendance has been successfully recorded. We look forward to seeing you at the market!</p>
                 `;
             } else {
-                // Handle Decline
-                const { data: vData } = await _supabase.from('vendors').select('internal_notes').eq('id', id).single();
-                let notes = getParsedNotes(vData?.internal_notes);
-
-                // Check if "Can't Make It" comment already exists to prevent duplicates
-                const declineCommentExists = notes.some(n =>
-                    n.type === 'status_change' &&
-                    n.status === 'Declined' &&
-                    n.text?.includes("Can't Make It")
-                );
-
-                if (!declineCommentExists) {
-                    notes.unshift({
-                        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
-                        date: new Date().toISOString(),
-                        text: "❌ Vendor clicked the 'Can't Make It' link in their email.",
-                        author: 'System',
-                        type: 'status_change',
-                        status: 'Declined'
-                    });
-                }
-
-                const { error } = await _supabase.from('vendors').update({ attendance_confirmed: false, internal_notes: JSON.stringify(notes) }).eq('id', id);
-                if (error) throw error;
-                
                 msgDiv.innerHTML = `
                     <div style="font-size: 5rem; color: #f87171; margin-bottom: 20px; text-shadow: 0 0 30px rgba(248, 113, 113, 0.4);">✕</div>
                     <h2 style="color:#f87171; margin-bottom: 15px; font-weight:800; font-size:2.5rem;">Declined</h2>
@@ -2656,36 +2620,16 @@
             msgDiv.innerHTML = `<div class="spinner" style="margin-bottom:20px; width:40px; height:40px; border-top-color:${accentColor};"></div><h2 style="font-weight:800;">${isConfirming ? 'Confirming power request...' : 'Updating power status...'}</h2>`;
             document.body.appendChild(msgDiv);
 
-            const { data: vData } = await _supabase.from('vendors').select('internal_notes, needs_power').eq('id', id).single();
-            let notes = getParsedNotes(vData?.internal_notes);
+            const { error } = await _supabase.rpc('sm_set_power', { p_vendor_id: id, p_needs_power: isConfirming });
+            if (error) throw error;
 
             if (isConfirming) {
-                notes.unshift({
-                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
-                    date: new Date().toISOString(),
-                    text: "⚡ Vendor confirmed they still need power access.",
-                    author: 'System',
-                    type: 'power_update'
-                });
-                const { error } = await _supabase.from('vendors').update({ needs_power: 'Yes', power_confirmed: true, internal_notes: JSON.stringify(notes) }).eq('id', id);
-                if (error) throw error;
-
                 msgDiv.innerHTML = `
                     <div style="font-size: 5rem; color: #60a5fa; margin-bottom: 20px; text-shadow: 0 0 30px rgba(96, 165, 250, 0.4);">⚡</div>
                     <h2 style="color:#60a5fa; margin-bottom: 15px; font-weight:800; font-size:2.2rem;">Power Confirmed!</h2>
                     <p style="color:var(--text-muted); font-size:1.1rem; max-width:400px; text-align:center;">Your power request has been confirmed. Please remember to bring your own extension cords to the market!</p>
                 `;
             } else {
-                notes.unshift({
-                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
-                    date: new Date().toISOString(),
-                    text: "🔌 Vendor indicated they no longer need power access.",
-                    author: 'System',
-                    type: 'power_update'
-                });
-                const { error } = await _supabase.from('vendors').update({ needs_power: 'No', power_confirmed: false, internal_notes: JSON.stringify(notes) }).eq('id', id);
-                if (error) throw error;
-
                 msgDiv.innerHTML = `
                     <div style="font-size: 5rem; color: #fbbf24; margin-bottom: 20px; text-shadow: 0 0 30px rgba(251, 191, 36, 0.4);">🔌</div>
                     <h2 style="color:#fbbf24; margin-bottom: 15px; font-weight:800; font-size:2.2rem;">Power Released</h2>
@@ -3926,7 +3870,9 @@
     };
 
     // LOGIN LOGIC
-    const FALLBACK_PASSWORD = "Vendor49!";
+    // Every login is a Supabase Auth account; passwords are stored hashed by Supabase, never in this file
+    // or in a table. Leaving the email blank signs in as the master admin account.
+    const MASTER_ADMIN_EMAIL = 'studentmarkets@cabgcu.com';
 
     function toggleAuthMode(mode) {
         document.getElementById('login-error').style.display = 'none';
@@ -3937,6 +3883,32 @@
             document.getElementById('login-form').style.display = 'block';
             document.getElementById('register-form').style.display = 'none';
         }
+    }
+
+    // Looks up the signed-in Auth user's staff profile. Row Level Security only returns your own row.
+    async function loadStaffProfile() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) return null;
+        const { data: profile } = await _supabase.from('cab_users').select('id, name, email, role').eq('auth_user_id', user.id).maybeSingle();
+        if (!profile) return null;
+        return { role: profile.role, name: profile.name, email: profile.email, id: profile.id };
+    }
+
+    async function restoreStaffSession() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (!session) return;
+        const profile = await loadStaffProfile();
+        if (!profile) { await _supabase.auth.signOut(); return; }
+        currentUser = profile;
+        unlockApp();
+    }
+
+    async function signInStaff(email, pass) {
+        const { error: authErr } = await _supabase.auth.signInWithPassword({ email, password: pass });
+        if (authErr) return null;
+        const profile = await loadStaffProfile();
+        if (!profile) { await _supabase.auth.signOut(); return null; }
+        return profile;
     }
 
     async function handleRegister() {
@@ -3957,21 +3929,13 @@
         error.style.display = 'none';
 
         try {
-            const { data: allowed } = await _supabase.from('allowed_emails').select('email').eq('email', email).maybeSingle();
-            if (!allowed) {
-                throw new Error("This email is not authorized to register.");
-            }
+            // Checks allowed_emails and creates the Auth login server-side.
+            const { error: regErr } = await _supabase.rpc('cab_register_staff', { p_name: name, p_email: email, p_password: pass });
+            if (regErr) throw new Error(regErr.message);
 
-            const { data: existing } = await _supabase.from('cab_users').select('email').eq('email', email).maybeSingle();
-            if (existing) {
-                throw new Error("Account already exists for this email.");
-            }
-
-            const { error: insErr, data: newUser } = await _supabase.from('cab_users').insert([{ email, name, password: pass, role: 'user' }]).select().single();
-            if (insErr) throw insErr;
-
-            currentUser = { role: 'user', name, email, id: newUser.id };
-            localStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
+            const profile = await signInStaff(email, pass);
+            if (!profile) throw new Error("Account created, but sign-in failed. Try logging in.");
+            currentUser = profile;
             unlockApp();
         } catch(e) {
             error.innerText = e.message || "Registration error.";
@@ -3997,33 +3961,10 @@
         error.style.display = 'none';
 
         try {
-            if (!email) {
-                // Fetch current password from DB secrets for Master Admin
-                const { data } = await _supabase.from('secrets').select('value').eq('name', 'ADMIN_PASSWORD').maybeSingle();
-                let validPassword = data && data.value ? data.value : FALLBACK_PASSWORD;
-                
-                if (pass === validPassword) {
-                    currentUser = { role: 'admin', name: 'Master Admin', email: 'admin' };
-                    localStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
-                    
-                    // Auto-save fallback on first run
-                    if (!data) await _supabase.from('secrets').upsert([{ name: 'ADMIN_PASSWORD', value: FALLBACK_PASSWORD }]);
-                    
-                    unlockApp();
-                } else {
-                    throw new Error("Invalid master password.");
-                }
-            } else {
-                // Check Staff Account
-                const { data: user } = await _supabase.from('cab_users').select('*').eq('email', email).eq('password', pass).maybeSingle();
-                if (user) {
-                    currentUser = { role: user.role, name: user.name, email: user.email, id: user.id };
-                    localStorage.setItem('cab_market_auth', JSON.stringify(currentUser));
-                    unlockApp();
-                } else {
-                    throw new Error("Invalid email or password.");
-                }
-            }
+            const profile = await signInStaff(email || MASTER_ADMIN_EMAIL, pass);
+            if (!profile) throw new Error(email ? "Invalid email or password." : "Invalid master password.");
+            currentUser = profile;
+            unlockApp();
         } catch (err) {
             console.error("Login Check Error:", err);
             error.innerText = err.message || "Connection error. Try again.";
@@ -4034,10 +3975,10 @@
         }
     }
 
-    function handleLogout() {
+    async function handleLogout() {
         stopEmailStatusPolling();
         resetCabbieChatState();
-        localStorage.removeItem('cab_market_auth');
+        await _supabase.auth.signOut();
         location.reload();
     }
 
@@ -5001,13 +4942,13 @@
     async function updateAdminPassword() {
         const newPass = document.getElementById('newAdminPassword').value.trim();
         if (!newPass) return showToast("Password cannot be empty.");
-        if (newPass.length < 6) return showToast("Password must be at least 6 characters.");
+        if (newPass.length < 8) return showToast("Password must be at least 8 characters.");
 
         if (!confirm("Are you sure you want to change the admin portal password?\n\nYou and all other admins will need this new password to log in next time.")) return;
 
         document.getElementById('loader').style.display = 'flex';
         
-        const { error } = await _supabase.from('secrets').upsert([{ name: 'ADMIN_PASSWORD', value: newPass }], { onConflict: 'name' });
+        const { error } = await _supabase.rpc('cab_admin_set_password', { p_email: MASTER_ADMIN_EMAIL, p_new_password: newPass });
         
         document.getElementById('loader').style.display = 'none';
 
@@ -10056,7 +9997,7 @@
         }
 
         // Load Active Users
-        const { data: users } = await _supabase.from('cab_users').select('*');
+        const { data: users } = await _supabase.from('cab_users').select('id, name, email, role');
         if (users && users.length > 0) {
             staffListEl.innerHTML = users.map(u => `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -10065,7 +10006,7 @@
                         <div style="font-size:0.75rem; color:#a78bfa; text-transform:uppercase; margin-top:4px; font-weight:bold;">${u.role}</div>
                     </div>
                     <div style="display:flex; gap:10px;">
-                        <button onclick="resetStaffPassword('${u.id}', '${u.name}')" class="btn-icon-text" style="padding: 6px 12px;">Reset Pass</button>
+                        <button onclick="resetStaffPassword('${u.email}', '${u.name}')" class="btn-icon-text" style="padding: 6px 12px;">Reset Pass</button>
                         <button onclick="removeStaff('${u.id}', '${u.name}')" class="btn-icon-text danger" style="padding: 6px 12px;">Delete</button>
                     </div>
                 </div>
@@ -10104,13 +10045,13 @@
         loadUserManagement();
     }
 
-    async function resetStaffPassword(id, name) {
-        const newPass = prompt(`Enter a new temporary password for ${name}:`);
+    async function resetStaffPassword(email, name) {
+        const newPass = prompt(`Enter a new temporary password for ${name} (8+ characters):`);
         if (!newPass || newPass.trim() === '') return;
         
-        const { error } = await _supabase.from('cab_users').update({ password: newPass }).eq('id', id);
+        const { error } = await _supabase.rpc('cab_admin_set_password', { p_email: email, p_new_password: newPass });
         if (error) {
-            showToast("Error resetting password.");
+            showToast("Error resetting password: " + error.message);
         } else {
             showToast(`Password for ${name} updated!`);
         }
@@ -10733,7 +10674,9 @@
     // ============================================================
     // The student markets public form embeds vendoradmin in a hidden
     // iframe and delegates ALL data operations through this API.
-    // This keeps Supabase credentials and business logic centralised.
+    // Every public request goes through a narrow Supabase function
+    // (sm_* in supabase/migrations) — Row Level Security blocks the
+    // public key from reading student data directly.
 
     window.addEventListener('message', async (event) => {
         const { type, requestId, payload } = event.data || {};
@@ -10795,6 +10738,9 @@
 
                 // --- Inline editor updates from student market iframe ---
                 case 'SM_EDIT_UPDATE': {
+                    // Only the form builder's own preview iframe may edit the form.
+                    const previewFrame = document.getElementById('fbPreviewIframe');
+                    if (!previewFrame || event.source !== previewFrame.contentWindow) break;
                     const { updates } = payload || {};
                     if (updates) {
                         if (updates.heroTitle !== undefined) formConfig.heroTitle = updates.heroTitle;
@@ -10818,110 +10764,23 @@
                     break;
                 }
 
-                // --- Check existing vendor by student ID ---
+                // --- Returning-vendor autofill by student ID (contact details come back masked) ---
                 case 'SM_CHECK_EXISTING_VENDOR': {
                     const { studentId } = payload;
-                    const { data, error } = await _supabase.from('vendors').select('*')
-                        .eq('student_id', studentId)
-                        .order('created_at', { ascending: false })
-                        .limit(1);
+                    const { data, error } = await _supabase.rpc('sm_prefill_vendor', { p_student_id: studentId });
                     if (error) throw error;
-
-                    // Check if food license was verified by AI — if not, strip link to force resubmission
-                    if (data && data[0] && data[0].food_license_link) {
-                        const v = data[0];
-                        const link = v.food_license_link;
-                        let licenseVerified = false;
-
-                        // Check if link is already invalid
-                        if (!link || link === 'Deleted to save space' || link === 'Archived Google Drive Link' || link.includes('drive.google.com')) {
-                            licenseVerified = false;
-                        } else {
-                            // Check AI scan result from internal_notes
-                            try {
-                                const notes = getParsedNotes(v.internal_notes);
-                                const aiNote = notes.find(n => n.type === 'ai_analysis' && n.ai_data && n.ai_data.license_status);
-                                if (aiNote) {
-                                    licenseVerified = aiNote.ai_data.license_status.includes('✅');
-                                }
-                                // If no AI note exists, license was never verified
-                            } catch(e) {}
-                        }
-
-                        if (!licenseVerified) {
-                            data[0].food_license_link = null;
-                            data[0]._food_license_needs_resubmit = true;
-                        }
-                    }
-
-                    // Surface the vendor's own strike count + reasons so the public form can
-                    // show them why they've been flagged, same info admins see in vendoradmin.
-                    if (data && data[0]) {
-                        const emailKey = normalizeStrikeEmail(data[0].preferred_email || data[0].gcu_email || '');
-                        let strikeInfo = { total: 0, late: [], manual: [] };
-                        if (emailKey) {
-                            const [{ data: allApps }, { data: allEvents }, { data: overridesRow }, { data: manualRow }] = await Promise.all([
-                                _supabase.from('vendors').select('event_id, created_at').eq('student_id', studentId),
-                                _supabase.from('events').select('id, name, app_close'),
-                                _supabase.from('secrets').select('value').eq('name', 'MARKET_STRIKE_OVERRIDES').maybeSingle(),
-                                _supabase.from('secrets').select('value').eq('name', 'MARKET_MANUAL_STRIKES').maybeSingle()
-                            ]);
-
-                            let overrides = {};
-                            try { overrides = overridesRow?.value ? JSON.parse(overridesRow.value) : {}; } catch (e) {}
-                            let manual = {};
-                            try { manual = manualRow?.value ? JSON.parse(manualRow.value) : {}; } catch (e) {}
-
-                            const eventMap = {}, closeMap = {};
-                            (allEvents || []).forEach(e => { eventMap[e.id] = e.name; closeMap[e.id] = e.app_close; });
-
-                            const forgiven = overrides[emailKey] || [];
-                            const lateNames = [];
-                            (allApps || []).forEach(a => {
-                                const closeDate = closeMap[a.event_id];
-                                const evName = eventMap[a.event_id];
-                                if (!closeDate || !evName) return;
-                                if (new Date(a.created_at) > new Date(closeDate) && !forgiven.includes(evName) && !lateNames.includes(evName)) {
-                                    lateNames.push(evName);
-                                }
-                            });
-
-                            const manualList = manual[emailKey] || [];
-                            strikeInfo = {
-                                total: lateNames.length + manualList.length,
-                                late: lateNames,
-                                manual: manualList.map(s => ({ reason: s.reason, addedAt: s.addedAt }))
-                            };
-                        }
-                        data[0]._strikeInfo = strikeInfo;
-                    }
-
-                    respond(data || []);
+                    respond(data ? [data] : []);
                     break;
                 }
 
                 // --- Submit vendor application ---
                 case 'SM_SUBMIT_APPLICATION': {
                     const { basePayload, selectedIds } = payload;
-
-                    const { data: existingApps } = await _supabase.from('vendors')
-                        .select('id, event_id')
-                        .eq('student_id', basePayload.student_id)
-                        .in('event_id', selectedIds);
-
-                    const existingMap = {};
-                    if (existingApps) existingApps.forEach(a => { existingMap[a.event_id] = a.id; });
-
-                    for (const eventId of selectedIds) {
-                        const finalPayload = { ...basePayload, event_id: eventId };
-                        if (existingMap[eventId]) {
-                            const { error } = await _supabase.from('vendors').update(finalPayload).eq('id', existingMap[eventId]);
-                            if (error) throw error;
-                        } else {
-                            const { error } = await _supabase.from('vendors').insert([finalPayload]);
-                            if (error) throw error;
-                        }
-                    }
+                    const { error } = await _supabase.rpc('sm_submit_application', {
+                        p_payload: basePayload,
+                        p_event_ids: (selectedIds || []).map(String)
+                    });
+                    if (error) throw error;
                     respond({ success: true });
                     break;
                 }
@@ -10930,8 +10789,9 @@
                 case 'SM_UPLOAD_LICENSE': {
                     const { fileData } = payload;
                     const blob = await fetch(fileData).then(r => r.blob());
-                    const path = `license_${Date.now()}.jpg`;
-                    const { error: upErr } = await _supabase.storage.from('licenses').upload(path, blob);
+                    // Random name so nobody can guess other students' license URLs.
+                    const path = `license_${Date.now()}_${crypto.randomUUID()}.jpg`;
+                    const { error: upErr } = await _supabase.storage.from('licenses').upload(path, blob, { contentType: 'image/jpeg' });
                     if (upErr) throw upErr;
                     const publicUrl = _supabase.storage.from('licenses').getPublicUrl(path).data.publicUrl;
                     respond({ url: publicUrl });
@@ -10941,168 +10801,41 @@
                 // --- Check application status ---
                 case 'SM_CHECK_STATUS': {
                     const { studentId } = payload;
-                    const { data: events } = await _supabase.from('events').select('*');
-                    const { data: apps, error } = await _supabase.from('vendors').select('*')
-                        .eq('student_id', studentId)
-                        .order('created_at', { ascending: false });
+                    const { data, error } = await _supabase.rpc('sm_check_status', { p_student_id: studentId });
                     if (error) throw error;
-                    respond({ apps: apps || [], events: events || [] });
+                    respond({ apps: data?.apps || [], events: data?.events || [] });
                     break;
                 }
 
                 // --- Confirm vendor attendance ---
                 case 'SM_CONFIRM_ATTENDANCE': {
                     const { vendorId } = payload;
-                    const { error } = await _supabase.from('vendors').update({ attendance_confirmed: true }).eq('id', vendorId);
+                    const { error } = await _supabase.rpc('sm_set_attendance', { p_vendor_id: vendorId, p_attending: true });
                     if (error) throw error;
                     respond({ success: true });
                     break;
                 }
 
                 // --- Confirm or decline power ---
-                case 'SM_CONFIRM_POWER': {
-                    const { vendorId } = payload;
-                    const { data: vData } = await _supabase.from('vendors').select('internal_notes').eq('id', vendorId).single();
-                    let notes = getParsedNotes(vData?.internal_notes);
-                    notes.unshift({
-                        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
-                        date: new Date().toISOString(),
-                        text: "⚡ Vendor confirmed they still need power access.",
-                        author: 'System',
-                        type: 'power_update'
-                    });
-                    const { error } = await _supabase.from('vendors').update({ needs_power: 'Yes', power_confirmed: true, internal_notes: JSON.stringify(notes) }).eq('id', vendorId);
-                    if (error) throw error;
-                    respond({ success: true });
-                    break;
-                }
-
+                case 'SM_CONFIRM_POWER':
                 case 'SM_DECLINE_POWER': {
                     const { vendorId } = payload;
-                    const { data: vData } = await _supabase.from('vendors').select('internal_notes').eq('id', vendorId).single();
-                    let notes = getParsedNotes(vData?.internal_notes);
-                    notes.unshift({
-                        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9),
-                        date: new Date().toISOString(),
-                        text: "🔌 Vendor indicated they no longer need power access.",
-                        author: 'System',
-                        type: 'power_update'
-                    });
-                    const { error } = await _supabase.from('vendors').update({ needs_power: 'No', power_confirmed: false, internal_notes: JSON.stringify(notes) }).eq('id', vendorId);
+                    const { error } = await _supabase.rpc('sm_set_power', { p_vendor_id: vendorId, p_needs_power: type === 'SM_CONFIRM_POWER' });
                     if (error) throw error;
                     respond({ success: true });
                     break;
                 }
 
-                // --- Resend status email ---
+                // --- Resend status email (sent server-side so the Brevo key stays secret) ---
                 case 'SM_RESEND_EMAIL': {
-                    const { appId, eventId } = payload;
-
-                    const { data: secrets } = await _supabase.from('secrets').select('*');
-                    const apiKey = secrets?.find(s => s.name === 'BREVO_API_KEY')?.value;
-                    if (!apiKey) throw new Error("API Key missing");
-
-                    const publicUrlConfig = secrets?.find(s => s.name === 'PUBLIC_APP_URL')?.value;
-
-                    const { data: vendor } = await _supabase.from('vendors').select('*').eq('id', appId).single();
-                    const { data: evt }    = await _supabase.from('events').select('*').eq('id', eventId).single();
-
-                    let targetTemplate = vendor.email_sent;
-                    const isApproved = vendor.status === 'Approved' || vendor.status === 'Checked In';
-                    if (!targetTemplate || targetTemplate === 'Yes' || targetTemplate === 'No') {
-                        targetTemplate = isApproved ? (vendor.needs_power === 'Yes' ? 'power' : 'approved') : 'denied';
+                    const { appId, eventId, publicFormUrl } = payload;
+                    const { data, error } = await _supabase.functions.invoke('sm-resend-email', { body: { appId, eventId, publicFormUrl } });
+                    if (error) {
+                        let msg = error.message;
+                        try { msg = (await error.context.json()).error || msg; } catch (e) {}
+                        throw new Error(msg);
                     }
-
-                    let subj = '', body = '';
-                    if (targetTemplate === 'approved')     { subj = evt.template_approved_subject; body = evt.template_approved_body; }
-                    else if (targetTemplate === 'power')   { subj = evt.template_power_subject || evt.template_approved_subject; body = evt.template_power_body || evt.template_approved_body; }
-                    else if (targetTemplate === 'power_denied') { subj = evt.template_power_denied_subject || evt.template_approved_subject; body = evt.template_power_denied_body || evt.template_approved_body; }
-                    else if (targetTemplate === 'denied')  { subj = evt.template_denied_subject; body = evt.template_denied_body; }
-
-                    if (['approved','power','power_denied'].includes(targetTemplate) && body && !body.includes('{{CONFIRM_LINK}}')) {
-                        body += "\n\n**Please click a link below to confirm your status by {{CONFIRM_DEADLINE}}:**\n{{CONFIRM_LINK}}\n{{DECLINE_LINK}}";
-                    }
-
-                    let baseUrl = publicUrlConfig || (payload.publicFormUrl || '');
-                    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-                    if (baseUrl && !baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
-                    const confirmUrl = `${baseUrl}?confirm=${vendor.id}`;
-                    const declineUrl = `${baseUrl}?decline=${vendor.id}`;
-                    const powerConfirmUrl = `${baseUrl}?confirm_power=${vendor.id}`;
-                    const powerDeclineUrl = `${baseUrl}?decline_power=${vendor.id}`;
-                    const finalConfirmLink = `<a href="${confirmUrl}" style="display:inline-block; padding:12px 24px; background-color:#34C759; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 5px 10px 0;">✓ Confirm Attendance</a>`;
-                    const finalDeclineLink = `<a href="${declineUrl}" style="display:inline-block; padding:12px 24px; background-color:#FF3B30; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 0;">✕ Can't Make It</a>`;
-                    const finalPowerConfirmLink = `<a href="${powerConfirmUrl}" style="display:inline-block; padding:12px 24px; background-color:#0A84FF; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 5px 10px 0;">⚡ Confirm Power</a>`;
-                    const finalPowerDeclineLink = `<a href="${powerDeclineUrl}" style="display:inline-block; padding:12px 24px; background-color:#FF9500; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:8px; margin: 10px 0;">🔌 No Longer Need Power</a>`;
-
-                    const fmtDate = (d) => d ? new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '';
-                    const fmtDT   = (d) => d ? new Date(d).toLocaleDateString('en-US',{month:'long',day:'numeric'})+' at '+new Date(d).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '';
-
-                    let rawBody = (body||'')
-                        .replace(/\{\{FIRST\}\}/g, vendor.first_name)
-                        .replace(/\{\{MARKET_NAME\}\}/g, evt.name)
-                        .replace(/\{\{LOCATION\}\}/g, evt.location)
-                        .replace(/\{\{MARKET_DATE\}\}/g, fmtDate(evt.market_date))
-                        .replace(/\{\{MARKET_TIME\}\}/g, evt.market_time||'TBD')
-                        .replace(/\{\{APP_OPENS\}\}/g, fmtDT(evt.app_open))
-                        .replace(/\{\{APP_CLOSES\}\}/g, fmtDT(evt.app_close))
-                        .replace(/\{\{CONTACT_DATE\}\}/g, fmtDate(evt.contact_date))
-                        .replace(/\{\{CONFIRM_DEADLINE\}\}/g, fmtDate(evt.confirm_date))
-                        .replace(/\{\{CONFIRM_LINK\}\}/g, finalConfirmLink)
-                        .replace(/\{\{DECLINE_LINK\}\}/g, finalDeclineLink)
-                        .replace(/\{\{POWER_CONFIRM_LINK\}\}/g, finalPowerConfirmLink)
-                        .replace(/\{\{POWER_DECLINE_LINK\}\}/g, finalPowerDeclineLink)
-                        .replace(/\{\{EVENT\}\}/g, evt.name);
-
-                    let plainText = rawBody.replace(/\*\*(.*?)\*\*/g,'$1');
-                    plainText = plainText.replace(finalConfirmLink, `\n\nConfirm Attendance Here: ${confirmUrl}\n`);
-                    plainText = plainText.replace(finalDeclineLink, `\nDecline/Cancel Spot Here: ${declineUrl}\n`);
-                    plainText = plainText.replace(finalPowerConfirmLink, `\n\nConfirm Power Here: ${powerConfirmUrl}\n`);
-                    plainText = plainText.replace(finalPowerDeclineLink, `\nNo Longer Need Power: ${powerDeclineUrl}\n`);
-                    const htmlBody = rawBody.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
-                    const parsedSubj = (subj||'').replace(/\{\{FIRST\}\}/g, vendor.first_name).replace(/\{\{MARKET_NAME\}\}/g, evt.name).replace(/\{\{EVENT\}\}/g, evt.name);
-
-                    const smProcessImageUrl = (u) => { if(!u) return ""; if(u.includes('drive.google.com')){const m=u.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)||u.match(/[?&]id=([a-zA-Z0-9_-]+)/); if(m&&m[1]) return `https://lh3.googleusercontent.com/d/${m[1]}`;} return u; };
-                    const bannerUrl = smProcessImageUrl(evt.banner_url || "");
-                    const headingText = evt.heading_text || "Market Status Update";
-                    const statusColor = isApproved ? '#34C759' : '#FF3B30';
-                    const statusBadgeText = isApproved ? 'APPROVED' : 'STATUS UPDATE';
-                    const barcodeData = vendor.student_id || vendor.id.substring(0,8);
-                    const qrHtml = isApproved ? `<tr><td style="padding:0 15px;background-color:#ffffff;"><div style="border-top:2px dashed #e5e7eb;width:100%;height:1px;"></div></td></tr><tr><td align="center" style="padding:40px 30px;background-color:#ffffff;"><table border="0" cellspacing="0" cellpadding="0" width="100%"><tr><td align="center" style="background:#ffffff;padding:25px;border-radius:16px;border:2px solid #eeeeee;"><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${barcodeData}&format=png&bgcolor=FFFFFF&color=000000&margin=10" alt="QR" width="250" style="display:block;margin:0 auto;max-width:100%;border:0;"></td></tr></table><p style="margin:25px 0 0;font-size:14px;color:#1a1a1a;font-weight:700;text-transform:uppercase;letter-spacing:2px;">SCAN AT CHECK-IN</p><p style="margin:8px 0 0;font-size:12px;color:#888;font-family:monospace;">ID: #${String(barcodeData).toUpperCase()}</p></td></tr>` : '';
-
-                    const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;"><table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f3f4f6;padding:20px;"><tr><td align="center"><table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.05);">${bannerUrl?`<tr><td align="center" style="padding:0;"><img src="${bannerUrl}" width="600" style="display:block;width:100%;max-width:100%;height:auto;border:0;"></td></tr>`:""}<tr><td align="center" style="background-color:#ffffff;padding:40px 30px 20px;"><h1 style="margin:0;font-size:24px;font-weight:800;color:#111;text-transform:uppercase;">${headingText}</h1><p style="margin:12px 0 0;font-size:12px;font-weight:700;color:#fff;background-color:${statusColor};display:inline-block;padding:6px 16px;text-transform:uppercase;letter-spacing:1px;border-radius:20px;">${statusBadgeText}</p></td></tr><tr><td style="padding:10px 40px 40px;background-color:#ffffff;font-size:16px;color:#333;line-height:1.6;">${htmlBody}</td></tr>${qrHtml}<tr><td align="center" style="background-color:#f9fafb;padding:20px;border-top:1px solid #eaeaea;"><p style="margin:0;font-size:12px;font-weight:600;color:#aaa;text-transform:uppercase;">&copy; Canyon Activities Board</p></td></tr></table></td></tr></table></body></html>`;
-
-                    const trackingToken = generateEmailTrackingToken(vendor, targetTemplate, eventId);
-                    const trackingTags = [...buildBrevoTrackingTags(vendor, targetTemplate, eventId), trackingToken];
-                    const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
-                        method: 'POST',
-                        headers: { 'accept': 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
-                        body: JSON.stringify({
-                            sender: { name: 'Canyon Activities Board', email: 'studentmarkets@cabgcu.com' },
-                            replyTo: { name: SENDER_NAME, email: REPLY_TO_EMAIL },
-                            to: [{ email: vendor.preferred_email, name: `${vendor.first_name} ${vendor.last_name}` }],
-                            subject: parsedSubj,
-                            htmlContent: fullHtml,
-                            textContent: plainText,
-                            tags: trackingTags,
-                            headers: {
-                                'X-CAB-Tracking': trackingToken,
-                                'X-CAB-Market-ID': String(eventId || ''),
-                                'X-CAB-Template': String(targetTemplate || '')
-                            }
-                        })
-                    });
-                    if (!resp.ok) throw new Error("Email service failed");
-                    const respData = await resp.json().catch(() => ({}));
-                    const brevoMessageId = respData.messageId || respData.messageIds?.[0] || respData.id || null;
-                    await _supabase.from('vendors').update({
-                        brevo_message_id: brevoMessageId,
-                        email_delivery_status: 'sent',
-                        email_sent_at: new Date().toISOString(),
-                        email_sent_event_id: eventId,
-                        email_tracking_token: trackingToken,
-                        email_subject: parsedSubj
-                    }).eq('id', vendor.id);
+                    if (data?.error) throw new Error(data.error);
                     respond({ success: true });
                     break;
                 }

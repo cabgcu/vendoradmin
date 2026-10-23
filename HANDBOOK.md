@@ -42,14 +42,16 @@ You can manage multiple market events, send templated emails, track who confirme
 
 ## 2. Logging In
 
-Open the admin site in your browser. You will see a login screen asking for your email and password.
+Open the admin site in your browser. You will see a login screen asking for your email and password. To sign in as the **master admin**, leave the email blank and enter the master admin password.
+
+Every login is a Supabase Auth account. Passwords are stored hashed inside Supabase and never in the website code or a database table.
 
 - **Admin accounts** have full access to everything.
 - **Staff accounts** can view applications and vendor details but cannot change statuses, send emails, or access Settings.
 
 If you need an account created, ask your admin to whitelist your email in **Settings → User Management**, then use the sign-up link on the login page.
 
-> **Forgot your password?** Contact your admin — they can reset the master password in **Settings → System & Data**.
+> **Forgot your password?** Contact your admin. They can reset staff passwords in **Settings → User Management** and the master password in **Settings → System & Data**.
 
 ---
 
@@ -443,7 +445,7 @@ The Checked-In CSV is useful for post-event reporting, verifying attendance, or 
 
 ### Changing the Admin Password
 
-Enter a new password and click **Update Password**. This affects all admin accounts. Make sure you share the new password with your team before changing it.
+Enter a new password (8+ characters) and click **Update Password**. This changes the master admin login (the "leave email blank" login). Make sure you share the new password with your team before changing it. You can also change it in the Supabase dashboard under **Authentication → Users** (`studentmarkets@cabgcu.com`).
 
 ### Storage Cleanup
 
@@ -571,3 +573,19 @@ It's a general-purpose flag. Use it however works for your team — common uses 
 ---
 
 *CAB Student Market Admin — for questions or issues, contact your system administrator.*
+
+---
+
+## 19. Security Setup (one time)
+
+The website only contains Supabase's *publishable* key, which is public by design. What keeps student data and passwords private is configured in Supabase itself:
+
+1. **Run the lockdown SQL.** In Supabase go to **SQL Editor → New query**, paste [`supabase/migrations/20261023000000_security_lockdown.sql`](supabase/migrations/20261023000000_security_lockdown.sql), type a new master admin password into the `cab.new_admin_password` line at the top, and click **Run**. This:
+   - moves the master admin and every staff account into Supabase Auth (staff keep their current passwords), then deletes the plaintext `cab_users.password` column and the `ADMIN_PASSWORD` secret;
+   - turns on Row Level Security, so visitors can't read vendors, staff accounts or API keys with the public key;
+   - adds the `sm_*` functions the public application form now uses. They never return a student's name, email, phone or license image.
+2. **Deploy the resend-email function** (keeps the Brevo key server-side): `supabase functions deploy sm-resend-email --no-verify-jwt`.
+3. **Turn off open sign-ups.** In **Authentication → Sign In / Providers**, disable "Allow new users to sign up". Staff accounts are created through the allow-list in **Settings → User Management**.
+4. **Webhook server** (if you run `webhook-server.js`): set the `SUPABASE_SERVICE_ROLE_KEY` environment variable. Never commit that key.
+5. **Set `PUBLIC_APP_URL`** in Settings so the links in re-sent status emails always point to your real form.
+
