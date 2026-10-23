@@ -6,8 +6,14 @@ app.use(express.json());
 
 // Supabase setup
 const SUPABASE_URL = 'https://xdfbjusrwbxoxbcocxkp.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_ylaFmuuSPD2UcKdF1yKw4g_UPXiRRef';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// The vendors table is locked down by Row Level Security, so this server needs the
+// service role key. Set it as an environment variable — never commit it.
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('SUPABASE_SERVICE_ROLE_KEY is not set');
+  process.exit(1);
+}
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 // Map Brevo event types to our status
 const eventMap = {

@@ -1,0 +1,3 @@
+# Public endpoint: the student form calls it with the publishable key, which is not a JWT.
+[functions.sm-resend-email]
+verify_jwt = false
