@@ -4900,7 +4900,8 @@
                 btnHtml = `<span style="color: #f87171; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; padding-right: 10px;">${v.status}</span>`;
             }
 
-            d.innerHTML = `<div><strong>${v.first_name} ${v.last_name}</strong><br><small style="color:var(--text-muted);">${foodBadge}${powerBadge} ID: ${v.student_id || 'N/A'}</small></div>${btnHtml}`;
+            const inTime = v.status === 'Checked In' ? formatCheckInTime(v.checked_in_at) : '';
+            d.innerHTML = `<div><strong>${v.first_name} ${v.last_name}</strong><br><small style="color:var(--text-muted);">${foodBadge}${powerBadge} ID: ${v.student_id || 'N/A'}${inTime ? ` · In at ${inTime}` : ''}</small></div>${btnHtml}`;
             res.appendChild(d);
         });
     }
@@ -5880,6 +5881,15 @@
         alertTimeout = setTimeout(() => { closeCheckInAlert(); }, duration);
     }
 
+    // "10:42 AM" for today, "Oct 28, 10:42 AM" otherwise; '' when unknown
+    function formatCheckInTime(ts) {
+        if (!ts) return '';
+        const d = new Date(ts);
+        if (isNaN(d)) return '';
+        const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        return d.toDateString() === new Date().toDateString() ? time : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + time;
+    }
+
     async function checkIn(lookupVal, isScan = false, el = null) {
         if (!lookupVal) return;
         const searchVal = String(lookupVal).trim().toUpperCase();
@@ -5921,9 +5931,16 @@
             el.innerText = newStatus === 'Checked In' ? '✓ IN' : 'MARK IN'; 
         }
         
-        await _supabase.from('vendors').update({ status: newStatus }).eq('id', id);
+        const checkedInAt = newStatus === 'Checked In' ? new Date().toISOString() : null;
+        const { error: ciErr } = await _supabase.from('vendors').update({ status: newStatus, checked_in_at: checkedInAt }).eq('id', id);
+        if (ciErr) {
+            // checked_in_at column not added yet (migration 20261028000000) — still record the check-in
+            console.warn('checked_in_at not saved:', ciErr.message);
+            await _supabase.from('vendors').update({ status: newStatus }).eq('id', id);
+        }
         
         vendor.status = newStatus;
+        vendor.checked_in_at = checkedInAt;
         refreshData(null, true);
         
         if (newStatus === 'Checked In') {
@@ -6169,8 +6186,9 @@
                 : '<span class="tag">Awaiting reply</span>';
 
             const isIn = v.status === 'Checked In';
+            const inTime = isIn ? formatCheckInTime(v.checked_in_at) : '';
             const checkInCell = isAppr
-                ? `<button onclick="checkIn('${v.id}', false, this); event.stopPropagation();" class="btn-action btn-checkin ${isIn ? 'in' : ''}">${isIn ? '✓ Arrived' : 'Mark In'}</button>`
+                ? `<button onclick="checkIn('${v.id}', false, this); event.stopPropagation();" class="btn-action btn-checkin ${isIn ? 'in' : ''}"${inTime ? ` title="Checked in ${inTime}"` : ''}>${isIn ? '✓ Arrived' : 'Mark In'}</button>${inTime ? `<div class="vendor-sub">${inTime}</div>` : ''}`
                 : `<span class="label-only">—</span>`;
 
             // Only allow resend email if they aren't pending, user is admin, and viewing a specific filter (not all applicants)
@@ -6640,7 +6658,7 @@
                         ${isConfirmed ? '✓ Confirmed' : 'Mark Confirmed'}
                     </button>
                     <button type="button" class="sidebar-btn sidebar-btn-sm" style="${isCheckedIn ? 'background: rgba(74, 222, 128, 0.2); color: #4ade80;' : 'background: rgba(255,255,255,0.05); color: var(--text-muted);'}" onclick="checkIn('${vendor.id}')">
-                        ${isCheckedIn ? '✓ Checked In' : 'Check In'}
+                        ${isCheckedIn ? '✓ Checked In' + (vendor.checked_in_at ? ' · ' + formatCheckInTime(vendor.checked_in_at) : '') : 'Check In'}
                     </button>
                 </div>
                 <div style="height: 1px; background: var(--glass-border); margin-bottom: 16px;"></div>
@@ -8980,15 +8998,16 @@
             return;
         }
 
-        let csvContent = "First Name,Last Name,Student ID,GCU Email\n";
+        let csvContent = "First Name,Last Name,Student ID,GCU Email,Checked In At\n";
         
         checkedIn.forEach(v => {
             const fName = `"${(v.first_name || '').replace(/"/g, '""')}"`;
             const lName = `"${(v.last_name || '').replace(/"/g, '""')}"`;
             const sId = `"${(v.student_id || '').replace(/"/g, '""')}"`;
             const email = `"${(v.gcu_email || '').replace(/"/g, '""')}"`;
+            const inAt = v.checked_in_at ? `"${new Date(v.checked_in_at).toLocaleString('en-US')}"` : '""';
             
-            csvContent += `${fName},${lName},${sId},${email}\n`;
+            csvContent += `${fName},${lName},${sId},${email},${inAt}\n`;
         });
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
