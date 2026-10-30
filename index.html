@@ -6552,7 +6552,10 @@
                 }
 
                 const hasAnswer = answer !== undefined && answer !== null && String(answer).trim() !== '';
-                const answerText = hasAnswer ? escapeHtml(String(answer)) : 'Not answered';
+                let answerText = hasAnswer ? escapeHtml(String(answer)) : 'Not answered';
+                if (hasAnswer && q.type === 'file' && /^https:\/\//.test(String(answer))) {
+                    answerText = `<a href="${escapeHtml(String(answer))}" target="_blank" rel="noopener" style="color:#60a5fa;">View uploaded file &#8599;</a>`;
+                }
                 questionsHtml += `
                     <div class="gd-row stack"><span class="k">${escapeHtml(q.label)}</span><span class="v ${hasAnswer ? '' : 'empty'}">${answerText}</span></div>
                 `;
@@ -10147,7 +10150,9 @@
         }
     }
 
-    const typeIcons = { text: 'Aa', textarea: '&para;', email: '@', tel: '#', number: '123', dropdown: '&#9662;', checkbox_single: '&#9745;' };
+    const typeIcons = { text: 'Aa', textarea: '&para;', email: '@', tel: '#', number: '123', dropdown: '&#9662;', checkbox_single: '&#9745;', file: '&#8679;' };
+    // File-upload questions: the "Accepts" choices (the public form maps these to file types).
+    const fileAcceptLabels = { images: 'Images only', images_pdf: 'Images or PDF', documents: 'Images, PDF or Word' };
 
     // Get eligible parent questions for conditional logic (dropdowns & checkboxes before this index)
     function getConditionalParents(currentIndex) {
@@ -10416,6 +10421,15 @@
                 if (q.type === 'dropdown') {
                     html += `<input type="text" class="fb-input fb-input-opts" value="${escapeHtml(q.options||'')}" placeholder="Option 1, Option 2, Option 3" oninput="updateQ(${i},'options',this.value)" onclick="event.stopPropagation()">`;
                 }
+                if (q.type === 'file') {
+                    html += `<div class="fb-toolbar" onclick="event.stopPropagation()" style="margin-top:6px;">
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Accepts</span>
+                        <select class="fb-select" onchange="updateQ(${i},'accept',this.value)">
+                            ${Object.entries(fileAcceptLabels).map(([k, lbl]) => `<option value="${k}" ${(q.accept || 'images') === k ? 'selected' : ''}>${lbl}</option>`).join('')}
+                        </select>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Max 10 MB per file</span>
+                    </div>`;
+                }
                 html += `<div class="fb-toolbar" onclick="event.stopPropagation()">
                     <select class="fb-select" onchange="updateQ(${i},'type',this.value)" ${isProtected?'disabled':''}>
                         <option value="text" ${q.type==='text'?'selected':''}>Short answer</option>
@@ -10425,13 +10439,14 @@
                         <option value="number" ${q.type==='number'?'selected':''}>Number</option>
                         <option value="dropdown" ${q.type==='dropdown'?'selected':''}>Dropdown</option>
                         <option value="checkbox_single" ${q.type==='checkbox_single'?'selected':''}>Checkbox</option>
+                        <option value="file" ${q.type==='file'?'selected':''}>File upload</option>
                     </select>
                     <select class="fb-select" onchange="updateQ(${i},'width',this.value)">
                         <option value="full" ${q.width==='full'?'selected':''}>Full width</option>
                         <option value="half" ${q.width==='half'?'selected':''}>Half width</option>
                     </select>
                     <button class="fb-pill ${q.required?'fb-pill-active':''}" onclick="updateQ(${i},'required',${!q.required})">Required</button>
-                    <button class="fb-pill ${q.autofill !== false ? 'fb-pill-active' : ''}" style="font-size:0.7rem; padding:4px 10px; border-color:rgba(74, 222, 128,0.3); ${q.autofill !== false ? 'background:rgba(74, 222, 128,0.15); color:#4ade80;' : ''}" onclick="updateQ(${i},'autofill',${q.autofill === false ? 'true' : 'false'})">Autofill</button>
+                    ${q.type === 'file' ? '' : `<button class="fb-pill ${q.autofill !== false ? 'fb-pill-active' : ''}" style="font-size:0.7rem; padding:4px 10px; border-color:rgba(74, 222, 128,0.3); ${q.autofill !== false ? 'background:rgba(74, 222, 128,0.15); color:#4ade80;' : ''}" onclick="updateQ(${i},'autofill',${q.autofill === false ? 'true' : 'false'})">Autofill</button>`}
                     <span style="flex:1;"></span>
                     <button class="fb-pill" onclick="moveQ(${i},-1)" ${i===0?'disabled':''}>&#9650;</button>
                     <button class="fb-pill" onclick="moveQ(${i},1)" ${i===formConfig.questions.length-1?'disabled':''}>&#9660;</button>
@@ -10451,6 +10466,10 @@
                     html += `<div style="display:flex; gap:10px; align-items:flex-start; color:var(--text-muted); font-size:0.85rem; padding:8px 12px; background:rgba(255,255,255,0.025); border-radius:10px; pointer-events:none; border:1px solid rgba(255,255,255,0.05);">
                         <input type="checkbox" disabled style="width:16px; height:16px; margin-top:1px; accent-color:#60a5fa; flex-shrink:0;">
                         <span style="line-height:1.4;">${escapeHtml(q.hint || q.label)}</span>
+                    </div>`;
+                } else if (q.type === 'file') {
+                    html += `<div style="height:44px; background: var(--inset-bg); border: 1px dashed var(--line); border-radius:12px; padding:8px 14px; font-size:0.8rem; color:rgba(255,255,255,0.35); display:flex; align-items:center; gap:8px; pointer-events:none;">
+                        <span>&#8679; Choose file</span><span style="opacity:0.7;">&middot; ${fileAcceptLabels[q.accept || 'images']}</span>
                     </div>`;
                 } else if (q.type === 'textarea') {
                     html += `<div style="height:52px; background: var(--inset-bg); border: 1px solid var(--line); border-radius:12px;"></div>`;
@@ -10551,6 +10570,7 @@
         formConfig.questions[i][k] = v;
         if (k === 'type') {
             if (v === 'dropdown' && !formConfig.questions[i].options) formConfig.questions[i].options = 'Option 1, Option 2';
+            if (v === 'file' && !formConfig.questions[i].accept) formConfig.questions[i].accept = 'images';
             renderFormPreview();
         } else if (k === 'width' || k === 'required' || k === 'autofill') {
             renderFormPreview();
@@ -10814,6 +10834,29 @@
                     if (upErr) throw upErr;
                     const publicUrl = _supabase.storage.from('licenses').getPublicUrl(path).data.publicUrl;
                     respond({ url: publicUrl });
+                    break;
+                }
+
+                // --- Upload a file for a "File upload" form question ---
+                case 'SM_UPLOAD_FILE': {
+                    const { file, fileName } = payload || {};
+                    if (!(file instanceof Blob)) throw new Error('No file received');
+                    if (file.size > 10 * 1024 * 1024) throw new Error('File is larger than 10 MB');
+                    const mimeExt = {
+                        'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp',
+                        'image/heic': 'heic', 'image/heif': 'heif', 'application/pdf': 'pdf',
+                        'application/msword': 'doc',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx'
+                    };
+                    const nameExt = String(fileName || '').split('.').pop().toLowerCase().replace('jpeg', 'jpg');
+                    const ext = mimeExt[file.type] || (Object.values(mimeExt).includes(nameExt) ? nameExt : null);
+                    if (!ext) throw new Error('That file type is not allowed');
+                    const contentType = file.type || Object.keys(mimeExt).find(k => mimeExt[k] === ext);
+                    // Random name so nobody can guess other students' file URLs.
+                    const path = `upload_${Date.now()}_${crypto.randomUUID()}.${ext}`;
+                    const { error: upErr } = await _supabase.storage.from('form-uploads').upload(path, file, { contentType });
+                    if (upErr) throw upErr;
+                    respond({ url: _supabase.storage.from('form-uploads').getPublicUrl(path).data.publicUrl });
                     break;
                 }
 

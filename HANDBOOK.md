@@ -425,6 +425,8 @@ This controls what questions appear on the **public vendor application form** th
 - You can **add** custom questions, **reorder** them by dragging, and **remove** ones you don't need.
 - Questions can be made required or optional.
 - A live preview shows exactly how the form looks to applicants.
+- Set a question's type to **File upload** to let applicants attach a file. Use **Accepts** to choose *Images only*, *Images or PDF*, or *Images, PDF or Word*. Files can be up to 10 MB (photos are compressed automatically). In the application review, the answer shows as a **View uploaded file** link.
+  > First-time setup: run `supabase/migrations/20261030000000_form_file_uploads.sql` once in the Supabase SQL Editor to create the `form-uploads` storage bucket.
 
 Click **Save** when you're happy with the form layout.
 
