@@ -6,13 +6,14 @@
 --
 -- Creates the public "form-uploads" bucket used by File upload questions
 -- in the Form Builder. Like license images, files get random unguessable
--- names; applicants can only add files (images, PDF, Word, 10 MB max),
+-- names; applicants can only add files (images, PDF, Word, 50 MB max —
+-- the largest single file the Supabase free plan allows),
 -- and only staff can list or delete them.
 -- =====================================================================
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
-    'form-uploads', 'form-uploads', true, 10485760,
+    'form-uploads', 'form-uploads', true, 52428800,
     array[
         'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif',
         'application/pdf', 'application/msword',

@@ -10427,7 +10427,7 @@
                         <select class="fb-select" onchange="updateQ(${i},'accept',this.value)">
                             ${Object.entries(fileAcceptLabels).map(([k, lbl]) => `<option value="${k}" ${(q.accept || 'images') === k ? 'selected' : ''}>${lbl}</option>`).join('')}
                         </select>
-                        <span style="font-size:0.75rem; color:var(--text-muted);">Max 10 MB per file</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Max 50 MB per file</span>
                     </div>`;
                 }
                 html += `<div class="fb-toolbar" onclick="event.stopPropagation()">
@@ -10841,7 +10841,7 @@
                 case 'SM_UPLOAD_FILE': {
                     const { file, fileName } = payload || {};
                     if (!(file instanceof Blob)) throw new Error('No file received');
-                    if (file.size > 10 * 1024 * 1024) throw new Error('File is larger than 10 MB');
+                    if (file.size > 50 * 1024 * 1024) throw new Error('File is larger than 50 MB');
                     const mimeExt = {
                         'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp',
                         'image/heic': 'heic', 'image/heif': 'heif', 'application/pdf': 'pdf',
